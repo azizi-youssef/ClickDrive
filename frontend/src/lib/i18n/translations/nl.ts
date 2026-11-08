@@ -58,11 +58,10 @@ export const nl: Translations = {
   hero: {
     eyebrow: 'Autoverhuur in Nador',
     titleLead: 'Autoverhuur in Nador,',
-    titleAccent: 'zonder online betaling.',
+    titleAccent: 'zonder gedoe.',
     subtitle: 'Vergelijk de voertuigen van partnerverhuurders in Nador, bekijk de voorwaarden duidelijk en verstuur uw aanvraag zonder directe verplichting.',
     ctaSearch: 'Vind een auto',
     ctaAgency: 'Bent u een verhuurbedrijf?',
-    badgeNoOnlinePayment: 'Geen online betaling',
     badgeVerified: 'Gecontroleerde lokale verhuurders',
     badgePickup: 'Luchthaven Al-Aroui & haven Beni Ansar',
     howItWorks: 'Hoe werkt het?',
@@ -131,6 +130,8 @@ export const nl: Translations = {
     motoOne: '{count} motor',
     motoMany: '{count} motoren',
     motoCardLabel: '{brand}-motoren bekijken',
+    description: 'De merken van onze partnerbureaus in Nador.',
+    motoDescription: 'Scooters, roadsters en trailmotoren van onze partnerbureaus.',
   },
   cookie: {
     title: 'Cookie-instellingen',

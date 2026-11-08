@@ -391,7 +391,7 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
         <ul className="space-y-2 text-[13px] text-slate-600">
           <li className="flex items-center gap-2">
             <Wallet className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
-            Aucun paiement en ligne — règlement à l’agence
+            Règlement directement à l’agence
           </li>
           <li className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />

@@ -20,12 +20,12 @@ import {
  * Photos locales homogènes ; sans photo dédiée, la carte reprend la photo d'un véhicule réel de la catégorie.
  */
 const CATEGORY_VISUALS: Record<string, { image?: string; pitch: string }> = {
-  'Économique': { image: '/economique.jpeg', pitch: 'Sobre et pratique au quotidien' },
+  'Économique': { image: '/economique.jpg', pitch: 'Sobre et pratique au quotidien' },
   Citadine: { image: '/peugeot-208.jpg', pitch: 'Facile à garer en ville' },
   Compacte: { image: '/opel%20Astra.jpeg', pitch: 'Polyvalente sur tous les trajets' },
   Berline: { image: '/Mercedes%20Class%20C%20220%20D.jpeg', pitch: 'Confort sur longue distance' },
-  SUV: { image: '/suv.jpeg', pitch: 'Espace et position de conduite haute' },
-  Luxe: { image: '/luxe.jpeg', pitch: 'Prestige pour vos grandes occasions' },
+  SUV: { image: '/suv.jpg', pitch: 'Espace et position de conduite haute' },
+  Luxe: { image: '/g_class.jpg', pitch: 'Prestige pour vos grandes occasions' },
   '7 places': { image: '/voiture%207%20places.jpeg', pitch: 'Famille et groupes, sans compromis' },
   Automatique: { image: '/peugeot-e-208.jpg', pitch: 'Conduite détendue, sans embrayage' },
   Scooter: { pitch: 'Agile et économique en ville' },

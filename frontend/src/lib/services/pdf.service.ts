@@ -45,7 +45,7 @@ const CONFIRMED_NOTE =
 const PENDING_NOTE =
   "Cette demande n'est pas encore une réservation confirmée : l'agence doit valider la disponibilité et les conditions.";
 const PAYMENT_NOTE =
-  "Aucun paiement en ligne : la location et la caution se règlent directement auprès de l'agence, à la remise du véhicule.";
+  "La location et la caution se règlent directement auprès de l'agence, à la remise du véhicule.";
 const LEGAL_NOTE =
   "ClickDrive met en relation clients et agences partenaires. Le contrat de location est signé avec l'agence, seule responsable du véhicule, du tarif et de la caution.";
 

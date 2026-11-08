@@ -58,11 +58,10 @@ export const es: Translations = {
   hero: {
     eyebrow: 'Alquiler de coches en Nador',
     titleLead: 'Alquiler de coches en Nador,',
-    titleAccent: 'sin pagar en línea.',
+    titleAccent: 'sin complicaciones.',
     subtitle: 'Compara los vehículos de las agencias asociadas en Nador, consulta condiciones claras y envía tu solicitud sin compromiso inmediato.',
     ctaSearch: 'Buscar un coche',
     ctaAgency: '¿Es usted una agencia?',
-    badgeNoOnlinePayment: 'Sin pago en línea',
     badgeVerified: 'Agencias locales verificadas',
     badgePickup: 'Aeropuerto Al-Aroui y puerto de Beni Ansar',
     howItWorks: '¿Cómo funciona?',
@@ -131,6 +130,8 @@ export const es: Translations = {
     motoOne: '{count} motocicleta',
     motoMany: '{count} motocicletas',
     motoCardLabel: 'Ver las motocicletas {brand}',
+    description: 'Los fabricantes que ofrecen las agencias asociadas de Nador.',
+    motoDescription: 'Scooters, roadsters y trails de las agencias asociadas.',
   },
   cookie: {
     title: 'Configuración de cookies',

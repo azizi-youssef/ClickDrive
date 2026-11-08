@@ -58,11 +58,10 @@ export const ar: Translations = {
   hero: {
     eyebrow: 'كراء السيارات في الناظور',
     titleLead: 'كراء السيارات في الناظور،',
-    titleAccent: 'دون أي دفع عبر الإنترنت.',
+    titleAccent: 'بكل سهولة.',
     subtitle: 'قارن سيارات الوكالات الشريكة في الناظور، اطّلع على الشروط بكل وضوح وأرسل طلبك دون التزام فوري.',
     ctaSearch: 'ابحث عن سيارة',
     ctaAgency: 'هل أنت صاحب وكالة؟',
-    badgeNoOnlinePayment: 'لا دفع عبر الإنترنت',
     badgeVerified: 'وكالات محلية موثّقة',
     badgePickup: 'مطار العروي وميناء بني أنصار',
     howItWorks: 'كيف تعمل المنصة؟',
@@ -131,6 +130,8 @@ export const ar: Translations = {
     motoOne: 'دراجة نارية واحدة',
     motoMany: '{count} دراجات نارية',
     motoCardLabel: 'عرض دراجات {brand} النارية',
+    description: 'العلامات التي تقدّمها الوكالات الشريكة في الناظور.',
+    motoDescription: 'دراجات سكوتر وروودستر وتريل من الوكالات الشريكة.',
   },
   cookie: {
     title: 'إعدادات ملفات تعريف الارتباط',

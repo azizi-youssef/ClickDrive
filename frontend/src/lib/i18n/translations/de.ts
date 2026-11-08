@@ -58,11 +58,10 @@ export const de: Translations = {
   hero: {
     eyebrow: 'Mietwagen in Nador',
     titleLead: 'Mietwagen in Nador –',
-    titleAccent: 'ohne Online-Zahlung.',
+    titleAccent: 'ganz einfach.',
     subtitle: 'Vergleichen Sie die Fahrzeuge unserer Partneragenturen in Nador, prüfen Sie die Bedingungen transparent und senden Sie Ihre Anfrage unverbindlich.',
     ctaSearch: 'Auto finden',
     ctaAgency: 'Sind Sie eine Agentur?',
-    badgeNoOnlinePayment: 'Keine Online-Zahlung',
     badgeVerified: 'Geprüfte lokale Agenturen',
     badgePickup: 'Flughafen Al-Aroui & Hafen Beni Ansar',
     howItWorks: 'So funktioniert es',
@@ -131,6 +130,8 @@ export const de: Translations = {
     motoOne: '{count} Motorrad',
     motoMany: '{count} Motorräder',
     motoCardLabel: '{brand}-Motorräder ansehen',
+    description: 'Die Hersteller unserer Partneragenturen in Nador.',
+    motoDescription: 'Roller, Roadster und Reiseenduros unserer Partneragenturen.',
   },
   cookie: {
     title: 'Cookie-Einstellungen',

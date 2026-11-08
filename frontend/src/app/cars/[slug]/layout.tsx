@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
   ]
     .filter(Boolean)
     .join(', ');
-  const description = `Louez ${moto ? 'la moto' : 'la voiture'} ${name} à Nador${agency ? ` chez ${agency}` : ''} : ${vehicle.daily_price} DH par jour, ${specs}. Demande de réservation sans paiement en ligne.`;
+  const description = `Louez ${moto ? 'la moto' : 'la voiture'} ${name} à Nador${agency ? ` chez ${agency}` : ''} : ${vehicle.daily_price} DH par jour, ${specs}. Demande de réservation en ligne.`;
   const image = vehicle.images?.[0];
 
   return {

@@ -1,27 +1,16 @@
 import type { Metadata } from 'next';
-import React, { cache } from 'react';
+import React from 'react';
 import { notFound } from 'next/navigation';
-import { agenciesService } from '@/lib/services/agencies.service';
 import type { Agency } from '@/types';
 import { breadcrumbJsonLd, jsonLdScript, SITE_URL } from '@/lib/seo/structured-data';
+import { loadPublicAgency } from './data';
 
 type Props = { params: Promise<{ slug: string }>; children: React.ReactNode };
-
-/**
- * Agence publique : active et non archivée (les autres ne sont ni indexées ni décrites).
- * Une erreur d'accès à la base est propagée (page d'erreur), jamais présentée comme « introuvable ».
- * Mise en cache pour la requête : métadonnées et layout ne lisent la base qu'une fois.
- */
-const loadPublicAgency = cache(async (slug: string): Promise<Agency | null> => {
-  const agency = await agenciesService.getAgencyBySlug(decodeURIComponent(slug));
-  if (!agency || agency.status !== 'ACTIVE' || ('archived_at' in agency && agency.archived_at)) return null;
-  return agency;
-});
 
 function summary(agency: Agency): string {
   const text = (agency.description ?? '').replace(/\s+/g, ' ').trim();
   if (text.length >= 60) return text.length > 155 ? `${text.slice(0, 152).trimEnd()}…` : text;
-  return `Louez une voiture ou une moto auprès de ${agency.name}, agence partenaire à ${agency.city || 'Nador'}. Comparez les véhicules et envoyez votre demande sans paiement en ligne.`;
+  return `Louez une voiture ou une moto auprès de ${agency.name}, agence partenaire à ${agency.city || 'Nador'}. Comparez les véhicules et envoyez votre demande de réservation en ligne.`;
 }
 
 export async function generateMetadata({ params }: Omit<Props, 'children'>): Promise<Metadata> {

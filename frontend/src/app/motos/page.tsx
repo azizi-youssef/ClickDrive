@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Location de moto et scooter à Nador',
   description:
-    'Comparez les motos et scooters proposés par les agences partenaires vérifiées à Nador : tarifs, cylindrée, permis exigé. Demande de réservation sans paiement en ligne.',
+    'Comparez les motos et scooters proposés par les agences partenaires vérifiées à Nador : tarifs, cylindrée, permis exigé. Demande de réservation en ligne.',
   alternates: { canonical: '/motos' },
   openGraph: {
     title: 'Louer une moto ou un scooter à Nador — ClickDrive',

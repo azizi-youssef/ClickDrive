@@ -156,8 +156,8 @@ export function HomeClient({
     },
     {
       icon: FileText,
-      title: 'Demande sans débit direct',
-      description: 'Aucun paiement préalable en ligne. Vous réglez directement à l’agence lors de la remise des clés.',
+      title: 'Demande gratuite et sans engagement',
+      description: 'Envoyez votre demande en quelques minutes ; l’agence vous confirme directement la disponibilité et les conditions.',
     },
     {
       icon: MapPin,
@@ -211,7 +211,7 @@ export function HomeClient({
           {/* Réassurance factuelle + liens secondaires */}
           <div className="mt-5 flex max-w-5xl flex-col gap-4 text-[13px] text-slate-300 lg:flex-row lg:items-center lg:justify-between">
             <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              {[t.hero.badgeNoOnlinePayment, t.hero.badgeVerified, t.hero.badgePickup].map((label) => (
+              {[t.hero.badgeVerified, t.hero.badgePickup].map((label) => (
                 <li key={label} className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
                   {label}

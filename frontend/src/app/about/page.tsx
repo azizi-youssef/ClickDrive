@@ -276,7 +276,7 @@ export default function AboutPage() {
             </div>
 
             <ul className="mt-10 grid grid-cols-1 gap-3 text-sm text-slate-300 sm:grid-cols-3 sm:gap-4">
-              {['Sans paiement en ligne', 'Agences partenaires vérifiées', 'Contact direct avec l’agence'].map((item) => (
+              {['Demande gratuite et sans engagement', 'Agences partenaires vérifiées', 'Contact direct avec l’agence'].map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <BadgeCheck className="h-4 w-4 shrink-0 text-accent-text" aria-hidden="true" />
                   {item}

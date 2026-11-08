@@ -35,8 +35,6 @@ export default function OpenGraphImage() {
           <span>Aéroport Nador-Al Aroui</span>
           <span style={{ color: '#E63946' }}>•</span>
           <span>Port Beni Ansar</span>
-          <span style={{ color: '#E63946' }}>•</span>
-          <span>Sans paiement en ligne</span>
         </div>
       </div>
     ),

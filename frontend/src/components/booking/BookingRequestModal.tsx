@@ -939,7 +939,7 @@ export function BookingRequestModal({
                       )}
                     </dl>
                     <p className="mt-3 text-xs leading-relaxed text-slate-400">
-                      Aucun paiement en ligne : le règlement se fait à l’agence à la remise des clés. Options éventuelles en sus.
+                      Le règlement se fait à l’agence, à la remise des clés. Options éventuelles en sus.
                     </p>
                   </div>
 
@@ -1086,8 +1086,8 @@ export function BookingRequestModal({
                 </button>
               ) : (
                 <p className="hidden items-center gap-1.5 text-xs text-slate-500 sm:flex">
-                  <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-                  Aucun paiement à cette étape
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  Demande gratuite et sans engagement
                 </p>
               )}
 

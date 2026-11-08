@@ -59,11 +59,10 @@ export const en: Translations = {
   hero: {
     eyebrow: 'Car rental in Nador',
     titleLead: 'Car rental in Nador,',
-    titleAccent: 'no online payment.',
+    titleAccent: 'made simple.',
     subtitle: 'Compare vehicles from partner agencies in Nador, review the conditions clearly and send your request with no immediate commitment.',
     ctaSearch: 'Find a car',
     ctaAgency: 'Are you an agency?',
-    badgeNoOnlinePayment: 'No online payment',
     badgeVerified: 'Verified local agencies',
     badgePickup: 'Al-Aroui airport & Beni Ansar port',
     howItWorks: 'How does it work?',
@@ -132,6 +131,8 @@ export const en: Translations = {
     motoOne: '{count} motorcycle',
     motoMany: '{count} motorcycles',
     motoCardLabel: 'See {brand} motorcycles',
+    description: 'Manufacturers offered by our partner agencies in Nador.',
+    motoDescription: 'Scooters, roadsters and trail bikes from our partner agencies.',
   },
   cookie: {
     title: 'Cookie settings',

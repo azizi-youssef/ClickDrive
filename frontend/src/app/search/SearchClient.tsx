@@ -685,6 +685,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
         kind={isMotoView ? 'motorcycles' : 'cars'}
         vehicleCounts={brandCounts}
         countsLoading={vehiclesLoading}
+        activeBrand={filters.brand !== 'ALL' ? filters.brand : undefined}
         onBrandSelect={selectBrandFromMarquee}
       />
     </>

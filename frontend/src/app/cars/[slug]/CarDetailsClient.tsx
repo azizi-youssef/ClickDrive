@@ -188,7 +188,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
   if (vehicle.delivery_available === true) {
     conditions.push({ icon: Truck, label: 'Livraison', value: 'Possible', note: 'Hôtel ou adresse, selon l’agence.' });
   }
-  conditions.push({ icon: Wallet, label: 'Paiement', value: 'À l’agence', note: 'Aucun paiement en ligne sur ClickDrive.' });
+  conditions.push({ icon: Wallet, label: 'Paiement', value: 'À l’agence' });
 
   const fadeUp = reduceMotion
     ? {}

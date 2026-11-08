@@ -61,8 +61,9 @@ const WORDMARK_BADGES: Record<string, { text: string; viewWidth: number; fontSiz
 };
 
 /*
- * Poids optique : chaque logo tient dans une boîte de 40×40 px, puis une échelle par marque
- * égalise la surface visuelle (logos fins et larges agrandis, emblèmes pleins réduits).
+ * Poids optique : chaque logo tient dans une boîte de 40×40 px (conteneur constant de 48 px), puis une échelle
+ * uniforme par marque égalise la surface visuelle (logos fins agrandis, emblèmes pleins réduits) :
+ * les proportions du tracé SVG ne sont jamais déformées.
  */
 const LOGO_SCALE: Record<string, number> = {
   Dacia: 1.2,
@@ -88,13 +89,32 @@ const LOGO_SCALE: Record<string, number> = {
 };
 
 /*
- * Contrastes sur fond blanc : logos et noms #374151 (10,3:1), nombre de véhicules #4B5563 (7,6:1).
- * Le rouge de marque #E63946 ne fait que 4,2:1 : il sert aux éléments graphiques (seuil 3:1),
- * le texte rouge utilise #C92F3B (5,3:1).
+ * Couleurs officielles des logos (Simple Icons v16.36.0, données CC0, champ « hex »).
+ * Renault, Peugeot et Kia : logos officiels actuels monochromes (l'ancien jaune Renault #FFCC33 serait
+ * illisible sur fond blanc). Hors Simple Icons : Mercedes-Benz (noir de marque), Land Rover (vert de marque),
+ * Kawasaki (« Kawasaki Green ») ; SYM sans source fiable → anthracite neutre.
  */
-const COLORS = {
-  accentText: '#C92F3B',
-  accent: '#E63946',
+const BRAND_COLORS: Record<string, string> = {
+  Dacia: '#646B52',
+  Renault: '#000000',
+  Peugeot: '#000000',
+  Toyota: '#EB0A1E',
+  Volkswagen: '#151F5D',
+  Hyundai: '#002C5E',
+  Kia: '#05141F',
+  Citroen: '#DA291C',
+  'Mercedes-Benz': '#1F1F1F',
+  'Land Rover': '#005A2B',
+  // Motos
+  Yamaha: '#E60012',
+  Honda: '#E40521',
+  Suzuki: '#E30613',
+  SYM: '#17191D',
+  Vespa: '#85B09A',
+  Kawasaki: '#6BBF23',
+  BMW: '#0066B1',
+  KTM: '#FF6600',
+  Ducati: '#CC0000',
 };
 
 /** Compte de véhicules par marque, clé normalisée (minuscules, sans accents). */
@@ -161,62 +181,84 @@ export function BrandLogo({ brand, className }: { brand: string; className?: str
   );
 }
 
-/** Carte d'une marque : logo, nom et nombre de véhicules, lien vers la recherche filtrée. */
+/** Une marque : logo en couleurs officielles, nom et nombre réel de véhicules, lien vers le catalogue filtré. */
 function BrandCard({
   brand,
   count,
   loading,
   kind,
+  active,
   onSelect,
 }: {
   brand: string;
   count: number | undefined;
   loading: boolean;
   kind: BrandMarqueeKind;
+  /** Marque actuellement filtrée dans le catalogue */
+  active: boolean;
   onSelect?: (brand: string) => void;
 }) {
   const { t } = useTranslation();
   const name = DISPLAY_NAMES[brand] ?? brand;
   const moto = kind === 'motorcycles';
   const [one, many] = moto ? [t.brands.motoOne, t.brands.motoMany] : [t.brands.vehicleOne, t.brands.vehicleMany];
-  const countLabel =
-    count === undefined || count === 0 ? t.brands.soon : (count === 1 ? one : many).replace('{count}', String(count));
+  const unavailable = !loading && (count === undefined || count === 0);
+  const countLabel = unavailable ? t.brands.soon : (count === 1 ? one : many).replace('{count}', String(count));
   const cardLabel = (moto ? t.brands.motoCardLabel : t.brands.cardLabel).replace('{brand}', name);
 
   return (
     <Link
       href={`${CATALOG_PATHS[moto ? 'MOTORCYCLE' : 'CAR']}?brand=${encodeURIComponent(brand)}`}
       aria-label={loading ? cardLabel : `${cardLabel} — ${countLabel}`}
+      aria-current={active ? 'true' : undefined}
+      draggable={false}
       onClick={(event) => {
         // Sur la page du catalogue : filtre appliqué sur place (le lien reste utilisable en nouvel onglet)
         if (!onSelect || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
         event.preventDefault();
         onSelect(brand);
       }}
-      className="group/card flex h-31 w-[clamp(132px,36vw,168px)] flex-col items-center justify-center gap-2 rounded-[22px] border border-slate-200 bg-white px-3 shadow-[0_1px_2px_rgba(11,18,32,0.04),0_8px_20px_-16px_rgba(11,18,32,0.2)] outline-none transition-[translate,scale,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-[#E63946] hover:shadow-[0_2px_4px_rgba(11,18,32,0.05),0_18px_32px_-18px_rgba(11,18,32,0.35)] focus-visible:-translate-y-1 focus-visible:border-[#E63946] focus-visible:ring-2 focus-visible:ring-[#E63946]/35 active:translate-y-0 active:scale-[0.98] sm:h-33 sm:rounded-[24px] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0"
+      // Sans carte : ni bordure, ni fond, ni ombre. Le contour n'apparaît qu'au focus clavier (accessibilité).
+      className="group/card flex flex-col items-center gap-4 rounded-2xl px-2 py-5 text-center outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17191D]"
     >
-      {/* Boîte 40×40 : même surface visuelle pour tous les logos */}
-      <span className="flex h-10 w-10 items-center justify-center" aria-hidden="true">
-        <BrandLogo
-          brand={brand}
-          className="h-full w-full text-[#374151] transition-colors duration-200 group-hover/card:text-[#0B1220] group-focus-visible/card:text-[#0B1220]"
+      {/* Logo aux couleurs officielles, 60 px, proportions du tracé conservées ; léger agrandissement au survol */}
+      <span
+        className={cn(
+          'flex h-16 w-16 items-center justify-center transition-[scale,filter,opacity] duration-[250ms] ease-out',
+          'group-hover/card:scale-[1.06] group-focus-visible/card:scale-[1.06]',
+          'motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 motion-reduce:group-focus-visible/card:scale-100',
+          // Marque sans véhicule : couleurs officielles conservées, légèrement estompées (pleines au survol)
+          unavailable && 'opacity-55 group-hover/card:opacity-100 group-focus-visible/card:opacity-100'
+        )}
+        style={{ color: BRAND_COLORS[brand] ?? '#17191D' }}
+        aria-hidden="true"
+      >
+        <BrandLogo brand={brand} className="h-[60px] w-[60px]" />
+      </span>
+      <span className="flex flex-col items-center">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#17191D]">{name}</span>
+        {loading ? (
+          <span className="mt-1.5 h-3.5 w-16 animate-pulse rounded bg-[#F1F2F5] motion-reduce:animate-none" aria-hidden="true" />
+        ) : (
+          <span className={cn('mt-1 text-[12.5px] tabular-nums', unavailable ? 'text-[#69707D]' : 'text-[#4E5562]')}>
+            {countLabel}
+          </span>
+        )}
+        {/* Marque active : fin soulignement rouge (place réservée : aucun décalage quand il apparaît) */}
+        <span
+          className={cn('mt-2.5 h-0.5 w-8 rounded-full transition-colors duration-[250ms]', active ? 'bg-[#E63946]' : 'bg-transparent')}
+          aria-hidden="true"
         />
       </span>
-      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#374151] transition-colors duration-200 group-hover/card:text-[#0B1220]">
-        {name}
-      </span>
-      {loading ? (
-        <span className="h-3.5 w-16 animate-pulse rounded bg-slate-100 motion-reduce:animate-none" aria-hidden="true" />
-      ) : (
-        <span className="text-xs font-medium text-[#4B5563]">{countLabel}</span>
-      )}
     </Link>
   );
 }
 
-/** Vitesse du défilement continu (px/s), et pause après une action de l'utilisateur */
-const CYCLE_SPEED_PX_PER_S = 32;
+/** Défilement continu volontairement lent (ton éditorial), et pause après une action de l'utilisateur */
+const CYCLE_SPEED_PX_PER_S = 24;
 const MANUAL_HOLD_MS = 6000;
+/** Distance (px) au-delà de laquelle un appui souris devient un glisser (et n'ouvre pas la carte) */
+const DRAG_THRESHOLD_PX = 6;
 
 function subscribeReducedMotion(onChange: () => void) {
   const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -241,16 +283,23 @@ function measureSetWidth(el: HTMLUListElement, count: number): number {
 }
 
 /**
- * Carrousel animé des grandes marques, en cycle infini :
- * - défilement continu et fluide ; une copie de la série est placée à la suite et la position est
- *   recalée d'une série dès qu'elle est dépassée, si bien que la boucle n'a ni fin ni saut visible ;
- * - défilement natif (swipe, molette, clavier), flèches sans butée et barre de progression du cycle ;
- * - pause au survol, au focus, au toucher, hors écran et onglet masqué, bouton pause/lecture (WCAG 2.2.2) ;
- * - apparition en cascade des cartes à l'entrée dans l'écran ;
- * - aucune animation si l'utilisateur a demandé à réduire les mouvements (liste simple, sans copie).
+ * Vitrine des grandes marques (éditorial automobile, sans cartes : ni bordure, ni fond, ni ombre) :
+ * - logos de 60 px aux couleurs officielles, proportions conservées, agrandis de 6 % au survol (250 ms) ;
+ * - nom en capitales espacées, nombre réel de véhicules dessous (données du catalogue), « Bientôt disponible »
+ *   sinon (logo en couleurs, légèrement estompé) ;
+ * - marque filtrée signalée par un fin soulignement rouge (`aria-current`) ;
+ * - cycle infini à défilement lent : une copie inerte de la série suit l'originale et la position est
+ *   recalée d'une série, sans saut visible ; pause au survol, au focus, au toucher, hors écran, onglet masqué
+ *   et bouton pause/lecture (WCAG 2.2.2) ; aucune animation si l'utilisateur réduit les mouvements ;
+ * - défilement natif (swipe, molette), glisser à la souris, flèches sans butée ;
+ * - clavier : Tab entre les cartes, ← → Début Fin pour se déplacer dans la liste.
+ *
+ * Contrastes (fond blanc) : #17191D 17,6:1 ; nombres #4E5562 7,6:1 ; « Bientôt » #69707D 5,0:1
+ * (le #737B89 de la charte n'atteint que 4,3:1 : réservé aux éléments non textuels) ;
+ * rouge #E63946 (4,2:1) uniquement pour des éléments graphiques.
  *
  * `kind` choisit le catalogue (voitures → /search, motos → /motos) et les libellés ;
- * `reverse` fait défiler vers la droite (deux barres consécutives se croisent au lieu de se suivre).
+ * `reverse` fait défiler vers la droite.
  */
 export function BrandMarquee({
   kind = 'cars',
@@ -259,6 +308,7 @@ export function BrandMarquee({
   countsLoading = false,
   reverse = false,
   className,
+  activeBrand,
   onBrandSelect,
 }: {
   kind?: BrandMarqueeKind;
@@ -268,15 +318,30 @@ export function BrandMarquee({
   countsLoading?: boolean;
   reverse?: boolean;
   className?: string;
+  /** Marque actuellement filtrée dans le catalogue (comparaison sans casse ni accents) */
+  activeBrand?: string;
   /** Sur la page du catalogue lui-même : applique le filtre sans quitter la page */
   onBrandSelect?: (brand: string) => void;
 }) {
   const { t } = useTranslation();
   const moto = kind === 'motorcycles';
   const texts = moto
-    ? { eyebrow: t.brands.motoEyebrow, title: t.brands.motoTitle, catalog: t.brands.motoCatalog, region: t.brands.motoRegionLabel }
-    : { eyebrow: t.brands.eyebrow, title: t.brands.title, catalog: t.brands.catalog, region: t.brands.regionLabel };
+    ? {
+        eyebrow: t.brands.motoEyebrow,
+        title: t.brands.motoTitle,
+        description: t.brands.motoDescription,
+        catalog: t.brands.motoCatalog,
+        region: t.brands.motoRegionLabel,
+      }
+    : {
+        eyebrow: t.brands.eyebrow,
+        title: t.brands.title,
+        description: t.brands.description,
+        catalog: t.brands.catalog,
+        region: t.brands.regionLabel,
+      };
   const catalogPath = CATALOG_PATHS[moto ? 'MOTORCYCLE' : 'CAR'];
+  const activeKey = activeBrand ? normalizeBrandKey(activeBrand) : null;
   const titleId = useId();
   const scrollerId = useId();
   const sectionRef = useRef<HTMLElement>(null);
@@ -284,6 +349,9 @@ export function BrandMarquee({
   const holdUntil = useRef(0);
   const setWidth = useRef(0);
   const position = useRef(0);
+  const drag = useRef<{ pointerId: number; startX: number; startLeft: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const [state, setState] = useState({ canPrev: false, canNext: true, thumb: 100, offset: 0 });
 
   const reducedMotion = useSyncExternalStore(
@@ -389,7 +457,7 @@ export function BrandMarquee({
     return () => observer.disconnect();
   }, []);
 
-  const autoplayActive = loop && playing && pageVisible && inView && !hovered && !focusInside;
+  const autoplayActive = loop && playing && pageVisible && inView && !hovered && !focusInside && !dragging;
 
   // Défilement continu : position flottante cumulée (scrollLeft est arrondi par les navigateurs)
   useEffect(() => {
@@ -436,10 +504,79 @@ export function BrandMarquee({
     el.scrollBy({ left: direction * page, behavior: reducedMotion ? 'auto' : 'smooth' });
   };
 
-  const roundButton =
-    'flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-[#0B1220] shadow-sm outline-none transition-colors duration-200 hover:border-[#E63946] hover:text-[#C92F3B] focus-visible:ring-2 focus-visible:ring-[#E63946]/40 disabled:cursor-not-allowed disabled:border-slate-100 disabled:text-slate-300 disabled:shadow-none disabled:hover:border-slate-100';
+  // ── Glisser à la souris (le tactile utilise le défilement natif) ─────────────────────
+  const onPointerDown = (event: React.PointerEvent<HTMLUListElement>) => {
+    holdAutoplay();
+    suppressClick.current = false;
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    drag.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startLeft: event.currentTarget.scrollLeft,
+      moved: false,
+    };
+  };
 
-  const pauseButton = (className: string) =>
+  const onPointerMove = (event: React.PointerEvent<HTMLUListElement>) => {
+    const current = drag.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    const el = event.currentTarget;
+    const dx = event.clientX - current.startX;
+    if (!current.moved) {
+      if (Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+      current.moved = true;
+      setDragging(true);
+      el.setPointerCapture?.(event.pointerId);
+    }
+    holdAutoplay();
+    let next = current.startLeft - dx;
+    // Cycle : on glisse sans fin, en recalant l'origine d'une série au besoin
+    const series = setWidth.current;
+    if (loop && series > 0) {
+      if (next >= series) {
+        current.startLeft -= series;
+        next -= series;
+      } else if (next < 0) {
+        current.startLeft += series;
+        next += series;
+      }
+    }
+    el.scrollLeft = next;
+  };
+
+  const endDrag = (event: React.PointerEvent<HTMLUListElement>) => {
+    const current = drag.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    // Un glisser ne doit pas ouvrir la carte sous le curseur au relâchement
+    suppressClick.current = current.moved;
+    drag.current = null;
+    if (current.moved) {
+      setDragging(false);
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+  };
+
+  // ── Clavier : ← → Début Fin entre les cartes (les copies inertes du cycle sont ignorées) ──
+  const onListKeyDown = (event: React.KeyboardEvent<HTMLUListElement>) => {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+    const links = Array.from(event.currentTarget.querySelectorAll<HTMLAnchorElement>('li:not([inert]) a'));
+    const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+    if (index === -1 || links.length === 0) return;
+    event.preventDefault();
+    holdAutoplay();
+    const target =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? links.length - 1
+          : Math.min(links.length - 1, Math.max(0, index + (event.key === 'ArrowRight' ? 1 : -1)));
+    links[target]?.focus();
+  };
+
+  const circleButton =
+    'flex h-11 w-11 items-center justify-center rounded-full border border-[#E9EBEF] bg-white text-[#17191D] outline-none transition-colors duration-[250ms] hover:border-[#17191D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17191D] disabled:cursor-not-allowed disabled:text-[#C3C8D0] disabled:hover:border-[#E9EBEF]';
+
+  const pauseButton = (extraClass: string) =>
     loop ? (
       <button
         type="button"
@@ -447,7 +584,7 @@ export function BrandMarquee({
         aria-controls={scrollerId}
         aria-label={playing ? t.brands.pause : t.brands.play}
         title={playing ? t.brands.pause : t.brands.play}
-        className={cn(roundButton, className)}
+        className={cn(circleButton, extraClass)}
       >
         {playing ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
       </button>
@@ -459,41 +596,42 @@ export function BrandMarquee({
       aria-labelledby={titleId}
       // Marge de départ commune au titre et aux cartes (mêmes valeurs que le conteneur max-w-7xl)
       className={cn(
-        'bg-white py-12 [--edge:1rem] sm:py-16 sm:[--edge:1.5rem] lg:[--edge:max(2rem,calc((100%-80rem)/2+2rem))]',
+        'border-t border-[#E9EBEF] bg-white py-14 [--edge:1rem] sm:py-20 sm:[--edge:1.5rem] lg:[--edge:max(2rem,calc((100%-80rem)/2+2rem))]',
         className
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: COLORS.accentText }}>
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
+        <div className="min-w-0 max-w-xl">
+          <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#17191D]">
+            <span className="h-px w-6 bg-[#E63946]" aria-hidden="true" />
             {texts.eyebrow}
           </p>
-          <h2 id={titleId} className="mt-1.5 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[28px]">
+          <h2 id={titleId} className="mt-3 text-[28px] font-semibold leading-tight tracking-[-0.02em] text-[#17191D] sm:text-[34px]">
             {texts.title}
           </h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-[#69707D]">{texts.description}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-5">
           <Link
             href={catalogPath}
-            className="group/link inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-bold text-[#0B1220] outline-none transition-colors hover:text-[#C92F3B] focus-visible:ring-2 focus-visible:ring-[#E63946]/40"
+            className="group/link inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#17191D] underline-offset-[6px] outline-none hover:underline focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#17191D]"
           >
             {texts.catalog}
             <ArrowRight
-              className="h-4 w-4 transition-transform group-hover/link:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180"
+              className="h-4 w-4 transition-transform duration-[250ms] group-hover/link:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180"
               aria-hidden="true"
             />
           </Link>
-          <div dir="ltr" className="flex items-center gap-2">
+          <div dir="ltr" className="hidden items-center gap-2 sm:flex">
             {/* Pause/lecture : à côté des flèches sur PC, sous le carrousel sur mobile */}
-            {pauseButton('hidden sm:flex')}
-            {/* Flèches : masquées sur mobile (swipe natif) */}
+            {pauseButton('')}
             <button
               type="button"
               onClick={() => scrollByPage(-1)}
               disabled={!state.canPrev}
               aria-controls={scrollerId}
               aria-label={t.brands.previous}
-              className={cn(roundButton, 'hidden sm:flex')}
+              className={circleButton}
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -503,7 +641,7 @@ export function BrandMarquee({
               disabled={!state.canNext}
               aria-controls={scrollerId}
               aria-label={t.brands.next}
-              className={cn(roundButton, 'hidden sm:flex')}
+              className={circleButton}
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -516,7 +654,7 @@ export function BrandMarquee({
         dir="ltr"
         role="region"
         aria-label={texts.region}
-        className="relative mt-5"
+        className="relative mt-8"
         onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
         onPointerLeave={() => setHovered(false)}
         onFocus={() => setFocusInside(true)}
@@ -527,13 +665,24 @@ export function BrandMarquee({
         <ul
           id={scrollerId}
           ref={scrollerRef}
-          onPointerDown={holdAutoplay}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onClickCapture={(event) => {
+            if (!suppressClick.current) return;
+            suppressClick.current = false;
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onKeyDown={onListKeyDown}
           onWheel={holdAutoplay}
           onTouchStart={holdAutoplay}
           className={cn(
-            'flex gap-3 overflow-x-auto overscroll-x-contain py-4 ps-(--edge) pe-(--edge) scroll-ps-(--edge) [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden',
-            // Aimantation sur les cartes, sauf pendant le défilement continu (elle le bloquerait)
-            autoplayActive ? 'snap-none' : 'snap-x snap-mandatory'
+            'flex gap-3 overflow-x-auto overscroll-x-contain py-3 ps-(--edge) pe-(--edge) scroll-ps-(--edge) [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden',
+            dragging ? 'cursor-grabbing select-none' : 'sm:cursor-grab',
+            // Aimantation sur les cartes, sauf pendant le défilement continu ou un glisser (elle les bloquerait)
+            autoplayActive || dragging ? 'snap-none' : 'snap-x snap-mandatory'
           )}
         >
           {/* Cycle : série d'origine + copie inerte (masquée aux lecteurs d'écran, hors tabulation) */}
@@ -544,16 +693,18 @@ export function BrandMarquee({
                 aria-hidden={copy === 1 || undefined}
                 inert={copy === 1 || undefined}
                 className={cn(
-                  'shrink-0 snap-start',
+                  // Espacement généreux : mobile ~2,5 marques visibles ; tablette ~5 ; portable ~7 ; grand écran 8+
+                  'w-[36vw] max-w-[168px] shrink-0 snap-start sm:w-[152px] lg:w-[168px]',
                   reveal && 'animate-[cd-brand-rise_560ms_cubic-bezier(0.16,1,0.3,1)_both]'
                 )}
-                style={reveal ? { animationDelay: `${Math.min(index, 7) * 70}ms` } : undefined}
+                style={reveal ? { animationDelay: `${Math.min(index, 7) * 60}ms` } : undefined}
               >
                 <BrandCard
                   brand={brand}
                   count={vehicleCounts?.[normalizeBrandKey(brand)]}
                   loading={countsLoading}
                   kind={kind}
+                  active={activeKey !== null && normalizeBrandKey(brand) === activeKey}
                   onSelect={onBrandSelect}
                 />
               </li>
@@ -561,31 +712,31 @@ export function BrandMarquee({
           )}
         </ul>
 
-        {/* Fondus contextuels : à gauche seulement après défilement, à droite tant qu'il reste du contenu */}
+        {/* Fondus de bord discrets : signalent qu'il reste des marques de chaque côté */}
         <div
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-y-0 left-0 w-10 bg-linear-to-r from-white to-transparent transition-opacity duration-200 sm:w-16',
+            'pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-white to-transparent transition-opacity duration-[250ms] sm:w-14',
             state.canPrev ? 'opacity-100' : 'opacity-0'
           )}
         />
         <div
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-white to-transparent transition-opacity duration-200 sm:w-16',
+            'pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-white to-transparent transition-opacity duration-[250ms] sm:w-14',
             state.canNext ? 'opacity-100' : 'opacity-0'
           )}
         />
       </div>
 
-      {/* Barre de progression (décorative) ; sur mobile, précédée du bouton pause/lecture */}
+      {/* Progression (décorative) ; sur mobile, précédée du bouton pause/lecture */}
       {state.thumb < 100 && (
-        <div dir="ltr" className="mx-auto mt-3 flex max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div dir="ltr" className="mx-auto mt-6 flex max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
           {pauseButton('sm:hidden')}
-          <div aria-hidden="true" className="relative h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div aria-hidden="true" className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-[#E9EBEF]">
             <div
-              className="absolute inset-y-0 rounded-full transition-[left] duration-150 motion-reduce:transition-none"
-              style={{ width: `${state.thumb}%`, left: `${state.offset}%`, backgroundColor: COLORS.accent }}
+              className="absolute inset-y-0 rounded-full bg-[#17191D] transition-[left] duration-150 motion-reduce:transition-none"
+              style={{ width: `${state.thumb}%`, left: `${state.offset}%` }}
             />
           </div>
         </div>

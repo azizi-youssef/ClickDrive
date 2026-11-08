@@ -56,11 +56,10 @@ export const fr = {
   hero: {
     eyebrow: 'Location de voitures à Nador',
     titleLead: 'Location de voitures à Nador,',
-    titleAccent: 'sans paiement en ligne.',
+    titleAccent: 'en toute simplicité.',
     subtitle: 'Comparez les véhicules des agences partenaires à Nador, consultez les conditions en toute clarté et envoyez votre demande sans engagement immédiat.',
     ctaSearch: 'Trouver une voiture',
     ctaAgency: 'Vous êtes une agence ?',
-    badgeNoOnlinePayment: 'Aucun paiement en ligne',
     badgeVerified: 'Agences locales vérifiées',
     badgePickup: 'Aéroport Al-Aroui & port de Beni Ansar',
     howItWorks: 'Comment ça marche ?',
@@ -129,6 +128,8 @@ export const fr = {
     motoOne: '{count} moto',
     motoMany: '{count} motos',
     motoCardLabel: 'Voir les motos {brand}',
+    description: 'Les constructeurs proposés par les agences partenaires de Nador.',
+    motoDescription: 'Scooters, roadsters et trails proposés par les agences partenaires.',
   },
   cookie: {
     title: 'Paramètres des cookies',
