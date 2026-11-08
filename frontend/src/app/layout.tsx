@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import Script from 'next/script';
 import { getServerLocale } from '@/lib/i18n/server';
 
 import './globals.css';
@@ -191,32 +190,7 @@ export default async function RootLayout({
       className={`h-full scroll-smooth ${plusJakartaSans.variable}${dir === 'rtl' ? ' is-rtl' : ''}`}
       suppressHydrationWarning
     >
-      <head>
-        {/*
-          Nettoyage des attributs injectés par les extensions navigateur (ex. Bitdefender « bis_skin_checked »)
-          avant l'hydratation React. next/script (beforeInteractive) l'insère dans le HTML initial et l'exécute
-          avant le code de l'application ; contrairement à une balise <script> brute, React ne le re-rend jamais
-          côté client (plus d'avertissement « Encountered a script tag »).
-        */}
-        <Script id="strip-extension-attributes" strategy="beforeInteractive">
-          {`(function () {
-  try {
-    var clean = function () {
-      var els = document.querySelectorAll('[bis_skin_checked]');
-      for (var i = 0; i < els.length; i++) els[i].removeAttribute('bis_skin_checked');
-    };
-    clean();
-    if (typeof MutationObserver !== 'undefined') {
-      new MutationObserver(clean).observe(document.documentElement, {
-        attributes: true,
-        subtree: true,
-        attributeFilter: ['bis_skin_checked'],
-      });
-    }
-  } catch (e) {}
-})();`}
-        </Script>
-      </head>
+      {/* Nettoyage des attributs d'extensions navigateur avant l'hydratation : voir src/instrumentation-client.ts */}
       <body
         className="flex min-h-full flex-col bg-canvas font-sans text-ink antialiased selection:bg-action selection:text-white"
         suppressHydrationWarning

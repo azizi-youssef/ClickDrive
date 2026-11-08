@@ -876,7 +876,7 @@ export function Navbar() {
             <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
 
             <a
-              href="https://wa.me/212661987654?text=Bonjour%2C%20je%20souhaite%20louer%20un%20v%C3%A9hicule%20%C3%A0%20Nador"
+              href="https://wa.me/212767137136?text=Bonjour%2C%20je%20souhaite%20louer%20un%20v%C3%A9hicule%20%C3%A0%20Nador"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
@@ -1801,7 +1801,7 @@ export function Navbar() {
 
               {/* Direct WhatsApp Support */}
               <a
-                href="https://wa.me/212661987654?text=Bonjour%2C%20je%20veux%20louer%20une%20voiture%20%C3%A0%20Nador"
+                href="https://wa.me/212767137136?text=Bonjour%2C%20je%20veux%20louer%20une%20voiture%20%C3%A0%20Nador"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold text-emerald-800 transition-colors hover:bg-emerald-100"

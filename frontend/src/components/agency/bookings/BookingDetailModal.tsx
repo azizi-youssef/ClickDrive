@@ -204,16 +204,9 @@ export function BookingDetailModal({
           <h3 className="mb-2 text-sm font-bold text-[#0F172A]">Montants</h3>
           <dl>
             <Row label="Montant total" value={money(loaded.total_price)} />
-            <Row
-              label={`Taux de commission${loaded.commission_rate ? ` (${loaded.commission_rate} %)` : ''}`}
-              value={money(loaded.commission_amount)}
-            />
             <Row label="Net agence" value={money(loaded.agency_amount)} />
           </dl>
-          <p className="mt-2 text-xs text-[#64748B]">
-            Montants et taux figes au moment de la demande. Le taux global de la plateforme ne peut
-            pas etre modifie par l'agence.
-          </p>
+          <p className="mt-2 text-xs text-[#64748B]">Montants figés au moment de la demande.</p>
         </section>
 
         {canAct && actions.includes('reject') && (

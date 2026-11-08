@@ -91,11 +91,14 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
   const initialStartDate = searchParams.get('startDate') || '';
   const initialEndDate = searchParams.get('endDate') || '';
   const initialLocation = searchParams.get('location') || '';
+  // Recherche libre par marque ou modèle (?q=…), par exemple depuis la page 404
+  const initialQuery = (searchParams.get('q') || '').trim().slice(0, 60);
 
   const [filters, setFilters] = useState<CatalogFilterState>({
     ...DEFAULT_FILTERS,
     category: initialCategory,
     brand: initialBrand,
+    brandQuery: initialQuery,
   });
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   // Mobile : formulaire de recherche replié en un résumé, pour afficher les véhicules dès le premier écran

@@ -28,11 +28,8 @@ export type TransactionItem = {
   customerName: string;
   vehicle: string;
   totalPrice: number;
-  commissionRate: number;
-  commissionAmount: number;
   agencyAmount: number;
   status: string;
-  commissionStatus: string;
 };
 
 export type FinanceData = {
@@ -94,11 +91,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       'Client',
       'Véhicule',
       'Montant Brut (MAD)',
-      'Taux Comm (%)',
-      'Commission ClickDrive (MAD)',
       'Net Agence (MAD)',
       'Statut Réservation',
-      'Statut Commission',
     ];
     const rows = data.transactions.map((t) => [
       t.reference,
@@ -106,11 +100,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       `"${t.customerName.replace(/"/g, '""')}"`,
       `"${t.vehicle.replace(/"/g, '""')}"`,
       t.totalPrice,
-      t.commissionRate,
-      t.commissionAmount,
       t.agencyAmount,
       t.status,
-      t.commissionStatus,
     ]);
 
     const csvContent =
@@ -203,7 +194,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
           <h3 className="font-bold text-slate-900">Grand livre des réservations</h3>
           <p className="text-xs text-slate-500">
-            Relevé exhaustif des commissions et répartitions financières certifiées par ClickDrive.
+            Relevé de vos réservations et des montants associés.
           </p>
         </div>
 
@@ -225,7 +216,6 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                   <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3">Véhicule</th>
                   <th className="px-4 py-3 text-right">Montant Brut</th>
-                  <th className="px-4 py-3 text-right">Commission (0%)</th>
                   <th className="px-4 py-3 text-right">Part Agence</th>
                   <th className="px-4 py-3 text-center">Statut</th>
                 </tr>
@@ -241,9 +231,6 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                     <td className="px-4 py-3 text-slate-600">{t.vehicle}</td>
                     <td className="px-4 py-3 text-right font-semibold text-slate-900">
                       {formatPrice(t.totalPrice)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-accent-text">
-                      -{formatPrice(t.commissionAmount)}
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-emerald-600">
                       {formatPrice(t.agencyAmount)}

@@ -4,7 +4,7 @@
  */
 
 /** Numéro WhatsApp de la plateforme (format international, sans « + » ni espaces) */
-export const CLICKDRIVE_WHATSAPP_NUMBER = '212661987654';
+export const CLICKDRIVE_WHATSAPP_NUMBER = '212767137136';
 
 export function clickdriveWhatsAppUrl(message?: string): string {
   const base = `https://wa.me/${CLICKDRIVE_WHATSAPP_NUMBER}`;
