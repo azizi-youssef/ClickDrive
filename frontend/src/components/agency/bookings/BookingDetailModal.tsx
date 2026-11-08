@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, XCircle } from 'lucide-react';
-import { canPerformAgencyBookingAction } from '@klickdrive/shared';
+import { canPerformAgencyBookingAction } from '@clickdrive/shared';
 import { cn } from '@/lib/utils';
 import { button } from '@/lib/design/tokens';
 import { Modal } from '@/components/agency/shell/Dialog';
@@ -33,7 +33,7 @@ export type BookingAction = 'approve' | 'reject' | 'propose_alternative';
 
 /**
  * Transitions autorisées par la machine à états partagée.
- * Le composant ne décide jamais d'une transition : il consulte @klickdrive/shared.
+ * Le composant ne décide jamais d'une transition : il consulte @clickdrive/shared.
  */
 export function allowedActions(status: string): BookingAction[] {
   const actions: BookingAction[] = [];

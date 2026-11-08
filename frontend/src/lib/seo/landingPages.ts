@@ -18,13 +18,13 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-nador': {
     slug: 'location-voiture-nador',
     h1: 'Location de Voiture à Nador — Meilleur Prix & Comparateur Multi-Agences',
-    title: 'Location Voiture Nador Pas Cher dès 250 DH/jour | KlickDrive',
+    title: 'Location Voiture Nador Pas Cher dès 250 DH/jour | ClickDrive',
     metaDescription: 'Comparez en direct les disponibilités des agences de location à Nador. Dacia, Renault, SUV, automatiques avec livraison aéroport & centre-ville sans mauvaise surprise.',
     keywords: ['location voiture nador', 'location voiture nador pas cher', 'rent a car nador', 'agences location nador'],
     zoneName: 'Nador Centre & Marchica',
     zoneType: 'city',
     introTitle: 'Trouvez et réservez votre voiture à Nador auprès d’agences vérifiées',
-    introText: 'KlickDrive révolutionne la location de véhicules à Nador en rassemblant sous un même toit les meilleures flottes locales : Nador Auto Rent, Rif Car Luxury, Marchica Drive et Atlas Car. Comparez les tarifs réels, visualisez les modèles exacts et réservez sans acompte abusif.',
+    introText: 'ClickDrive révolutionne la location de véhicules à Nador en rassemblant sous un même toit les meilleures flottes locales : Nador Auto Rent, Rif Car Luxury, Marchica Drive et Atlas Car. Comparez les tarifs réels, visualisez les modèles exacts et réservez sans acompte abusif.',
     defaultLocation: 'Centre-Ville Nador (Boulevard Mohammed V)',
     faqs: [
       {
@@ -45,13 +45,13 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-nador-aeroport': {
     slug: 'location-voiture-nador-aeroport',
     h1: 'Location Voiture Aéroport Nador Al-Aroui (NDR) — Accueil VIP & Clés en main',
-    title: 'Location Voiture Nador Aéroport (NDR) — Livraison Direct Terminal | KlickDrive',
+    title: 'Location Voiture Nador Aéroport (NDR) — Livraison Direct Terminal | ClickDrive',
     metaDescription: 'Réservez votre voiture livrée dès votre atterrissage à l’Aéroport Nador Al-Aroui (NDR). Pas de file d’attente, agences locales contrôlées, assistance locale par WhatsApp.',
     keywords: ['location voiture nador aeroport', 'car rental nador airport', 'aeroport al aroui voiture', 'location auto aéroport nador'],
     zoneName: 'Aéroport Nador Al-Aroui (NDR)',
     zoneType: 'airport',
     introTitle: 'Votre véhicule prêt dès la sortie du terminal des arrivées',
-    introText: 'Finies les files d’attente aux guichets d’aéroport après votre vol. Un agent partenaire KlickDrive vous attend avec une pancarte à votre nom dans le hall des arrivées de l’Aéroport Al-Aroui (NDR). Faites l’état des lieux en 5 minutes et prenez la route sans stress.',
+    introText: 'Finies les files d’attente aux guichets d’aéroport après votre vol. Un agent partenaire ClickDrive vous attend avec une pancarte à votre nom dans le hall des arrivées de l’Aéroport Al-Aroui (NDR). Faites l’état des lieux en 5 minutes et prenez la route sans stress.',
     defaultLocation: 'Aéroport Nador Al-Aroui (NDR)',
     faqs: [
       {
@@ -60,7 +60,7 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
       },
       {
         question: 'Y a-t-il des frais supplémentaires pour une livraison tardive ?',
-        answer: 'La plupart des agences KlickDrive n’appliquent aucun supplément pour les vols réguliers en soirée. Tout est transparent dès la confirmation.',
+        answer: 'La plupart des agences ClickDrive n’appliquent aucun supplément pour les vols réguliers en soirée. Tout est transparent dès la confirmation.',
       },
     ],
   },
@@ -68,7 +68,7 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-beni-ansar': {
     slug: 'location-voiture-beni-ansar',
     h1: 'Location Voiture Port de Beni Ansar — Ferry & Gare Maritime Nador',
-    title: 'Location Voiture Beni Ansar Port Nador | Prise en Charge Ferry KlickDrive',
+    title: 'Location Voiture Beni Ansar Port Nador | Prise en Charge Ferry ClickDrive',
     metaDescription: 'Louez votre voiture à l’arrivée du ferry au Port de Beni Ansar (Nador). Idéal pour les MRE et voyageurs arrivant d’Almería, Motril ou Sète.',
     keywords: ['location voiture beni ansar', 'location voiture port nador', 'ferry beni ansar car rental'],
     zoneName: 'Port de Beni Ansar (Ferry)',
@@ -87,7 +87,7 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-nador-suv': {
     slug: 'location-voiture-nador-suv',
     h1: 'Location SUV à Nador — Dacia Duster, Hyundai Tucson & 4x4',
-    title: 'Location SUV Nador — Duster, Tucson dès 340 DH | KlickDrive',
+    title: 'Location SUV Nador — Duster, Tucson dès 340 DH | ClickDrive',
     metaDescription: 'Découvrez notre sélection de SUV robustes et confortables à Nador. Idéal pour explorer la côte de Marchica, Gourougou, Ras Kebdana et l’Oriental.',
     keywords: ['location suv nador', 'dacia duster nador', 'location 4x4 nador', 'tucson nador'],
     zoneName: 'Nador & Région',
@@ -106,7 +106,7 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-nador-automatique': {
     slug: 'location-voiture-nador-automatique',
     h1: 'Location Voiture Automatique à Nador — Conduite fluide & Zéro fatigue',
-    title: 'Location Voiture Boîte Automatique Nador | KlickDrive',
+    title: 'Location Voiture Boîte Automatique Nador | ClickDrive',
     metaDescription: 'Large choix de voitures à boîte automatique à Nador : citadines, berlines et SUV. Réservez en ligne avec confirmation rapide.',
     keywords: ['location voiture automatique nador', 'boite auto nador', 'location dsg edc nador'],
     zoneName: 'Nador Ville & Aéroports',

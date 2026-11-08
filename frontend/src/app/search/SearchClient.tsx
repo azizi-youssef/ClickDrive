@@ -18,7 +18,7 @@ import {
 import { apiFetch } from '@/lib/api/client';
 import { formatLocalDate, getEffectiveRentalDates } from '@/lib/utils/date-only';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
-import { formatNumber } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 import type { Vehicle, Agency } from '@/types';
 import { catalogFacets, sortByRelevance, RELEVANCE_EXPLANATION } from '@/lib/catalog/discovery';
 import { CATALOG_PATHS, VEHICLE_TYPE_LABELS, vehicleTypeOf, type VehicleType } from '@/lib/vehicles/kind';
@@ -29,13 +29,22 @@ import {
   ArrowUpDown,
   CalendarDays,
   Car,
+  ChevronDown,
   ChevronRight,
   MapPin,
   Motorbike,
   RefreshCw,
+  Search,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
+
+/** « 2026-11-08 » → « 8 nov. » (date locale, sans décalage de fuseau) */
+function shortDate(value: string): string {
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return value;
+  return new Date(year, month - 1, day).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
 
 // « Meilleures agences » retiré : il triait sur une note par défaut, sans avis réels
 type SortOption = 'price_asc' | 'price_desc' | 'featured';
@@ -80,6 +89,8 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
     brand: initialBrand,
   });
   const [sortBy, setSortBy] = useState<SortOption>('featured');
+  // Mobile : formulaire de recherche replié en un résumé, pour afficher les véhicules dès le premier écran
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Préchargés côté serveur quand c'est possible (résultats présents dès le HTML)
@@ -323,7 +334,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
 
           <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-on-dark">
             <span className="h-px w-6 bg-[#E63946]" aria-hidden="true" />
-            Catalogue KlickDrive
+            Catalogue ClickDrive
           </p>
           <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
             {isMotoView ? 'Location de moto à Nador' : 'Location de voiture à Nador'}
@@ -373,6 +384,33 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
 
       <div className="relative z-10 mx-auto -mt-14 max-w-[1360px] px-4 sm:px-6 lg:-mt-16 lg:px-8">
         <div className="rounded-2xl bg-white p-2 shadow-[0_18px_50px_-20px_rgba(11,18,32,0.35)] ring-1 ring-slate-200/70 sm:p-2.5">
+          {/* Mobile : résumé de la recherche (lieu, dates) ; le formulaire complet s'ouvre à la demande */}
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen((open) => !open)}
+            aria-expanded={mobileSearchOpen}
+            aria-controls="catalog-search-form"
+            className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] sm:hidden"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text" aria-hidden="true">
+              <Search className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-bold text-[#0B1220]">{locationLabel}</span>
+              <span className="block truncate text-[13px] text-slate-600">
+                {hasPeriod ? `${shortDate(searchPeriod.startDate)} → ${shortDate(searchPeriod.endDate)}` : 'Dates flexibles'}
+                {filters.category && filters.category !== ALL_CATEGORIES ? ` · ${filters.category}` : ''}
+              </span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-[#0B1220]">
+              {mobileSearchOpen ? 'Fermer' : 'Modifier'}
+              <ChevronDown
+                className={cn('h-4 w-4 transition-transform motion-reduce:transition-none', mobileSearchOpen && 'rotate-180')}
+                aria-hidden="true"
+              />
+            </span>
+          </button>
+          <div id="catalog-search-form" className={cn(mobileSearchOpen ? 'mt-2 block' : 'hidden', 'sm:mt-0 sm:block')}>
           <SearchBar
             initialLocation={initialLocation || undefined}
             initialStartDate={initialStartDate}
@@ -383,6 +421,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
             categories={categoryOptions}
             basePath={CATALOG_PATHS[vehicleType]}
           />
+          </div>
         </div>
       </div>
 
@@ -427,8 +466,12 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     {hasPeriod
                       ? 'Seuls les véhicules libres sur toute votre période sont affichés.'
                       : 'Statut du jour affiché. Lancez la recherche avec vos dates pour vérifier la disponibilité sur votre période.'}
+                    {/* Explication du classement : visible sur tablette et ordinateur ; sur mobile, elle est
+                        lue par les lecteurs d'écran mais ne repousse pas les résultats sous le premier écran */}
                     {sortBy === 'featured' && (
-                      <span className="block text-xs text-ink-secondary">Classement : {RELEVANCE_EXPLANATION}</span>
+                      <span className="sr-only sm:not-sr-only sm:block sm:text-xs sm:text-ink-secondary">
+                        Classement : {RELEVANCE_EXPLANATION}
+                      </span>
                     )}
                   </p>
                 )}
@@ -438,7 +481,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                 <button
                   type="button"
                   onClick={() => setMobileFilterOpen(true)}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 sm:flex-none lg:hidden"
+                  className="inline-flex h-11 flex-none items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 sm:flex-none lg:hidden"
                 >
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                   Filtres

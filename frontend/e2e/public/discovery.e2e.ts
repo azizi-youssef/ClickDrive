@@ -73,7 +73,7 @@ test.describe('Fiche véhicule', () => {
     expect(response.status()).toBe(200);
     const html = await response.text();
     expect(html).toMatch(/<h1[^>]*>[^<]+/);
-    expect(html).toContain(`rel="canonical" href="https://klickdrive.ma${href}"`);
+    expect(html).toContain(`rel="canonical" href="https://clickdrive.ma${href}"`);
     expect(html).toMatch(/"@type":"(Car|Motorcycle)"/);
     expect(html).toContain('"@type":"BreadcrumbList"');
     // Aucun champ interne exposé

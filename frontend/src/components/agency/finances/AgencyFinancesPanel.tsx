@@ -95,7 +95,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       'Véhicule',
       'Montant Brut (MAD)',
       'Taux Comm (%)',
-      'Commission KlickDrive (MAD)',
+      'Commission ClickDrive (MAD)',
       'Net Agence (MAD)',
       'Statut Réservation',
       'Statut Commission',
@@ -119,7 +119,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `klickdrive_finances_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `clickdrive_finances_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -131,7 +131,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-slate-500">
-            Modèle par abonnement mensuel : <strong>0% de commission KlickDrive</strong>. Vous conservez 100% de vos montants de location.
+            Modèle par abonnement mensuel : <strong>0% de commission ClickDrive</strong>. Vous conservez 100% de vos montants de location.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
           <h3 className="font-bold text-slate-900">Grand livre des réservations</h3>
           <p className="text-xs text-slate-500">
-            Relevé exhaustif des commissions et répartitions financières certifiées par KlickDrive.
+            Relevé exhaustif des commissions et répartitions financières certifiées par ClickDrive.
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-import { agencyBookingActionSchema } from '@klickdrive/shared';
+import { agencyBookingActionSchema } from '@clickdrive/shared';
 import { serverError } from '@/lib/api/server-error';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';

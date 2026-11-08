@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
   return (
     <AdminShell
       title="Vue d'ensemble"
-      subtitle="Activité de la marketplace KlickDrive — Nador & Oriental"
+      subtitle="Activité de la marketplace ClickDrive — Nador & Oriental"
     >
       <Suspense
         fallback={

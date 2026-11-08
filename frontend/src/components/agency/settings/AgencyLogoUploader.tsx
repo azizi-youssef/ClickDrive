@@ -50,7 +50,7 @@ export function AgencyLogoUploader({
       }
       onUploaded(result.data[field]);
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('klickdrive:profile-updated'));
+        window.dispatchEvent(new CustomEvent('clickdrive:profile-updated'));
       }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'Échec du téléversement.');

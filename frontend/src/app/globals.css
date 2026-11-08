@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ================================================================
-   KlickDrive — Design system (source unique des couleurs et arrondis)
+   ClickDrive — Design system (source unique des couleurs et arrondis)
    ================================================================
    Les jetons ci-dessous sont exposés à Tailwind (@theme) :
    bg-action, text-ink-secondary, border-line, bg-success-soft…
@@ -684,4 +684,46 @@ nav[aria-label="Breadcrumb"] a {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ── Mobile : champs de saisie à 16 px minimum ─────────────────────────────
+   En dessous de 16 px, Safari iOS agrandit la page au focus d'un champ et ne la
+   rétablit pas ensuite. Les champs déjà plus grands (text-base, text-lg…) gardent
+   leur taille. Règle hors couche : elle prime sur les utilitaires Tailwind. */
+@media (max-width: 767px), (pointer: coarse) {
+  :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):not(
+      .text-base,
+      .text-lg,
+      .text-xl,
+      .text-2xl,
+      .text-3xl
+    ) {
+    font-size: 16px;
+  }
+}
+
+/* ── Zone tactile de 44 × 44 px sans changer l'apparence ──────────────────
+   Pour les boutons d'icône compacts (en-tête mobile) : la zone cliquable est
+   agrandie par un pseudo-élément centré, le dessin du bouton reste identique. */
+.tap-44 {
+  position: relative;
+}
+.tap-44::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+[dir='rtl'] .tap-44::after {
+  transform: translate(50%, -50%);
+}
+
+/* ── Barre d'action fixe en bas d'écran (fiche véhicule, mobile) ──────────
+   --cd-bottom-bar est publiée par la barre elle-même (0 quand elle est masquée) :
+   la fin de la page reste lisible au-dessus d'elle. */
+body {
+  padding-bottom: var(--cd-bottom-bar, 0px);
 }

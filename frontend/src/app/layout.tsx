@@ -6,9 +6,9 @@ import { getServerLocale } from '@/lib/i18n/server';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
 
-const SITE_URL = 'https://klickdrive.ma';
-const SITE_NAME = 'KlickDrive';
-const SITE_TITLE = 'KlickDrive — Location de voitures à Nador';
+const SITE_URL = 'https://clickdrive.ma';
+const SITE_NAME = 'ClickDrive';
+const SITE_TITLE = 'ClickDrive — Location de voitures à Nador';
 const SITE_DESCRIPTION =
   "Trouvez et comparez des voitures de location à Nador auprès d'agences locales. Recherchez par dates, catégorie et destination : aéroport Nador-Al Aroui, Beni Ansar, Nador et Marchica.";
 
@@ -132,7 +132,7 @@ const jsonLd = {
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'contact@klickdrive.ma',
+        email: 'contact@clickdrive.ma',
         availableLanguage: ['French', 'Arabic'],
       },
       priceRange: '$$',

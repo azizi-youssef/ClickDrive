@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPlatformAdminRole } from '@klickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared';
 import { isPublicLoginPath, loginUrl, type LoginPortal } from '@/lib/auth/login-portals';
 
 /**

@@ -5,7 +5,7 @@ import { requireAgencyPermissionApi } from '@/lib/auth/access-api';
 import type { SearchFilters } from '@/types';
 import { isValidDateOnly } from '@/lib/utils/date-only';
 import { getServerAuth } from '@/lib/auth/server';
-import { isPlatformAdminRole } from '@klickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared';
 import { toPublicVehicles } from '@/lib/vehicles/public';
 
 /** Taille maximale d'une page de résultats (aucune requête non bornée) */

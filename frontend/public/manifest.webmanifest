@@ -1,6 +1,6 @@
 {
-  "name": "KlickDrive — Location de voitures à Nador",
-  "short_name": "KlickDrive",
+  "name": "ClickDrive — Location de voitures à Nador",
+  "short_name": "ClickDrive",
   "description": "Trouvez et comparez des voitures de location à Nador auprès d'agences locales vérifiées. Recherchez par dates, catégorie et destination.",
   "start_url": "/",
   "scope": "/",
@@ -16,7 +16,7 @@
       "src": "/UI.png",
       "sizes": "900x600",
       "type": "image/png",
-      "label": "Accueil KlickDrive"
+      "label": "Accueil ClickDrive"
     }
   ],
   "shortcuts": [

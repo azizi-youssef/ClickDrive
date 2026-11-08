@@ -48,7 +48,7 @@ export function FleetCapacityCard({ subscription, loading, onOpenUpgradeModal }:
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
               <ShieldCheck className="h-3.5 w-3.5" />
-              0% de commission KlickDrive
+              0% de commission ClickDrive
             </span>
             {is_at_capacity && (
               <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 animate-pulse">

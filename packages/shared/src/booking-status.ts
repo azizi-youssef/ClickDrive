@@ -1,4 +1,4 @@
-/** Statuts canoniques du cycle de vie réservation (marketplace KlickDrive). */
+/** Statuts canoniques du cycle de vie réservation (marketplace ClickDrive). */
 export const BOOKING_STATUSES = [
   'REQUESTED',
   'UNDER_REVIEW',

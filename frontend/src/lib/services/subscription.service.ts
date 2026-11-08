@@ -6,7 +6,7 @@ import {
   SubscriptionStatus,
 } from '@/types';
 
-/** Grille tarifaire officielle KlickDrive par capacité de flotte */
+/** Grille tarifaire officielle ClickDrive par capacité de flotte */
 export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'plan-starter',
@@ -43,7 +43,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     features: [
       'De 15 à 25 véhicules actifs au catalogue',
       '0% de commission sur toutes les réservations',
-      'Mise en avant prioritaire sur le moteur de recherche KlickDrive',
+      'Mise en avant prioritaire sur le moteur de recherche ClickDrive',
       "Suivi opérationnel simple de la flotte",
       'Gestion multi-utilisateurs (propriétaire & collaborateurs)',
       'Support prioritaire 7j/7',
@@ -66,7 +66,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       '0% de commission sur toutes les réservations',
       'Badge Concessionnaire Officiel Vérifié',
       'Export comptable automatisé et facturation proforma',
-      'Gestionnaire de compte KlickDrive dédié',
+      'Gestionnaire de compte ClickDrive dédié',
       'Notifications WhatsApp immédiates pour chaque réservation',
     ],
   },
@@ -331,7 +331,7 @@ class SubscriptionService {
   }
 
   /**
-   * Vue globale pour l'administration KlickDrive.
+   * Vue globale pour l'administration ClickDrive.
    */
   async getAllAgencySubscriptions(): Promise<AgencySubscription[]> {
     const supabase = (await createAdminClient()) ?? (await createClient());

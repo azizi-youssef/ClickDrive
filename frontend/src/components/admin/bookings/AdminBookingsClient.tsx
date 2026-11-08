@@ -44,7 +44,7 @@ const STATUS_OPTIONS = [
 ];
 
 function csvExport(rows: Booking[]) {
-  const header = ['Dossier', 'Client', 'Email', 'Téléphone', 'Véhicule', 'Agence', 'Début', 'Fin', 'Jours', 'Montant (100% agence)', 'Commission KlickDrive', 'Statut', 'Créé le'];
+  const header = ['Dossier', 'Client', 'Email', 'Téléphone', 'Véhicule', 'Agence', 'Début', 'Fin', 'Jours', 'Montant (100% agence)', 'Commission ClickDrive', 'Statut', 'Créé le'];
   const lines = rows.map((b) =>
     [
       b.booking_ref ?? b.reference ?? '',
@@ -69,7 +69,7 @@ function csvExport(rows: Booking[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `klickdrive-reservations-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `clickdrive-reservations-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

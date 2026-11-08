@@ -208,7 +208,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
             <div>
               <h2 id="add-agency-title" className="text-lg font-bold text-slate-900">Ajouter une nouvelle agence</h2>
               <p className="text-xs text-slate-500">
-                Créez l'agence partenaire et configurez son compte d'accès KlickDrive
+                Créez l'agence partenaire et configurez son compte d'accès ClickDrive
               </p>
             </div>
           </div>
@@ -351,7 +351,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                     <Compass className="h-3.5 w-3.5 text-slate-500" />
-                    <span>Coordonnées GPS (Carte KlickDrive)</span>
+                    <span>Coordonnées GPS (Carte ClickDrive)</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[11px] text-slate-500">Préréglages :</span>
@@ -424,7 +424,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
                     Email de connexion officiel <span className="text-red-500">*</span>
                   </label>
                   <span className="text-[11px] text-slate-500">
-                    Format : <span className="font-mono text-amber-900">nom.agence@Klickdrive.ma</span>
+                    Format : <span className="font-mono text-amber-900">nom.agence@Clickdrive.ma</span>
                   </span>
                 </div>s
                 <input

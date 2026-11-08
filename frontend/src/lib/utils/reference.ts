@@ -1,5 +1,5 @@
 /**
- * KlickDrive Unique Booking Reference Generator
+ * ClickDrive Unique Booking Reference Generator
  * Format: CD-YYYY-XXXXXX (e.g. CD-2026-001842)
  * Easily readable, memorable, clean for WhatsApp and PDF invoices.
  */

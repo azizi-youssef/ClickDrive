@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BOOKING_STATUSES } from '@klickdrive/shared';
+import { BOOKING_STATUSES } from '@clickdrive/shared';
 import { bookingStatusLabel, bookingStatusTone, bookingTimeline, bookingNextStepHint } from '../lib/bookings/status';
 
 const LOCALES = ['fr', 'ar', 'es', 'de', 'nl'] as const;

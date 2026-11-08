@@ -1,4 +1,4 @@
-# KlickDrive — Audit UI/UX (phase 1)
+# ClickDrive — Audit UI/UX (phase 1)
 
 *Date : 4 novembre 2026 · Commit audité : `cebe3f8` · Arbre de travail propre.*
 
@@ -52,10 +52,10 @@
 | M4 | Cibles < 24 px : liens de la barre supérieure (17 px de haut), fils d'Ariane (16 px), liens e-mail CGV/contact (18 px), raccourcis agences du footer (22 px). | Mesuré, toutes largeurs ≥ 768 px. |
 | M5 | Textes < 11 px : 31 sur l'accueil (étiquettes de catégories en 10 px, « / jour » en 9 px), 11 sur le catalogue et les pages SEO. | Mesuré. |
 | M6 | Photographie : 10 véhicules sur 11 n'ont qu'une photo ; certaines sont des visuels avec texte (« CLIO5 », « TUCSON ») plutôt que des photos du véhicule. | API + catalogue. |
-| M7 | Accueil très long (~8 900 px à 1366 px) avec messages en double : encart « KlickDrive pour les professionnels » puis encart agence identique en tête du footer. | Rendu. |
+| M7 | Accueil très long (~8 900 px à 1366 px) avec messages en double : encart « ClickDrive pour les professionnels » puis encart agence identique en tête du footer. | Rendu. |
 | M8 | `/api/auth/me` appelé deux fois à chaque page. | Ressources réseau. |
 | M9 | `/agencies/[slug]` déborde de 1 px à 360 px. | Mesuré. |
-| M10 | Page de connexion : « © 2026 KlickDrive » à 2,86:1, séparateur « ou » à 3,10:1. | Mesuré. |
+| M10 | Page de connexion : « © 2026 ClickDrive » à 2,86:1, séparateur « ou » à 3,10:1. | Mesuré. |
 
 ### Faible
 

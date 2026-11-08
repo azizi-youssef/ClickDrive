@@ -1,4 +1,4 @@
-# 🚗 KlickDrive — Marketplace de Location de Voitures à Nador
+# 🚗 ClickDrive — Marketplace de Location de Voitures à Nador
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -6,17 +6,17 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-Proprietary-E63946?style=for-the-badge)]()
 
-**KlickDrive** est une plateforme SaaS & Marketplace automobile nouvelle génération conçue pour moderniser et sécuriser la location de véhicules à Nador et dans la région de l'Oriental (Aéroport Nador Al-Aroui, Port Beni Ansar, Centre-Ville, Marchica).
+**ClickDrive** est une plateforme SaaS & Marketplace automobile nouvelle génération conçue pour moderniser et sécuriser la location de véhicules à Nador et dans la région de l'Oriental (Aéroport Nador Al-Aroui, Port Beni Ansar, Centre-Ville, Marchica).
 
 Elle connecte les voyageurs et résidents aux agences locales vérifiées avec un système de disponibilité en temps réel, un moteur de réservation avec protection anti double-booking, la génération instantanée de contrats PDF officiels, la transmission automatisée sur WhatsApp et des espaces de gestion complets (Agences & Super-Admin).
 
 ---
 
 <p align="center">
-  <img src="frontend/public/UI.png" alt="Aperçu de l'interface KlickDrive" width="900" style="border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
+  <img src="frontend/public/UI.png" alt="Aperçu de l'interface ClickDrive" width="900" style="border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);" />
 </p>
 
-<p align="center"><em>Aperçu de la Marketplace KlickDrive — Expérience utilisateur moderne, rapide et responsive</em></p>
+<p align="center"><em>Aperçu de la Marketplace ClickDrive — Expérience utilisateur moderne, rapide et responsive</em></p>
 
 ---
 
@@ -52,7 +52,7 @@ Elle connecte les voyageurs et résidents aux agences locales vérifiées avec u
 Le projet est structuré sous forme de monorepo moderne géré par `npm workspaces` :
 
 ```
-KlickDrive/
+ClickDrive/
 ├── frontend/                     # Application principale Next.js 16 (App Router)
 │   ├── public/                   # Images des véhicules, logos, visuels des lieux
 │   ├── src/
@@ -78,7 +78,7 @@ KlickDrive/
 │   ├── .env.local                # Configuration locale frontend
 │   └── package.json
 │
-├── packages/shared/              # Package partagé @klickdrive/shared
+├── packages/shared/              # Package partagé @clickdrive/shared
 │   ├── src/
 │   │   ├── booking-status.ts     # Statuts canoniques, statuts bloquants & transitions
 │   │   ├── permissions.ts        # RBAC & permissions (AGENCY_OWNER, STAFF, SUPER_ADMIN)
@@ -146,8 +146,8 @@ Le système s'appuie sur une fonction PostgreSQL dédiée (`vehicle_availability
 
 ### 1. Cloner le Répertoire
 ```bash
-git clone https://github.com/azizi-youssef/KlickDrive.git
-cd KlickDrive
+git clone https://github.com/azizi-youssef/ClickDrive.git
+cd ClickDrive
 ```
 
 ### 2. Installer les Dépendances du Monorepo
@@ -205,5 +205,5 @@ L'application est accessible sur : **`http://localhost:3000`**
 
 ## 👥 Auteur & Contribution
 
-Développé par **[Youssef Azizi](https://github.com/azizi-youssef)** — KlickDrive.
+Développé par **[Youssef Azizi](https://github.com/azizi-youssef)** — ClickDrive.
 Pour toute question, partenariat agence ou signalement de bug, n'hésitez pas à ouvrir une issue ou à contacter l'équipe support locale à Nador.

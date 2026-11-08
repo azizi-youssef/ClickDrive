@@ -1,7 +1,7 @@
 {
-  "name": "klickdrive-backend",
+  "name": "clickdrive-backend",
   "version": "1.0.0",
-  "description": "KlickDrive REST API — Express.js",
+  "description": "ClickDrive REST API — Express.js",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -11,7 +11,7 @@
     "test:rate-limit": "node scripts/test-rate-limit.mjs"
   },
   "dependencies": {
-    "@klickdrive/shared": "1.0.0",
+    "@clickdrive/shared": "1.0.0",
     "@supabase/supabase-js": "^2.117.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

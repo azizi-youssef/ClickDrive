@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverError } from '@/lib/api/server-error';
-import { isPlatformAdminRole } from '@klickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared';
 import { requireAgencyPortalApi } from '@/lib/auth/agency-api';
 import { agenciesService } from '@/lib/services/agencies.service';
 import { vehiclesService } from '@/lib/services/vehicles.service';

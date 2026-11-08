@@ -5,7 +5,7 @@ import { whatsappService } from './whatsapp.service';
 
 /**
  * ========================================================================
- * Service Delivery & Remise de Véhicule — KlickDrive
+ * Service Delivery & Remise de Véhicule — ClickDrive
  * Gère l'organisation des rendez-vous de livraison (Aéroport, Port, Agence),
  * l'enregistrement digital de l'état des lieux (checklists, kilométrage, carburant)
  * et la validation sécurisée du départ et de la restitution.

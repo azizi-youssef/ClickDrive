@@ -47,7 +47,7 @@ export default function NotFound() {
     <div
       className={`relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-[#F3F5F7] px-5 py-16 font-sans text-slate-900`}
     >
-      <style>{`@keyframes klickdrive-drive{from{transform:translateX(-25vw)}to{transform:translateX(125vw)}}`}</style>
+      <style>{`@keyframes clickdrive-drive{from{transform:translateX(-25vw)}to{transform:translateX(125vw)}}`}</style>
 
       {/* Route */}
       <div
@@ -63,7 +63,7 @@ export default function NotFound() {
       {/* Voiture : animée uniquement si le mouvement est autorisé */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[calc(14%+4px)] left-0 hidden motion-safe:block motion-safe:animate-[klickdrive-drive_16s_linear_infinite]"
+        className="pointer-events-none absolute bottom-[calc(14%+4px)] left-0 hidden motion-safe:block motion-safe:animate-[clickdrive-drive_16s_linear_infinite]"
       >
         <CarSilhouette />
       </div>

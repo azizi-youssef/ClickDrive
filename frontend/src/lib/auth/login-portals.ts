@@ -1,9 +1,9 @@
-import { isAgencyRole, isPlatformAdminRole, type UserRole } from '@klickdrive/shared';
+import { isAgencyRole, isPlatformAdminRole, type UserRole } from '@clickdrive/shared';
 
 export type LoginPortal = 'client' | 'agency' | 'admin';
 
 export const LOGIN_PATH = '/login';
-const INTERNAL_ORIGIN = 'https://klickdrive.invalid';
+const INTERNAL_ORIGIN = 'https://clickdrive.invalid';
 
 /** Routes publiques de connexion (y compris redirections legacy). */
 export function isPublicLoginPath(path: string): boolean {

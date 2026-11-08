@@ -1,9 +1,9 @@
 /**
- * Utilitaires pour la génération et la normalisation des identifiants agences KlickDrive.
+ * Utilitaires pour la génération et la normalisation des identifiants agences ClickDrive.
  * Respecte les exigences strictes de normalisation, unicité et sécurité.
  */
 
-const KLICKDRIVE_EMAIL_DOMAIN = 'klickdrive.ma';
+const CLICKDRIVE_EMAIL_DOMAIN = 'clickdrive.ma';
 
 /**
  * Normalise un nom d'agence en composante email locale :
@@ -36,23 +36,23 @@ export function normalizeAgencyLocalPart(agencyName: string): string {
 }
 
 /**
- * Génère l'adresse email de base au format `nom.agence@klickdrive.ma`.
+ * Génère l'adresse email de base au format `nom.agence@clickdrive.ma`.
  */
 export function generateBaseAgencyEmail(agencyName: string): string {
   const localPart = normalizeAgencyLocalPart(agencyName);
-  return `${localPart}@${KLICKDRIVE_EMAIL_DOMAIN}`;
+  return `${localPart}@${CLICKDRIVE_EMAIL_DOMAIN}`;
 }
 
 /**
  * Génère une liste de candidats d'adresses email avec suffixes numériques si collision.
- * Exemple : ['nom.agence@klickdrive.ma', 'nom.agence2@klickdrive.ma', 'nom.agence3@klickdrive.ma', ...]
+ * Exemple : ['nom.agence@clickdrive.ma', 'nom.agence2@clickdrive.ma', 'nom.agence3@clickdrive.ma', ...]
  */
 export function generateCandidateAgencyEmails(agencyName: string, maxCandidates = 10): string[] {
   const localPart = normalizeAgencyLocalPart(agencyName);
-  const candidates: string[] = [`${localPart}@${KLICKDRIVE_EMAIL_DOMAIN}`];
+  const candidates: string[] = [`${localPart}@${CLICKDRIVE_EMAIL_DOMAIN}`];
 
   for (let i = 2; i <= maxCandidates; i++) {
-    candidates.push(`${localPart}${i}@${KLICKDRIVE_EMAIL_DOMAIN}`);
+    candidates.push(`${localPart}${i}@${CLICKDRIVE_EMAIL_DOMAIN}`);
   }
 
   return candidates;
@@ -76,7 +76,7 @@ export async function resolveUniqueAgencyEmail(
 
   // Fallback si 20 collisions : timestamp suffix
   const localPart = normalizeAgencyLocalPart(agencyName);
-  return `${localPart}.${Date.now().toString().slice(-4)}@${KLICKDRIVE_EMAIL_DOMAIN}`;
+  return `${localPart}.${Date.now().toString().slice(-4)}@${CLICKDRIVE_EMAIL_DOMAIN}`;
 }
 
 /**

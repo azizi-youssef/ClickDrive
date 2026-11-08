@@ -91,7 +91,7 @@ export function AgencySubscriptionModal({
           </div>
 
           <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-            Gérez votre capacité de flotte KlickDrive
+            Gérez votre capacité de flotte ClickDrive
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
             Abonnement calculé en fonction de la taille de votre parc de véhicules.

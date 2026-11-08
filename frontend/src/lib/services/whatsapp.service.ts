@@ -6,7 +6,7 @@ import { maskPhone, withRetry } from '@/lib/notifications/retry';
 
 /**
  * ========================================================================
- * Service WhatsApp Business — KlickDrive
+ * Service WhatsApp Business — ClickDrive
  * Gère l'envoi de notifications via WhatsApp Business Cloud API (Meta Graph),
  * l'enregistrement des identifiants de messages (wamid) et la résilience aux erreurs.
  * ========================================================================
@@ -320,7 +320,7 @@ export class WhatsAppService {
   }
 
   // ========================================================================
-  // NOTIFICATIONS MÉTIER KLICKDRIVE
+  // NOTIFICATIONS MÉTIER CLICKDRIVE
   // ========================================================================
 
   /**
@@ -338,7 +338,7 @@ export class WhatsAppService {
     const dates = `${booking.start_date} → ${booking.end_date}`;
 
     const text =
-      `🚗 *KLICKDRIVE — Confirmation de Réservation*\n\n` +
+      `🚗 *CLICKDRIVE — Confirmation de Réservation*\n\n` +
       `Bonjour *${booking.customer_name}*,\n\n` +
       `Votre réservation a bien été enregistrée :\n` +
       `• *Réf. dossier :* ${ref}\n` +
@@ -348,7 +348,7 @@ export class WhatsAppService {
       `• *Montant total :* ${booking.total_price} MAD\n` +
       `• *Caution à l'arrivée :* ${booking.deposit_amount || 3000} MAD (empreinte)\n\n` +
       `Un agent vous contactera pour organiser l'accueil et la remise des clés.\n` +
-      `📄 Suivi en direct : https://klickdrive.ma/account/bookings/${encodeURIComponent(ref)}`;
+      `📄 Suivi en direct : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`;
 
     return this.sendTextMessage(phone, text, {
       ...options,
@@ -366,7 +366,7 @@ export class WhatsAppService {
     agencyPhone: string,
     appUrl?: string
   ): Promise<WhatsAppMessageResult> {
-    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://klickdrive.ma';
+    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma';
     const ref = booking.reference || booking.booking_ref || '';
     const pdfUrl = `${baseUrl}${signedBookingPdfPath(ref)}`;
     const vehicleName = booking.vehicle
@@ -374,7 +374,7 @@ export class WhatsAppService {
       : 'Véhicule';
 
     const text =
-      `🚨 *NOUVELLE DEMANDE DE LOCATION KLICKDRIVE*\n\n` +
+      `🚨 *NOUVELLE DEMANDE DE LOCATION CLICKDRIVE*\n\n` +
       `*Dossier :* ${ref}\n` +
       `*Véhicule :* ${vehicleName}\n` +
       `*Client :* ${booking.customer_name} (${booking.customer_phone})\n` +
@@ -401,7 +401,7 @@ export class WhatsAppService {
   ): Promise<WhatsAppMessageResult> {
     const ref = booking.reference || booking.booking_ref || '';
     const text =
-      `📍 *KLICKDRIVE — Organisation de votre Rendez-vous*\n\n` +
+      `📍 *CLICKDRIVE — Organisation de votre Rendez-vous*\n\n` +
       `Bonjour *${booking.customer_name}*,\n\n` +
       `Votre rendez-vous pour la remise du véhicule est planifié :\n` +
       `• *Dossier :* ${ref}\n` +
@@ -429,8 +429,8 @@ export class WhatsAppService {
     const ref = booking.reference || booking.booking_ref || '';
     const isPickup = params.type === 'PICKUP';
     const title = isPickup
-      ? `🔑 *KLICKDRIVE — Remise des Clés Validée (Départ)*`
-      : `🏁 *KLICKDRIVE — Restitution du Véhicule Validée*`;
+      ? `🔑 *CLICKDRIVE — Remise des Clés Validée (Départ)*`
+      : `🏁 *CLICKDRIVE — Restitution du Véhicule Validée*`;
 
     const text =
       `${title}\n\n` +
@@ -442,7 +442,7 @@ export class WhatsAppService {
       (params.damages ? `• *Observations état :* ${params.damages}\n` : '') +
       (params.depositStatus ? `• *Statut caution :* ${params.depositStatus}\n` : '') +
       (params.agentName ? `• *Agent certifié :* ${params.agentName}\n` : '') +
-      `\nMerci pour votre confiance avec KlickDrive !`;
+      `\nMerci pour votre confiance avec ClickDrive !`;
 
     return this.sendTextMessage(booking.customer_phone, text, {
       bookingRef: ref,
@@ -885,7 +885,7 @@ export class WhatsAppService {
           `📍 *Lieu de prise en charge :* ${pickupLocation}\n` +
           `📅 *Période :* du ${booking.start_date} au ${booking.end_date}\n\n` +
           `L'agence partenaire prépare votre véhicule et vous accueillera à votre arrivée.\n` +
-          `📄 Détails : https://klickdrive.ma/account/bookings/${encodeURIComponent(bookingRef || '')}`;
+          `📄 Détails : https://clickdrive.ma/account/bookings/${encodeURIComponent(bookingRef || '')}`;
         actionTaken = `Dossier ${bookingRef} passé au statut CONFIRMED`;
       } else if (booking && booking.status === 'CONFIRMED') {
         replyText =
@@ -934,28 +934,28 @@ export class WhatsAppService {
           `❌ *Annulation prise en compte*\n\n` +
           `Bonjour *${customerName}*,\n` +
           `Votre demande d'annulation pour le dossier *${bookingRef}* a bien été enregistrée. Aucun montant ne vous sera débité.\n\n` +
-          `Au plaisir de vous accueillir prochainement sur KlickDrive.ma.`;
+          `Au plaisir de vous accueillir prochainement sur ClickDrive.ma.`;
         actionTaken = `Dossier ${bookingRef} passé au statut CANCELLED`;
       } else {
         replyText =
           `❌ *Annulation*\n\n` +
-          `Votre demande d'annulation a bien été enregistrée par le service client KlickDrive.`;
+          `Votre demande d'annulation a bien été enregistrée par le service client ClickDrive.`;
         actionTaken = `Demande d'annulation enregistrée`;
       }
     } else if (intent === 'HELP') {
       replyText =
-        `📍 *Assistance KlickDrive — Conciergerie*\n\n` +
+        `📍 *Assistance ClickDrive — Conciergerie*\n\n` +
         `Bonjour *${customerName}*,\n` +
         (bookingRef ? `Pour votre dossier *${bookingRef}* :\n` : '') +
         `• Prise en charge : *${pickupLocation}*\n` +
         (booking?.start_date ? `• Date : *${booking.start_date} à ${booking.pickup_time || '10:00'}*\n` : '') +
-        `• Assistance KlickDrive (lun–ven 9h–18h, sam. 9h–13h) : *+212 661-987654*\n\n` +
+        `• Assistance ClickDrive (lun–ven 9h–18h, sam. 9h–13h) : *+212 661-987654*\n\n` +
         `Répondez *CONFIRMER* pour valider ou *ANNULER* pour vous désister.`;
       actionTaken = `Guide d'assistance envoyé`;
     } else {
       replyText =
         `Bonjour *${customerName}* !\n\n` +
-        `Bienvenue sur le service WhatsApp de *KlickDrive.ma*.\n` +
+        `Bienvenue sur le service WhatsApp de *ClickDrive.ma*.\n` +
         `• Répondez *OUI* ou *CONFIRMER* pour valider votre réservation.\n` +
         `• Répondez *ANNULER* si vous souhaitez annuler.\n` +
         `• Répondez *AIDE* pour contacter notre conciergerie.\n\n` +

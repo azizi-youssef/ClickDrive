@@ -54,7 +54,7 @@ export async function GET(
       downloaded_at: new Date().toISOString(),
     });
 
-    const filename = `KlickDrive_Demande_${booking.reference || reference}.pdf`;
+    const filename = `ClickDrive_Demande_${booking.reference || reference}.pdf`;
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {

@@ -13,9 +13,9 @@ export const metadata: Metadata = {
     'Comparez les motos et scooters proposés par les agences partenaires vérifiées à Nador : tarifs, cylindrée, permis exigé. Demande de réservation sans paiement en ligne.',
   alternates: { canonical: '/motos' },
   openGraph: {
-    title: 'Louer une moto ou un scooter à Nador — KlickDrive',
+    title: 'Louer une moto ou un scooter à Nador — ClickDrive',
     description: 'Motos et scooters des agences partenaires vérifiées à Nador, avec cylindrée et permis exigé.',
-    url: 'https://klickdrive.ma/motos',
+    url: 'https://clickdrive.ma/motos',
   },
 };
 

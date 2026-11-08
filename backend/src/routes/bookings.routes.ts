@@ -118,7 +118,7 @@ bookingsRouter.post('/', validate(bookingSchema), async (req: Request, res: Resp
         vehicle_id: input.vehicleId,
         agency_id: input.agencyId,
         customer_name: input.customerName || `${input.firstName || ''} ${input.lastName || ''}`.trim(),
-        customer_email: input.customerEmail || input.email || 'client@klickdrive.ma',
+        customer_email: input.customerEmail || input.email || 'client@clickdrive.ma',
         customer_phone: input.customerPhone || input.phone,
         first_name: input.firstName,
         last_name: input.lastName,

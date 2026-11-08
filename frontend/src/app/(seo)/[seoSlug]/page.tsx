@@ -37,13 +37,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: page.metaDescription,
     keywords: page.keywords,
     alternates: {
-      canonical: `https://klickdrive.ma/${page.slug}`,
+      canonical: `https://clickdrive.ma/${page.slug}`,
     },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
-      url: `https://klickdrive.ma/${page.slug}`,
-      siteName: 'KlickDrive Nador',
+      url: `https://clickdrive.ma/${page.slug}`,
+      siteName: 'ClickDrive Nador',
       locale: 'fr_FR',
       type: 'website',
     },
@@ -86,10 +86,10 @@ export default async function SeoLandingPage({ params }: PageProps) {
     '@graph': [
       {
         '@type': 'LocalBusiness',
-        '@id': `https://klickdrive.ma/${pageData.slug}#business`,
-        name: 'KlickDrive Marketplace Nador',
+        '@id': `https://clickdrive.ma/${pageData.slug}#business`,
+        name: 'ClickDrive Marketplace Nador',
         description: pageData.metaDescription,
-        url: `https://klickdrive.ma/${pageData.slug}`,
+        url: `https://clickdrive.ma/${pageData.slug}`,
         telephone: '+212 536 60 00 00',
         address: {
           '@type': 'PostalAddress',
@@ -107,7 +107,7 @@ export default async function SeoLandingPage({ params }: PageProps) {
       },
       {
         '@type': 'FAQPage',
-        '@id': `https://klickdrive.ma/${pageData.slug}#faq`,
+        '@id': `https://clickdrive.ma/${pageData.slug}#faq`,
         mainEntity: pageData.faqs.map((faq) => ({
           '@type': 'Question',
           name: faq.question,
@@ -218,7 +218,7 @@ export default async function SeoLandingPage({ params }: PageProps) {
                 Nos agences partenaires opérant sur cette zone
               </h2>
               <p className="text-sm text-slate-600 mt-2">
-                Chaque agence est rigoureusement sélectionnée selon notre charte qualité KlickDrive.
+                Chaque agence est rigoureusement sélectionnée selon notre charte qualité ClickDrive.
               </p>
             </div>
 

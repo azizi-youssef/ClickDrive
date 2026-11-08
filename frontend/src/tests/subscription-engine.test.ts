@@ -1,7 +1,7 @@
 import { DEFAULT_SUBSCRIPTION_PLANS, subscriptionService } from '../lib/services/subscription.service';
 
 export function runSubscriptionEngineTests() {
-  console.log('=== TEST SUITE: KLICKDRIVE SUBSCRIPTION MONETIZATION ENGINE ===\n');
+  console.log('=== TEST SUITE: CLICKDRIVE SUBSCRIPTION MONETIZATION ENGINE ===\n');
 
   let passed = 0;
   let failed = 0;

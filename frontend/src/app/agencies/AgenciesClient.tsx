@@ -487,7 +487,7 @@ export function AgenciesClient() {
                   Vous êtes loueur ?
                 </span>
                 <h2 id="partner-title" className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
-                  Développez votre activité de location avec KlickDrive.
+                  Développez votre activité de location avec ClickDrive.
                 </h2>
                 <ul className="mt-5 grid gap-2.5 text-sm text-slate-300 sm:grid-cols-2">
                   {['Vitrine en ligne pour votre flotte', 'Demandes de réservation centralisées', 'Calendrier et disponibilités', 'Contact client direct par WhatsApp'].map(

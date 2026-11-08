@@ -9,6 +9,8 @@ import React, {
 } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { brandLogo } from '@/lib/brand/logo';
+import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
@@ -130,7 +132,7 @@ const STRINGS: Record<string, NavStrings> = {
     categoriesHubsDesc: 'Flotte disponible immédiatement',
     viewAllCars: 'Voir tous les véhicules',
     searchFleet: 'Explorer la flotte',
-    allAgenciesVerified: 'Agences locales vérifiées par KlickDrive avant leur mise en ligne',
+    allAgenciesVerified: 'Agences locales vérifiées par ClickDrive avant leur mise en ligne',
     navigation: 'Navigation principale',
     closeMenu: 'Fermer le menu',
     openMenu: 'Ouvrir le menu de navigation',
@@ -138,7 +140,7 @@ const STRINGS: Record<string, NavStrings> = {
     partnerFleetNotice: 'Pas encore fixé ?',
     partnerFleetDesc: 'Comparez la flotte de toutes les agences partenaires de Nador.',
     needAssistance: 'Assistance client directe',
-    whatsappHelp: 'Assistance WhatsApp KlickDrive',
+    whatsappHelp: 'Assistance WhatsApp ClickDrive',
     badgeVerified: 'Partenaires vérifiés',
     badgePricing: 'Prix transparents',
     badgeSupport: 'Support local',
@@ -178,7 +180,7 @@ const STRINGS: Record<string, NavStrings> = {
     categoriesHubsDesc: 'أسطول جاهز للاستلام الفوري',
     viewAllCars: 'عرض جميع السيارات',
     searchFleet: 'تصفح الأسطول',
-    allAgenciesVerified: 'وكالات محلية تتحقق منها KlickDrive قبل نشرها',
+    allAgenciesVerified: 'وكالات محلية تتحقق منها ClickDrive قبل نشرها',
     navigation: 'القائمة الرئيسية',
     closeMenu: 'إغلاق القائمة',
     openMenu: 'فتح قائمة التنقل',
@@ -226,7 +228,7 @@ const STRINGS: Record<string, NavStrings> = {
     categoriesHubsDesc: 'Immediately available vehicles',
     viewAllCars: 'See all vehicles',
     searchFleet: 'Browse Fleet',
-    allAgenciesVerified: 'Local agencies checked by KlickDrive before going live',
+    allAgenciesVerified: 'Local agencies checked by ClickDrive before going live',
     navigation: 'Main navigation',
     closeMenu: 'Close menu',
     openMenu: 'Open navigation menu',
@@ -234,7 +236,7 @@ const STRINGS: Record<string, NavStrings> = {
     partnerFleetNotice: 'Not sure yet?',
     partnerFleetDesc: 'Compare the fleets of every partner agency in Nador.',
     needAssistance: 'Direct customer support',
-    whatsappHelp: 'KlickDrive WhatsApp Support',
+    whatsappHelp: 'ClickDrive WhatsApp Support',
     badgeVerified: 'Verified Partners',
     badgePricing: 'Transparent Pricing',
     badgeSupport: 'Local support',
@@ -511,8 +513,9 @@ export function Navbar() {
   const destinationsTriggerRef = useRef<HTMLButtonElement>(null);
   const destinationLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const accountMenuRef = useRef<HTMLDivElement>(null);
-  const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
+  // Menu mobile = dialogue modal : focus placé dans le menu, Tab piégé, Échap, page inerte, focus rendu au bouton
+  const mobileDrawerRef = useModalDialog<HTMLDivElement>(mobileMenuOpen, { onClose: () => setMobileMenuOpen(false) });
   const authRequest = useRef(0);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -681,17 +684,7 @@ export function Navbar() {
   /* Body Scroll Lock for Mobile Drawer                                   */
   /* -------------------------------------------------------------------- */
 
-  useEffect(() => {
-    if (!mobileMenuOpen) {
-      document.body.style.overflow = '';
-      return;
-    }
-
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileMenuOpen]);
+  // Défilement de la page bloqué par useModalDialog tant que le menu mobile est ouvert
 
   /* -------------------------------------------------------------------- */
   /* Hover Delays for Destinations Dropdown                               */
@@ -919,7 +912,7 @@ export function Navbar() {
             {/* -------------------------------------------------------- */}
             <Link
               href="/"
-              aria-label="KlickDrive — Accueil"
+              aria-label="ClickDrive — Accueil"
               className="group flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-[#E63946]"
             >
               {/* Mobile Compact Emblem (under 640px) */}
@@ -930,8 +923,8 @@ export function Navbar() {
                 )}
               >
                 <Image
-                  src="/logo_12.png"
-                  alt="KlickDrive"
+                  src={brandLogo}
+                  alt="ClickDrive"
                   fill
                   sizes="128px"
                   className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -943,15 +936,15 @@ export function Navbar() {
               <div
                 className={cn(
                   'relative hidden sm:block transition-all duration-300',
-                  // Proportions calées sur le logo (≈ 3,7:1) pour qu'il occupe toute la hauteur
+                  // Proportions calées sur le logo (1036×241, ≈ 4,3:1) pour qu'il occupe toute la hauteur
                   scrolled
-                    ? 'h-9 w-[134px] lg:h-10 lg:w-[149px]'
-                    : 'h-10 w-[149px] lg:h-12 lg:w-[179px]'
+                    ? 'h-9 w-[155px] lg:h-10 lg:w-[172px]'
+                    : 'h-10 w-[172px] lg:h-12 lg:w-[206px]'
                 )}
               >
                 <Image
-                  src="/logo_12.png"
-                  alt="KlickDrive — Location de voitures à Nador"
+                  src={brandLogo}
+                  alt="ClickDrive — Location de voitures à Nador"
                   fill
                   sizes="(max-width: 1024px) 208px, 224px"
                   className={cn(
@@ -1438,7 +1431,7 @@ export function Navbar() {
                 <Link
                   href={LOGIN_PATH}
                   aria-label={strings.login}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
                 >
                   <User className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -1451,7 +1444,7 @@ export function Navbar() {
                 aria-label={mobileMenuOpen ? strings.closeMenu : strings.openMenu}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -1478,7 +1471,7 @@ export function Navbar() {
                 <Link
                   href={accountHref(authProfile)}
                   aria-label={`${accountIdentity(authProfile, locale).badge} : ${accountIdentity(authProfile, locale).name}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs"
+                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs"
                 >
                   <AccountAvatar profile={authProfile} className="h-7 w-7 text-[10px]" />
                 </Link>
@@ -1486,7 +1479,7 @@ export function Navbar() {
                 <Link
                   href={LOGIN_PATH}
                   aria-label={strings.login}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs"
+                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs"
                 >
                   <User className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -1496,7 +1489,7 @@ export function Navbar() {
               <Link
                 href="/search"
                 aria-label={strings.findCar}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text transition-colors hover:bg-[#E63946]/15"
+                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text transition-colors hover:bg-[#E63946]/15"
               >
                 <Search className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -1510,7 +1503,7 @@ export function Navbar() {
                 aria-label={mobileMenuOpen ? strings.closeMenu : strings.openMenu}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -1533,6 +1526,7 @@ export function Navbar() {
             className="fixed inset-0 z-50 bg-[#0B1220]/65 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
+            data-modal-backdrop
           />
 
           {/* Full-Height Drawer Panel */}
@@ -1541,8 +1535,9 @@ export function Navbar() {
             role="dialog"
             aria-modal="true"
             aria-label={strings.navigation}
+            tabIndex={-1}
             className={cn(
-              'fixed inset-y-0 z-50 flex w-full max-w-sm sm:max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 ease-out',
+              'fixed inset-y-0 z-50 flex w-full max-w-sm sm:max-w-md flex-col bg-white shadow-2xl outline-none transition-transform duration-300 ease-out',
               isRTL ? 'left-0 border-r border-slate-200' : 'right-0 border-l border-slate-200'
             )}
           >
@@ -1554,10 +1549,9 @@ export function Navbar() {
                 className="flex items-center"
               >
                 <Image
-                  src="/logo_12.png"
-                  alt="KlickDrive"
-                  width={140}
-                  height={32}
+                  src={brandLogo}
+                  alt="ClickDrive"
+                  sizes="140px"
                   className="h-8 w-auto object-contain"
                 />
               </Link>
@@ -1566,7 +1560,7 @@ export function Navbar() {
                 type="button"
                 aria-label={strings.closeMenu}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#E63946]"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>

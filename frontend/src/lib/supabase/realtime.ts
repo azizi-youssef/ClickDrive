@@ -11,8 +11,8 @@ export type RealtimeTable =
   | 'reviews'
   | 'profiles';
 
-const BROADCAST_CHANNEL_NAME = 'klickdrive:realtime_broadcast';
-const DOM_EVENT_NAME = 'klickdrive:realtime_event';
+const BROADCAST_CHANNEL_NAME = 'clickdrive:realtime_broadcast';
+const DOM_EVENT_NAME = 'clickdrive:realtime_event';
 
 /**
  * Notifie immédiatement tous les composants locaux et autres onglets ouverts
@@ -80,7 +80,7 @@ export interface UseRealtimeRefreshOptions {
 }
 
 /**
- * Hook universel de rafraîchissement automatique des pages KlickDrive.
+ * Hook universel de rafraîchissement automatique des pages ClickDrive.
  * Combine :
  * - Les WebSockets Supabase Realtime (changements de la base de données en direct)
  * - La synchronisation multi-onglets (BroadcastChannel)

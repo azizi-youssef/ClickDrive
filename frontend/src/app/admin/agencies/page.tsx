@@ -13,7 +13,7 @@ export default async function AdminAgenciesPage({
   const initialStatus = typeof filter === 'string' ? filter.toUpperCase() : undefined;
 
   return (
-    <AdminShell title="Agences partenaires" subtitle="Gérez les agences de la marketplace KlickDrive">
+    <AdminShell title="Agences partenaires" subtitle="Gérez les agences de la marketplace ClickDrive">
       <AdminAgenciesClient initialStatus={initialStatus} />
     </AdminShell>
   );

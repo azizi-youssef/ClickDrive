@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     'Comparez les prix et disponibilités des voitures de location à Nador, Aéroport Nador Al-Aroui et Port Beni Ansar. Réservation sans paiement immédiat.',
   alternates: { canonical: '/search' },
   openGraph: {
-    title: 'Rechercher une voiture de location à Nador — KlickDrive',
+    title: 'Rechercher une voiture de location à Nador — ClickDrive',
     description:
       'Comparez instantanément les véhicules disponibles auprès des agences partenaires vérifiées à Nador.',
-    url: 'https://klickdrive.ma/search',
+    url: 'https://clickdrive.ma/search',
   },
 };
 

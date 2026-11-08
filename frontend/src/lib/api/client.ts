@@ -1,5 +1,5 @@
 /**
- * Client HTTP KlickDrive — par défaut le BFF Next.js (/app/api/*).
+ * Client HTTP ClickDrive — par défaut le BFF Next.js (/app/api/*).
  * Express legacy : définir NEXT_PUBLIC_API_URL=http://localhost:4000
  */
 

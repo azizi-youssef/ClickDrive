@@ -23,9 +23,9 @@ test('1. Normalisation des numéros WhatsApp (Maroc et International)', () => {
 });
 
 test('2. Génération de liens direct Click-to-Chat WhatsApp', () => {
-  const url = whatsappService.generateDirectChatUrl('0612345678', 'Bonjour KlickDrive');
+  const url = whatsappService.generateDirectChatUrl('0612345678', 'Bonjour ClickDrive');
   assert.equal(url.includes('https://wa.me/212612345678'), true);
-  assert.equal(url.includes('Bonjour%20KlickDrive'), true);
+  assert.equal(url.includes('Bonjour%20ClickDrive'), true);
 });
 
 test('3. Envoi de notification WhatsApp en mode simulation & wamid', async () => {

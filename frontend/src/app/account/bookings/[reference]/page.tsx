@@ -18,7 +18,7 @@ import {
 import { MeetingPointBadge } from '@/components/booking/MeetingPointBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { bookingNextStepHint, bookingStatusLabel, bookingTimeline } from '@/lib/bookings/status';
-import { klickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -92,11 +92,11 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
   const nextStep = bookingNextStepHint(booking.status);
   const reference = booking.reference || booking.booking_ref || '';
   const isConfirmed = ['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP', 'ACTIVE', 'COMPLETED'].includes(booking.status);
-  const conciergeUrl = klickdriveWhatsAppUrl(
-    `Bonjour KlickDrive, je souhaite un suivi sur mon dossier réf. ${reference} (${booking.vehicle?.brand} ${booking.vehicle?.model}).`
+  const conciergeUrl = clickdriveWhatsAppUrl(
+    `Bonjour ClickDrive, je souhaite un suivi sur mon dossier réf. ${reference} (${booking.vehicle?.brand} ${booking.vehicle?.model}).`
   );
-  const whatsappText = `Bonjour, je vous contacte concernant mon dossier KlickDrive réf. ${reference} pour la ${booking.vehicle?.brand} ${booking.vehicle?.model}.`;
-  // Pas de numéro de repli inventé : sans numéro d'agence, on oriente vers le support KlickDrive
+  const whatsappText = `Bonjour, je vous contacte concernant mon dossier ClickDrive réf. ${reference} pour la ${booking.vehicle?.brand} ${booking.vehicle?.model}.`;
+  // Pas de numéro de repli inventé : sans numéro d'agence, on oriente vers le support ClickDrive
   const agencyDigits = (booking.agency?.whatsapp || booking.agency?.phone || '').replace(/[^0-9]/g, '');
   const agencyWhatsappUrl = agencyDigits.length >= 8 ? `https://wa.me/${agencyDigits}?text=${encodeURIComponent(whatsappText)}` : null;
   const contactAgency = isConfirmed && agencyWhatsappUrl;
@@ -126,7 +126,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800">
-                  Dossier KlickDrive
+                  Dossier ClickDrive
                 </span>
                 <StatusBadge status={booking.status} locale={locale} size="sm" />
               </div>
@@ -162,7 +162,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>{contactAgency ? 'Contacter l’agence' : 'Support KlickDrive'}</span>
+                <span>{contactAgency ? 'Contacter l’agence' : 'Support ClickDrive'}</span>
               </a>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
               <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div>
                 <strong className="block mb-0.5">Rappel légal important :</strong>
-                KlickDrive n'est pas le loueur légal du véhicule mais l'intermédiaire technologique. Le contrat de location officiel, la vérification physique des documents et la remise des clés s'effectuent directement avec l'agence partenaire.
+                ClickDrive n'est pas le loueur légal du véhicule mais l'intermédiaire technologique. Le contrat de location officiel, la vérification physique des documents et la remise des clés s'effectuent directement avec l'agence partenaire.
               </div>
             </div>
 
@@ -379,7 +379,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                       className="w-full py-2.5 px-3 rounded-xl bg-[#0B1220] text-white font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
                     >
                       <MessageSquare className="w-4 h-4 text-[#E63946]" />
-                      <span>Conciergerie KlickDrive (Suivi)</span>
+                      <span>Conciergerie ClickDrive (Suivi)</span>
                     </a>
                   </>
                 )}

@@ -99,12 +99,12 @@ export default function AgencyJoinPage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/90">
               <Sparkles className="h-4 w-4 text-[#E63946]" />
-              Programme partenaires KlickDrive
+              Programme partenaires ClickDrive
             </div>
 
             <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
               Faites grandir votre agence avec{' '}
-              <span className="text-[#E63946]">KlickDrive.</span>
+              <span className="text-[#E63946]">ClickDrive.</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
@@ -126,7 +126,7 @@ export default function AgencyJoinPage() {
                 href="/"
                 className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-white/20 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
               >
-                Découvrir KlickDrive
+                Découvrir ClickDrive
               </Link>
             </div>
 
@@ -212,7 +212,7 @@ export default function AgencyJoinPage() {
             <div className="lg:col-span-5">
               <div className="mb-8">
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#E63946]">
-                  Pourquoi KlickDrive ?
+                  Pourquoi ClickDrive ?
                 </span>
 
                 <h2 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">
@@ -220,7 +220,7 @@ export default function AgencyJoinPage() {
                 </h2>
 
                 <p className="mt-4 text-sm leading-7 text-slate-600">
-                  KlickDrive accompagne les agences de location dans leur
+                  ClickDrive accompagne les agences de location dans leur
                   développement digital, avec des outils adaptés à leur
                   activité et à leurs besoins.
                 </p>
@@ -501,7 +501,7 @@ export default function AgencyJoinPage() {
                 Prêt à développer votre activité ?
               </h2>
               <p className="mt-1 text-xs text-slate-500">
-                Rejoignez le réseau de partenaires KlickDrive.
+                Rejoignez le réseau de partenaires ClickDrive.
               </p>
             </div>
 

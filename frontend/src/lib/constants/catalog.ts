@@ -1,5 +1,5 @@
 ﻿/**
- * KlickDrive Catalog Constants
+ * ClickDrive Catalog Constants
  * Static configuration data for the Nador region rental platform.
  * These are geographic/categorical constants, not business data.
  */

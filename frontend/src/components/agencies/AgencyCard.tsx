@@ -79,7 +79,7 @@ export function AgencyCard({ agency, carCount }: AgencyCardProps) {
         )}
 
         <p className="mt-3 line-clamp-2 text-[13px] leading-relaxed text-slate-600">
-          {agency.description?.trim() || 'Agence partenaire KlickDrive : consultez sa flotte, ses tarifs et réservez en ligne.'}
+          {agency.description?.trim() || 'Agence partenaire ClickDrive : consultez sa flotte, ses tarifs et réservez en ligne.'}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">

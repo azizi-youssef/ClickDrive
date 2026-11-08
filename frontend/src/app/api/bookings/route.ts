@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverError } from '@/lib/api/server-error';
-import { isPlatformAdminRole } from '@klickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';
 import { bookingsService } from '@/lib/services/bookings.service';
 import { bookingRequestSchema } from '@/lib/validations/booking';
-import { KLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
+import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import {
   checkDistributedRateLimit,
   checkRateLimit,
@@ -101,8 +101,8 @@ export async function POST(req: NextRequest) {
     const appUrl = req.nextUrl.origin;
     const { notificationService } = await import('@/lib/services/notification.service');
     const agencyWhatsAppMessage = notificationService.formatAgencyWhatsAppMessage(result.booking, appUrl);
-    // Numéro réel de l'agence ; à défaut, l'assistance KlickDrive (jamais un numéro fictif)
-    const agencyPhone = result.booking.agency?.whatsapp || result.booking.agency?.phone || KLICKDRIVE_WHATSAPP_NUMBER;
+    // Numéro réel de l'agence ; à défaut, l'assistance ClickDrive (jamais un numéro fictif)
+    const agencyPhone = result.booking.agency?.whatsapp || result.booking.agency?.phone || CLICKDRIVE_WHATSAPP_NUMBER;
     const agencyWhatsAppUrl = notificationService.generateWhatsAppLink(agencyPhone, agencyWhatsAppMessage);
     const pdfUrl = `${appUrl}${signedBookingPdfPath(result.booking.reference || '')}`;
 

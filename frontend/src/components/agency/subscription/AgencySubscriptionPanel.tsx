@@ -15,7 +15,7 @@ import { cn, formatPrice } from '@/lib/utils';
 import type { AgencySubscription, SubscriptionPlan } from '@/types';
 import { FleetCapacityCard } from './FleetCapacityCard';
 import { AgencySubscriptionModal } from './AgencySubscriptionModal';
-import { klickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
 
 interface Props {
   agencyId: string;
@@ -201,13 +201,13 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
                 100% de vos gains locatifs vous reviennent
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                KlickDrive fonctionne avec un forfait mensuel fixe calculé selon la capacité de votre flotte.
+                ClickDrive fonctionne avec un forfait mensuel fixe calculé selon la capacité de votre flotte.
                 Aucune commission n’est prélevée sur le montant payé par les clients : vous encaissez directement la totalité de vos locations.
               </p>
             </div>
           </div>
           <a
-            href={klickdriveWhatsAppUrl('Bonjour, je souhaite des informations sur les abonnements KlickDrive')}
+            href={clickdriveWhatsAppUrl('Bonjour, je souhaite des informations sur les abonnements ClickDrive')}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
@@ -222,7 +222,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
       <div className="space-y-4">
         <div>
           <h3 className="text-base font-bold text-slate-900">
-            Toutes les formules d’abonnement KlickDrive
+            Toutes les formules d’abonnement ClickDrive
           </h3>
           <p className="text-xs text-slate-500">
             Faites évoluer votre capacité en temps réel selon la croissance de votre parc automobile.

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
     description,
     alternates: { canonical: `/cars/${vehicle.slug}` },
     openGraph: {
-      title: `${name} en location à Nador — KlickDrive`,
+      title: `${name} en location à Nador — ClickDrive`,
       description,
       url: `${SITE_URL}/cars/${vehicle.slug}`,
       ...(image ? { images: [{ url: image, alt: name }] } : {}),

@@ -1,10 +1,10 @@
-import { normalizeBookingStatus, type BookingStatus } from '@klickdrive/shared';
+import { normalizeBookingStatus, type BookingStatus } from '@clickdrive/shared';
 import type { Locale } from '@/lib/i18n/config';
 import type { BadgeTone } from '@/components/ui/Badge';
 
 /**
  * Présentation des statuts de réservation — source unique pour l'espace client, l'agence et l'admin.
- * Couvre tous les statuts de la machine à états (@klickdrive/shared), y compris les statuts historiques.
+ * Couvre tous les statuts de la machine à états (@clickdrive/shared), y compris les statuts historiques.
  * Aucun statut n'est inventé : les étapes du suivi correspondent à des statuts réels.
  */
 
@@ -27,8 +27,8 @@ const PRESENTATION: Record<BookingStatus, StatusPresentation> = {
     tone: 'warning',
   },
   UNDER_REVIEW: {
-    customer: { fr: 'Vérification par KlickDrive', en: 'Being checked by KlickDrive', ar: 'قيد التحقق من KlickDrive', es: 'En revisión por KlickDrive', de: 'Prüfung durch KlickDrive', nl: 'Controle door KlickDrive' },
-    business: 'Vérification KlickDrive',
+    customer: { fr: 'Vérification par ClickDrive', en: 'Being checked by ClickDrive', ar: 'قيد التحقق من ClickDrive', es: 'En revisión por ClickDrive', de: 'Prüfung durch ClickDrive', nl: 'Controle door ClickDrive' },
+    business: 'Vérification ClickDrive',
     tone: 'warning',
   },
   SENT_TO_AGENCY: {
@@ -181,7 +181,7 @@ export function bookingTimeline(status: string, locale: Locale = 'fr') {
 const NEXT_STEP_HINT: Record<BookingStatus, string> = {
   REQUESTED: 'Votre demande est enregistrée. Elle va être transmise à l’agence, qui vérifiera la disponibilité.',
   PENDING: 'Votre demande est enregistrée. Elle va être transmise à l’agence, qui vérifiera la disponibilité.',
-  UNDER_REVIEW: 'KlickDrive vérifie votre demande avant de la transmettre à l’agence.',
+  UNDER_REVIEW: 'ClickDrive vérifie votre demande avant de la transmettre à l’agence.',
   SENT_TO_AGENCY: 'L’agence a reçu votre demande et va vérifier la disponibilité du véhicule.',
   AGENCY_REVIEW: 'L’agence examine votre demande. Sa réponse s’affichera ici.',
   ALTERNATIVE_PROPOSED: 'L’agence vous propose une alternative. Contactez-la pour l’accepter ou la refuser.',
@@ -189,7 +189,7 @@ const NEXT_STEP_HINT: Record<BookingStatus, string> = {
   CONFIRMED: 'L’agence a confirmé votre réservation. Contrat, caution et paiement se règlent sur place, à la remise des clés.',
   READY_FOR_PICKUP: 'Le véhicule est prêt. Présentez-vous au point de rendez-vous à l’heure prévue.',
   ACTIVE: 'Votre location est en cours. Bonne route !',
-  COMPLETED: 'Le véhicule a été restitué. Merci d’avoir loué avec KlickDrive.',
+  COMPLETED: 'Le véhicule a été restitué. Merci d’avoir loué avec ClickDrive.',
   REJECTED: 'L’agence n’a pas pu accepter cette demande. Vous pouvez rechercher un autre véhicule aux mêmes dates.',
   EXPIRED: 'Cette demande a expiré sans réponse de l’agence. Vous pouvez en envoyer une nouvelle.',
   CANCELLED: 'Cette réservation a été annulée.',

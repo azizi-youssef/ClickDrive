@@ -5,7 +5,7 @@
  */
 
 export const MOTORCYCLE_SCHEMA_MISSING_MESSAGE =
-  "L'ajout de motos n'est pas encore activé sur KlickDrive. Réessayez plus tard ou contactez le support KlickDrive.";
+  "L'ajout de motos n'est pas encore activé sur ClickDrive. Réessayez plus tard ou contactez le support ClickDrive.";
 
 type DbError = { code?: string | null; message?: string | null } | null | undefined;
 

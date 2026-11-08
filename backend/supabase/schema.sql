@@ -1,5 +1,5 @@
 -- ========================================================================
--- KlickDrive: PostgreSQL Schema with RLS, Temporal Availability & Multi-Agency
+-- ClickDrive: PostgreSQL Schema with RLS, Temporal Availability & Multi-Agency
 -- Target: Supabase / PostgreSQL 15+
 -- ========================================================================
 
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
     total_days INTEGER NOT NULL CHECK (total_days > 0),
     daily_price NUMERIC(10, 2) NOT NULL,
     total_price NUMERIC(10, 2) NOT NULL,
-    commission_rate NUMERIC(4, 2) NOT NULL DEFAULT 0.15, -- 15% de commission KlickDrive
+    commission_rate NUMERIC(4, 2) NOT NULL DEFAULT 0.15, -- 15% de commission ClickDrive
     commission_amount NUMERIC(10, 2) GENERATED ALWAYS AS (total_price * 0.15) STORED,
     agency_amount NUMERIC(10, 2) GENERATED ALWAYS AS (total_price * 0.85) STORED,
     deposit_amount NUMERIC(10, 2) NOT NULL,

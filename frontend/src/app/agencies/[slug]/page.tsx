@@ -9,7 +9,7 @@ import { AgencyBanner } from '@/components/agencies/AgencyBanner';
 import { Badge } from '@/components/ui/Badge';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import type { Agency, Vehicle } from '@/types';
-import { klickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import {
   MapPin,
@@ -171,7 +171,7 @@ export default function AgencyDetailPage({ params }: AgencyDetailPageProps) {
               </div>
             </div>
 
-            {/* KlickDrive Intermediation Actions */}
+            {/* ClickDrive Intermediation Actions */}
             <div className="flex flex-wrap items-center gap-2.5">
               <a
                 href="#agency-fleet"
@@ -182,13 +182,13 @@ export default function AgencyDetailPage({ params }: AgencyDetailPageProps) {
               </a>
 
               <a
-                href={klickdriveWhatsAppUrl(`Bonjour KlickDrive, j'ai une question concernant l'agence partenaire ${agency.name} à ${agency.city}.`)}
+                href={clickdriveWhatsAppUrl(`Bonjour ClickDrive, j'ai une question concernant l'agence partenaire ${agency.name} à ${agency.city}.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2.5 rounded-xl border border-emerald-500 hover:bg-emerald-50 text-emerald-700 text-xs font-semibold flex items-center gap-2 transition-colors"
               >
                 <MessageSquare className="w-4 h-4 text-emerald-600" />
-                <span>Conciergerie KlickDrive</span>
+                <span>Conciergerie ClickDrive</span>
               </a>
             </div>
           </div>
@@ -197,12 +197,12 @@ export default function AgencyDetailPage({ params }: AgencyDetailPageProps) {
             {agency.description}
           </p>
 
-          {/* Uniquement des informations vérifiables : pas d'horaires en base, pas de paiement ni de caution via KlickDrive */}
+          {/* Uniquement des informations vérifiables : pas d'horaires en base, pas de paiement ni de caution via ClickDrive */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 text-xs text-slate-600">
             {agency.verified && (
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" aria-hidden="true" />
-                <span>Agence vérifiée par KlickDrive avant sa mise en ligne</span>
+                <span>Agence vérifiée par ClickDrive avant sa mise en ligne</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">

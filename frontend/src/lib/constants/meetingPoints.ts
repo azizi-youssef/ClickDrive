@@ -25,7 +25,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
     gradientBg: 'from-blue-600 to-indigo-700',
     borderColor: 'border-blue-300',
     textColor: 'text-blue-700',
-    instructions: 'Accueil personnalisé au hall Arrivées avec pancarte nominative KlickDrive dès la sortie des bagages.',
+    instructions: 'Accueil personnalisé au hall Arrivées avec pancarte nominative ClickDrive dès la sortie des bagages.',
   },
   {
     id: 'port-beni-ansar',
@@ -132,6 +132,6 @@ export function getMeetingPoint(locationStr?: string): MeetingPoint {
     gradientBg: 'from-blue-600 to-indigo-700',
     borderColor: 'border-blue-300',
     textColor: 'text-blue-700',
-    instructions: 'Point de remise convenu avec la conciergerie KlickDrive et l’agence.',
+    instructions: 'Point de remise convenu avec la conciergerie ClickDrive et l’agence.',
   };
 }

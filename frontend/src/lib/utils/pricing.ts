@@ -1,5 +1,5 @@
 /**
- * KlickDrive Centralized Financial Engine
+ * ClickDrive Centralized Financial Engine
  * Calculates booking prices, commission amounts, and agency payouts.
  * 
  * Rules (Modèle Abonnement Mensuel par Capacité) :

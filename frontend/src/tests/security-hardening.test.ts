@@ -5,7 +5,7 @@ import { detectImageType, hasValidImageSignature } from '../lib/utils/image-uplo
 import { generateTemporaryPassword } from '../lib/utils/agency-credentials';
 
 function requestWith(headers: Record<string, string>) {
-  return new Request('https://klickdrive.ma/api/bookings', { headers });
+  return new Request('https://clickdrive.ma/api/bookings', { headers });
 }
 
 test('IP limiteur — l’en-tête de la plateforme prime sur X-Forwarded-For', () => {

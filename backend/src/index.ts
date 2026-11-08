@@ -39,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
-    service: 'KlickDrive API',
+    service: 'ClickDrive API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV ?? 'development',
@@ -60,7 +60,7 @@ app.use((_req, res) => {
 
 // ── Global Error Handler ───────────────────────────────────────────────────
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('[KlickDrive API Error]', err);
+  console.error('[ClickDrive API Error]', err);
   res.status(500).json({
     error: 'Erreur interne du serveur',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
@@ -72,7 +72,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`
   ╔══════════════════════════════════════╗
-  ║   🚗  KlickDrive API  — v1.0.0        ║
+  ║   🚗  ClickDrive API  — v1.0.0        ║
   ║   Port : ${PORT}                        ║
   ║   Env  : ${(process.env.NODE_ENV ?? 'development').padEnd(12)}         ║
   ║   CORS : ${FRONTEND_URL.padEnd(22)} ║

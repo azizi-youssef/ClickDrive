@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import type { AgencyMemberRole } from '@klickdrive/shared';
+import type { AgencyMemberRole } from '@clickdrive/shared';
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Loader2, RefreshCw, Search, Shield, UserPlus, Users, X } from 'lucide-react';
 import type { ClientAuthProfile } from '@/lib/auth/client';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';

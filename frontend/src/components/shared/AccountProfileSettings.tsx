@@ -128,7 +128,7 @@ export function AccountProfileSettings() {
       setRemoveAvatar(false);
       clearSelectedPhoto();
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('klickdrive:profile-updated'));
+        window.dispatchEvent(new CustomEvent('clickdrive:profile-updated'));
       }
       router.refresh();
     } catch (saveError: unknown) {
@@ -145,7 +145,7 @@ export function AccountProfileSettings() {
       <div className="mb-5">
         <h2 className="text-base font-bold text-slate-900">Profil du compte</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Modifiez votre nom et la photo affichée dans votre espace KlickDrive.
+          Modifiez votre nom et la photo affichée dans votre espace ClickDrive.
         </p>
       </div>
 

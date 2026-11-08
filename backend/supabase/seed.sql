@@ -1,5 +1,5 @@
 -- ========================================================================
--- KlickDrive: Realistic Seed Data for Nador (10 Agencies, 50+ Vehicles)
+-- ClickDrive: Realistic Seed Data for Nador (10 Agencies, 50+ Vehicles)
 -- ========================================================================
 
 -- Insert 10 Realistic Rental Agencies in Nador

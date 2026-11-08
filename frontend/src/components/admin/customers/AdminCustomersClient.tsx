@@ -141,13 +141,13 @@ export function AdminCustomersClient() {
 
   const openWhatsApp = (phone: string, customerName: string) => {
     const cleaned = phone.replace(/[^\d+]/g, '');
-    const text = encodeURIComponent(`Bonjour ${customerName}, service support KlickDrive à votre écoute concernant vos réservations.`);
+    const text = encodeURIComponent(`Bonjour ${customerName}, service support ClickDrive à votre écoute concernant vos réservations.`);
     window.open(`https://wa.me/${cleaned.startsWith('+') ? cleaned.slice(1) : cleaned}?text=${text}`, '_blank');
   };
 
   const exportCSV = () => {
     const rows = [
-      ['Répertoire Clients KlickDrive'],
+      ['Répertoire Clients ClickDrive'],
       ['Nom', 'Email', 'Téléphone', 'CIN/Passeport', 'Pays', 'Réservations', 'Total Dépensé (MAD)', 'Dernière Réservation'],
       ...customers.map((c) => [
         c.name,
@@ -164,7 +164,7 @@ export function AdminCustomersClient() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `klickdrive-clients-${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `clickdrive-clients-${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

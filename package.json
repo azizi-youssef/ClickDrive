@@ -1,7 +1,7 @@
 {
-  "name": "klickdrive",
+  "name": "clickdrive",
   "version": "1.0.0",
-  "description": "KlickDrive — Monorepo Frontend + Backend",
+  "description": "ClickDrive — Monorepo Frontend + Backend",
   "private": true,
   "workspaces": [
     "frontend",
@@ -13,9 +13,9 @@
     "dev:frontend": "npm run dev -w frontend",
     "dev:backend": "npm run dev -w backend",
     "dev:legacy": "concurrently -n FRONT,BACK -c cyan,yellow \"npm run dev -w frontend\" \"npm run dev -w backend\"",
-    "build:shared": "npm run build -w @klickdrive/shared",
+    "build:shared": "npm run build -w @clickdrive/shared",
     "build": "npm run build:shared && npm run build -w backend && npm run build -w frontend",
-    "lint": "npm run lint -w frontend && npm run lint -w @klickdrive/shared",
+    "lint": "npm run lint -w frontend && npm run lint -w @clickdrive/shared",
     "test": "npm run test -w frontend",
     "build:frontend": "npm run build:shared && npm run build -w frontend",
     "build:backend": "npm run build -w backend",

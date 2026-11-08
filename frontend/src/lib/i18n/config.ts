@@ -54,8 +54,8 @@ export const SUPPORTED_LOCALES: LanguageOption[] = [
 ];
 
 export const DEFAULT_LOCALE: Locale = 'fr';
-export const LOCALE_COOKIE_KEY = 'klickdrive_locale';
-export const LOCALE_STORAGE_KEY = 'klickdrive_locale';
+export const LOCALE_COOKIE_KEY = 'clickdrive_locale';
+export const LOCALE_STORAGE_KEY = 'clickdrive_locale';
 
 const LOCALE_CODES = new Set<string>(SUPPORTED_LOCALES.map((option) => option.code));
 

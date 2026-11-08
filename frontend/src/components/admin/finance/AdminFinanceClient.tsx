@@ -68,7 +68,7 @@ function csvExport(rows: Booking[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `klickdrive-finances-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `clickdrive-finances-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -406,7 +406,7 @@ export function AdminFinanceClient({ commissionRate }: Props) {
               <Th className="hidden md:table-cell">Agence</Th>
               <Th className="hidden lg:table-cell">Dates</Th>
               <Th>Total (MAD)</Th>
-              <Th>Commission KlickDrive</Th>
+              <Th>Commission ClickDrive</Th>
               <Th className="hidden sm:table-cell">Net Agence</Th>
               <Th>Statut</Th>
             </tr>

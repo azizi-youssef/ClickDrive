@@ -4,7 +4,7 @@ import { bookingStatusLabel, bookingStatusTone, bookingNextStepHint } from '@/li
 import { formatEngineCc, isMotorcycle, motorcycleLicenseLabel } from '@/lib/vehicles/kind';
 
 /* ================================================================
-   Fiche « Demande de réservation » KlickDrive — une seule page A4
+   Fiche « Demande de réservation » ClickDrive — une seule page A4
    Principes :
    - uniquement des données réelles du dossier : jamais de valeur inventée
      (caution, horaires, lieu, pays…) — une donnée absente est signalée comme telle ;
@@ -47,7 +47,7 @@ const PENDING_NOTE =
 const PAYMENT_NOTE =
   "Aucun paiement en ligne : la location et la caution se règlent directement auprès de l'agence, à la remise du véhicule.";
 const LEGAL_NOTE =
-  "KlickDrive met en relation clients et agences partenaires. Le contrat de location est signé avec l'agence, seule responsable du véhicule, du tarif et de la caution.";
+  "ClickDrive met en relation clients et agences partenaires. Le contrat de location est signé avec l'agence, seule responsable du véhicule, du tarif et de la caution.";
 
 const MISSING = 'Non renseigné';
 
@@ -403,11 +403,11 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
   const tone = TONES[bookingStatusTone(status)] ?? TONES.neutral;
 
   doc.setProperties({
-    title: `KlickDrive - Demande de réservation ${reference}`,
+    title: `ClickDrive - Demande de réservation ${reference}`,
     subject: 'Demande de réservation de véhicule',
-    author: 'KlickDrive',
-    creator: 'KlickDrive',
-    keywords: 'KlickDrive, réservation, location de voiture, Nador',
+    author: 'ClickDrive',
+    creator: 'ClickDrive',
+    keywords: 'ClickDrive, réservation, location de voiture, Nador',
   });
   doc.setLanguage('fr');
 
@@ -427,7 +427,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
       const drawW = Math.min(tile.w - 6, (tile.h - 4.5) * ratio);
       const drawH = drawW / ratio;
       const format = /image\/jpe?g/.test(logo.dataUrl) ? 'JPEG' : 'PNG';
-      doc.addImage(logo.dataUrl, format, tile.x + (tile.w - drawW) / 2, tile.y + (tile.h - drawH) / 2, drawW, drawH, 'klickdrive-logo', 'FAST');
+      doc.addImage(logo.dataUrl, format, tile.x + (tile.w - drawW) / 2, tile.y + (tile.h - drawH) / 2, drawW, drawH, 'clickdrive-logo', 'FAST');
       logoDrawn = true;
     } catch (error) {
       console.warn('[PdfService] Logo non affiché, en-tête textuel utilisé :', error);
@@ -442,7 +442,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
     doc.text(pdfSafeText('Agences partenaires · Nador et région de l’Oriental'), titleX, top + 16);
   } else {
     layout.font('bold', 14, COLORS.white);
-    doc.text('KlickDrive', titleX, top + 10);
+    doc.text('ClickDrive', titleX, top + 10);
     layout.font('normal', 8, COLORS.onInk);
     doc.text('Demande de réservation', titleX, top + 16);
   }
@@ -493,7 +493,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
   /* ---------- Client ---------- */
   section('Client et conducteur');
   const customerName = oneLine(booking.customer_name) || oneLine(`${booking.first_name ?? ''} ${booking.last_name ?? ''}`);
-  const showEmail = Boolean(booking.customer_email) && !booking.customer_email.endsWith('@klickdrive.ma');
+  const showEmail = Boolean(booking.customer_email) && !booking.customer_email.endsWith('@clickdrive.ma');
   layout.fields([
     { label: 'Nom complet', value: customerName, emphasis: true },
     { label: 'Téléphone / WhatsApp', value: oneLine(booking.customer_phone) },
@@ -683,7 +683,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
     layout
       .wrap(LEGAL_NOTE, layout.contentWidth, 2)
       .lines.forEach((line, i) => doc.text(line, MARGIN_X, lineY + 4 + i * 2.7));
-    doc.text(`${reference} · Document généré le ${formatPdfDateTime(generatedAt)} · klickdrive.ma`, MARGIN_X, layout.height - 7.2);
+    doc.text(`${reference} · Document généré le ${formatPdfDateTime(generatedAt)} · clickdrive.ma`, MARGIN_X, layout.height - 7.2);
     doc.text(`Page ${page} / ${pages}`, right, layout.height - 7.2, { align: 'right' });
   }
 
@@ -696,7 +696,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
 
 export class PdfService {
   /**
-   * Génère la fiche PDF « KlickDrive — Demande de réservation » sur une page A4.
+   * Génère la fiche PDF « ClickDrive — Demande de réservation » sur une page A4.
    * Les densités sont essayées de la plus aérée à la plus serrée ; la première
    * qui tient sur une page est retenue.
    */

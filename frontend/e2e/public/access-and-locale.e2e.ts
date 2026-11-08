@@ -31,7 +31,7 @@ test.describe('Espaces privés sans session', () => {
 
 test.describe('Arabe (RTL)', () => {
   test('cookie de langue : HTML initial en arabe, de droite à gauche', async ({ page, context, baseURL }) => {
-    await context.addCookies([{ name: 'klickdrive_locale', value: 'ar', url: baseURL! }]);
+    await context.addCookies([{ name: 'clickdrive_locale', value: 'ar', url: baseURL! }]);
     const response = await page.goto('/');
     const html = (await response?.text()) ?? '';
     // Rendu serveur : la direction est correcte avant toute hydratation
@@ -51,7 +51,7 @@ test.describe('Arabe (RTL)', () => {
   });
 
   test('navigation en arabe : catalogue et fiche restent en RTL, sans débordement', async ({ page, context, baseURL }) => {
-    await context.addCookies([{ name: 'klickdrive_locale', value: 'ar', url: baseURL! }]);
+    await context.addCookies([{ name: 'clickdrive_locale', value: 'ar', url: baseURL! }]);
     await page.goto('/search');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expectNoHorizontalOverflow(page);

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 /** Image de partage (Open Graph / réseaux sociaux), générée : aucun fichier binaire à maintenir. */
-export const alt = 'KlickDrive — Location de voitures et motos à Nador';
+export const alt = 'ClickDrive — Location de voitures et motos à Nador';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -26,7 +26,7 @@ export default function OpenGraphImage() {
           <div style={{ fontSize: 30, letterSpacing: 6, textTransform: 'uppercase', color: '#CBD5E1' }}>Nador · Oriental</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ fontSize: 108, fontWeight: 800, letterSpacing: -3 }}>KlickDrive</div>
+          <div style={{ fontSize: 108, fontWeight: 800, letterSpacing: -3 }}>ClickDrive</div>
           <div style={{ fontSize: 46, fontWeight: 600, color: '#E2E8F0', maxWidth: 980 }}>
             Location de voitures et motos auprès d’agences vérifiées
           </div>

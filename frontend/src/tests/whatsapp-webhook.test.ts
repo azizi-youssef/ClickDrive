@@ -94,7 +94,7 @@ test('4. Webhook WhatsApp — Traitement d’un message entrant client « AIDE �
   });
 
   assert.equal(result.intent, 'HELP', 'L’intention détectée doit être HELP');
-  assert.ok(result.replySent && result.replySent.includes('Assistance KlickDrive'), 'La réponse automatique doit fournir le guide conciergerie');
+  assert.ok(result.replySent && result.replySent.includes('Assistance ClickDrive'), 'La réponse automatique doit fournir le guide conciergerie');
 });
 
 test('5. Webhook WhatsApp — Mise à jour des accusés de réception (sent -> delivered -> read)', async () => {

@@ -18,7 +18,7 @@ test('1. Création d’une agence valide - Validation du schéma Zod', () => {
     manager_name: 'Karim Benali',
     phone: '+212612345678',
     whatsapp: '+212612345678',
-    email: 'rif.car.nador@klickdrive.ma',
+    email: 'rif.car.nador@clickdrive.ma',
     address: '45 Boulevard Mohammed V, Nador',
     city: 'Nador',
     region: 'Oriental',
@@ -31,7 +31,7 @@ test('1. Création d’une agence valide - Validation du schéma Zod', () => {
   assert.equal(parsed.success, true);
   if (parsed.success) {
     assert.equal(parsed.data.name, 'Rif Car Nador');
-    assert.equal(parsed.data.email, 'rif.car.nador@klickdrive.ma');
+    assert.equal(parsed.data.email, 'rif.car.nador@clickdrive.ma');
     assert.equal(parsed.data.status, 'ACTIVE');
   }
 });
@@ -40,34 +40,34 @@ test('2. Génération correcte d’un email - Règles de normalisation strictes'
   // A. Accents et minuscules
   assert.equal(
     generateBaseAgencyEmail('Élite Drive Oriental'),
-    'elite.drive.oriental@klickdrive.ma'
+    'elite.drive.oriental@clickdrive.ma'
   );
 
   // B. Espaces remplacés par des points et suppression caractères spéciaux
   assert.equal(
     generateBaseAgencyEmail("Avis & Rent (Nador - Al'Aroui)"),
-    'avis.rent.nador.al.aroui@klickdrive.ma'
+    'avis.rent.nador.al.aroui@clickdrive.ma'
   );
 
   // C. Points consécutifs supprimés
   assert.equal(
     generateBaseAgencyEmail('Nador...Auto..Cars'),
-    'nador.auto.cars@klickdrive.ma'
+    'nador.auto.cars@clickdrive.ma'
   );
 });
 
 test('3. Gestion d’un email déjà utilisé - Suffixe numérique d’unicité', async () => {
   const existingEmails = new Set([
-    'rif.car@klickdrive.ma',
-    'rif.car2@klickdrive.ma',
-    'rif.car3@klickdrive.ma',
+    'rif.car@clickdrive.ma',
+    'rif.car2@clickdrive.ma',
+    'rif.car3@clickdrive.ma',
   ]);
 
   const uniqueEmail = await resolveUniqueAgencyEmail('Rif Car', async (candidate) => {
     return existingEmails.has(candidate);
   });
 
-  assert.equal(uniqueEmail, 'rif.car4@klickdrive.ma');
+  assert.equal(uniqueEmail, 'rif.car4@clickdrive.ma');
 });
 
 test('4. Rejet d’une création invalide ou incomplète', () => {
@@ -76,7 +76,7 @@ test('4. Rejet d’une création invalide ou incomplète', () => {
     createAgencyWithAuthSchema.safeParse({
       name: 'A',
       phone: '0612345678',
-      email: 'a@klickdrive.ma',
+      email: 'a@clickdrive.ma',
       address: 'Nador',
     }).success,
     false
@@ -121,7 +121,7 @@ test('6. Refus d’accès d’un compte suspendu / sans agence active', () => {
   // Utilisateur avec agence autorisée
   const agencyAuth = {
     userId: 'user-2',
-    email: 'agent@klickdrive.ma',
+    email: 'agent@clickdrive.ma',
     displayName: 'Agent',
     avatarUrl: null,
     role: 'AGENCY_OWNER' as const,
@@ -136,7 +136,7 @@ test('6. Refus d’accès d’un compte suspendu / sans agence active', () => {
 test('7. Protection contre les accès inter-agences', () => {
   const agencyAuth = {
     userId: 'user-2',
-    email: 'agent@klickdrive.ma',
+    email: 'agent@clickdrive.ma',
     displayName: 'Agent',
     avatarUrl: null,
     role: 'AGENCY_OWNER' as const,

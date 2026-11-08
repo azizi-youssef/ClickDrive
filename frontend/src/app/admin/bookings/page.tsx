@@ -8,7 +8,7 @@ export default function AdminBookingsPage() {
   return (
     <AdminShell
       title="Réservations"
-      subtitle="Toutes les réservations de la marketplace KlickDrive"
+      subtitle="Toutes les réservations de la marketplace ClickDrive"
     >
       <AdminBookingsClient />
     </AdminShell>

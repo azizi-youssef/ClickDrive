@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { brandLogo } from '@/lib/brand/logo';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -77,8 +78,8 @@ function useIsActive() {
 }
 
 /* ── Préférence « sidebar réduite » (persistée, sans flash d'hydratation) ── */
-const COLLAPSE_KEY = 'klickdrive:admin-sidebar-collapsed';
-const COLLAPSE_EVENT = 'klickdrive:admin-sidebar';
+const COLLAPSE_KEY = 'clickdrive:admin-sidebar-collapsed';
+const COLLAPSE_EVENT = 'clickdrive:admin-sidebar';
 
 function readCollapsed() {
   try {
@@ -115,7 +116,7 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
   return (
     <Link
       href="/admin"
-      aria-label="KlickDrive Admin — vue d'ensemble"
+      aria-label="ClickDrive Admin — vue d'ensemble"
       className="flex items-center gap-2.5 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[#E63946]/60"
     >
       <div
@@ -125,8 +126,8 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
         )}
       >
         <Image
-          src="/logo_12.png"
-          alt="KlickDrive"
+          src={brandLogo}
+          alt="ClickDrive"
           fill
           sizes={collapsed ? '32px' : '128px'}
           className="object-contain object-left p-1"
@@ -385,10 +386,10 @@ export function AdminTopBar({
   useEffect(() => {
     loadProfile();
     const handleUpdate = () => loadProfile();
-    window.addEventListener('klickdrive:profile-updated', handleUpdate);
+    window.addEventListener('clickdrive:profile-updated', handleUpdate);
     window.addEventListener('focus', handleUpdate);
     return () => {
-      window.removeEventListener('klickdrive:profile-updated', handleUpdate);
+      window.removeEventListener('clickdrive:profile-updated', handleUpdate);
       window.removeEventListener('focus', handleUpdate);
     };
   }, [loadProfile]);

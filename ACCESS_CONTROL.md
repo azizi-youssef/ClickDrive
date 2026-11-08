@@ -1,4 +1,4 @@
-# KlickDrive — audit et contrôle d’accès agences
+# ClickDrive — audit et contrôle d’accès agences
 
 ## Rapport d’audit de l’architecture existante
 
@@ -104,7 +104,7 @@ l’état de la base Supabase déployée doit être vérifié séparément (rejo
 sur `bookings` et `booking_events` (inertes car les privilèges étaient déjà retirés), retrait de `EXECUTE` à `anon`
 sur les fonctions d’invitation, de rôle, de révocation, de statistiques et sur `expire_completed_bookings()`,
 et `is_admin()` aligné sur `SUPER_ADMIN`. Côté application, `isPlatformAdminRole` ne reconnaît plus `ADMIN`
-(`@klickdrive/shared`), et le middleware protège désormais aussi `/account/*`.
+(`@clickdrive/shared`), et le middleware protège désormais aussi `/account/*`.
 
 ## Remédiations de sécurité additionnelles
 

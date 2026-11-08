@@ -1,4 +1,4 @@
-# KlickDrive — Remédiation de l’audit technique du 6 novembre 2026
+# ClickDrive — Remédiation de l’audit technique du 6 novembre 2026
 
 Statut au 7 novembre 2026 : **phases 0 à 3 réalisées en grande partie ; phase 4 (accessibilité des dialogues, tests de
 composants, E2E écrits) réalisée sauf exécution des E2E ; phases 5 à 7 partielles**.
@@ -40,7 +40,7 @@ affichée pendant l’analyse (seule la *claim* `role` des jetons a été décod
 | Politiques d’écriture `WITH CHECK (true)` | Présentes (inertes car privilèges retirés) | Supprimées (`20261107000100`) | test « aucune politique permissive » | **Corrigé** |
 | Fonctions `SECURITY DEFINER` exécutables par `anon` | `expire_completed_bookings()` écrivait sans session ; RPC d’admin appelables | `REVOKE EXECUTE … FROM anon` | 7 tests « sans session, refusé » | **Corrigé** |
 | `is_admin()` accorde des droits à `ADMIN` historique | Oui (non utilisé par les politiques) | Aligné sur `SUPER_ADMIN` | test « ADMIN sans droit global » | **Corrigé** |
-| Rôle `ADMIN` historique traité comme super-admin côté application | `isPlatformAdminRole` incluait `ADMIN` → `GET /api/bookings` lui renvoyait toutes les réservations avec PII | `SUPER_ADMIN` uniquement (`@klickdrive/shared`) | `lib/auth/access.spec.ts` | **Corrigé** |
+| Rôle `ADMIN` historique traité comme super-admin côté application | `isPlatformAdminRole` incluait `ADMIN` → `GET /api/bookings` lui renvoyait toutes les réservations avec PII | `SUPER_ADMIN` uniquement (`@clickdrive/shared`) | `lib/auth/access.spec.ts` | **Corrigé** |
 | `/account/*` non protégé par le middleware | Exact (le layout serveur protégeait déjà) | Middleware : session, profil, redirection sûre, `noindex` | test `privateAreaFor` + vérification HTTP 307 | **Corrigé** |
 | Middleware ouvert si Supabase non configuré | Oui, y compris en production | Fail-closed en production (503) | revue de code | **Corrigé** |
 | Disponibilité fail-open | La route renvoyait `available: true` sur erreur ; le service aussi ; la carte se repliait sur le statut flotte | États AVAILABLE / UNAVAILABLE / UNKNOWN ; 503 si inconnu ; aucune demande sur disponibilité non vérifiée | `lib/availability/status.spec.ts` (16 tests) + HTTP 404/400 | **Corrigé** |
@@ -56,7 +56,7 @@ affichée pendant l’analyse (seule la *claim* `role` des jetons a été décod
 | Image Open Graph `/og-…png` absente ; icône Apple en `.ico` | Exact (aggravé par le changement de marque) | `opengraph-image`, `twitter-image`, `apple-icon` générés | PNG 1200×630 et 180×180 | **Corrigé** |
 | Pages privées indexables | Pas de `noindex` sur `/account`, `/agency`, `/login` | `X-Robots-Tag` + métadonnées | HTTP | **Corrigé** |
 | Sitemap listait les agences inactives | `getAgencies(false)` | Agences actives uniquement | revue de code | **Corrigé** |
-| Titres en double (« … \| KlickDrive \| KlickDrive Nador ») | Exact | Titres sans marque (gabarit) | HTTP | **Corrigé** |
+| Titres en double (« … \| ClickDrive \| ClickDrive Nador ») | Exact | Titres sans marque (gabarit) | HTTP | **Corrigé** |
 | Anglais absent | Exact | `en.ts` complet + statuts de réservation | `lib/i18n/i18n.spec.ts` | **Corrigé** |
 | RTL appliqué après hydratation ; décalage serveur/client | Exact (source d’erreurs d’hydratation) | Langue lue côté serveur (cookie, sinon `Accept-Language`), `lang`/`dir` dans le premier HTML | HTTP : `ar` → `dir="rtl"` | **Corrigé** |
 | jsPDF dans le navigateur | Non : utilisé uniquement côté serveur | — | revue des imports | **Sans objet** |
@@ -120,7 +120,7 @@ appliquée au 6 novembre (recherche par dates en erreur 500).
 | 10 | Super administrateur : agences | `staging/journeys.e2e.ts` | compte de test | Écrit, NON EXÉCUTÉ |
 | 11 | Navigation arabe (RTL) | `public/access-and-locale.e2e.ts` | lecture | Écrit, NON EXÉCUTÉ ; RTL vérifié manuellement (`dir="rtl"`, aucun débordement à 375 px) |
 
-Garde-fou : `e2e/support/env.ts` refuse toute écriture si l’URL cible est `klickdrive.ma`, même avec `E2E_ALLOW_WRITES=1`.
+Garde-fou : `e2e/support/env.ts` refuse toute écriture si l’URL cible est `clickdrive.ma`, même avec `E2E_ALLOW_WRITES=1`.
 Le serveur local lit la base de production : seuls les parcours en lecture seule doivent y être lancés.
 
 ---
@@ -137,7 +137,7 @@ Le serveur local lit la base de production : seuls les parcours en lecture seule
 5. Accessibilité restante : carrousels et menus de navigation (non audités), contraste (à mesurer par axe), zoom 200 %,
    lecteur d’écran réel (NVDA / VoiceOver) — non vérifiés.
 6. Incohérence de contact à confirmer : le pied de page affiche le WhatsApp `+212 767 137 136`, le reste du site
-   (`KLICKDRIVE_WHATSAPP_NUMBER`, barre de navigation, carte de réservation) `+212 661 987 654`. Non modifié : donnée métier.
+   (`CLICKDRIVE_WHATSAPP_NUMBER`, barre de navigation, carte de réservation) `+212 661 987 654`. Non modifié : donnée métier.
 7. Catalogue : pagination et filtrage côté serveur (le catalogue complet est encore chargé puis filtré côté client).
 8. Observabilité : identifiants de corrélation, journaux structurés, contrôle de santé base de données, alertes.
 9. Backend Express historique : documenter puis retirer une fois l’absence de dépendance prouvée.

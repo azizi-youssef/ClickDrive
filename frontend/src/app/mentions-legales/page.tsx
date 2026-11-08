@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Mentions Légales',
   alternates: { canonical: '/mentions-legales' },
   description:
-    "Informations légales relatives à la plateforme KlickDrive, éditeur, hébergeur et conditions d'utilisation du site de location de voitures à Nador.",
+    "Informations légales relatives à la plateforme ClickDrive, éditeur, hébergeur et conditions d'utilisation du site de location de voitures à Nador.",
   robots: { index: true, follow: true },
 };
 
@@ -42,12 +42,12 @@ export default function MentionsLegalesPage() {
           {/* 1 - Éditeur */}
           <Section title="1. Éditeur du site">
             <InfoGrid items={[
-              { label: 'Dénomination sociale', value: 'KlickDrive' },
+              { label: 'Dénomination sociale', value: 'ClickDrive' },
               { label: 'Forme juridique', value: 'Entreprise individuelle' },
               { label: 'Responsable de la publication', value: 'Youssef Azizi' },
               { label: 'Adresse', value: 'Nador, Région de l\'Oriental, Maroc' },
-              { label: 'Email', value: 'contact@klickdrive.ma' },
-              { label: 'Site web', value: 'https://klickdrive.ma' },
+              { label: 'Email', value: 'contact@clickdrive.ma' },
+              { label: 'Site web', value: 'https://clickdrive.ma' },
             ]} />
           </Section>
 
@@ -67,22 +67,22 @@ export default function MentionsLegalesPage() {
           {/* 3 - Propriété intellectuelle */}
           <Section title="3. Propriété intellectuelle">
             <Paragraph>
-              L&apos;ensemble du contenu présent sur le site KlickDrive (textes, graphiques, logos,
-              images, icônes, sons, logiciels) est la propriété exclusive de KlickDrive ou de ses
+              L&apos;ensemble du contenu présent sur le site ClickDrive (textes, graphiques, logos,
+              images, icônes, sons, logiciels) est la propriété exclusive de ClickDrive ou de ses
               partenaires, et est protégé par les lois marocaines et internationales relatives à
               la propriété intellectuelle.
             </Paragraph>
             <Paragraph>
               Toute reproduction, distribution, modification, adaptation, retransmission ou
               publication, même partielle, de ces différents éléments est strictement interdite
-              sans l&apos;accord exprès par écrit de KlickDrive.
+              sans l&apos;accord exprès par écrit de ClickDrive.
             </Paragraph>
           </Section>
 
           {/* 4 - Données personnelles */}
           <Section title="4. Données personnelles">
             <Paragraph>
-              KlickDrive collecte et traite des données personnelles dans le cadre de la gestion
+              ClickDrive collecte et traite des données personnelles dans le cadre de la gestion
               des réservations de véhicules (nom, prénom, CIN/passeport, email, téléphone). Ces
               données sont traitées conformément à la{' '}
               <strong>loi n° 09-08 relative à la protection des personnes physiques à l'égard
@@ -92,8 +92,8 @@ export default function MentionsLegalesPage() {
             <Paragraph>
               Pour toute demande relative à vos données personnelles (accès, rectification,
               suppression), contactez-nous à{' '}
-              <a href="mailto:privacy@klickdrive.ma" className="text-accent-text hover:underline font-semibold">
-                privacy@klickdrive.ma
+              <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">
+                privacy@clickdrive.ma
               </a>.
             </Paragraph>
             <Paragraph>
@@ -108,7 +108,7 @@ export default function MentionsLegalesPage() {
           {/* 5 - Cookies */}
           <Section title="5. Cookies">
             <Paragraph>
-              Le site KlickDrive utilise des cookies essentiels au fonctionnement de la
+              Le site ClickDrive utilise des cookies essentiels au fonctionnement de la
               plateforme (gestion de session, authentification). Aucun cookie publicitaire
               tiers n&apos;est déposé sans votre consentement.
             </Paragraph>
@@ -121,8 +121,8 @@ export default function MentionsLegalesPage() {
           {/* 6 - Responsabilité */}
           <Section title="6. Limitation de responsabilité">
             <Paragraph>
-              KlickDrive agit en qualité d&apos;<strong>intermédiaire technique</strong> entre les
-              voyageurs et les agences de location de véhicules. KlickDrive ne saurait être tenu
+              ClickDrive agit en qualité d&apos;<strong>intermédiaire technique</strong> entre les
+              voyageurs et les agences de location de véhicules. ClickDrive ne saurait être tenu
               responsable des dommages directs ou indirects résultant de l&apos;utilisation du site,
               de l&apos;indisponibilité d&apos;un véhicule, ou d&apos;un litige entre un client et une agence
               partenaire.
@@ -151,7 +151,7 @@ export default function MentionsLegalesPage() {
             </Paragraph>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
               <li>
-                📧 <a href="mailto:contact@klickdrive.ma" className="text-accent-text hover:underline font-semibold">contact@klickdrive.ma</a>
+                📧 <a href="mailto:contact@clickdrive.ma" className="text-accent-text hover:underline font-semibold">contact@clickdrive.ma</a>
               </li>
               <li>
                 📍 Nador, Région de l&apos;Oriental, Maroc

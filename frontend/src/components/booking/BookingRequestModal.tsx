@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
+import { brandLogo } from '@/lib/brand/logo';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Vehicle } from '@/types';
 import { calculateBookingPrice, calculateRentalDays } from '@/lib/utils/pricing';
@@ -350,7 +351,7 @@ export function BookingRequestModal({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         cin: cin.trim().toUpperCase(),
-        email: email.trim() || `${phone.replace(/[^0-9]/g, '')}@klickdrive.ma`,
+        email: email.trim() || `${phone.replace(/[^0-9]/g, '')}@clickdrive.ma`,
         phone: phone.trim(),
         country,
         birthDate,
@@ -452,7 +453,7 @@ export function BookingRequestModal({
         <header className="shrink-0 bg-ink px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] text-white sm:px-6 sm:pt-5">
           <div className="flex items-start gap-3">
             <div className="relative hidden h-10 w-28 shrink-0 rounded-xl bg-white sm:block">
-              <Image src="/logo_12.png" alt="KlickDrive" fill sizes="112px" className="object-contain px-2.5 py-2" priority />
+              <Image src={brandLogo} alt="ClickDrive" fill sizes="112px" className="object-contain px-2.5 py-2" priority />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
@@ -1010,7 +1011,7 @@ export function BookingRequestModal({
 
                   <ol className="mt-5 space-y-2.5 text-start text-sm text-slate-600">
                     {[
-                      'Votre demande apparaît dans l’espace de l’agence sur KlickDrive.',
+                      'Votre demande apparaît dans l’espace de l’agence sur ClickDrive.',
                       'L’agence confirme la disponibilité et vous recontacte.',
                       'Vous signez le contrat et réglez à l’agence lors de la remise des clés.',
                     ].map((item, i) => (

@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { brandLogo } from '@/lib/brand/logo';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -38,7 +39,7 @@ import {
   type LoginPortal,
 } from '@/lib/auth/login-portals';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
-import { USER_ROLES } from '@klickdrive/shared';
+import { USER_ROLES } from '@clickdrive/shared';
 
 const MAX_ATTEMPTS = 5;
 const LOCK_SECONDS = 30;
@@ -78,7 +79,7 @@ const PORTAL_COPY: Record<
     emailPlaceholder: 'vous@example.com',
     emailLabel: 'Adresse e-mail',
     trust: 'Connexion sécurisée. Google disponible pour les clients.',
-    help: 'Utilisez « Mot de passe oublié » ou contactez KlickDrive si vous ne retrouvez pas votre compte.',
+    help: 'Utilisez « Mot de passe oublié » ou contactez ClickDrive si vous ne retrouvez pas votre compte.',
     submitLabel: 'Se connecter',
   },
   agency: {
@@ -91,7 +92,7 @@ const PORTAL_COPY: Record<
     emailPlaceholder: 'contact@votre-agence.ma',
     emailLabel: 'E-mail professionnel',
     trust: 'Accès réservé aux agences partenaires autorisées.',
-    help: 'Mot de passe oublié ou agence non activée ? Contactez le responsable KlickDrive.',
+    help: 'Mot de passe oublié ou agence non activée ? Contactez le responsable ClickDrive.',
     submitLabel: 'Accéder à mon espace',
   },
   admin: {
@@ -100,11 +101,11 @@ const PORTAL_COPY: Record<
     titleAccent: 'sous contrôle.',
     copy: 'Validez les agences, la commission et la marketplace depuis l’administration.',
     accessLabel: 'Espace administrateur',
-    formSubtitle: 'Connectez-vous pour gérer la plateforme KlickDrive.',
-    emailPlaceholder: 'admin@klickdrive.ma',
+    formSubtitle: 'Connectez-vous pour gérer la plateforme ClickDrive.',
+    emailPlaceholder: 'admin@clickdrive.ma',
     emailLabel: 'Adresse e-mail',
     trust: 'Accès réservé aux administrateurs autorisés.',
-    help: 'Contactez le responsable KlickDrive pour vérifier votre compte ou réinitialiser votre mot de passe.',
+    help: 'Contactez le responsable ClickDrive pour vérifier votre compte ou réinitialiser votre mot de passe.',
     submitLabel: 'Se connecter',
   },
 };
@@ -594,8 +595,8 @@ function LoginStyles() {
 /* Logo sur fond clair (le gris de « Drive » manque de contraste sur le panneau graphite) */
 function BrandLogo() {
   return (
-    <Link href="/" className="cd-logo" aria-label="KlickDrive — Accueil">
-      <Image src="/logo_12.png" alt="KlickDrive" width={851} height={229} sizes="168px" priority />
+    <Link href="/" className="cd-logo" aria-label="ClickDrive — Accueil">
+      <Image src={brandLogo} alt="ClickDrive" sizes="168px" priority />
     </Link>
   );
 }
@@ -605,7 +606,7 @@ function BrandPanel({ portal }: { portal: LoginPortal }) {
   const features = PORTAL_FEATURES[portal];
 
   return (
-    <aside className="cd-brand" aria-label="KlickDrive">
+    <aside className="cd-brand" aria-label="ClickDrive">
       <div className="cd-eyebrow">{copy.eyebrow}</div>
       <svg className="cd-road-art" aria-hidden="true" viewBox="0 0 720 720" fill="none">
         <path d="M805 60H492c-112 0-202 90-202 202v63c0 84-68 152-152 152H-92" stroke="#e63946" strokeOpacity=".06" strokeWidth="148" />
@@ -742,7 +743,7 @@ function PortalLoginForm() {
 
     try {
       if (!isSupabaseConfigured()) {
-        setError('La connexion est momentanément indisponible. Contactez KlickDrive.');
+        setError('La connexion est momentanément indisponible. Contactez ClickDrive.');
         return;
       }
       const supabase = createClient();
@@ -901,7 +902,7 @@ function PortalLoginForm() {
     <main lang="fr" className={`cd-login`}>
       <LoginStyles />
       <BrandPanel portal={portal} />
-      <section className="cd-access" aria-label="Connexion KlickDrive">
+      <section className="cd-access" aria-label="Connexion ClickDrive">
         <div className="cd-topbar">
           <BrandLogo />
           <Link href="/" className="cd-back" aria-label="Retour au site">
@@ -1142,7 +1143,7 @@ function PortalLoginForm() {
 
             {portal === 'client' && (
               <p className="cd-join">
-                {isRegistration ? 'Vous avez déjà un compte ? ' : 'Nouveau sur KlickDrive ? '}
+                {isRegistration ? 'Vous avez déjà un compte ? ' : 'Nouveau sur ClickDrive ? '}
                 <Link href={isRegistration ? loginUrl('client') : `${LOGIN_PATH}?portal=client&mode=signup`}>
                   {isRegistration ? 'Se connecter' : 'Créer un compte'}
                 </Link>
@@ -1169,7 +1170,7 @@ function PortalLoginForm() {
           </details>
         </div>
 
-        <p className="cd-access-footer">© {new Date().getFullYear()} KlickDrive · Nador, Maroc</p>
+        <p className="cd-access-footer">© {new Date().getFullYear()} ClickDrive · Nador, Maroc</p>
       </section>
     </main>
   );

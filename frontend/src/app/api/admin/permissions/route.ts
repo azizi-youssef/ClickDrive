@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePlatformPermissionApi } from '@/lib/auth/access-api';
 import { createAdminClient } from '@/lib/supabase/server';
-import { USER_ROLES, type UserRole } from '@klickdrive/shared';
+import { USER_ROLES, type UserRole } from '@clickdrive/shared';
 import { z } from 'zod';
 
 const updateRoleSchema = z.object({

@@ -1,5 +1,5 @@
 /**
- * KlickDrive Booking Engine & Business Logic Test Suite
+ * ClickDrive Booking Engine & Business Logic Test Suite
  * Validates:
  * 1. calculateBookingPrice (subtotal, commission_rate, commission_amount, agency_amount, total)
  * 2. calculateRentalDays (dates math, min 1 day)
@@ -16,7 +16,7 @@ import { bookingRequestSchema } from '../lib/validations/booking';
 
 function runTests() {
   console.log('========================================================');
-  console.log('🧪 KlickDrive Booking Engine Test Suite Running...');
+  console.log('🧪 ClickDrive Booking Engine Test Suite Running...');
   console.log('========================================================\n');
 
   let passed = 0;
@@ -38,20 +38,20 @@ function runTests() {
   const defaultPrice = calculateBookingPrice(360, 5);
   assert(defaultPrice.subtotal === 1800, 'Sous-total 360 DH x 5 jours = 1 800 DH');
   assert(defaultPrice.commission_rate === 0.00, 'Taux de commission par défaut = 0% (Modèle Abonnement)');
-  assert(defaultPrice.commission_amount === 0, 'Commission KlickDrive = 0 DH (100% conservé par agence)');
+  assert(defaultPrice.commission_amount === 0, 'Commission ClickDrive = 0 DH (100% conservé par agence)');
   assert(defaultPrice.agency_amount === 1800, 'Net agence 100% = 1 800 DH');
   assert(defaultPrice.total === 1800, 'Total facturé = 1 800 DH');
 
   // Test avec taux explicite (ex: 15% rétroactif)
   const price1 = calculateBookingPrice(360, 5, 15.00);
   assert(price1.commission_rate === 15.00, 'Taux de commission historique = 15%');
-  assert(price1.commission_amount === 270, 'Commission KlickDrive 15% de 1800 = 270 DH');
+  assert(price1.commission_amount === 270, 'Commission ClickDrive 15% de 1800 = 270 DH');
   assert(price1.agency_amount === 1530, 'Montant agence = 1800 - 270 = 1 530 DH');
 
   // Test avec taux dynamique différent (ex: 20%)
   const price2 = calculateBookingPrice(400, 3, 20.00);
   assert(price2.subtotal === 1200, 'Sous-total 400 DH x 3 jours = 1 200 DH');
-  assert(price2.commission_amount === 240, 'Commission KlickDrive 20% de 1200 = 240 DH');
+  assert(price2.commission_amount === 240, 'Commission ClickDrive 20% de 1200 = 240 DH');
   assert(price2.agency_amount === 960, 'Montant agence = 960 DH');
 
   // --- 2. DURATION CALCULATION TESTS ---

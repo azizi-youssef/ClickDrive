@@ -22,8 +22,8 @@ describe('breadcrumbJsonLd', () => {
       { name: 'Motos', path: '/motos' },
     ]);
     expect(crumbs.itemListElement).toEqual([
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://klickdrive.ma' },
-      { '@type': 'ListItem', position: 2, name: 'Motos', item: 'https://klickdrive.ma/motos' },
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://clickdrive.ma' },
+      { '@type': 'ListItem', position: 2, name: 'Motos', item: 'https://clickdrive.ma/motos' },
     ]);
   });
 });

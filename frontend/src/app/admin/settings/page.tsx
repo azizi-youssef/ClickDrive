@@ -16,7 +16,7 @@ import { AccountProfileSettings } from '@/components/shared/AccountProfileSettin
 
 export const metadata: Metadata = {
   title: 'Paramètres',
-  description: 'Configurez les paramètres et les règles de fonctionnement de la plateforme KlickDrive.',
+  description: 'Configurez les paramètres et les règles de fonctionnement de la plateforme ClickDrive.',
 };
 
 type SettingSection = {
@@ -36,7 +36,7 @@ const SETTING_SECTIONS: SettingSection[] = [
     icon: DollarSign,
     label: 'Abonnements & Monétisation',
     description:
-      'Gérez les forfaits mensuels basés sur la capacité en véhicules et les règles de monétisation KlickDrive.',
+      'Gérez les forfaits mensuels basés sur la capacité en véhicules et les règles de monétisation ClickDrive.',
     accent: 'text-[#0B1220]',
     iconBackground: 'bg-blue-50',
     category: 'Finance',
@@ -68,7 +68,7 @@ export default function AdminSettingsPage() {
   return (
     <AdminShell
       title="Paramètres plateforme"
-      subtitle="Centralisez la configuration et la gestion de KlickDrive."
+      subtitle="Centralisez la configuration et la gestion de ClickDrive."
     >
       <div className="mx-auto w-full max-w-6xl space-y-8">
         <AccountProfileSettings />

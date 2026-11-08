@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'État du système' };
 
 export default function AdminHealthPage() {
   return (
-    <AdminShell title="État du système" subtitle="État des services de la plateforme KlickDrive">
+    <AdminShell title="État du système" subtitle="État des services de la plateforme ClickDrive">
       <AdminHealthClient />
     </AdminShell>
   );

@@ -54,7 +54,7 @@ class NotificationService {
 
   /** Message WhatsApp professionnel destiné à l'agence */
   formatAgencyWhatsAppMessage(booking: Booking, appUrl?: string): string {
-    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://klickdrive.ma';
+    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma';
     const ref = booking.reference || booking.booking_ref || '';
     const pdfUrl = `${baseUrl}${signedBookingPdfPath(ref)}`;
     const dashboardUrl = `${baseUrl}/agency?booking=${encodeURIComponent(ref)}`;
@@ -63,7 +63,7 @@ class NotificationService {
       : 'Véhicule';
 
     return (
-      `🚗 *NOUVELLE DEMANDE DE RÉSERVATION KLICKDRIVE*\n\n` +
+      `🚗 *NOUVELLE DEMANDE DE RÉSERVATION CLICKDRIVE*\n\n` +
       `*Référence :* ${ref}\n` +
       `*Véhicule :* ${vehicleName}\n` +
       `*Client :* ${booking.customer_name}\n` +
@@ -89,13 +89,13 @@ class NotificationService {
     const ref = booking.reference || booking.booking_ref || '';
 
     return (
-      `✅ *Demande KlickDrive enregistrée*\n\n` +
+      `✅ *Demande ClickDrive enregistrée*\n\n` +
       `Bonjour ${booking.customer_name},\n` +
       `Votre demande pour la *${vehicleName}* a bien été transmise à l'agence ${booking.agency?.name || ''}.\n\n` +
       `*Référence :* ${ref}\n` +
       `*Période :* du ${booking.start_date} au ${booking.end_date}\n` +
       `*Total estimé :* ${booking.total_price} DH\n\n` +
-      `Suivez votre demande : https://klickdrive.ma/account/bookings/${encodeURIComponent(ref)}`
+      `Suivez votre demande : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`
     );
   }
 

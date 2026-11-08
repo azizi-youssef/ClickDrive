@@ -53,25 +53,26 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
           <Globe className="h-3.5 w-3.5" />
           <span>Langue / Language</span>
         </div>
-        <div className="grid grid-cols-5 gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
+        {/* 6 langues en 3 × 2 : nom complet dans sa propre langue, zones tactiles de 44 px */}
+        <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
           {supportedLanguages.map((lang) => {
             const isActive = lang.code === locale;
             return (
               <button
                 key={lang.code}
                 type="button"
+                lang={lang.code}
+                dir={lang.code === 'ar' ? 'rtl' : 'ltr'}
                 onClick={() => setLocale(lang.code)}
                 className={cn(
-                  'flex flex-col items-center justify-center rounded-lg py-2 text-center transition-all',
+                  'flex min-h-11 items-center justify-center rounded-lg px-1 text-center text-sm transition-all',
                   isActive
                     ? 'bg-white font-bold text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    : 'font-medium text-slate-600 hover:text-slate-900'
                 )}
                 aria-pressed={isActive}
               >
-                <span className="text-xs uppercase font-bold tracking-tight">
-                  {lang.code}
-                </span>
+                {lang.nativeName}
               </button>
             );
           })}
@@ -91,7 +92,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
           onClick={() => setIsOpen((prev) => !prev)}
           aria-expanded={isOpen}
           aria-label="Sélectionner la langue"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
         >
           <Globe className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{currentLanguage.nativeName}</span>
@@ -149,7 +150,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
         aria-expanded={isOpen}
         aria-label={`Langue actuelle : ${currentLanguage.nativeName}. Cliquer pour changer.`}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all duration-200',
+          'tap-44 inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all duration-200',
           isOpen
             ? 'border-[#0B1220] bg-slate-100 text-slate-900 shadow-xs'
             : 'border-slate-200/80 bg-white/80 text-slate-700 hover:border-slate-300 hover:bg-slate-50'

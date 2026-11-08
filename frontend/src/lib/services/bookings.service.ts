@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { canPerformAgencyBookingAction } from '@klickdrive/shared';
+import { canPerformAgencyBookingAction } from '@clickdrive/shared';
 import { Booking, BookingStatus, BookingEvent, BookingEventType } from '@/types';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { bookingRequestSchema, BookingRequestInput } from '@/lib/validations/booking';
@@ -367,7 +367,7 @@ export class BookingsService {
           last_name: input.lastName,
           customer_name: fullName,
           cin: input.cin,
-          customer_email: input.email || `${input.phone.replace(/[^0-9]/g, '')}@klickdrive.ma`,
+          customer_email: input.email || `${input.phone.replace(/[^0-9]/g, '')}@clickdrive.ma`,
           customer_phone: input.phone,
           customer_country: input.country,
           birth_date: input.birthDate,

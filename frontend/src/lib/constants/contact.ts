@@ -1,13 +1,13 @@
 /**
- * Coordonnées et horaires du support KlickDrive : source unique, à mettre à jour ici uniquement.
+ * Coordonnées et horaires du support ClickDrive : source unique, à mettre à jour ici uniquement.
  * Les horaires reprennent ceux publiés sur la page Contact.
  */
 
 /** Numéro WhatsApp de la plateforme (format international, sans « + » ni espaces) */
-export const KLICKDRIVE_WHATSAPP_NUMBER = '212661987654';
+export const CLICKDRIVE_WHATSAPP_NUMBER = '212661987654';
 
-export function klickdriveWhatsAppUrl(message?: string): string {
-  const base = `https://wa.me/${KLICKDRIVE_WHATSAPP_NUMBER}`;
+export function clickdriveWhatsAppUrl(message?: string): string {
+  const base = `https://wa.me/${CLICKDRIVE_WHATSAPP_NUMBER}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 

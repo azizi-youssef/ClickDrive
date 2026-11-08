@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     'Rejoignez le réseau des agences de location partenaires à Nador. Espace de gestion de flotte, visibilité locale et réception de demandes qualifiées.',
   alternates: { canonical: '/agency/join' },
   openGraph: {
-    title: 'Rejoindre KlickDrive — Pour les agences de location à Nador',
+    title: 'Rejoindre ClickDrive — Pour les agences de location à Nador',
     description:
-      'Présentez votre flotte sur KlickDrive et recevez des demandes de réservation directes et sécurisées.',
-    url: 'https://klickdrive.ma/agency/join',
+      'Présentez votre flotte sur ClickDrive et recevez des demandes de réservation directes et sécurisées.',
+    url: 'https://clickdrive.ma/agency/join',
   },
 };
 

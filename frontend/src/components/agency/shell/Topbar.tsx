@@ -1,4 +1,5 @@
 'use client';
+import { brandLogo } from '@/lib/brand/logo';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
@@ -233,7 +234,7 @@ export function Topbar({
                   <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src="/logo_12.png" alt="" className="h-full w-full object-contain p-0.5" />
+                  <img src={brandLogo.src} alt="" className="h-full w-full object-contain p-0.5" />
                 )}
               </div>
               <span className="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block">
@@ -256,7 +257,7 @@ export function Topbar({
                 <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src="/logo_12.png" alt="" className="h-full w-full object-contain p-0.5" />
+                <img src={brandLogo.src} alt="" className="h-full w-full object-contain p-0.5" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -295,7 +296,7 @@ export function Topbar({
               className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             >
               <Home aria-hidden="true" className="h-4 w-4 text-slate-400" />
-              <span>Voir le site KlickDrive</span>
+              <span>Voir le site ClickDrive</span>
             </Link>
           </div>
 

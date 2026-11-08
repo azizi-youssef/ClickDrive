@@ -11,12 +11,12 @@ import type { Vehicle, Agency } from '@/types';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { GsapReveal } from '@/components/ui/react-bits';
+import { StyleExplorer } from '@/components/home/StyleExplorer';
 
 import {
   AlertCircle,
   ArrowRight,
   Motorbike,
-  ArrowUpRight,
   Car,
   CheckCircle2,
   Clock3,
@@ -124,36 +124,6 @@ export function HomeClient({
   });
 
   const totalAgencies = agencies.length;
-
-  // ── Helpers catégories ──────────────────────────────────────────
-  const getCategoryCount = (cat: string) =>
-    vehicles.filter((v) => v.category === cat && v.status === 'AVAILABLE').length;
-  const getCategoryMinPrice = (cat: string): number | null => {
-    const prices = vehicles
-      .filter((v) => v.category === cat && v.status === 'AVAILABLE')
-      .map((v) => v.daily_price);
-    return prices.length > 0 ? Math.min(...prices) : null;
-  };
-  const getTotalCategoryCount = (cat: string) =>
-    vehicles.filter((v) => v.category === cat).length;
-
-  // Types de véhicules (taxonomie officielle — cartes)
-  // Ordre par popularité / volume estimé
-  const CATEGORY_DEFS = [
-    { name: 'Économique', image: '/economique.jpeg', description: 'Pratique & économique' },
-    { name: 'SUV',        image: '/suv.jpeg',        description: 'Confort & espace' },
-    { name: 'Berline',    image: '/Mercedes%20Class%20C%20220%20D.jpeg', description: 'Élégance au quotidien' },
-    { name: 'Compacte',   image: '/economique.jpeg', description: 'Agile en ville' },
-    { name: 'Luxe',       image: '/luxe.jpeg',       description: 'Prestige & confort' },
-    { name: 'Utilitaire', image: '/voiture%207%20places.jpeg', description: 'Charges & déménagement' },
-  ] as const;
-
-  const categories = CATEGORY_DEFS.map((def) => ({
-    ...def,
-    availableCount: getCategoryCount(def.name),
-    totalCount: getTotalCategoryCount(def.name),
-    minPrice: getCategoryMinPrice(def.name),
-  }));
 
   // Filtres pratiques (chips — cumulables avec catégorie)
   // N'apparaissent que si le catalogue contient au moins un véhicule correspondant
@@ -298,165 +268,8 @@ export function HomeClient({
         </div>
       </section>
 
-      {/* ================================================================
-          CATEGORIES — "Trouvez votre style" (visuels locaux homogènes)
-      ================================================================= */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-        {/* En-tête */}
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="section-header-eyebrow">
-              <span className="h-3 w-3 rounded-full bg-[#E63946]" />
-              Explorer
-            </p>
-            <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Trouvez votre style
-            </h2>
-            <p className="mt-2 text-sm text-slate-500 max-w-md">
-              Du modèle économique au véhicule premium — choisissez le type qui correspond à votre trajet.
-            </p>
-          </div>
-          <Link
-            href="/search"
-            className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text hover:shadow-md sm:flex shrink-0"
-          >
-            Tout explorer <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {/* Chips filtres pratiques (cumulables avec type) */}
-        {practicalFilters.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="Filtres pratiques">
-          <span className="text-xs font-semibold text-slate-500">Aussi :</span>
-          {practicalFilters.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setVehicleFilter(f.active ? 'Tous' : f.label)}
-              aria-pressed={f.active}
-              className={
-                f.active
-                  ? 'rounded-full px-4 py-2 text-xs font-bold bg-[#0B1220] text-white shadow-sm transition min-h-11'
-                  : 'rounded-full px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition min-h-11'
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        )}
-
-        {/* Grille de cartes — mobile: scroll-snap horizontal, tablette: 3 col, desktop: 6 col */}
-        <div
-          className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory no-scrollbar sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:grid-cols-6 sm:gap-4"
-          role="list"
-          aria-label="Catégories de véhicules"
-        >
-          {categories.map((category) => {
-            const isSoon = category.totalCount === 0;
-            const hasAvailable = category.availableCount > 0;
-            const ariaLabel = isSoon
-              ? `Catégorie ${category.name} — bientôt disponible`
-              : `Voir les ${category.availableCount} véhicule${category.availableCount > 1 ? 's' : ''} ${category.name.toLowerCase()}`;
-
-            if (isSoon) {
-              // Carte grisée non-cliquable
-              return (
-                <div
-                  key={category.name}
-                  role="listitem"
-                  aria-label={ariaLabel}
-                  className="relative aspect-[0.88] w-[72vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-900 opacity-60 sm:w-auto cursor-not-allowed"
-                >
-                  <Image
-                    src={category.image}
-                    alt=""
-                    fill
-                    loading="lazy"
-                    sizes="(max-width: 640px) 72vw, (max-width: 1024px) 33vw, 16vw"
-                    className="object-cover grayscale"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/50 to-black/10 pointer-events-none" />
-                  <div className="absolute inset-x-0 bottom-0 p-3.5">
-                    <div className="text-sm font-black text-white/70">{category.name}</div>
-                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-bold text-white/50">
-                      Bientôt
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={category.name}
-                href={`/search?category=${encodeURIComponent(category.name)}`}
-                role="listitem"
-                aria-label={ariaLabel}
-                className="group relative aspect-[0.88] w-[72vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] sm:w-auto"
-              >
-                {/* Photo */}
-                <Image
-                  src={category.image}
-                  alt={`${category.name} — KlickDrive Nador`}
-                  fill
-                  loading="lazy"
-                  sizes="(max-width: 640px) 72vw, (max-width: 1024px) 33vw, 16vw"
-                  className="object-cover transition-transform duration-700 ease-out motion-reduce:transition-none group-hover:scale-105"
-                />
-
-                {/* Dégradé — 60 % de hauteur, jusqu'à 85 % opacité */}
-                <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/45 to-black/5 pointer-events-none" />
-
-                {/* Barre accent bas */}
-                <div className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-[#E63946] transition-transform duration-300 group-hover:scale-x-100 motion-reduce:transition-none" aria-hidden="true" />
-
-                {/* Contenu texte */}
-                <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-                  {/* Nom catégorie */}
-                  <p className="text-sm font-black text-white leading-tight" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                    {category.name}
-                  </p>
-
-                  {/* Sous-titre */}
-                  <p className="mt-0.5 text-[13px] font-medium text-white/80 leading-snug">
-                    {category.description}
-                  </p>
-
-                  {/* Ligne bas : compteur + prix + flèche */}
-                  <div className="mt-2 flex items-center justify-between gap-1">
-                    <div className="flex flex-col">
-                      <span className="text-[13px] font-bold text-white/90 leading-none">
-                        {hasAvailable
-                          ? `${category.availableCount} véhicule${category.availableCount > 1 ? 's' : ''}`
-                          : 'Indisponible'}
-                      </span>
-                      {category.minPrice !== null && (
-                        <span className="text-[11px] font-semibold text-white/65 mt-0.5">
-                          à partir de {category.minPrice.toLocaleString('fr-FR')} DH/j
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 transition-colors duration-200 group-hover:bg-[#E63946] motion-reduce:transition-none"
-                      aria-hidden="true"
-                    >
-                      <ArrowUpRight className="h-3.5 w-3.5 text-white" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Lien mobile "Voir tout" */}
-        <div className="mt-6 flex justify-center sm:hidden">
-          <Link href="/search" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text">
-            Tout explorer <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
+      {/* Catégories réellement proposées (voitures / motos) — composant dédié */}
+      <StyleExplorer vehicles={vehicles} loading={!dataLoaded} />
 
       {/* ================================================================
           FEATURED VEHICLES — Distinction nette entre erreur et absence
@@ -468,7 +281,7 @@ export function HomeClient({
             <div>
               <p className="section-header-eyebrow">
                 <span className="h-3 w-3 rounded-full bg-[#E63946]" />
-                Sélection KlickDrive
+                Sélection ClickDrive
               </p>
               <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Les voitures populaires
@@ -562,6 +375,25 @@ export function HomeClient({
                     ({carVehicles.filter((v) => v.category === filter).length})
                   </span>
                 )}
+              </button>
+            ))}
+            {/* Filtres pratiques (boîte, places) : ils filtrent cette liste, donc ils sont ici */}
+            {practicalFilters.length > 0 && (
+              <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
+            )}
+            {practicalFilters.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setVehicleFilter(f.active ? 'Tous' : f.label)}
+                aria-pressed={f.active}
+                className={
+                  f.active
+                    ? 'rounded-full px-4 py-2 text-xs font-bold bg-[#0B1220] text-white shadow-sm transition min-h-11'
+                    : 'rounded-full px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition min-h-11'
+                }
+              >
+                {f.label}
               </button>
             ))}
             <div className="flex items-center gap-1.5 ml-auto">

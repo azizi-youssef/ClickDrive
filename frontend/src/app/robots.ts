@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/'],
       },
     ],
-    sitemap: 'https://klickdrive.ma/sitemap.xml',
-    host: 'https://klickdrive.ma',
+    sitemap: 'https://clickdrive.ma/sitemap.xml',
+    host: 'https://clickdrive.ma',
   };
 }

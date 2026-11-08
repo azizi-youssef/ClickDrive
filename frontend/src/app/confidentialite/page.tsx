@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Politique de Confidentialité',
   alternates: { canonical: '/confidentialite' },
   description:
-    'Politique de confidentialité de KlickDrive : comment nous collectons, utilisons et protégeons vos données personnelles. Conforme à la loi 09-08 (CNDP) et au RGPD.',
+    'Politique de confidentialité de ClickDrive : comment nous collectons, utilisons et protégeons vos données personnelles. Conforme à la loi 09-08 (CNDP) et au RGPD.',
   robots: { index: true, follow: true },
 };
 
@@ -55,9 +55,9 @@ export default function ConfidentialitePage() {
 
           <Section title="1. Responsable du traitement">
             <Paragraph>
-              Le responsable du traitement des données personnelles est <strong>KlickDrive</strong>,
+              Le responsable du traitement des données personnelles est <strong>ClickDrive</strong>,
               représenté par <strong>Youssef Azizi</strong>, dont le siège est à Nador, Maroc.
-              Contact : <a href="mailto:privacy@klickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@klickdrive.ma</a>
+              Contact : <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a>
             </Paragraph>
           </Section>
 
@@ -133,7 +133,7 @@ export default function ConfidentialitePage() {
             </Paragraph>
             <ul className="mt-3 space-y-3 text-sm text-slate-600">
               {[
-                { who: 'Agences partenaires KlickDrive', why: 'Pour traiter votre demande de réservation et établir le contrat de location (nom, contact, pièces d\'identité).' },
+                { who: 'Agences partenaires ClickDrive', why: 'Pour traiter votre demande de réservation et établir le contrat de location (nom, contact, pièces d\'identité).' },
                 { who: 'Supabase (hébergeur BDD)', why: 'Stockage sécurisé des données — infrastructure AWS EU-West conforme RGPD.' },
                 { who: 'Meta / WhatsApp Business', why: 'Envoi des notifications de réservation via l\'API WhatsApp Business Cloud — uniquement si vous avez fourni votre numéro.' },
                 { who: 'Autorités compétentes', why: 'Sur réquisition judiciaire ou obligation légale uniquement.' },
@@ -172,7 +172,7 @@ export default function ConfidentialitePage() {
             </div>
             <Paragraph>
               Pour exercer ces droits, contactez-nous à{' '}
-              <a href="mailto:privacy@klickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@klickdrive.ma</a>.
+              <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a>.
               Nous traiterons votre demande dans un délai de <strong>30 jours</strong>.
             </Paragraph>
             <Paragraph>
@@ -184,7 +184,7 @@ export default function ConfidentialitePage() {
 
           <Section title="6. Cookies">
             <Paragraph>
-              KlickDrive utilise des cookies pour assurer le bon fonctionnement de la plateforme.
+              ClickDrive utilise des cookies pour assurer le bon fonctionnement de la plateforme.
             </Paragraph>
             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
               <table className="w-full text-sm">
@@ -214,7 +214,7 @@ export default function ConfidentialitePage() {
 
           <Section title="7. Sécurité des données">
             <Paragraph>
-              KlickDrive met en œuvre des mesures techniques et organisationnelles appropriées pour
+              ClickDrive met en œuvre des mesures techniques et organisationnelles appropriées pour
               protéger vos données contre tout accès non autorisé, perte, destruction ou
               divulgation :
             </Paragraph>
@@ -238,7 +238,7 @@ export default function ConfidentialitePage() {
             <Paragraph>
               Vos données sont principalement hébergées sur des serveurs en <strong>Europe de
               l&apos;Ouest (AWS EU-West)</strong> via Supabase. En cas de transfert hors EEE/Maroc,
-              KlickDrive s&apos;assure que des garanties appropriées sont en place (clauses contractuelles
+              ClickDrive s&apos;assure que des garanties appropriées sont en place (clauses contractuelles
               types, décision d&apos;adéquation).
             </Paragraph>
           </Section>
@@ -256,8 +256,8 @@ export default function ConfidentialitePage() {
               Pour toute question relative à la protection de vos données :
             </Paragraph>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-              <li>📧 <a href="mailto:privacy@klickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@klickdrive.ma</a></li>
-              <li>📍 KlickDrive — Nador, Maroc</li>
+              <li>📧 <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a></li>
+              <li>📍 ClickDrive — Nador, Maroc</li>
               <li>💬 <Link href="/contact" className="text-accent-text hover:underline font-semibold">Formulaire de contact</Link></li>
             </ul>
           </Section>

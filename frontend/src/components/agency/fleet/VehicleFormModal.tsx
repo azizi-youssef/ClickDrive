@@ -326,7 +326,7 @@ export function VehicleFormModal({
                     : 'Ajouter un nouveau véhicule'}
               </h2>
               <p className="text-xs text-slate-300">
-                Flotte KlickDrive — Tarification certifiée & disponibilité
+                Flotte ClickDrive — Tarification certifiée & disponibilité
               </p>
             </div>
           </div>
@@ -874,7 +874,7 @@ export function VehicleFormModal({
                   <div>
                     <p className="font-semibold text-amber-900">Aucune photo ajoutée pour l&apos;instant</p>
                     <p className="mt-0.5 text-amber-700">
-                      Ajoutez au moins 1 photo pour que {isMoto ? 'votre moto soit présentée' : 'votre véhicule soit présenté'} avec son visuel réel sur la marketplace KlickDrive.
+                      Ajoutez au moins 1 photo pour que {isMoto ? 'votre moto soit présentée' : 'votre véhicule soit présenté'} avec son visuel réel sur la marketplace ClickDrive.
                     </p>
                   </div>
                 </div>
@@ -941,7 +941,7 @@ export function VehicleFormModal({
                       Publier immédiatement sur la marketplace
                     </h3>
                     <p id="vehicle-publish-hint" className="text-xs text-slate-500">
-                      Rend le véhicule visible par les clients lors des recherches sur KlickDrive.
+                      Rend le véhicule visible par les clients lors des recherches sur ClickDrive.
                     </p>
                   </div>
                   <label className="relative inline-flex cursor-pointer items-center">

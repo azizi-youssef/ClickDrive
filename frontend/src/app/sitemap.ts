@@ -5,7 +5,7 @@ import { agenciesService } from '@/lib/services/agencies.service';
 import { ALL_SEO_SLUGS } from '@/lib/seo/landingPages';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://klickdrive.ma';
+  const baseUrl = 'https://clickdrive.ma';
 
   // Les pages fixes restent listées même si le catalogue est inaccessible (build CI sans Supabase).
   const [vehicles, agencies] = await Promise.all([

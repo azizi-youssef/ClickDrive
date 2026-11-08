@@ -2,7 +2,7 @@
  * Configuration des parcours authentifiés : uniquement par variables d'environnement
  * (secrets CI d'un environnement de test). Aucun identifiant n'est écrit dans le dépôt.
  *
- *   E2E_BASE_URL               URL de l'environnement de test (ex. https://staging.klickdrive.ma)
+ *   E2E_BASE_URL               URL de l'environnement de test (ex. https://staging.clickdrive.ma)
  *   E2E_ALLOW_WRITES=1         autorise les parcours qui créent des données (réservation, véhicule, compte)
  *   E2E_CUSTOMER_EMAIL / _PASSWORD      compte client de test
  *   E2E_AGENCY_EMAIL / _PASSWORD        administrateur d'une agence de test
@@ -22,7 +22,8 @@ function account(prefix: string): TestAccount | null {
 }
 
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
-const PRODUCTION_HOSTS = new Set(['klickdrive.ma', 'www.klickdrive.ma']);
+// Nouveau domaine et ancien (klickdrive.ma, redirigé) : jamais d'écriture sur la production
+const PRODUCTION_HOSTS = new Set(['clickdrive.ma', 'www.clickdrive.ma', 'klickdrive.ma', 'www.klickdrive.ma']);
 
 /** Jamais d'écriture sur la production, même si la variable est positionnée par erreur. */
 export const targetsProduction = PRODUCTION_HOSTS.has(new URL(baseURL).hostname);

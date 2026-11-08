@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BOOKING_STATUSES } from '@klickdrive/shared';
+import { BOOKING_STATUSES } from '@clickdrive/shared';
 
 export const agencyInputSchema = z.object({
   name: z.string().trim().min(2).max(120),

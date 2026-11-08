@@ -6,7 +6,7 @@ import { isValidBookingReference } from '../lib/utils/reference';
 process.env.BOOKING_LINK_SECRET = 'test_booking_link_secret';
 
 function params(path: string) {
-  const url = new URL(path, 'https://klickdrive.test');
+  const url = new URL(path, 'https://clickdrive.test');
   return { exp: url.searchParams.get('exp'), sig: url.searchParams.get('sig') };
 }
 

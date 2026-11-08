@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Vehicle } from '@/types';
 import { formatNumber } from '@/lib/utils';
 import { LOCATIONS_NADOR } from '@/lib/constants/catalog';
@@ -49,6 +49,23 @@ const labelClass = 'mb-1.5 block text-xs font-bold text-slate-600';
 
 export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps) {
   const uid = useId();
+  const mobileBarRef = useRef<HTMLDivElement>(null);
+
+  // Barre de réservation fixe (mobile / tablette) : sa hauteur est publiée dans --cd-bottom-bar
+  // pour que la page lui laisse la place et que la bannière cookies se pose au-dessus, sans la masquer.
+  useEffect(() => {
+    const bar = mobileBarRef.current;
+    if (!bar) return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--cd-bottom-bar', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(bar);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--cd-bottom-bar');
+    };
+  }, []);
   const [initialDates] = useState(getInitialDates);
   const today = initialDates.today;
 
@@ -337,7 +354,7 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
               <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.subtotal)}</dd>
             </div>
             <div className="flex justify-between gap-3 text-slate-600">
-              <dt>Frais de service KlickDrive</dt>
+              <dt>Frais de service ClickDrive</dt>
               <dd className="font-semibold text-emerald-700">Offerts</dd>
             </div>
             <div className="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-extrabold text-[#0B1220]">
@@ -387,13 +404,13 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
         </ul>
 
         <a
-          href={`https://wa.me/212661987654?text=${encodeURIComponent(`Bonjour KlickDrive, j'ai une question sur le véhicule ${vehicle.brand} ${vehicle.model} (${vehicle.year}) avant d'envoyer ma demande.`)}`}
+          href={`https://wa.me/212661987654?text=${encodeURIComponent(`Bonjour ClickDrive, j'ai une question sur le véhicule ${vehicle.brand} ${vehicle.model} (${vehicle.year}) avant d'envoyer ma demande.`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl text-[13px] font-semibold text-slate-600 transition-colors hover:text-[#0B1220]"
         >
           <MessageSquare className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-          Une question ? Conciergerie KlickDrive
+          Une question ? Conciergerie ClickDrive
         </a>
       </form>
 
@@ -413,7 +430,7 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
       )}
 
       {/* ── Barre de réservation mobile / tablette (< 1024 px) ────── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl lg:hidden">
+      <div ref={mobileBarRef} className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl lg:hidden">
         <div className="min-w-0">
           <p className="leading-none">
             <span className="text-lg font-extrabold text-[#0B1220] tabular-nums">{formatNumber(vehicle.daily_price)}</span>

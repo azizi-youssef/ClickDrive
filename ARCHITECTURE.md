@@ -1,4 +1,4 @@
-# KlickDrive — Architecture (cible production)
+# ClickDrive — Architecture (cible production)
 
 ## Vue d’ensemble
 
@@ -60,13 +60,13 @@ défilement bloqué, focus rendu à l’élément d’ouverture. Le fond cliquab
 ## Langues
 
 - 6 langues : `fr` (défaut), `en`, `es`, `de`, `nl`, `ar` (RTL) — `lib/i18n/config.ts`, dictionnaires `translations/*.ts`.
-- La langue est lue **côté serveur** (cookie `klickdrive_locale`, sinon `Accept-Language` dans `proxy.ts`) :
+- La langue est lue **côté serveur** (cookie `clickdrive_locale`, sinon `Accept-Language` dans `proxy.ts`) :
   `lang` et `dir` sont corrects dès le premier HTML, sans bascule après hydratation.
 - Une seule URL par page (pas de préfixe de langue) : pas de `hreflang`.
 
 ## Package partagé
 
-`packages/shared` (`@klickdrive/shared`) :
+`packages/shared` (`@clickdrive/shared`) :
 
 - Enums / types : statuts réservation, rôles
 - Schémas Zod : `bookingRequestSchema`, actions agence

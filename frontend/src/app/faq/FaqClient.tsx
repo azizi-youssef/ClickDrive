@@ -200,7 +200,7 @@ export function FaqClient() {
             id="faq-title"
             className="mt-4 max-w-3xl text-balance text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-[56px]"
           >
-            Questions fréquentes <span className="text-accent-text">KlickDrive</span>
+            Questions fréquentes <span className="text-accent-text">ClickDrive</span>
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
             Recherche, réservation, caution, prise en charge à Nador : retrouvez les réponses avant de louer votre

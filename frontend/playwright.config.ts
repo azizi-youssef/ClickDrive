@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Tests de bout en bout KlickDrive.
+ * Tests de bout en bout ClickDrive.
  *
  * - `E2E_BASE_URL` absent : le serveur de développement local est utilisé (démarré si besoin).
  * - Parcours publics (`e2e/public/*`) : lecture seule, exécutables sur n'importe quel environnement.

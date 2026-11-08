@@ -1,10 +1,10 @@
-import type { UserRole, AgencyStatus, BookingStatus } from '@klickdrive/shared';
+import type { UserRole, AgencyStatus, BookingStatus } from '@clickdrive/shared';
 import type { MotorcycleCategory, MotorcycleLicense, VehicleType } from '@/lib/vehicles/kind';
 
 export type { UserRole, AgencyStatus, BookingStatus };
 export type { MotorcycleCategory, MotorcycleLicense, VehicleType };
 
-/** Taxonomie officielle KlickDrive — à utiliser partout (formulaire agence, filtres, validation) */
+/** Taxonomie officielle ClickDrive — à utiliser partout (formulaire agence, filtres, validation) */
 export type VehicleCategory =
   | 'Économique'
   | 'Compacte'
