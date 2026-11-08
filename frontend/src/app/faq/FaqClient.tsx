@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import faqHeroImage from '../../../public/faq.jpg';
 import {
   ArrowRight,
   ChevronDown,
@@ -183,6 +185,25 @@ export function FaqClient() {
     <div className="min-h-screen bg-[#F5F6F8] pb-20 text-[#0B1220]">
       {/* ── Hero + recherche ─────────────────────────────────────────── */}
       <section aria-labelledby="faq-title" className="relative overflow-hidden bg-[#0B1220] text-white">
+        {/* Photo en fond, voile marine pour garder le texte blanc lisible (contraste AA) — comme les catalogues et les agences */}
+        <Image
+          src={faqHeroImage}
+          alt=""
+          fill
+          priority
+          placeholder="blur"
+          sizes="100vw"
+          quality={70}
+          className="object-cover object-[50%_65%]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#0B1220]/95 via-[#0B1220]/80 to-[#0B1220]/50 rtl:bg-linear-to-l"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0B1220]/85 via-transparent to-[#0B1220]/45"
+        />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] [background-size:56px_56px]"

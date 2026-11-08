@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import agenciesHeroImage from '../../../public/agences.jpg';
 import {
   Building2,
   Search,
@@ -158,6 +160,25 @@ export function AgenciesClient() {
     <div className="min-h-screen bg-canvas">
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative isolate overflow-hidden bg-[#0B1220] text-white">
+        {/* Photo en fond, voile marine pour garder le texte blanc lisible (contraste AA) — comme /search et /motos */}
+        <Image
+          src={agenciesHeroImage}
+          alt=""
+          fill
+          priority
+          placeholder="blur"
+          sizes="100vw"
+          quality={70}
+          className="-z-10 object-cover object-[60%_55%]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-[#0B1220]/95 via-[#0B1220]/82 to-[#0B1220]/50 rtl:bg-linear-to-l"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-t from-[#0B1220]/85 via-transparent to-[#0B1220]/45"
+        />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -end-40 -top-40 h-125 w-125 rounded-full border border-white/4" />
           <div className="absolute -end-20 -top-20 h-87.5 w-87.5 rounded-full border border-white/5" />
