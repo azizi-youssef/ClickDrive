@@ -31,6 +31,11 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchClientAuthProfile, type ClientAuthProfile } from '@/lib/auth/client';
+import { contactBadgeDescription, contactBadgeLabel } from '@/lib/admin/contact-alerts';
+import { ContactAlertToast } from '@/components/admin/messages/ContactAlerts';
+import { useContactAlerts } from '@/components/admin/messages/contact-alerts-store';
+
+const MESSAGES_HREF = '/admin/messages';
 
 /* ── Navigation items ──────────────────────────────────────────────── */
 type NavItemDef = { href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
@@ -45,7 +50,7 @@ const NAV_GROUPS: { label: string; items: NavItemDef[] }[] = [
       { href: '/admin/fleet', label: 'Voitures', icon: Car, exact: true },
       { href: '/admin/fleet/motos', label: 'Motos', icon: Motorbike },
       { href: '/admin/customers', label: 'Clients', icon: Users },
-      { href: '/admin/messages', label: 'Messages', icon: Inbox },
+      { href: MESSAGES_HREF, label: 'Messages', icon: Inbox },
     ],
   },
   {
@@ -146,7 +151,16 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
 }
 
 /* ── Nav list (sidebar & drawer) ───────────────────────────────────── */
-function NavGroups({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
+function NavGroups({
+  collapsed = false,
+  onNavigate,
+  messageCount = 0,
+}: {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+  /** Messages de contact non traités, affichés sur l'entrée « Messages » */
+  messageCount?: number;
+}) {
   const isActive = useIsActive();
   return (
     <nav aria-label="Navigation administration" className="flex-1 overflow-y-auto px-3 py-4">
@@ -161,16 +175,18 @@ function NavGroups({ collapsed = false, onNavigate }: { collapsed?: boolean; onN
             {group.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
+              const badge = item.href === MESSAGES_HREF ? messageCount : 0;
+              const label = badge > 0 ? `${item.label} (${contactBadgeDescription(badge)})` : item.label;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     onClick={onNavigate}
-                    title={collapsed ? item.label : undefined}
-                    aria-label={collapsed ? item.label : undefined}
+                    title={collapsed ? label : undefined}
+                    aria-label={collapsed || badge > 0 ? label : undefined}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
+                      'relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
                       collapsed && 'justify-center px-0',
                       active
                         ? 'bg-white font-bold text-[#0B1220] shadow-sm'
@@ -179,6 +195,17 @@ function NavGroups({ collapsed = false, onNavigate }: { collapsed?: boolean; onN
                   >
                     <Icon aria-hidden="true" className={cn('h-4.5 w-4.5 shrink-0', active && 'text-accent-text')} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
+                    {badge > 0 &&
+                      (collapsed ? (
+                        <span aria-hidden="true" className="absolute end-3 top-2 h-2.5 w-2.5 rounded-full bg-[#E63946] ring-2 ring-[#0B1220]" />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="ms-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#E63946] px-1.5 text-[11px] font-bold leading-none text-white"
+                        >
+                          {contactBadgeLabel(badge)}
+                        </span>
+                      ))}
                   </Link>
                 </li>
               );
@@ -199,11 +226,13 @@ export function AdminSidebar({
   onToggle,
   onLogout,
   loggingOut,
+  messageCount = 0,
 }: {
   collapsed: boolean;
   onToggle: () => void;
   onLogout: () => void;
   loggingOut: boolean;
+  messageCount?: number;
 }) {
   return (
     <aside
@@ -227,7 +256,7 @@ export function AdminSidebar({
         )}
       </div>
 
-      <NavGroups collapsed={collapsed} />
+      <NavGroups collapsed={collapsed} messageCount={messageCount} />
 
       <div className={cn('space-y-0.5 border-t border-white/10 p-3')}>
         {collapsed && (
@@ -267,11 +296,13 @@ export function AdminMobileDrawer({
   onClose,
   onLogout,
   loggingOut,
+  messageCount = 0,
 }: {
   open: boolean;
   onClose: () => void;
   onLogout: () => void;
   loggingOut: boolean;
+  messageCount?: number;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -314,7 +345,7 @@ export function AdminMobileDrawer({
           </button>
         </div>
 
-        <NavGroups onNavigate={onClose} />
+        <NavGroups onNavigate={onClose} messageCount={messageCount} />
 
         <div className="space-y-0.5 border-t border-white/10 p-3">
           <Link href="/" target="_blank" onClick={onClose} className={footerLink}>
@@ -365,6 +396,7 @@ export function AdminTopBar({
   onMobileMenu,
   onLogout,
   loggingOut,
+  messageCount = 0,
 }: {
   title: string;
   subtitle?: string;
@@ -372,6 +404,7 @@ export function AdminTopBar({
   onMobileMenu: () => void;
   onLogout: () => void;
   loggingOut: boolean;
+  messageCount?: number;
 }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<ClientAuthProfile | null>(null);
@@ -424,10 +457,14 @@ export function AdminTopBar({
       <button
         type="button"
         onClick={onMobileMenu}
-        aria-label="Ouvrir le menu"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 outline-none transition-colors hover:bg-[#F5F6F8] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30 lg:hidden"
+        aria-label={messageCount > 0 ? `Ouvrir le menu (${contactBadgeDescription(messageCount)})` : 'Ouvrir le menu'}
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 outline-none transition-colors hover:bg-[#F5F6F8] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30 lg:hidden"
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
+        {/* Le menu latéral est replié sur mobile : le point signale les messages non traités */}
+        {messageCount > 0 && (
+          <span aria-hidden="true" className="absolute -end-1 -top-1 h-3 w-3 rounded-full bg-[#E63946] ring-2 ring-white" />
+        )}
       </button>
 
       <div className="min-w-0 flex-1">
@@ -530,6 +567,8 @@ export function AdminShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  // Messages de contact non traités : compteur du menu, rafraîchi en continu (voir contact-alerts-store)
+  const { newCount: messageCount } = useContactAlerts();
 
   const handleLogout = useCallback(async () => {
     setLoggingOut(true);
@@ -540,8 +579,10 @@ export function AdminShell({
     }
   }, []);
 
+  // Cadre d'application à la hauteur de l'écran visible (dvh : barres du navigateur mobile exclues) ;
+  // seul <main> défile.
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F5F6F8]">
+    <div className="flex h-dvh overflow-hidden bg-[#F5F6F8]">
       <a
         href="#admin-main"
         className="sr-only z-60 rounded-lg bg-[#0B1220] px-4 py-2 text-sm font-bold text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
@@ -549,8 +590,20 @@ export function AdminShell({
         Aller au contenu
       </a>
 
-      <AdminSidebar collapsed={collapsed} onToggle={toggleCollapsed} onLogout={handleLogout} loggingOut={loggingOut} />
-      <AdminMobileDrawer open={mobileOpen} onClose={closeMobile} onLogout={handleLogout} loggingOut={loggingOut} />
+      <AdminSidebar
+        collapsed={collapsed}
+        onToggle={toggleCollapsed}
+        onLogout={handleLogout}
+        loggingOut={loggingOut}
+        messageCount={messageCount}
+      />
+      <AdminMobileDrawer
+        open={mobileOpen}
+        onClose={closeMobile}
+        onLogout={handleLogout}
+        loggingOut={loggingOut}
+        messageCount={messageCount}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AdminTopBar
@@ -560,11 +613,18 @@ export function AdminShell({
           onMobileMenu={() => setMobileOpen(true)}
           onLogout={handleLogout}
           loggingOut={loggingOut}
+          messageCount={messageCount}
         />
-        <main id="admin-main" tabIndex={-1} className="flex-1 overflow-y-auto outline-none">
+        {/* `relative` : la zone qui défile est le bloc conteneur des éléments positionnés (sr-only,
+            décors). Sans lui, ils se placent par rapport à la page, sortent du cadre overflow-hidden
+            et allongent la page entière : une bande vide apparaissait sous le dernier bloc. */}
+        <main id="admin-main" tabIndex={-1} className="relative flex-1 overflow-y-auto outline-none">
           <div className="mx-auto max-w-360 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
         </main>
       </div>
+
+      {/* Alerte à l'arrivée d'un message de contact (enfant direct du cadre : `fixed` reste relatif à l'écran) */}
+      <ContactAlertToast />
     </div>
   );
 }

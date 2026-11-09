@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Inbox, Mail, Phone } from 'lucide-react';
 import { AdminCard, EmptyState, ErrorBanner, SelectFilter, StatusBadge } from '@/components/admin/AdminUI';
 import { CONTACT_CATEGORY_LABELS } from '@/lib/email/templates';
+import { CONTACT_MESSAGES_ARRIVED_EVENT } from '@/lib/admin/contact-alerts';
+import { BrowserAlertsToggle } from './ContactAlerts';
+import { notifyContactMessagesChanged } from './contact-alerts-store';
 
 type ContactMessage = {
   id: string;
@@ -59,6 +62,10 @@ export function AdminContactMessagesClient() {
 
   useEffect(() => {
     void load(filter);
+    // Un message vient d'arriver (détecté par la surveillance du tableau de bord) : il s'ajoute à la liste
+    const onArrived = () => void load(filter);
+    window.addEventListener(CONTACT_MESSAGES_ARRIVED_EVENT, onArrived);
+    return () => window.removeEventListener(CONTACT_MESSAGES_ARRIVED_EVENT, onArrived);
   }, [filter, load]);
 
   async function setStatus(message: ContactMessage, status: ContactMessage['status']) {
@@ -72,6 +79,7 @@ export function AdminContactMessagesClient() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Mise à jour impossible');
       setMessages((current) => current?.map((m) => (m.id === message.id ? { ...m, status } : m)) ?? current);
+      notifyContactMessagesChanged(); // compteur du menu à jour sans attendre
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Mise à jour impossible');
     } finally {
@@ -85,8 +93,15 @@ export function AdminContactMessagesClient() {
         <p className="text-sm text-slate-600">
           {messages ? `${messages.length} message${messages.length > 1 ? 's' : ''}` : 'Chargement…'}
         </p>
-        <SelectFilter value={filter} onChange={setFilter} options={FILTERS} />
+        <div className="flex flex-wrap items-center gap-3">
+          <BrowserAlertsToggle />
+          <SelectFilter value={filter} onChange={setFilter} options={FILTERS} />
+        </div>
       </div>
+      <p className="text-xs text-slate-500">
+        Une alerte s’affiche dans l’administration dès qu’un message arrive. Le compteur du menu « Messages » indique les
+        messages non encore pris en charge.
+      </p>
 
       {error && <ErrorBanner message={error} onRetry={() => void load(filter)} />}
 
