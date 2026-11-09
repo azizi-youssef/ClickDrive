@@ -1,0 +1,30 @@
+# Relances des demandes sans réponse et demandes d'avis (frontend/src/app/api/cron/booking-follow-up).
+# Secrets du dépôt à créer : CLICKDRIVE_APP_URL (ex. https://clickdrive.ma) et CRON_SECRET
+# (même valeur que la variable CRON_SECRET de Vercel). Sans eux, la tâche s'arrête sans erreur.
+name: Relances des réservations
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  follow-up:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Appeler la tâche de relance
+        env:
+          APP_URL: ${{ secrets.CLICKDRIVE_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Secrets CLICKDRIVE_APP_URL / CRON_SECRET absents : relances non configurées."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/booking-follow-up"

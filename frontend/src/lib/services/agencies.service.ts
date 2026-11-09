@@ -29,6 +29,25 @@ export class AgenciesService {
     return (data ?? []) as Agency[];
   }
 
+  /**
+   * Agences actives lues sans cookies, pour un cache partagé entre visiteurs (catalogue public) :
+   * Next interdit cookies() dans unstable_cache. Le résultat doit passer par toPublicAgencies.
+   */
+  async getActiveAgenciesWithoutSession(): Promise<Agency[]> {
+    const supabase = await createAdminClient();
+    if (!supabase) throw new Error('Client Supabase serveur indisponible.');
+    const { data, error } = await supabase
+      .from('agencies')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('rating', { ascending: false });
+    if (error) {
+      console.error('[AgenciesService] getActiveAgenciesWithoutSession error:', error.message);
+      throw new Error('Impossible de charger les agences.');
+    }
+    return (data ?? []) as Agency[];
+  }
+
   async getAgencyBySlug(slug: string): Promise<Agency | null> {
     requireSupabase();
     const supabase = await createClient();

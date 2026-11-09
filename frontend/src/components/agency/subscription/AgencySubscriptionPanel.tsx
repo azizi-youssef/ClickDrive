@@ -12,7 +12,8 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
-import type { AgencySubscription, SubscriptionPlan } from '@/types';
+import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
+import { PendingPlanChangeBanner } from './PendingPlanChangeBanner';
 import { FleetCapacityCard } from './FleetCapacityCard';
 import { AgencySubscriptionModal } from './AgencySubscriptionModal';
 import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
@@ -27,6 +28,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [pendingChange, setPendingChange] = useState<PlanChangeRequest | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -45,11 +47,12 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
       }
 
       setSubscription(subJson.data);
+      setPendingChange(subJson.pendingChange ?? null);
       if (plansJson.success && Array.isArray(plansJson.data)) {
         setPlans(plansJson.data);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des informations de forfait.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Erreur lors du chargement des informations de forfait.');
     } finally {
       setLoading(false);
     }
@@ -112,6 +115,10 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
           Changer de formule / Capacité
         </button>
       </div>
+
+      {pendingChange && (
+        <PendingPlanChangeBanner agencyId={agencyId} request={pendingChange} onCancelled={() => setPendingChange(null)} />
+      )}
 
       {/* Carte d'état de capacité */}
       <FleetCapacityCard
@@ -310,9 +317,8 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
         plans={plans}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSuccess={(updated) => {
-          setSubscription(updated);
-        }}
+        pendingChange={pendingChange}
+        onRequested={setPendingChange}
       />
     </div>
   );

@@ -12,9 +12,6 @@ import {
   Check,
   AlertCircle,
   Car,
-  DollarSign,
-  Camera,
-  Layers,
   Motorbike,
 } from 'lucide-react';
 import {
@@ -49,6 +46,10 @@ export type EditableVehicle = {
   weekly_price?: number | null;
   monthly_price?: number | null;
   deposit: number;
+  /** Assurance incluse : responsabilité civile seule ou tous risques */
+  insurance_coverage?: 'THIRD_PARTY' | 'COMPREHENSIVE' | null;
+  /** Franchise en cas de sinistre (MAD) */
+  insurance_excess?: number | null;
   min_rental_days: number;
   status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'BLOCKED';
   published: boolean;
@@ -56,7 +57,12 @@ export type EditableVehicle = {
   unit_number?: string;
   images: string[];
   features: string[];
+  /** Présentation rédigée par l'agence */
+  description?: string | null;
 };
+
+/** Nombre de photos conseillé par annonce (avertissement, non bloquant) */
+const RECOMMENDED_PHOTOS = 4;
 
 /** Valeurs de départ propres à chaque type (l'agence les ajuste) */
 const TYPE_DEFAULTS: Record<VehicleType, Partial<EditableVehicle>> = {
@@ -205,8 +211,8 @@ export function VehicleFormModal({
         ...prev,
         images: [...prev.images, ...newUrls],
       }));
-    } catch (err: any) {
-      setError(err.message || 'Échec du téléversement des images');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Échec du téléversement des images');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -285,8 +291,8 @@ export function VehicleFormModal({
       }
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Une erreur est survenue.');
     } finally {
       setBusy(false);
     }
@@ -753,6 +759,50 @@ export function VehicleFormModal({
                     des clés.
                   </p>
                 </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:col-span-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-700">Assurance incluse dans le prix</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="vehicle-insurance" className="mb-1 block text-xs font-semibold text-slate-600">
+                        Couverture
+                      </label>
+                      <select
+                        id="vehicle-insurance"
+                        value={form.insurance_coverage ?? ''}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            insurance_coverage: (e.target.value || null) as EditableVehicle['insurance_coverage'],
+                            ...(e.target.value ? {} : { insurance_excess: null }),
+                          })
+                        }
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
+                      >
+                        <option value="">Non renseignée</option>
+                        <option value="THIRD_PARTY">Responsabilité civile (tiers)</option>
+                        <option value="COMPREHENSIVE">Tous risques</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="vehicle-insurance-excess" className="mb-1 block text-xs font-semibold text-slate-600">
+                        Franchise en cas de sinistre (MAD)
+                      </label>
+                      <input
+                        id="vehicle-insurance-excess"
+                        type="number"
+                        min="0"
+                        disabled={!form.insurance_coverage}
+                        value={form.insurance_excess ?? ''}
+                        onChange={(e) => setForm({ ...form, insurance_excess: e.target.value === '' ? null : Number(e.target.value) })}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-brand focus:outline-none disabled:bg-slate-100"
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Affiché sur la fiche du véhicule : le client sait ce qui est couvert avant de réserver.
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -817,6 +867,23 @@ export function VehicleFormModal({
             <div className="space-y-5">
               {/* Image Uploader */}
               <div>
+                <div className="mb-5">
+                  <label htmlFor="vehicle-description" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    Présentation {isMoto ? 'de la moto' : 'du véhicule'}
+                  </label>
+                  <textarea
+                    id="vehicle-description"
+                    rows={4}
+                    maxLength={1500}
+                    value={form.description ?? ''}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder={isMoto ? 'État, entretien, équipements (top-case, casques fournis…), conseils d’utilisation' : 'État, entretien, équipements, idéal pour… (ville, famille, longs trajets)'}
+                    className="w-full resize-none rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    {(form.description ?? '').length}/1 500 caractères — affichée sur la fiche, elle aide le client à choisir.
+                  </p>
+                </div>
                 <p id="vehicle-photos-label" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
                   {isMoto ? 'Photos de la moto' : 'Photos du véhicule'}
                 </p>
@@ -867,14 +934,20 @@ export function VehicleFormModal({
                 </div>
               </div>
 
-              {/* Warning when no images */}
-              {form.images.length === 0 && (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-800">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              {/* Conseil photos : 4 vues minimum recommandées (non bloquant) */}
+              {form.images.length < RECOMMENDED_PHOTOS && (
+                <div role="status" className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-800">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
                   <div>
-                    <p className="font-semibold text-amber-900">Aucune photo ajoutée pour l&apos;instant</p>
+                    <p className="font-semibold text-amber-900">
+                      {form.images.length === 0
+                        ? 'Aucune photo ajoutée pour l’instant'
+                        : `${form.images.length} photo${form.images.length > 1 ? 's' : ''} sur les ${RECOMMENDED_PHOTOS} recommandées`}
+                    </p>
                     <p className="mt-0.5 text-amber-700">
-                      Ajoutez au moins 1 photo pour que {isMoto ? 'votre moto soit présentée' : 'votre véhicule soit présenté'} avec son visuel réel sur la marketplace ClickDrive.
+                      {isMoto
+                        ? 'Montrez la moto de face, de profil, le tableau de bord et la selle : le client choisit sur ces photos.'
+                        : 'Montrez l’extérieur (avant et arrière), l’intérieur et le coffre : le client choisit sur ces photos.'}
                     </p>
                   </div>
                 </div>

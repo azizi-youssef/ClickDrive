@@ -1,16 +1,20 @@
 import type { Metadata } from 'next';
 import { NotFoundView } from '@/components/not-found/NotFoundView';
+import { localizedPageMetadata } from '@/lib/i18n/server';
+import { I18nScope } from '@/components/i18n/I18nScope';
 
-export const metadata: Metadata = {
-  title: 'Page introuvable',
-  description: "Cette page n'existe pas ou a été déplacée. Retrouvez nos véhicules en location à Nador.",
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return localizedPageMetadata('notFound', null, { robots: { index: false, follow: true } });
+}
 
 /**
  * 404 du site public (URL inconnue, annonce ou agence retirée).
  * Le message s'adapte à l'adresse demandée ; voir NotFoundView.
  */
 export default function NotFound() {
-  return <NotFoundView />;
+  return (
+    <I18nScope namespaces={['notFound']}>
+      <NotFoundView />
+    </I18nScope>
+  );
 }

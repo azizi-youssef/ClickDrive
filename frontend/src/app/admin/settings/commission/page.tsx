@@ -85,10 +85,10 @@ export default function CommissionSettingsPage() {
           message: data.error || 'Erreur lors de l’enregistrement.',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setFeedback({
         type: 'error',
-        message: err.message || 'Erreur réseau.',
+        message: (err instanceof Error ? err.message : '') || 'Erreur réseau.',
       });
     } finally {
       setSaving(false);

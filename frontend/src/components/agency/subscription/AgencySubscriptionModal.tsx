@@ -4,16 +4,13 @@ import React, { useState } from 'react';
 import {
   X,
   CheckCircle2,
-  Zap,
-  ShieldCheck,
-  TrendingUp,
   Sparkles,
   ArrowRight,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
-import type { AgencySubscription, SubscriptionPlan } from '@/types';
+import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 
 interface Props {
   agencyId: string;
@@ -21,7 +18,10 @@ interface Props {
   plans: SubscriptionPlan[];
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (updatedSub: AgencySubscription) => void;
+  /** Demande enregistrée : la formule actuelle reste active jusqu'au paiement */
+  onRequested: (request: PlanChangeRequest) => void;
+  /** Demande déjà en attente : une seule à la fois */
+  pendingChange?: PlanChangeRequest | null;
 }
 
 export function AgencySubscriptionModal({
@@ -30,7 +30,8 @@ export function AgencySubscriptionModal({
   plans,
   isOpen,
   onClose,
-  onSuccess,
+  onRequested,
+  pendingChange = null,
 }: Props) {
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>(subscription.plan.slug);
   const [busy, setBusy] = useState(false);
@@ -58,14 +59,14 @@ export function AgencySubscriptionModal({
       });
 
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Erreur lors du changement de forfait.');
+      if (!res.ok || !json.success || !json.pendingChange) {
+        throw new Error(json.error || 'La demande de changement n’a pas pu être envoyée.');
       }
 
-      onSuccess(json.data);
+      onRequested(json.pendingChange);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Une erreur est survenue.');
     } finally {
       setBusy(false);
     }
@@ -213,7 +214,9 @@ export function AgencySubscriptionModal({
         {/* Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/80 px-6 py-4 sm:px-8">
           <div className="text-xs text-slate-500">
-            Facturation mensuelle sans engagement. Prorata calculé au changement de palier.
+            {pendingChange
+              ? `Une demande vers la formule ${pendingChange.requested_plan.name} attend déjà son paiement.`
+              : 'La nouvelle formule s’applique dès réception du paiement ; votre formule actuelle reste active d’ici là.'}
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -229,17 +232,17 @@ export function AgencySubscriptionModal({
             <button
               type="button"
               onClick={handleUpgrade}
-              disabled={busy || selectedPlanSlug === currentSlug}
+              disabled={busy || selectedPlanSlug === currentSlug || Boolean(pendingChange)}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B1220] hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-white shadow-md shadow-blue-900/15 transition cursor-pointer"
             >
               {busy ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Validation...</span>
+                  <span>Envoi…</span>
                 </>
               ) : (
                 <>
-                  <span>{selectedPlanSlug === currentSlug ? 'Forfait actuel' : 'Confirmer le changement de palier'}</span>
+                  <span>{selectedPlanSlug === currentSlug ? 'Forfait actuel' : 'Demander ce changement'}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}

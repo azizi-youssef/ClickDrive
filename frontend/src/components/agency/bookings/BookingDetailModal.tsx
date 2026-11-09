@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, XCircle } from 'lucide-react';
-import { canPerformAgencyBookingAction } from '@clickdrive/shared';
+import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { cn } from '@/lib/utils';
 import { button } from '@/lib/design/tokens';
 import { Modal } from '@/components/agency/shell/Dialog';

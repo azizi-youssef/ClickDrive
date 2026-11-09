@@ -1,14 +1,18 @@
 'use client';
 
+import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import { motion, useReducedMotion } from 'framer-motion';
 import { findSameModelAlternatives } from '@/lib/availability/engine';
 import { BookingCard, type BookingAvailability } from '@/components/booking/BookingCard';
 import { VehicleGallery } from '@/components/cars/VehicleGallery';
 import { VehicleCard } from '@/components/cars/VehicleCard';
 import { AgencyLogo } from '@/components/agencies/AgencyLogo';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatDecimal, formatNumber } from '@/lib/i18n/format';
+import { categoryLabel, featureLabel, fuelLabel, licenseLabel as licenseText, transmissionLabel } from '@/lib/i18n/labels';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import type { Vehicle, Review } from '@/types';
 import {
@@ -41,7 +45,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import { formatEngineCc, isMotorcycle, motorcycleLicenseLabel } from '@/lib/vehicles/kind';
+import { formatEngineCc, isMotorcycle } from '@/lib/vehicles/kind';
 
 interface CarDetailsClientProps {
   slug: string;
@@ -51,15 +55,11 @@ interface CarDetailsClientProps {
   alternativesPool: Vehicle[];
 }
 
-const FUEL_LABELS: Record<string, string> = {
-  DIESEL: 'Diesel',
-  GASOLINE: 'Essence',
-  HYBRID: 'Hybride',
-  ELECTRIC: 'Électrique',
-};
-
 export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: CarDetailsClientProps) {
   const reduceMotion = useReducedMotion();
+  const { t, locale, fmt, plural, date } = useTranslation();
+  const c = t.car;
+  const num = (value: number) => formatNumber(value, locale);
 
   const [vehicle, setVehicle] = useState<Vehicle>(initialVehicle);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -102,29 +102,34 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
   const title = `${vehicle.brand} ${vehicle.model} ${vehicle.year}`;
   const isMoto = isMotorcycle(vehicle);
   const engineCc = formatEngineCc(vehicle.engine_cc);
-  const licenseLabel = motorcycleLicenseLabel(vehicle.license_required);
-  const vehicleNoun = isMoto ? 'la moto' : 'le véhicule';
+  const licenseLabel = licenseText(t, vehicle.license_required);
+  const category = isMoto ? fmt(t.vehicle.card.motoCategory, { category: categoryLabel(t, vehicle.category) }) : categoryLabel(t, vehicle.category);
   const isFleetListed = vehicle.status === 'AVAILABLE';
   // Un véhicule en flotte n'est « disponible » que si les dates choisies le sont aussi.
   const isAvailableForDates = isFleetListed && dateAvailability !== 'unavailable';
   const vehicleStatusLabel = !isFleetListed
     ? vehicle.status === 'MAINTENANCE'
-      ? 'Maintenance'
-      : 'Non disponible'
+      ? c.status.maintenance
+      : c.status.notAvailable
     : dateAvailability === 'checking'
-      ? 'Vérification…'
+      ? c.status.checking
       : dateAvailability === 'unavailable'
-        ? 'Indisponible pour ces dates'
-        : 'Disponible';
+        ? c.status.unavailableDates
+        : c.status.available;
 
   // Note : uniquement à partir des avis réels du véhicule
   const reviewCount = reviews.length;
   const averageRating = reviewCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount : null;
 
   const agency = vehicle.agency;
-  const agencyPhone = agency?.phone?.replace(/[^0-9]/g, '') || '212661987654';
+  // Numéro de l'agence (WhatsApp, sinon téléphone) ; à défaut, l'assistance ClickDrive, jamais un numéro inventé
+  const agencyPhone = (agency?.whatsapp || agency?.phone || '').replace(/[^0-9]/g, '') || CLICKDRIVE_WHATSAPP_NUMBER;
   const whatsappLink = `https://wa.me/${agencyPhone}?text=${encodeURIComponent(
-    `Bonjour ${agency?.name || 'ClickDrive'}, j'ai une question sur ${vehicleNoun} ${vehicle.brand} ${vehicle.model} (${vehicle.daily_price} DH/j) avant d'envoyer ma demande.`
+    fmt(isMoto ? c.whatsappMoto : c.whatsappCar, {
+      agency: agency?.name || 'ClickDrive',
+      vehicle: `${vehicle.brand} ${vehicle.model}`,
+      price: num(vehicle.daily_price),
+    })
   )}`;
 
   const handleShare = async () => {
@@ -144,51 +149,78 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
 
   // Caractéristiques : seules les données présentes sont affichées
   const specs: { icon: React.ElementType; label: string; value: string }[] = [
-    { icon: isMoto ? Motorbike : Car, label: 'Marque & modèle', value: `${vehicle.brand} ${vehicle.model}` },
-    { icon: CalendarDays, label: 'Année', value: String(vehicle.year) },
-    { icon: Tag, label: 'Catégorie', value: isMoto ? `Moto · ${vehicle.category}` : vehicle.category },
-    { icon: Gauge, label: isMoto ? 'Boîte' : 'Transmission', value: vehicle.transmission === 'AUTOMATIC' ? 'Automatique' : 'Manuelle' },
-    { icon: Fuel, label: 'Carburant', value: FUEL_LABELS[vehicle.fuel] ?? vehicle.fuel },
+    { icon: isMoto ? Motorbike : Car, label: c.spec.brandModel, value: `${vehicle.brand} ${vehicle.model}` },
+    { icon: CalendarDays, label: c.spec.year, value: String(vehicle.year) },
+    { icon: Tag, label: c.spec.category, value: category },
+    { icon: Gauge, label: isMoto ? c.spec.gearbox : c.spec.transmission, value: transmissionLabel(t, vehicle.transmission) },
+    { icon: Fuel, label: c.spec.fuel, value: fuelLabel(t, vehicle.fuel) },
   ];
-  if (isMoto && engineCc) specs.push({ icon: Motorbike, label: 'Cylindrée', value: engineCc });
-  if (isMoto && licenseLabel) specs.push({ icon: IdCard, label: 'Permis exigé', value: licenseLabel });
-  if (vehicle.seats > 0) specs.push({ icon: Users, label: 'Places', value: `${vehicle.seats} place${vehicle.seats > 1 ? 's' : ''}` });
-  if (!isMoto && vehicle.doors > 0) specs.push({ icon: DoorOpen, label: 'Portes', value: `${vehicle.doors} portes` });
+  if (isMoto && engineCc) specs.push({ icon: Motorbike, label: c.spec.engine, value: engineCc });
+  if (isMoto && licenseLabel) specs.push({ icon: IdCard, label: c.spec.license, value: licenseLabel });
+  if (vehicle.seats > 0) specs.push({ icon: Users, label: c.spec.seats, value: plural(vehicle.seats, t.vehicle.seats) });
+  if (!isMoto && vehicle.doors > 0) specs.push({ icon: DoorOpen, label: c.spec.doors, value: plural(vehicle.doors, c.spec.doorsValue) });
   if (!isMoto && typeof vehicle.air_conditioning === 'boolean') {
-    specs.push({ icon: Snowflake, label: 'Climatisation', value: vehicle.air_conditioning ? 'Oui' : 'Non' });
+    specs.push({ icon: Snowflake, label: c.spec.ac, value: vehicle.air_conditioning ? c.spec.yes : c.spec.no });
   }
-  if (vehicle.mileage > 0) specs.push({ icon: Odometer, label: 'Kilométrage compteur', value: `${formatNumber(vehicle.mileage)} km` });
+  if (vehicle.mileage > 0) specs.push({ icon: Odometer, label: c.spec.mileage, value: `${num(vehicle.mileage)} km` });
 
   // Conditions : uniquement celles fournies par les données du véhicule et du parcours de réservation
   const conditions: { icon: React.ElementType; label: string; value: string; note?: string }[] = [];
   if (isMoto) {
     conditions.push(
       licenseLabel
-        ? { icon: IdCard, label: 'Permis exigé', value: licenseLabel, note: 'À présenter en original à la remise de la moto.' }
-        : { icon: IdCard, label: 'Permis exigé', value: 'À confirmer', note: 'L’agence précise le permis nécessaire en réponse à votre demande.' }
+        ? { icon: IdCard, label: c.spec.license, value: licenseLabel, note: c.cond.licenseNote }
+        : { icon: IdCard, label: c.spec.license, value: c.cond.toConfirm, note: c.cond.licenseTbcNote }
     );
   }
   if ((vehicle.deposit ?? 0) > 0) {
-    conditions.push({ icon: ShieldCheck, label: 'Caution', value: `${formatNumber(vehicle.deposit)} MAD`, note: 'Remboursable selon le contrat de l’agence.' });
+    conditions.push({ icon: ShieldCheck, label: c.cond.deposit, value: `${num(vehicle.deposit)} MAD`, note: c.cond.depositNote });
   }
   if (vehicle.min_rental_days > 0) {
-    conditions.push({ icon: CalendarClock, label: 'Durée minimale', value: `${vehicle.min_rental_days} jour${vehicle.min_rental_days > 1 ? 's' : ''}` });
+    conditions.push({ icon: CalendarClock, label: c.cond.minDuration, value: plural(vehicle.min_rental_days, c.cond.days) });
   }
   if (typeof vehicle.min_driver_age === 'number' && vehicle.min_driver_age > 0) {
-    conditions.push({ icon: UserRound, label: 'Âge minimum', value: `${vehicle.min_driver_age} ans` });
+    conditions.push({ icon: UserRound, label: c.cond.minAge, value: plural(vehicle.min_driver_age, c.cond.years) });
   }
   if (typeof vehicle.unlimited_mileage === 'boolean') {
     conditions.push({
       icon: Odometer,
-      label: 'Kilométrage',
-      value: vehicle.unlimited_mileage ? 'Illimité' : 'Limité',
-      note: vehicle.unlimited_mileage ? undefined : 'Plafond précisé par l’agence.',
+      label: c.cond.mileage,
+      value: vehicle.unlimited_mileage ? c.cond.unlimited : c.cond.limited,
+      note: vehicle.unlimited_mileage ? undefined : c.cond.limitedNote,
     });
   }
   if (vehicle.delivery_available === true) {
-    conditions.push({ icon: Truck, label: 'Livraison', value: 'Possible', note: 'Hôtel ou adresse, selon l’agence.' });
+    conditions.push({ icon: Truck, label: c.cond.delivery, value: c.cond.possible, note: c.cond.deliveryNote });
   }
-  conditions.push({ icon: Wallet, label: 'Paiement', value: 'À l’agence' });
+  // Assurance et frais annexes : renseignés par l'agence, affichés pour un prix sans surprise
+  if (vehicle.insurance_coverage) {
+    conditions.push({
+      icon: ShieldCheck,
+      label: c.cond.insurance,
+      value: vehicle.insurance_coverage === 'COMPREHENSIVE' ? c.cond.comprehensive : c.cond.thirdParty,
+      note:
+        vehicle.insurance_excess != null
+          ? Number(vehicle.insurance_excess) > 0
+            ? fmt(c.cond.excess, { amount: num(Number(vehicle.insurance_excess)) })
+            : c.cond.noExcess
+          : c.cond.excessByAgency,
+    });
+  }
+  const deliveryFee = (amount: number | null | undefined) =>
+    amount == null ? null : Number(amount) === 0 ? c.cond.free : `${num(Number(amount))} MAD`;
+  const airportFee = deliveryFee(agency?.delivery_fee_airport);
+  const portFee = deliveryFee(agency?.delivery_fee_port);
+  if (airportFee) {
+    conditions.push({ icon: Truck, label: c.cond.airportDelivery, value: airportFee, note: c.cond.payExtra });
+  }
+  if (portFee) {
+    conditions.push({ icon: Truck, label: c.cond.portDelivery, value: portFee, note: c.cond.payExtra });
+  }
+  if (agency?.cancellation_policy?.trim()) {
+    conditions.push({ icon: CalendarClock, label: c.cond.cancellation, value: c.cond.byAgency, note: agency.cancellation_policy.trim() });
+  }
+  conditions.push({ icon: Wallet, label: c.cond.payment, value: c.cond.atAgency });
 
   const fadeUp = reduceMotion
     ? {}
@@ -199,16 +231,16 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
       {/* ── Fil d'Ariane ─────────────────────────────────────────── */}
       <div className="border-b border-slate-200/80 bg-white">
         <nav
-          aria-label="Fil d’Ariane"
+          aria-label={c.breadcrumbAria}
           className="mx-auto flex h-11 max-w-[1360px] items-center gap-1.5 overflow-hidden px-4 text-xs font-medium text-slate-500 sm:px-6 lg:px-8"
         >
-          <Link href="/" className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]">Accueil</Link>
+          <Link href="/" className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]">{c.home}</Link>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
           <Link
             href={isMoto ? '/motos' : '/search'}
             className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]"
           >
-            {isMoto ? 'Motos' : 'Voitures'}
+            {isMoto ? c.motos : c.cars}
           </Link>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
           <span aria-current="page" className="truncate font-semibold text-[#0B1220]">
@@ -224,7 +256,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
             <div className="mb-2.5 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-md bg-[#0B1220] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
                 {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
-                {isMoto ? `Moto · ${vehicle.category}` : vehicle.category}
+                {category}
               </span>
               <span
                 className={cn(
@@ -257,18 +289,18 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               {agency?.verified && (
                 <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-emerald-700">
                   <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  Agence vérifiée
+                  {c.verifiedAgency}
                 </span>
               )}
               <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
               {averageRating !== null ? (
                 <a href="#avis" className="inline-flex min-h-9 items-center gap-1.5 font-bold text-[#0B1220] hover:underline">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-                  {averageRating.toFixed(1).replace('.', ',')}
-                  <span className="font-medium text-slate-500">({reviewCount} avis)</span>
+                  {formatDecimal(averageRating, locale)}
+                  <span className="font-medium text-slate-500">{plural(reviewCount, c.reviewsCount)}</span>
                 </a>
               ) : (
-                <span className="text-[13px] font-medium text-slate-500">Pas encore d’avis</span>
+                <span className="text-[13px] font-medium text-slate-500">{c.noReviewsYet}</span>
               )}
             </div>
           </div>
@@ -279,7 +311,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               whileTap={reduceMotion ? undefined : { scale: 0.9 }}
               onClick={() => setFavorite((current) => !current)}
               aria-pressed={favorite}
-              aria-label={favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              aria-label={favorite ? c.removeFavorite : c.addFavorite}
               className={cn(
                 'flex h-11 w-11 items-center justify-center rounded-xl border bg-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
                 favorite ? 'border-[#F8C9CD] text-accent-text' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-[#0B1220]'
@@ -292,10 +324,12 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               onClick={() => void handleShare()}
               aria-label={
                 shareState === 'copied'
-                  ? `Lien de ${vehicleNoun} copié`
+                  ? isMoto
+                    ? c.linkCopiedMoto
+                    : c.linkCopiedCar
                   : isMoto
-                    ? 'Partager cette moto'
-                    : 'Partager ce véhicule'
+                    ? c.shareMoto
+                    : c.shareCar
               }
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-[#0B1220] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
             >
@@ -304,7 +338,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               ) : (
                 <Share2 className="h-4 w-4" aria-hidden="true" />
               )}
-              <span aria-live="polite">{shareState === 'copied' ? 'Lien copié' : 'Partager'}</span>
+              <span aria-live="polite">{shareState === 'copied' ? c.copied : c.share}</span>
             </button>
           </div>
         </header>
@@ -315,15 +349,15 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
           <div className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-1">
             <VehicleGallery images={vehicle.images ?? []} title={title} />
 
-            <ul className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Informations essentielles">
+            <ul className="grid grid-cols-3 gap-2 sm:gap-3" aria-label={c.keyInfoAria}>
               {[
-                { icon: Gauge, value: vehicle.transmission === 'AUTOMATIC' ? 'Automatique' : 'Manuelle' },
+                { icon: Gauge, value: transmissionLabel(t, vehicle.transmission) },
                 isMoto && engineCc
                   ? { icon: Motorbike, value: engineCc }
-                  : { icon: Fuel, value: FUEL_LABELS[vehicle.fuel] ?? vehicle.fuel },
+                  : { icon: Fuel, value: fuelLabel(t, vehicle.fuel) },
                 isMoto && vehicle.license_required
-                  ? { icon: IdCard, value: `Permis ${vehicle.license_required}` }
-                  : { icon: Users, value: `${vehicle.seats} place${vehicle.seats > 1 ? 's' : ''}` },
+                  ? { icon: IdCard, value: fmt(t.vehicle.license, { license: vehicle.license_required }) }
+                  : { icon: Users, value: plural(vehicle.seats, t.vehicle.seats) },
               ].map(({ icon: Icon, value }) => (
                 <li key={value} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-2.5">
                   <Icon className="h-5 w-5 text-accent-text" aria-hidden="true" />
@@ -336,7 +370,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
           {/* Réservation : après la galerie en mobile, colonne collante sur desktop.
               Hauteur limitée à l'écran : sur un écran peu haut (ex. 1024×768), la colonne défile
               elle-même pour que « Réserver » reste atteignable et visible au focus (WCAG 2.4.11). */}
-          <aside className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label="Réservation">
+          <aside className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label={c.bookingAria}>
             <div className="space-y-3 lg:sticky lg:top-28 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-2xl lg:[scrollbar-width:thin]">
               <BookingCard vehicle={vehicle} onAvailabilityChange={setDateAvailability} />
 
@@ -345,8 +379,8 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-[#0B1220]">{isMoto ? 'Une question sur cette moto ?' : 'Une question sur ce véhicule ?'}</p>
-                  <p className="truncate text-xs text-slate-500">Écrivez à {agency?.name ?? 'l’agence'} sur WhatsApp.</p>
+                  <p className="text-sm font-bold text-[#0B1220]">{isMoto ? c.questionMoto : c.questionCar}</p>
+                  <p className="truncate text-xs text-slate-500">{fmt(c.writeTo, { agency: agency?.name ?? c.theAgency })}</p>
                 </div>
                 <a
                   href={whatsappLink}
@@ -354,7 +388,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   rel="noopener noreferrer"
                   className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#0B1220] px-3.5 text-xs font-bold text-white transition-colors hover:bg-slate-800"
                 >
-                  Écrire
+                  {c.write}
                 </a>
               </div>
             </div>
@@ -364,7 +398,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
           <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-2">
             {/* Caractéristiques */}
             <motion.section {...fadeUp} aria-labelledby="specs-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
-              <SectionTitle id="specs-title" eyebrow="Fiche technique" title="Caractéristiques" />
+              <SectionTitle id="specs-title" eyebrow={c.specsEyebrow} title={c.specsTitle} />
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {specs.map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3 rounded-xl bg-[#F5F6F8] p-3.5">
@@ -382,47 +416,57 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
 
             {/* Équipements & options */}
             <motion.section {...fadeUp} aria-labelledby="features-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
-              <SectionTitle id="features-title" eyebrow="À bord" title="Équipements & options" />
+              <SectionTitle id="features-title" eyebrow={c.featuresEyebrow} title={c.featuresTitle} />
               {vehicle.features.length > 0 ? (
                 <>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Inclus avec le véhicule</h3>
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{c.included}</h3>
                   <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {vehicle.features.map((feature, index) => (
                       <li key={`${feature}-${index}`} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3.5 py-3 text-sm text-slate-700">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                           <Check className="h-3.5 w-3.5" aria-hidden="true" />
                         </span>
-                        {feature}
+                        {featureLabel(t, feature)}
                       </li>
                     ))}
                   </ul>
                 </>
               ) : (
-                <p className="text-sm text-slate-500">L’agence n’a pas encore détaillé les équipements de ce véhicule.</p>
+                <p className="text-sm text-slate-500">{c.noFeatures}</p>
               )}
 
-              <h3 className="mb-3 mt-6 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Options sur demande</h3>
+              <h3 className="mb-3 mt-6 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{c.onRequest}</h3>
               <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {[
-                  { icon: Baby, label: 'Siège enfant' },
-                  { icon: UserPlus, label: 'Conducteur additionnel' },
+                  { icon: Baby, label: c.childSeat },
+                  { icon: UserPlus, label: c.extraDriver },
                 ].map(({ icon: Icon, label }) => (
                   <li key={label} className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 px-3.5 py-3 text-sm text-slate-700">
                     <Icon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
                     <span className="flex-1">{label}</span>
-                    <span className="rounded-full bg-[#F5F6F8] px-2 py-0.5 text-[11px] font-bold text-ink-tertiary">Tarif agence</span>
+                    <span className="rounded-full bg-[#F5F6F8] px-2 py-0.5 text-[11px] font-bold text-ink-tertiary">{c.agencyRate}</span>
                   </li>
                 ))}
               </ul>
             </motion.section>
 
             {/* Conditions de location */}
+            {vehicle.description?.trim() && (
+              <motion.section {...fadeUp} aria-labelledby="vehicle-description-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+                <h2 id="vehicle-description-title" className="text-lg font-extrabold text-ink">
+                  {c.agencyWord}
+                </h2>
+                <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-slate-700">{vehicle.description.trim()}</p>
+                {locale !== 'fr' && <p className="mt-2 text-xs text-slate-500">{c.agencyTextNote}</p>}
+              </motion.section>
+            )}
+
             <motion.section {...fadeUp} aria-labelledby="conditions-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
               <SectionTitle
                 id="conditions-title"
-                eyebrow="Avant de partir"
-                title="Conditions de location"
-                subtitle="Le contrat de l’agence fait foi ; les conditions ci-dessous sont celles renseignées pour ce véhicule."
+                eyebrow={c.conditionsEyebrow}
+                title={c.conditionsTitle}
+                subtitle={c.conditionsSubtitle}
               />
               <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {conditions.map(({ icon: Icon, label, value, note }) => (
@@ -438,34 +482,31 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               </dl>
 
               <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-100">
-                <Disclosure icon={FileText} title="Documents à présenter">
+                <Disclosure icon={FileText} title={c.documentsTitle}>
                   <ul className="list-disc space-y-1 ps-5">
-                    <li>Pièce d’identité : CIN ou passeport</li>
-                    <li>Permis de conduire en cours de validité</li>
+                    <li>{c.docId}</li>
+                    <li>{c.docLicense}</li>
                   </ul>
-                  <p className="mt-2">Ces informations sont demandées lors de votre demande de réservation.</p>
+                  <p className="mt-2">{c.docNote}</p>
                 </Disclosure>
-                <Disclosure icon={Info} title="Assurance, carburant et annulation">
-                  <p>
-                    Ces conditions sont définies par l’agence et précisées dans son contrat. Demandez-les avant de
-                    confirmer votre réservation.
-                  </p>
+                <Disclosure icon={Info} title={c.insuranceTitle}>
+                  <p>{c.insuranceText}</p>
                 </Disclosure>
               </div>
             </motion.section>
 
             {/* Avis clients */}
             <motion.section {...fadeUp} id="avis" aria-labelledby="reviews-title" className="scroll-mt-28 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
-              <SectionTitle id="reviews-title" eyebrow="Expérience client" title="Avis clients" />
+              <SectionTitle id="reviews-title" eyebrow={c.reviewsEyebrow} title={c.reviewsTitle} />
               {reviewCount > 0 && averageRating !== null ? (
                 <>
                   <div className="flex flex-col gap-5 rounded-xl bg-[#F5F6F8] p-4 sm:flex-row sm:items-center sm:p-5">
                     <div className="text-center sm:w-36 sm:shrink-0">
-                      <p className="text-4xl font-extrabold text-[#0B1220] tabular-nums">{averageRating.toFixed(1).replace('.', ',')}</p>
+                      <p className="text-4xl font-extrabold text-[#0B1220] tabular-nums">{formatDecimal(averageRating, locale)}</p>
                       <Stars rating={averageRating} className="mt-1 justify-center" />
-                      <p className="mt-1 text-xs text-slate-500">{reviewCount} avis</p>
+                      <p className="mt-1 text-xs text-slate-500">{plural(reviewCount, c.reviewsShort)}</p>
                     </div>
-                    <ul className="flex-1 space-y-1.5" aria-label="Répartition des notes">
+                    <ul className="flex-1 space-y-1.5" aria-label={c.distributionAria}>
                       {[5, 4, 3, 2, 1].map((star) => {
                         const n = reviews.filter((r) => Math.round(r.rating) === star).length;
                         return (
@@ -493,7 +534,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                             <div className="mt-0.5 flex items-center gap-2">
                               <Stars rating={review.rating} />
                               <time dateTime={review.created_at} className="text-xs text-slate-500">
-                                {new Date(review.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                {date(review.created_at, 'medium')}
                               </time>
                             </div>
                           </div>
@@ -508,9 +549,9 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F6F8] text-slate-400">
                     <Star className="h-6 w-6" aria-hidden="true" />
                   </span>
-                  <p className="mt-3 text-sm font-bold text-[#0B1220]">Aucun avis pour le moment</p>
+                  <p className="mt-3 text-sm font-bold text-[#0B1220]">{c.noReviews}</p>
                   <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-slate-500">
-                    Les avis des clients ayant loué ce véhicule apparaîtront ici après leurs locations.
+                    {c.noReviewsText}
                   </p>
                 </div>
               )}
@@ -525,17 +566,15 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               <div>
                 <p className="inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent-text">
                   <span className="h-px w-7 bg-current" aria-hidden="true" />
-                  Alternatives
+                  {c.similarEyebrow}
                 </p>
                 <h2 id="similar-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220]">
-                  Véhicules similaires
+                  {c.similarTitle}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Même modèle ou même catégorie chez d’autres agences. Disponibilité à vérifier sur chaque fiche.
-                </p>
+                <p className="mt-1 text-sm text-slate-500">{c.similarText}</p>
               </div>
               <Link href="/search" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#0B1220] hover:text-accent-text">
-                Tout le catalogue
+                {c.fullCatalog}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
             </div>
@@ -571,9 +610,10 @@ function SectionTitle({ id, eyebrow, title, subtitle }: { id: string; eyebrow: s
 }
 
 function Stars({ rating, className }: { rating: number; className?: string }) {
+  const { t, locale, fmt } = useTranslation();
   const rounded = Math.round(rating);
   return (
-    <span className={cn('flex items-center gap-0.5', className)} role="img" aria-label={`${rating.toFixed(1)} sur 5`}>
+    <span className={cn('flex items-center gap-0.5', className)} role="img" aria-label={fmt(t.car.starsAria, { rating: formatDecimal(rating, locale) })}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} className={cn('h-3.5 w-3.5', i <= rounded ? 'fill-amber-400 text-amber-400' : 'text-slate-300')} aria-hidden="true" />
       ))}
@@ -605,8 +645,9 @@ function Disclosure({ icon: Icon, title, children }: { icon: React.ElementType; 
 }
 
 export function DetailSkeleton() {
+  const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-[#F5F6F8]" role="status" aria-label="Chargement du véhicule">
+    <div className="min-h-screen bg-[#F5F6F8]" role="status" aria-label={t.car.loadingVehicle}>
       <div className="h-11 border-b border-slate-200/80 bg-white" />
       <div className="mx-auto max-w-[1360px] animate-pulse px-4 pt-8 sm:px-6 lg:px-8 motion-reduce:animate-none">
         <div className="h-5 w-32 rounded bg-slate-200" />

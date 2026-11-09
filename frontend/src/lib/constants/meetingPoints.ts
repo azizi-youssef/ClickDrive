@@ -25,7 +25,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
     gradientBg: 'from-blue-600 to-indigo-700',
     borderColor: 'border-blue-300',
     textColor: 'text-blue-700',
-    instructions: 'Accueil personnalisé au hall Arrivées avec pancarte nominative ClickDrive dès la sortie des bagages.',
+    instructions: 'Rendez-vous dans le hall Arrivées, à la sortie des bagages, au point convenu avec l’agence.',
   },
   {
     id: 'port-beni-ansar',

@@ -1,6 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Plane, Anchor, Building2, MapPin, Sparkles, Train } from 'lucide-react';
 import { getMeetingPoint } from '@/lib/constants/meetingPoints';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { meetingPointText } from '@/lib/i18n/labels';
 
 interface MeetingPointBadgeProps {
   location: string;
@@ -16,6 +20,8 @@ export function MeetingPointBadge({
   className = '',
 }: MeetingPointBadgeProps) {
   const point = getMeetingPoint(location);
+  const { t } = useTranslation();
+  const text = meetingPointText(t, point);
 
   const renderIcon = (iconSizeClass: string) => {
     switch (point.iconName) {
@@ -40,7 +46,7 @@ export function MeetingPointBadge({
         <span className={`w-4 h-4 rounded flex items-center justify-center text-white bg-gradient-to-br ${point.gradientBg}`}>
           {renderIcon('w-2.5 h-2.5')}
         </span>
-        <span className="truncate max-w-[140px]">{point.shortName}</span>
+        <span className="truncate max-w-[140px]">{text.shortName}</span>
       </span>
     );
   }
@@ -54,18 +60,18 @@ export function MeetingPointBadge({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold text-slate-900">{point.name}</span>
+          <span className="text-xs font-bold text-slate-900">{text.name}</span>
           <span className="text-[11px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
             {point.code}
           </span>
           <span className={`text-[11px] font-semibold ${point.textColor}`}>
-            • {point.badgeLabel}
+            • {text.badgeLabel}
           </span>
         </div>
 
         {showInstructions && (
           <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-            {point.instructions}
+            {text.instructions}
           </p>
         )}
       </div>

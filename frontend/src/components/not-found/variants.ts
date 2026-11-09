@@ -1,13 +1,13 @@
 import type { Vehicle } from '@/types';
 import { vehicleTypeOf } from '@/lib/vehicles/kind';
+import { delocalizeHref } from '@/lib/i18n/routing';
 
 export type NotFoundKind = 'vehicle' | 'agency' | 'page';
 
+/** Textes traduits : t.notFound[kind] (titre, texte, bouton principal) */
 export type NotFoundVariant = {
   kind: NotFoundKind;
-  title: string;
-  text: string;
-  primary: { label: string; href: string };
+  primaryHref: string;
 };
 
 /**
@@ -15,29 +15,11 @@ export type NotFoundVariant = {
  * la même réponse qu'une URL mal saisie (mêmes cas que les notFound() des routes).
  */
 export function notFoundVariant(pathname: string | null | undefined): NotFoundVariant {
-  const path = pathname ?? '';
-  if (/^\/cars\/[^/]+/.test(path)) {
-    return {
-      kind: 'vehicle',
-      title: 'Ce véhicule n’est plus en ligne',
-      text: 'L’annonce a pu être retirée par l’agence, ou le lien est incomplet. D’autres véhicules sont disponibles à Nador.',
-      primary: { label: 'Voir les voitures disponibles', href: '/search' },
-    };
-  }
-  if (/^\/agencies\/[^/]+/.test(path)) {
-    return {
-      kind: 'agency',
-      title: 'Cette agence est introuvable',
-      text: 'Elle n’est peut-être plus référencée sur ClickDrive, ou le lien est incomplet.',
-      primary: { label: 'Voir les agences partenaires', href: '/agencies' },
-    };
-  }
-  return {
-    kind: 'page',
-    title: 'Cette page n’existe pas',
-    text: 'Le lien est peut-être erroné, ou la page a été déplacée. Cherchez un véhicule ou choisissez une rubrique ci-dessous.',
-    primary: { label: 'Voir les voitures', href: '/search' },
-  };
+  // Adresse dans une langue (/nl/cars/…) : même cas que l'adresse française
+  const path = delocalizeHref(pathname ?? '');
+  if (/^\/cars\/[^/]+/.test(path)) return { kind: 'vehicle', primaryHref: '/search' };
+  if (/^\/agencies\/[^/]+/.test(path)) return { kind: 'agency', primaryHref: '/agencies' };
+  return { kind: 'page', primaryHref: '/search' };
 }
 
 function slugPart(value: string): string {

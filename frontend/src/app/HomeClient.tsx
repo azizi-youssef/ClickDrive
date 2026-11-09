@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import { SearchBar } from '@/components/search/SearchBar';
-import { SUPPORT_HOURS_SUMMARY } from '@/lib/constants/contact';
 import { VehicleCard } from '@/components/cars/VehicleCard';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import type { Vehicle, Agency } from '@/types';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatNumber } from '@/lib/i18n/format';
+import { categoryLabel } from '@/lib/i18n/labels';
 import { GsapReveal } from '@/components/ui/react-bits';
 import { StyleExplorer } from '@/components/home/StyleExplorer';
 
@@ -37,7 +38,8 @@ export function HomeClient({
   initialVehicles: Vehicle[] | null;
   initialAgencies: Agency[] | null;
 }) {
-  const { t, isRTL } = useTranslation();
+  const { t, locale, isRTL, plural, fmt } = useTranslation();
+  const home = t.home;
   const preloaded = initialVehicles !== null && initialAgencies !== null;
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles ?? []);
   const [agencies, setAgencies] = useState<Agency[]>(initialAgencies ?? []);
@@ -128,9 +130,9 @@ export function HomeClient({
   // Filtres pratiques (chips — cumulables avec catégorie)
   // N'apparaissent que si le catalogue contient au moins un véhicule correspondant
   const practicalFilters = [
-    carVehicles.some((v) => v.transmission === 'AUTOMATIC') && { label: 'Automatique', key: 'automatic', active: vehicleFilter === 'Automatique' },
-    carVehicles.some((v) => (v.seats ?? 0) >= 7) && { label: '7 places', key: '7places', active: vehicleFilter === '7 places' },
-  ].filter(Boolean) as { label: string; key: string; active: boolean }[];
+    carVehicles.some((v) => v.transmission === 'AUTOMATIC') && { value: 'Automatique', label: home.featured.automatic, key: 'automatic', active: vehicleFilter === 'Automatique' },
+    carVehicles.some((v) => (v.seats ?? 0) >= 7) && { value: '7 places', label: home.featured.sevenSeats, key: '7places', active: vehicleFilter === '7 places' },
+  ].filter(Boolean) as { value: string; label: string; key: string; active: boolean }[];
 
   // Puces de catégories : uniquement celles présentes, de la plus fournie à la moins fournie
   const categoryChips = [
@@ -141,33 +143,34 @@ export function HomeClient({
   ];
 
   const destinations = [
-    { name: 'Aéroport Nador-Al Aroui', shortName: 'Aéroport', image: '/aeroport%20nador%20al%20aroui.jpeg', icon: Plane, tag: 'Populaire' },
-    { name: 'Nador Centre', shortName: 'Nador', image: '/centre%20nadar.jpeg', icon: MapPin, tag: null },
-    { name: 'Port Beni Ansar', shortName: 'Beni Ansar', image: '/frontera%20melilla.jpeg', icon: MapPin, tag: 'MRE' },
-    { name: 'Marchica & alentours', shortName: 'Marchica', image: '/atalayoun%20nador.jpg', icon: MapPin, tag: null },
+    // shortName : valeur du filtre « lieu » dans l'URL (français, comme en base)
+    { name: home.destinations.airport, shortName: 'Aéroport', image: '/aeroport%20nador%20al%20aroui.jpeg', icon: Plane, tag: home.destinations.popular },
+    { name: home.destinations.center, shortName: 'Nador', image: '/centre%20nadar.jpeg', icon: MapPin, tag: null },
+    { name: home.destinations.port, shortName: 'Beni Ansar', image: '/frontera%20melilla.jpeg', icon: MapPin, tag: home.destinations.portTag },
+    { name: home.destinations.marchica, shortName: 'Marchica', image: '/atalayoun%20nador.jpg', icon: MapPin, tag: null },
   ];
 
   // Bande de confiance unifiée, cohérente et lisible sur tous les écrans
   const unifiedTrustItems = [
     {
       icon: ShieldCheck,
-      title: dataLoaded && totalAgencies > 0 ? `${totalAgencies} agences locales référencées` : 'Agences locales auditées',
-      description: 'Registre de commerce, assurance RC et flotte inspectés avant validation sur la plateforme.',
+      title: dataLoaded && totalAgencies > 0 ? plural(totalAgencies, home.trust.agenciesCount) : home.trust.agenciesAudited,
+      description: home.trust.agenciesDesc,
     },
     {
       icon: FileText,
-      title: 'Demande gratuite et sans engagement',
-      description: 'Envoyez votre demande en quelques minutes ; l’agence vous confirme directement la disponibilité et les conditions.',
+      title: home.trust.freeTitle,
+      description: home.trust.freeDesc,
     },
     {
       icon: MapPin,
-      title: 'Prise en charge à Nador',
-      description: 'Livraison au terminal de l’Aéroport Al-Aroui, au port de Beni Ansar, en ville ou à votre hébergement.',
+      title: home.trust.pickupTitle,
+      description: home.trust.pickupDesc,
     },
     {
       icon: Clock3,
-      title: 'Support client local',
-      description: `Une équipe locale joignable ${SUPPORT_HOURS_SUMMARY} pour répondre à vos questions.`,
+      title: home.trust.supportTitle,
+      description: home.trust.supportDesc,
     },
   ];
 
@@ -281,20 +284,20 @@ export function HomeClient({
             <div>
               <p className="section-header-eyebrow">
                 <span className="h-3 w-3 rounded-full bg-[#E63946]" />
-                Sélection ClickDrive
+                {home.featured.eyebrow}
               </p>
               <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                Les voitures populaires
+                {home.featured.title}
               </h2>
               <p className="mt-2 text-sm text-slate-500">
-                Consultez les caractéristiques et envoyez votre demande pour vos dates.
+                {home.featured.subtitle}
               </p>
             </div>
             <Link
               href="/search"
               className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text hover:shadow-md sm:flex"
             >
-              Tout explorer <ArrowRight className="h-4 w-4" />
+              {home.featured.exploreAll} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -303,7 +306,7 @@ export function HomeClient({
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex items-center gap-2 flex-1">
                 <label htmlFor="date-depart" className="text-xs font-semibold text-slate-600 shrink-0 w-16">
-                  Départ
+                  {home.featured.departure}
                 </label>
                 <input
                   id="date-depart"
@@ -321,12 +324,12 @@ export function HomeClient({
                     }
                   }}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B1220] focus:border-transparent transition min-h-11"
-                  aria-label="Date de départ"
+                  aria-label={home.featured.departureAria}
                 />
               </div>
               <div className="flex items-center gap-2 flex-1">
                 <label htmlFor="date-retour" className="text-xs font-semibold text-slate-600 shrink-0 w-16">
-                  Retour
+                  {home.featured.return}
                 </label>
                 <input
                   id="date-retour"
@@ -344,19 +347,19 @@ export function HomeClient({
                     }
                   }}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B1220] focus:border-transparent transition min-h-11"
-                  aria-label="Date de retour"
+                  aria-label={home.featured.returnAria}
                 />
               </div>
               {selectedDays > 0 && (
                 <div className="shrink-0 rounded-xl bg-[#0B1220] px-4 py-2.5 text-sm font-bold text-white flex items-center">
-                  {selectedDays} jour{selectedDays > 1 ? 's' : ''}
+                  {plural(selectedDays, home.featured.days)}
                 </div>
               )}
             </div>
           </div>
 
           {/* ── Chips filtres rapides ───────────────────────────────────────── */}
-          <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par catégorie">
+          <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label={home.featured.filterAria}>
             {categoryChips.map((filter) => (
               <button
                 key={filter}
@@ -369,7 +372,7 @@ export function HomeClient({
                     : 'rounded-full px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition min-h-11'
                 }
               >
-                {filter}
+                {filter === 'Tous' ? home.featured.all : categoryLabel(t, filter)}
                 {filter !== 'Tous' && (
                   <span className="ml-1.5 opacity-60">
                     ({carVehicles.filter((v) => v.category === filter).length})
@@ -385,7 +388,7 @@ export function HomeClient({
               <button
                 key={f.key}
                 type="button"
-                onClick={() => setVehicleFilter(f.active ? 'Tous' : f.label)}
+                onClick={() => setVehicleFilter(f.active ? 'Tous' : f.value)}
                 aria-pressed={f.active}
                 className={
                   f.active
@@ -398,20 +401,21 @@ export function HomeClient({
             ))}
             <div className="flex items-center gap-1.5 ml-auto">
               <label htmlFor="budget-max" className="text-xs font-semibold text-slate-600 shrink-0">
-                Budget&nbsp;:
+                {home.featured.budget}
               </label>
               <select
                 id="budget-max"
                 value={budgetMax}
                 onChange={(e) => setBudgetMax(Number(e.target.value))}
                 className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0B1220] transition min-h-11 cursor-pointer"
-                aria-label="Budget maximum par jour"
+                aria-label={home.featured.budgetAria}
               >
-                <option value={0}>Tous budgets</option>
-                <option value={300}>≤ 300 DH/j</option>
-                <option value={500}>≤ 500 DH/j</option>
-                <option value={800}>≤ 800 DH/j</option>
-                <option value={1200}>≤ 1 200 DH/j</option>
+                <option value={0}>{home.featured.allBudgets}</option>
+                {[300, 500, 800, 1200].map((amount) => (
+                  <option key={amount} value={amount}>
+                    {fmt(home.featured.upTo, { amount: formatNumber(amount, locale) })}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -422,9 +426,9 @@ export function HomeClient({
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600">
                 <AlertCircle className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Impossible de charger les véhicules</h3>
+              <h3 className="text-base font-bold text-slate-900">{home.featured.errorTitle}</h3>
               <p className="mt-1.5 max-w-md text-xs leading-relaxed text-slate-600">
-                Une interruption temporaire de connexion empêche d&apos;afficher les véhicules en direct.
+                {home.featured.errorText}
               </p>
               <button
                 type="button"
@@ -432,7 +436,7 @@ export function HomeClient({
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Réessayer
+                {home.featured.retry}
               </button>
             </div>
           ) : !dataLoaded ? (
@@ -448,13 +452,13 @@ export function HomeClient({
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
                 <Car className="h-6 w-6 text-slate-400" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Consultez la flotte par destination</h3>
+              <h3 className="text-base font-bold text-slate-900">{home.featured.emptyTitle}</h3>
               <p className="mt-1.5 max-w-md text-xs leading-5 text-slate-500">
-                Les véhicules sont gérés en direct par les agences locales à Nador. Utilisez le formulaire de recherche ci-dessus pour afficher les disponibilités exactes pour vos dates.
+                {home.featured.emptyText}
               </p>
               <Link href="/search" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800">
                 <Search className="h-3.5 w-3.5" />
-                Lancer une recherche de véhicule
+                {home.featured.emptyCta}
               </Link>
             </div>
           ) : (
@@ -473,7 +477,7 @@ export function HomeClient({
 
           <div className="mt-8 flex justify-center sm:hidden">
             <Link href="/search" className="btn-primary px-5 py-3 text-sm">
-              Voir toutes les voitures <ArrowRight className="h-4 w-4" />
+              {home.featured.seeAllCars} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -489,20 +493,20 @@ export function HomeClient({
               <div>
                 <p className="section-header-eyebrow">
                   <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />
-                  Deux-roues
+                  {home.motos.eyebrow}
                 </p>
                 <h2 id="home-motos-title" className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                  Motos et scooters
+                  {home.motos.title}
                 </h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  {motoVehicles.length} moto{motoVehicles.length > 1 ? 's' : ''} proposée{motoVehicles.length > 1 ? 's' : ''} par les agences partenaires, avec cylindrée et permis exigé.
+                  {plural(motoVehicles.length, home.motos.subtitle)}
                 </p>
               </div>
               <Link
                 href="/motos"
                 className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text hover:shadow-md sm:flex"
               >
-                Toutes les motos <ArrowRight className="h-4 w-4" />
+                {home.motos.allMotos} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -516,7 +520,7 @@ export function HomeClient({
             </div>
             <div className="mt-8 flex justify-center sm:hidden">
               <Link href="/motos" className="btn-primary px-5 py-3 text-sm">
-                Voir toutes les motos <ArrowRight className="h-4 w-4" />
+                {home.motos.seeAllMotos} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -530,13 +534,13 @@ export function HomeClient({
         <div className="mb-10">
           <p className="section-header-eyebrow">
             <span className="h-3 w-3 rounded-full bg-[#E63946]" />
-            Où récupérer votre voiture ?
+            {home.destinations.eyebrow}
           </p>
           <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            Louez là où votre voyage commence
+            {home.destinations.title}
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            Prise en charge directe aux principaux points d’arrivée à Nador.
+            {home.destinations.subtitle}
           </p>
         </div>
 
@@ -571,7 +575,7 @@ export function HomeClient({
                   </div>
                   <p className="text-sm font-bold text-white sm:text-base">{destination.name}</p>
                   <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-white/70 transition group-hover:text-white">
-                    Explorer les voitures
+                    {home.destinations.explore}
                     <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
                   </div>
                 </div>

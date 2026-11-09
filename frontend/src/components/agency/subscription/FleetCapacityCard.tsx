@@ -2,9 +2,7 @@
 
 import React from 'react';
 import {
-  Car,
   AlertTriangle,
-  CheckCircle2,
   Sparkles,
   ArrowUpRight,
   ShieldCheck,

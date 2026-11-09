@@ -1,4 +1,5 @@
-import type { UserRole, AgencyStatus, BookingStatus } from '@clickdrive/shared';
+import type { UserRole, AgencyStatus } from '@clickdrive/shared/roles';
+import type { BookingStatus } from '@clickdrive/shared/booking-status';
 import type { MotorcycleCategory, MotorcycleLicense, VehicleType } from '@/lib/vehicles/kind';
 
 export type { UserRole, AgencyStatus, BookingStatus };
@@ -104,6 +105,16 @@ export interface Agency {
   created_at: string;
   /** Nombre de véhicules (agrégation API admin) */
   vehicle_count?: number | null;
+  /** Horaires d'ouverture, texte libre court (« Lun–Sam 8h–20h ») */
+  opening_hours?: string | null;
+  /** Langues parlées (codes de AGENCY_LANGUAGES) */
+  languages?: string[] | null;
+  /** Politique d'annulation de l'agence */
+  cancellation_policy?: string | null;
+  /** Frais de livraison à l'aéroport Nador-Al Aroui, en MAD (null = non renseigné) */
+  delivery_fee_airport?: number | null;
+  /** Frais de livraison au port de Beni Ansar, en MAD (null = non renseigné) */
+  delivery_fee_port?: number | null;
 }
 
 export interface Vehicle {
@@ -148,6 +159,12 @@ export interface Vehicle {
   engine_cc?: number | null;
   /** Motos : permis exigé par l'agence */
   license_required?: MotorcycleLicense | null;
+  /** Assurance incluse : responsabilité civile seule ou tous risques (null = non renseigné) */
+  insurance_coverage?: 'THIRD_PARTY' | 'COMPREHENSIVE' | null;
+  /** Franchise en cas de sinistre, en MAD */
+  insurance_excess?: number | null;
+  /** Présentation rédigée par l'agence (état, équipements, conseils) */
+  description?: string | null;
 }
 
 export interface Booking {
@@ -222,6 +239,10 @@ export interface Booking {
 
   // Événements timeline
   events?: BookingEvent[];
+  /** Arrivée en ferry au port de Beni Ansar : compagnie, traversée, heure */
+  ferry_details?: string | null;
+  /** Langue du client à la demande (NULL = français) : migration 20261111000100 */
+  customer_locale?: 'fr' | 'ar' | 'en' | 'de' | 'es' | 'nl' | null;
 }
 
 export interface Review {
@@ -284,6 +305,23 @@ export interface AgencySubscription {
   auto_renew: boolean;
   payment_method?: string;
   created_at: string;
+}
+
+export type PlanChangeRequestStatus = 'PENDING_PAYMENT' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+/** Demande de changement de formule : la nouvelle formule ne s'applique qu'après validation du paiement */
+export interface PlanChangeRequest {
+  id: string;
+  agency_id: string;
+  agency_name?: string;
+  status: PlanChangeRequestStatus;
+  amount_due: number;
+  current_plan_name: string | null;
+  requested_plan: { id: string; slug: string; name: string; price_monthly: number; max_vehicles: number | null };
+  payment_reference: string | null;
+  decision_note: string | null;
+  created_at: string;
+  decided_at: string | null;
 }
 
 export interface SubscriptionStats {

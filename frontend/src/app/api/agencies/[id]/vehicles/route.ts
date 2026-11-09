@@ -211,6 +211,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       published: input.published,
       unit_number: unitNumber,
       license_plate: input.license_plate || null,
+      description: input.description || null,
+      // Assurance : envoyée seulement si renseignée (fonctionne avant la migration 20261109000100)
+      ...(input.insurance_coverage || input.insurance_excess != null
+        ? { insurance_coverage: input.insurance_coverage ?? null, insurance_excess: input.insurance_excess ?? null }
+        : {}),
       // Colonnes motos envoyées uniquement pour une moto : une voiture s'enregistre même
       // si la migration motos n'est pas encore appliquée (vehicle_type vaut 'CAR' par défaut).
       ...(isMotorcycle

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@/tests/setup/dom';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@/tests/setup/render';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { StyleExplorer, summarizeCategories } from './StyleExplorer';

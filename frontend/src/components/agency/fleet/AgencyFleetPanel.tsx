@@ -6,23 +6,15 @@ import Image from 'next/image';
 import {
   Car,
   Search,
-  Filter,
   Plus,
   Edit,
   Trash2,
   Calendar,
-  Lock,
-  Unlock,
-  CheckCircle2,
   AlertCircle,
-  MoreVertical,
   Loader2,
   RefreshCw,
   Eye,
   EyeOff,
-  Fuel,
-  Gauge,
-  Sparkles,
   Camera,
   Motorbike,
 } from 'lucide-react';
@@ -30,7 +22,8 @@ import { cn, formatPrice } from '@/lib/utils';
 import { VehicleFormModal, type EditableVehicle } from './VehicleFormModal';
 import { FleetCapacityCard } from '../subscription/FleetCapacityCard';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
-import type { AgencySubscription, SubscriptionPlan } from '@/types';
+import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
+import { PendingPlanChangeBanner } from '../subscription/PendingPlanChangeBanner';
 import {
   CAR_CATEGORIES,
   MOTORCYCLE_CATEGORIES,
@@ -80,14 +73,12 @@ export function AgencyFleetPanel({
   agencyId,
   vehicleType,
   canManage,
-  onOpenCalendar,
   onNotify,
 }: {
   agencyId: string;
   /** Voitures et motos sont gérées dans deux listes distinctes */
   vehicleType: VehicleType;
   canManage: boolean;
-  onOpenCalendar?: (vehicleId?: string) => void;
   /** Retour utilisateur (bandeau de notification du portail) */
   onNotify?: (kind: 'success' | 'error', message: string) => void;
 }) {
@@ -123,6 +114,7 @@ export function AgencyFleetPanel({
 
   // Subscription state
   const [subscription, setSubscription] = useState<AgencySubscription | null>(null);
+  const [pendingChange, setPendingChange] = useState<PlanChangeRequest | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [subLoading, setSubLoading] = useState(true);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -139,6 +131,7 @@ export function AgencyFleetPanel({
 
       if (subJson.success && subJson.data) {
         setSubscription(subJson.data);
+        setPendingChange(subJson.pendingChange ?? null);
       }
       if (plansJson.success && plansJson.data) {
         setPlans(plansJson.data);
@@ -196,8 +189,8 @@ export function AgencyFleetPanel({
       setVehicles(json.data ?? []);
       setTotalPages(json.meta?.totalPages ?? 1);
       setTotalCount(json.meta?.total ?? 0);
-    } catch (err: any) {
-      setError(err.message || 'Impossible de contacter le serveur.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Impossible de contacter le serveur.');
     } finally {
       setLoading(false);
     }
@@ -269,8 +262,8 @@ export function AgencyFleetPanel({
       }
       setBlockingVehicle(null);
       void loadVehicles();
-    } catch (err: any) {
-      setBlockingError(err.message);
+    } catch (err: unknown) {
+      setBlockingError((err instanceof Error ? err.message : '') || 'Impossible de bloquer cette période.');
     } finally {
       setBlockingBusy(false);
     }
@@ -319,6 +312,9 @@ export function AgencyFleetPanel({
       </div>
 
       {/* Subscription Fleet Capacity Card */}
+      {pendingChange && (
+        <PendingPlanChangeBanner agencyId={agencyId} request={pendingChange} onCancelled={() => setPendingChange(null)} />
+      )}
       <FleetCapacityCard
         subscription={subscription}
         loading={subLoading}
@@ -684,10 +680,8 @@ export function AgencyFleetPanel({
           plans={plans}
           isOpen={upgradeModalOpen}
           onClose={() => setUpgradeModalOpen(false)}
-          onSuccess={(updatedSub) => {
-            setSubscription(updatedSub);
-            void loadVehicles();
-          }}
+          pendingChange={pendingChange}
+          onRequested={setPendingChange}
         />
       )}
 

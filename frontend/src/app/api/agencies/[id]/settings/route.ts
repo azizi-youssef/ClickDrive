@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgencyPermissionApi } from '@/lib/auth/access-api';
 import { createAdminClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { AGENCY_LANGUAGE_CODES } from '@/lib/agencies/languages';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,12 @@ const settingsUpdateSchema = z.object({
   email: z.union([z.literal(''), z.string().trim().email('Email invalide').max(160)]).optional(),
   address: z.string().trim().max(240).optional(),
   city: z.string().trim().max(80).optional(),
+  // Infos pratiques (fiche agence et fiches véhicules) ; un texte vide efface la valeur
+  opening_hours: z.string().trim().max(300, 'Horaires limités à 300 caractères').transform((v) => v || null).optional(),
+  languages: z.array(z.enum(AGENCY_LANGUAGE_CODES as [string, ...string[]])).max(8).optional(),
+  cancellation_policy: z.string().trim().max(600, 'Politique d’annulation limitée à 600 caractères').transform((v) => v || null).optional(),
+  delivery_fee_airport: z.number().min(0).max(5000).nullable().optional(),
+  delivery_fee_port: z.number().min(0).max(5000).nullable().optional(),
 });
 
 export async function GET(request: NextRequest, context: RouteContext) {

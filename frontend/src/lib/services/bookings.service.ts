@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
-import { canPerformAgencyBookingAction } from '@clickdrive/shared';
+import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { Booking, BookingStatus, BookingEvent, BookingEventType } from '@/types';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { bookingRequestSchema, BookingRequestInput } from '@/lib/validations/booking';
-import { calculateBookingPrice, calculateRentalDays } from '@/lib/utils/pricing';
+import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
 import { generateBookingReference, isValidBookingReference } from '@/lib/utils/reference';
 import { commissionService } from './commission.service';
 import { vehiclesService } from './vehicles.service';
@@ -345,7 +345,8 @@ export class BookingsService {
     // 4. Calcul financier certifié côté serveur
     const totalDays = calculateRentalDays(input.startDate, input.endDate);
     const platformCommissionRate = await commissionService.getCommissionRate();
-    const pricing = calculateBookingPrice(vehicle.daily_price, totalDays, platformCommissionRate);
+    // Tarif semaine ou mois de l'agence appliqué dès 7 ou 30 jours (même calcul que l'estimation affichée)
+    const pricing = calculateRentalPrice(vehicle, totalDays, platformCommissionRate);
 
     // 5. Génération de la référence unique (CD-2026-XXXXXX)
     const reference = generateBookingReference();
@@ -353,9 +354,12 @@ export class BookingsService {
     const nowIso = new Date().toISOString();
 
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .insert({
+      const insertBooking = (withLocale: boolean) =>
+        supabase
+          .from('bookings')
+          .insert({
+          // Colonne de la migration 20261111000100 : écrite seulement pour une langue autre que le français
+          ...(withLocale && input.locale && input.locale !== 'fr' ? { customer_locale: input.locale } : {}),
           reference,
           booking_ref: reference,
           idempotency_key: idempotencyKey,
@@ -366,13 +370,15 @@ export class BookingsService {
           first_name: input.firstName,
           last_name: input.lastName,
           customer_name: fullName,
-          cin: input.cin,
+          cin: input.cin || null,
           customer_email: input.email || `${input.phone.replace(/[^0-9]/g, '')}@clickdrive.ma`,
           customer_phone: input.phone,
           customer_country: input.country,
           birth_date: input.birthDate,
-          license_number: input.licenseNumber,
-          license_expiry: input.licenseExpiry,
+          license_number: input.licenseNumber || null,
+          // Colonne de la migration 20261110000100 : envoyée seulement si le client l'a renseignée
+          ...(input.ferryDetails ? { ferry_details: input.ferryDetails } : {}),
+          license_expiry: input.licenseExpiry || null,
           start_date: input.startDate,
           end_date: input.endDate,
           pickup_time: input.pickupTime,
@@ -394,8 +400,15 @@ export class BookingsService {
           commission_status: 'PENDING',
           requested_at: nowIso,
         })
-        .select('*, vehicle:vehicles(*), agency:agencies(*)')
-        .single();
+          .select('*, vehicle:vehicles(*), agency:agencies(*)')
+          .single();
+
+      let { data, error } = await insertBooking(true);
+      // Migration de la langue pas encore appliquée : la demande passe quand même (e-mails en français)
+      if (error && /customer_locale/.test(`${error.message} ${error.details ?? ''}`)) {
+        console.warn('[BookingsService] Colonne customer_locale absente : demande enregistrée sans la langue.');
+        ({ data, error } = await insertBooking(false));
+      }
 
       if (error) {
         if (error.code === '23505') {

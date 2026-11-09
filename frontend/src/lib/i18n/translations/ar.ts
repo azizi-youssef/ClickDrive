@@ -14,6 +14,7 @@ export const ar: Translations = {
     allRightsReserved: 'جميع الحقوق محفوظة.',
     morocco: 'المغرب',
     nador: 'الناظور',
+    skipToContent: 'الانتقال إلى المحتوى الرئيسي',
   },
   nav: {
     home: 'الرئيسية',
@@ -78,6 +79,8 @@ export const ar: Translations = {
     station: 'محطة قطار الناظور ONCF',
     marchica: 'منتجع مارتشيكا لاغون',
     searchBtn: 'بحث',
+    allTypes: "جميع الأنواع",
+    formAria: "ابحث عن سيارة للكراء",
     category: 'الفئة',
     dateError: 'اختر تاريخ بداية ابتداءً من اليوم وتاريخ نهاية بعده.',
     sameLocation: 'نفس مكان الإرجاع',
@@ -135,9 +138,8 @@ export const ar: Translations = {
   },
   cookie: {
     title: 'إعدادات ملفات تعريف الارتباط',
-    desc: 'يستخدم ClickDrive ملفات تعريف الارتباط الضرورية لتحسين تجربتك وقياس أداء المنصة.',
-    accept: 'قبول الكل',
-    decline: 'رفض',
+    desc: 'يستخدم ClickDrive فقط ملفات تعريف الارتباط الضرورية لعمل الموقع (تسجيل الدخول، اللغة، التفضيلات). لا توجد ملفات إعلانية أو لقياس الجمهور.',
+    ok: 'فهمت',
     privacy: 'سياسة الخصوصية',
     mentions: 'الشروط القانونية',
   },

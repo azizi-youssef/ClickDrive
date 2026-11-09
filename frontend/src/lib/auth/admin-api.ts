@@ -1,4 +1,4 @@
-import { isPlatformAdminRole } from '@clickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { NextResponse } from 'next/server';
 import { getServerAuth } from '@/lib/auth/server';
 

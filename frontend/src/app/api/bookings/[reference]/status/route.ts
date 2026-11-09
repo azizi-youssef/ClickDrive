@@ -1,6 +1,8 @@
-import { agencyBookingActionSchema } from '@clickdrive/shared';
+import { agencyBookingActionSchema } from '@clickdrive/shared/booking-schema';
 import { serverError } from '@/lib/api/server-error';
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
+import { notifyBookingStatusByReference } from '@/lib/bookings/notifications';
+import { trackServerEvent } from '@/lib/analytics/server';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';
 import { bookingsService } from '@/lib/services/bookings.service';
 
@@ -35,9 +37,15 @@ export async function POST(
     }
 
     const { action, notes, reason, alternativeVehicleId } = parsed.data;
+    // Le client est prévenu par e-mail de la réponse de l'agence (envoi après la réponse HTTP)
+    const appUrl = req.nextUrl.origin;
 
     if (action === 'approve') {
       const result = await bookingsService.approveBooking(reference, notes, auth.userId);
+      if (result.success) {
+        after(() => notifyBookingStatusByReference(reference, 'CONFIRMED', appUrl));
+        after(() => trackServerEvent('Demande acceptée', `${appUrl}/agency`).then(() => undefined));
+      }
       return NextResponse.json(result, {
         status: result.success ? 200 : result.availabilityConflict || result.transitionConflict ? 409 : 400,
       });
@@ -45,6 +53,7 @@ export async function POST(
 
     if (action === 'reject') {
       const result = await bookingsService.rejectBooking(reference, reason, auth.userId);
+      if (result.success) after(() => notifyBookingStatusByReference(reference, 'REJECTED', appUrl, reason));
       return NextResponse.json(result, { status: result.success ? 200 : 400 });
     }
 
@@ -61,6 +70,7 @@ export async function POST(
         notes,
         auth.userId
       );
+      if (result.success) after(() => notifyBookingStatusByReference(reference, 'ALTERNATIVE_PROPOSED', appUrl, notes));
       return NextResponse.json(result, { status: result.success ? 200 : 400 });
     }
 

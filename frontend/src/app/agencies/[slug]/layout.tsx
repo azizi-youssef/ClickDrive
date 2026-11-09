@@ -4,32 +4,41 @@ import { notFound } from 'next/navigation';
 import type { Agency } from '@/types';
 import { breadcrumbJsonLd, jsonLdScript, SITE_URL } from '@/lib/seo/structured-data';
 import { loadPublicAgency } from './data';
+import { getTranslations, localizedAlternates } from '@/lib/i18n/server';
+import { interpolate } from '@/lib/i18n/format';
+import { localizeHref } from '@/lib/i18n/routing';
 
 type Props = { params: Promise<{ slug: string }>; children: React.ReactNode };
 
-function summary(agency: Agency): string {
+/** Présentation de l'agence (rédigée en français) en français ; dans une autre langue, résumé traduit */
+function summary(agency: Agency, fallback: string, useOwnText: boolean): string {
   const text = (agency.description ?? '').replace(/\s+/g, ' ').trim();
-  if (text.length >= 60) return text.length > 155 ? `${text.slice(0, 152).trimEnd()}…` : text;
-  return `Louez une voiture ou une moto auprès de ${agency.name}, agence partenaire à ${agency.city || 'Nador'}. Comparez les véhicules et envoyez votre demande de réservation en ligne.`;
+  if (useOwnText && text.length >= 60) return text.length > 155 ? `${text.slice(0, 152).trimEnd()}…` : text;
+  return interpolate(fallback, { agency: agency.name, city: agency.city || 'Nador' });
 }
 
 export async function generateMetadata({ params }: Omit<Props, 'children'>): Promise<Metadata> {
   const { slug } = await params;
+  const { locale, t } = await getTranslations();
+  const copy = t.meta.pages.agency;
   const agency = await loadPublicAgency(slug).catch(() => null);
   if (!agency) {
-    return { title: 'Agence introuvable', robots: { index: false, follow: true } };
+    return { title: copy.notFound, robots: { index: false, follow: true } };
   }
-  const description = summary(agency);
+  const description = summary(agency, copy.description, locale === 'fr');
   const image = agency.banner_url || agency.logo_url || undefined;
+  const values = { agency: agency.name, city: agency.city || 'Nador' };
+  const path = `/agencies/${agency.slug}`;
   return {
-    title: `${agency.name} — location de véhicules à ${agency.city || 'Nador'}`,
+    title: interpolate(copy.title, values),
     description,
-    alternates: { canonical: `/agencies/${agency.slug}` },
+    alternates: await localizedAlternates(path),
     openGraph: {
       type: 'website',
-      title: `${agency.name} — agence partenaire ClickDrive`,
+      title: interpolate(copy.ogTitle, values),
       description,
-      url: `${SITE_URL}/agencies/${agency.slug}`,
+      locale: t.meta.ogLocale,
+      url: `${SITE_URL}${localizeHref(path, locale)}`,
       ...(image ? { images: [{ url: image, alt: agency.name }] } : {}),
     },
   };
@@ -40,6 +49,8 @@ export default async function AgencyDetailLayout({ params, children }: Props) {
   const agency = await loadPublicAgency(slug);
   // Agence inexistante, suspendue ou archivée : vraie réponse 404 (pas de « soft 404 » côté navigateur)
   if (!agency) notFound();
+  const { locale, t } = await getTranslations();
+  const href = (path: string) => localizeHref(path, locale);
 
   // Données structurées : uniquement des faits enregistrés ; note seulement si de vrais avis existent
   const structured = agency
@@ -49,7 +60,7 @@ export default async function AgencyDetailLayout({ params, children }: Props) {
           '@type': 'AutoRental',
           '@id': `${SITE_URL}/agencies/${agency.slug}#agency`,
           name: agency.name,
-          url: `${SITE_URL}/agencies/${agency.slug}`,
+          url: `${SITE_URL}${href(`/agencies/${agency.slug}`)}`,
           ...(agency.description ? { description: agency.description } : {}),
           ...(agency.logo_url ? { logo: agency.logo_url, image: agency.banner_url || agency.logo_url } : {}),
           ...(agency.phone ? { telephone: agency.phone } : {}),
@@ -67,9 +78,9 @@ export default async function AgencyDetailLayout({ params, children }: Props) {
             : {}),
         },
         breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Agences', path: '/agencies' },
-          { name: agency.name, path: `/agencies/${agency.slug}` },
+          { name: t.agencies.list.home, path: href('/') },
+          { name: t.agencies.list.agencies, path: href('/agencies') },
+          { name: agency.name, path: href(`/agencies/${agency.slug}`) },
         ]),
       ]
     : [];

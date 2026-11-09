@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { AccessPermission } from '@clickdrive/shared';
+import type { AccessPermission } from '@clickdrive/shared/roles';
 import { getServerAuth, hasAccessPermission, type ServerAuthContext } from '@/lib/auth/server';
 
 export type AccessGate =

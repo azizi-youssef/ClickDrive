@@ -12,15 +12,18 @@ export const bookingRequestSchema = z
     agencyId: z.string().regex(UUID_PATTERN, 'Identifiant agence invalide'),
     firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
     lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-    cin: z.string().min(3, 'Numéro de CIN ou Passeport requis'),
+    // CIN et permis : facultatifs à la demande (présentés en original à la remise des clés) ; vérifiés s'ils sont fournis
+    cin: z.string().trim().min(3, 'Numéro de CIN ou passeport trop court').optional().or(z.literal('')),
     phone: z.string().min(8, 'Numéro de téléphone valide requis'),
     email: z.string().email('Adresse email valide').optional().or(z.literal('')),
     country: z.string().min(2, 'Pays de résidence requis').default('Maroc'),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date de naissance requise (AAAA-MM-JJ)'),
-    licenseNumber: z.string().min(3, 'Numéro de permis de conduire requis'),
+    licenseNumber: z.string().trim().min(3, 'Numéro de permis de conduire trop court').optional().or(z.literal('')),
     licenseExpiry: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date d'expiration du permis requise (AAAA-MM-JJ)"),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date d'expiration du permis invalide (AAAA-MM-JJ)")
+      .optional()
+      .or(z.literal('')),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date de prise en charge requise'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date de restitution requise'),
     pickupTime: z.string().default('10:00'),
@@ -30,15 +33,19 @@ export const bookingRequestSchema = z
     dropoffLocation: z.string().min(2, 'Lieu de restitution requis'),
     flightNumber: z.string().optional(),
     flightArrivalTime: z.string().optional(),
+    // Arrivée en ferry au port : compagnie, traversée, heure (texte libre court)
+    ferryDetails: z.string().trim().max(160, 'Précisions sur la traversée limitées à 160 caractères').optional(),
     childSeat: z.boolean().default(false),
     additionalDriver: z.boolean().default(false),
     customerNotes: z.string().optional(),
+    // Langue du client (site traduit) : e-mails et messages de suivi dans sa langue
+    locale: z.enum(['fr', 'ar', 'en', 'de', 'es', 'nl']).optional(),
   })
   .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
     message: 'La date de retour doit être égale ou postérieure à la date de début',
     path: ['endDate'],
   })
-  .refine((data) => new Date(data.licenseExpiry) >= new Date(data.endDate), {
+  .refine((data) => !data.licenseExpiry || new Date(data.licenseExpiry) >= new Date(data.endDate), {
     message: 'Le permis de conduire doit être valide pendant toute la durée de la location',
     path: ['licenseExpiry'],
   });

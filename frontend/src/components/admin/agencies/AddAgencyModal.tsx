@@ -12,9 +12,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Phone,
-  User,
-  Globe,
   Compass,
 } from 'lucide-react';
 import { Btn } from '@/components/admin/AdminUI';
@@ -28,7 +25,6 @@ import {
 import {
   generateBaseAgencyEmail,
   generateTemporaryPassword,
-  normalizeAgencySlug,
 } from '@/lib/utils/agency-credentials';
 
 const MOROCCAN_CITIES = [

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { createClient } from './client';
+// supabase-js (≈ 250 Ko) est chargé à la demande, après l'affichage : jamais dans le bundle initial
+type BrowserClient = NonNullable<ReturnType<typeof import('./client').createClient>>;
 
 export type RealtimeTable =
   | 'vehicles'
@@ -184,11 +185,15 @@ export function useRealtimeRefresh({
       }, pollingIntervalMs);
     }
 
-    // 4. Supabase Realtime WebSocket
-    const supabase = createClient();
-    let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null;
+    // 4. Supabase Realtime WebSocket (client chargé en différé ; le polling couvre l'attente)
+    let cancelled = false;
+    let supabase: BrowserClient | null = null;
+    let channel: ReturnType<BrowserClient['channel']> | null = null;
 
-    if (supabase) {
+    void import('./client').then(({ createClient }) => {
+      if (cancelled) return;
+      supabase = createClient();
+      if (!supabase) return;
       const channelName = `realtime_${tables.slice().sort().join('_')}_${Math.random().toString(36).slice(2, 7)}`;
       channel = supabase.channel(channelName);
 
@@ -209,10 +214,11 @@ export function useRealtimeRefresh({
           setIsConnected(false);
         }
       });
-    }
+    });
 
     // Nettoyage complet
     return () => {
+      cancelled = true;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }

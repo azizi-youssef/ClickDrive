@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Building2,
   Plus,
   RefreshCw,
-  Search,
-  Filter,
   CheckCircle,
   XCircle,
   KeyRound,
@@ -16,11 +14,6 @@ import {
   Phone,
   Car,
   Calendar,
-  ShieldAlert,
-  ExternalLink,
-  Copy,
-  Check,
-  UserCheck,
   Sparkles,
 } from 'lucide-react';
 import type { Agency, AgencySubscription } from '@/types';

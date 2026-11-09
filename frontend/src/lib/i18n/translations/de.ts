@@ -14,6 +14,7 @@ export const de: Translations = {
     allRightsReserved: 'Alle Rechte vorbehalten.',
     morocco: 'Marokko',
     nador: 'Nador',
+    skipToContent: 'Zum Hauptinhalt springen',
   },
   nav: {
     home: 'Startseite',
@@ -78,6 +79,8 @@ export const de: Translations = {
     station: 'ONCF Bahnhof Nador',
     marchica: 'Marchica Lagoon Resort',
     searchBtn: 'Suchen',
+    allTypes: "Alle Typen",
+    formAria: "Mietwagen suchen",
     category: 'Kategorie',
     dateError: 'Wählen Sie eine Abholung ab heute und eine spätere Rückgabe.',
     sameLocation: 'Gleicher Rückgabeort',
@@ -135,9 +138,8 @@ export const de: Translations = {
   },
   cookie: {
     title: 'Cookie-Einstellungen',
-    desc: 'ClickDrive nutzt Cookies für optimale Funktionalität und anonyme Reichweitenmessung.',
-    accept: 'Alle akzeptieren',
-    decline: 'Ablehnen',
+    desc: 'ClickDrive verwendet nur Cookies, die für den Betrieb der Website nötig sind (Anmeldung, Sprache, Einstellungen). Keine Werbe- oder Analyse-Cookies.',
+    ok: 'Verstanden',
     privacy: 'Datenschutzrichtlinie',
     mentions: 'Impressum & Rechtliches',
   },

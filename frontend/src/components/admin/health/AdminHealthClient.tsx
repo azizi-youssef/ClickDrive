@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, CheckCircle, AlertTriangle, XCircle, Activity, Database, Globe, Zap } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertTriangle, XCircle, Database, Globe, Zap } from 'lucide-react';
 import { AdminCard, SectionHeader, Btn, ErrorBanner } from '@/components/admin/AdminUI';
 import { fetchHealth, type HealthReport } from '@/lib/api/admin-dashboard.api';
 
@@ -98,7 +98,6 @@ export function AdminHealthClient() {
           <ul className="divide-y divide-slate-50">
             {Object.entries(health.checks).map(([key, value]) => {
               const cfg = SERVICE_LABELS[key];
-              const Icon = cfg?.icon ?? Activity;
               const isOk = value !== 'error';
               return (
                 <li key={key} className="flex items-center gap-4 px-5 py-4 sm:px-6">

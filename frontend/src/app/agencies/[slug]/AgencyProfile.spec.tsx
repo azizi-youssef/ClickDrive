@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@/tests/setup/dom';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@/tests/setup/render';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { AgencyProfile } from './AgencyProfile';
@@ -72,6 +72,35 @@ describe('AgencyProfile — fiche agence', () => {
     const order = [...new Set(cards())];
     expect(order[0]).toContain('car-2'); // 600 DH en premier
     expect(order[order.length - 1]).toContain('moto-1'); // 300 DH en dernier
+  });
+
+  it('infos pratiques et délai de réponse : affichés seulement quand ils existent', () => {
+    render(<AgencyProfile agency={agency} initialVehicles={fleet} />);
+    expect(screen.queryByRole('heading', { name: 'Infos pratiques' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Répond aux demandes')).not.toBeInTheDocument();
+
+    render(
+      <AgencyProfile
+        agency={{
+          ...agency,
+          slug: 'agence-infos',
+          opening_hours: 'Lun–Sam 8h–20h',
+          languages: ['ar', 'rif', 'es'],
+          delivery_fee_airport: 0,
+          delivery_fee_port: 150,
+          cancellation_policy: 'Annulation gratuite jusqu’à 48 h avant la prise en charge.',
+        }}
+        initialVehicles={fleet}
+        responseTime={{ medianMinutes: 40, responses: 6, label: 'en moins de 1 h' }}
+      />
+    );
+    const practical = screen.getByRole('region', { name: 'Infos pratiques' });
+    expect(within(practical).getByText('Lun–Sam 8h–20h')).toBeInTheDocument();
+    expect(within(practical).getByText('Arabe, Tarifit (rifain), Espagnol')).toBeInTheDocument();
+    expect(within(practical).getByText('Gratuite')).toBeInTheDocument();
+    expect(within(practical).getByText('150 DH, à régler à l’agence')).toBeInTheDocument();
+    expect(screen.getByText('en moins de 1 h')).toBeInTheDocument();
+    expect(screen.getByText('médiane sur 6 demandes')).toBeInTheDocument();
   });
 
   it('agence sans véhicule : message clair et lien vers le catalogue', () => {

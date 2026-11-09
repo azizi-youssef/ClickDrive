@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { isPlatformAdminRole, type UserRole } from '@clickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
+import { type UserRole } from '@clickdrive/shared/roles';
 import { canAccessAgencyPortal } from '@/lib/auth/portals';
 
 export async function verifyAdminPortalLogin(

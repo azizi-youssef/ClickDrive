@@ -1,43 +1,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import { Cookie } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 const STORAGE_KEY = 'clickdrive_cookie_consent';
 
-type ConsentState = 'accepted' | 'declined' | null;
-
 /**
- * Bandeau de consentement compact, ancré en bas de l'écran : il ne recouvre plus
- * le formulaire de recherche du hero (une ligne sur PC, deux blocs serrés sur mobile).
+ * Bandeau d'information cookies, ancré en bas de l'écran (une ligne sur PC, deux blocs serrés sur mobile).
+ * Le site n'utilise que des cookies nécessaires (session, langue, préférences) : il n'y a rien à accepter
+ * ni à refuser, d'où un seul bouton. Si un outil de mesure d'audience soumis à consentement est ajouté,
+ * ce bandeau devra redevenir un choix (accepter / refuser) appliqué avant tout chargement de l'outil.
+ * Les choix enregistrés par l'ancien bandeau (« accepted », « declined ») masquent aussi ce bandeau.
  */
 export function CookieBanner() {
   const { t, isRTL } = useTranslation();
-  const [consent, setConsent] = useState<ConsentState>(null);
+  const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY) as ConsentState | null;
-      if (stored === 'accepted' || stored === 'declined') setConsent(stored);
+      if (localStorage.getItem(STORAGE_KEY)) setDismissed(true);
     } catch {
       /* stockage indisponible : le bandeau reste affiché */
     }
   }, []);
 
-  function save(value: Exclude<ConsentState, null>) {
+  function dismiss() {
     try {
-      localStorage.setItem(STORAGE_KEY, value);
+      localStorage.setItem(STORAGE_KEY, 'acknowledged');
     } catch {
-      /* stockage indisponible : le choix vaut pour la session en cours */
+      /* stockage indisponible : le bandeau reste masqué pour la page en cours */
     }
-    setConsent(value);
+    setDismissed(true);
   }
 
-  if (!mounted || consent !== null) return null;
+  if (!mounted || dismissed) return null;
 
   return (
     <section
@@ -61,24 +61,14 @@ export function CookieBanner() {
             </Link>
           </span>
         </p>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            id="cookie-decline"
-            onClick={() => save('declined')}
-            className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220] sm:min-h-10 sm:flex-none"
-          >
-            {t.cookie.decline}
-          </button>
-          <button
-            type="button"
-            id="cookie-accept"
-            onClick={() => save('accepted')}
-            className="min-h-11 flex-1 rounded-xl bg-[#0B1220] px-4 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] sm:min-h-10 sm:flex-none"
-          >
-            {t.cookie.accept}
-          </button>
-        </div>
+        <button
+          type="button"
+          id="cookie-ok"
+          onClick={dismiss}
+          className="min-h-11 shrink-0 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] sm:min-h-10"
+        >
+          {t.cookie.ok}
+        </button>
       </div>
     </section>
   );

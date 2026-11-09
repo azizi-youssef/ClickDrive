@@ -1,19 +1,16 @@
 import type { Metadata } from 'next';
 import { AgenciesClient } from './AgenciesClient';
+import { localizedPageMetadata } from '@/lib/i18n/server';
+import { I18nScope } from '@/components/i18n/I18nScope';
 
-export const metadata: Metadata = {
-  title: 'Agences de location de voitures à Nador',
-  description:
-    'Découvrez les agences partenaires vérifiées sur ClickDrive à Nador, l’aéroport Nador-Al Aroui et Beni Ansar. Consultez leurs parcs, conditions et tarifs.',
-  alternates: { canonical: '/agencies' },
-  openGraph: {
-    title: 'Agences partenaires vérifiées à Nador — ClickDrive',
-    description:
-      'Comparez les agences locales de location à Nador. Véhicules contrôlés, tarifs transparents et support dédié.',
-    url: 'https://clickdrive.ma/agencies',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return localizedPageMetadata('agencies', '/agencies');
+}
 
 export default function AgenciesPage() {
-  return <AgenciesClient />;
+  return (
+    <I18nScope namespaces={['agencies']}>
+      <AgenciesClient />
+    </I18nScope>
+  );
 }

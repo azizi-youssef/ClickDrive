@@ -35,7 +35,6 @@ import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 interface Props {
   initialStats: AdminStats | null;
   statsError: string | null;
-  commissionRate: number;
 }
 
 /* ── CSV export (internal) ───────────────────────────────────────────── */
@@ -132,7 +131,7 @@ function Initial({ name, dark }: { name: string; dark?: boolean }) {
 /* ═══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════════════ */
-export function AdminOverviewClient({ initialStats, statsError, commissionRate: _commissionRate }: Props) {
+export function AdminOverviewClient({ initialStats, statsError }: Props) {
   const [stats, setStats] = useState<AdminStats | null>(initialStats);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);

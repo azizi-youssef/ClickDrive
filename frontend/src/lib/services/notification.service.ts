@@ -2,18 +2,6 @@ import { Booking } from '@/types';
 import { createClient } from '@/lib/supabase/server';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
 
-export interface EmailPayload {
-  to: string;
-  subject: string;
-  template:
-    | 'booking-request-to-agency'
-    | 'booking-request-confirmation-to-customer'
-    | 'booking-approved'
-    | 'booking-rejected'
-    | 'booking-alternative';
-  variables: Record<string, any>;
-}
-
 export interface WhatsAppPayload {
   phone: string;
   text: string;
@@ -30,21 +18,7 @@ export interface DashboardNotificationPayload {
 }
 
 class NotificationService {
-  /**
-   * Envoi d'email via provider tiers (Resend / SendGrid).
-   * TODO: brancher un provider email de production ici.
-   */
-  async sendEmail(
-    payload: EmailPayload
-  ): Promise<{ success: boolean; messageId?: string }> {
-    console.log(
-      `[NotificationService] 📧 Sending email to ${payload.to} — ${payload.subject}`
-    );
-    return {
-      success: true,
-      messageId: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-    };
-  }
+  // Les e-mails transactionnels sont envoyés par lib/email (Resend), voir lib/bookings/notifications.ts
 
   /** Construit un lien WhatsApp avec message pré-rempli */
   generateWhatsAppLink(phone: string, text: string): string {
@@ -71,6 +45,7 @@ class NotificationService {
       `*Téléphone client :* ${booking.customer_phone}\n\n` +
       `📅 *Période :* du ${booking.start_date} au ${booking.end_date} (${booking.total_days} jours)\n` +
       `📍 *Point de rendez-vous :* ${booking.pickup_location}\n` +
+      (booking.ferry_details ? `🚢 *Ferry :* ${booking.ferry_details}\n` : '') +
       (booking.flight_number
         ? `✈️ *Vol d'arrivée :* ${booking.flight_number} (${booking.flight_arrival_time || '—'})\n`
         : '') +
@@ -122,8 +97,9 @@ class NotificationService {
       console.warn('[NotificationService] Could not persist dashboard notification:', err);
     }
 
-    console.log('[NotificationService] 🔔', payload.title, '—', payload.message);
-    return true;
+    // Rien n'a été enregistré (notification d'agence sans destinataire individuel) : on ne prétend pas le contraire
+    console.log('[NotificationService] 🔔', payload.title);
+    return false;
   }
 }
 

@@ -6,23 +6,16 @@ import {
   MessageSquare,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Send,
   RefreshCw,
-  Search,
-  Filter,
-  Radio,
   FileText,
   Smartphone,
-  ShieldCheck,
   Check,
   Copy,
   ArrowDownLeft,
   ArrowUpRight,
   Webhook,
   Play,
-  HelpCircle,
-  Bot,
   Zap,
 } from 'lucide-react';
 import {
@@ -35,7 +28,6 @@ import {
   EmptyState,
   Btn,
   StatusBadge,
-  ErrorBanner,
 } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 
@@ -252,6 +244,12 @@ export function AdminNotificationsClient() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+          <span>{error}</span>
+        </div>
+      )}
       {/* KPIs Notifications */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <KpiCard

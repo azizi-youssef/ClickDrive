@@ -4,12 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   Building2,
-  MapPin,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  Phone,
-  Mail,
   ShieldAlert,
 } from 'lucide-react';
 import { Btn } from '@/components/admin/AdminUI';

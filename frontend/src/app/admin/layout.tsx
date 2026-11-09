@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { isPlatformAdminRole } from '@clickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { getServerAuth } from '@/lib/auth/server';
 
 export const metadata: Metadata = {

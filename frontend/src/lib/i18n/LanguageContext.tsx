@@ -1,20 +1,24 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import {
   type Locale,
   type LanguageOption,
   SUPPORTED_LOCALES,
   DEFAULT_LOCALE,
-  LOCALE_STORAGE_KEY,
   LOCALE_COOKIE_KEY,
+  localeDirection,
 } from './config';
-import { translations, type Translations } from './translations';
+import type { Messages } from './messages';
+import { delocalizeHref, localizeHref } from './routing';
+import { formatDate, formatMoney, interpolate, plural, type DateStyle, type PluralForms } from './format';
 
 interface LanguageContextType {
   locale: Locale;
+  /** Change de langue : la page est rechargée à son adresse dans la nouvelle langue */
   setLocale: (locale: Locale) => void;
-  t: Translations;
+  /** Dictionnaire de la page (seuls les espaces de noms chargés pour elle sont présents) */
+  t: Messages;
   dir: 'ltr' | 'rtl';
   isRTL: boolean;
   currentLanguage: LanguageOption;
@@ -23,101 +27,77 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
-/** Langue demandée explicitement dans l'URL (?lang=xx), sinon null */
-function queryLocale(): Locale | null {
+function switchLocale(next: Locale) {
+  if (!SUPPORTED_LOCALES.some((option) => option.code === next)) return;
   try {
-    const queryLang = new URLSearchParams(window.location.search).get('lang');
-    return queryLang && SUPPORTED_LOCALES.some((l) => l.code === queryLang) ? (queryLang as Locale) : null;
+    document.cookie = `${LOCALE_COOKIE_KEY}=${next}; path=/; max-age=31536000; SameSite=Lax`;
   } catch {
-    return null;
+    // Cookies bloqués : l'adresse suffit à fixer la langue
   }
+  const { pathname, search, hash } = window.location;
+  const target = localizeHref(delocalizeHref(`${pathname}${search}`), next);
+  // Rechargement complet voulu (pas router.push) : le serveur renvoie la page, ses métadonnées, le
+  // dictionnaire et le sens d'écriture de la langue, que la navigation client ne recharge pas
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign(`${target}${hash}`);
 }
 
 /**
- * La langue initiale vient du serveur (cookie lu par le layout racine) : le premier rendu client est
- * identique au HTML serveur, sans erreur d'hydratation ni bascule de direction (RTL) après coup.
+ * La langue et le dictionnaire viennent du serveur (adresse de la page) : le premier rendu client
+ * est identique au HTML serveur, sans bascule de langue ni de sens d'écriture après coup.
  */
 export function LanguageProvider({
   children,
-  initialLocale,
+  locale = DEFAULT_LOCALE,
+  messages,
 }: {
   children: React.ReactNode;
-  initialLocale?: Locale;
+  locale?: Locale;
+  messages: Partial<Messages>;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale ?? DEFAULT_LOCALE);
-
-  // Après le montage : un ?lang= explicite l'emporte (lien partagé dans une langue donnée)
-  useEffect(() => {
-    const requested = queryLocale();
-    if (requested && requested !== locale) setLocaleState(requested);
-    // Exécuté une seule fois au montage
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-      document.cookie = `${LOCALE_COOKIE_KEY}=${locale}; path=/; max-age=31536000; SameSite=Lax`;
-
-      // Synchronize <html> attributes
-      const isArabic = locale === 'ar';
-      document.documentElement.lang = locale;
-      document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
-
-      if (isArabic) {
-        document.documentElement.classList.add('is-rtl');
-      } else {
-        document.documentElement.classList.remove('is-rtl');
-      }
-    } catch (err) {
-      console.warn('[i18n] Erreur persistance locale:', err);
-    }
-  }, [locale]);
-
-  const setLocale = (newLocale: Locale) => {
-    if (SUPPORTED_LOCALES.some((l) => l.code === newLocale)) {
-      setLocaleState(newLocale);
-    }
-  };
-
-  const currentLanguage = useMemo(() => {
-    return SUPPORTED_LOCALES.find((l) => l.code === locale) || SUPPORTED_LOCALES[0];
-  }, [locale]);
-
   const value = useMemo<LanguageContextType>(() => {
-    const dir = locale === 'ar' ? 'rtl' : 'ltr';
+    const dir = localeDirection(locale);
     return {
       locale,
-      setLocale,
-      t: translations[locale] || translations.fr,
+      setLocale: switchLocale,
+      t: messages as Messages,
       dir,
       isRTL: dir === 'rtl',
-      currentLanguage,
+      currentLanguage: SUPPORTED_LOCALES.find((option) => option.code === locale) ?? SUPPORTED_LOCALES[0],
       supportedLanguages: SUPPORTED_LOCALES,
     };
-  }, [locale, currentLanguage]);
+  }, [locale, messages]);
 
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
+/** Ajoute au dictionnaire courant les espaces de noms d'une page (voir I18nScope) */
+export function MessagesScope({ children, messages }: { children: React.ReactNode; messages: Partial<Messages> }) {
+  const parent = useContext(LanguageContext);
+  const value = useMemo<LanguageContextType | null>(
+    () => (parent ? { ...parent, t: { ...parent.t, ...messages } as Messages } : null),
+    [parent, messages]
+  );
+  if (!value) throw new Error('MessagesScope doit être placé dans un LanguageProvider.');
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage(): LanguageContextType {
   const context = useContext(LanguageContext);
-  if (!context) {
-    // Graceful fallback for components used outside LanguageProvider (e.g. testing or isolated admin widgets)
-    return {
-      locale: DEFAULT_LOCALE,
-      setLocale: () => {},
-      t: translations[DEFAULT_LOCALE],
-      dir: 'ltr',
-      isRTL: false,
-      currentLanguage: SUPPORTED_LOCALES[0],
-      supportedLanguages: SUPPORTED_LOCALES,
-    };
-  }
+  if (!context) throw new Error('useLanguage / useTranslation doivent être appelés dans un LanguageProvider.');
   return context;
 }
 
 export function useTranslation() {
   const { t, locale, setLocale, isRTL, dir } = useLanguage();
-  return { t, locale, setLocale, isRTL, dir };
+  // Aides liées à la langue courante
+  const href = useCallback((path: string) => localizeHref(path, locale), [locale]);
+  const fmt = useCallback((template: string, values?: Record<string, string | number>) => interpolate(template, values), []);
+  const plural_ = useCallback(
+    (count: number, forms: PluralForms, values?: Record<string, string | number>) => plural(locale, count, forms, values),
+    [locale]
+  );
+  const date = useCallback((value: Date | string, style?: DateStyle) => formatDate(value, locale, style), [locale]);
+  const money = useCallback((value: number) => formatMoney(value, locale, t.common?.currency ?? 'DH'), [locale, t]);
+  return { t, locale, setLocale, isRTL, dir, href, fmt, plural: plural_, date, money };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isLegacyAdminRole, isPlatformAdminRole } from '@clickdrive/shared';
+import { isLegacyAdminRole, isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { privateAreaFor } from '@/lib/supabase/middleware';
 import { canPortalAccessRedirect, isSafeRedirect } from '@/lib/auth/login-portals';
 import { canAccessAdminPortal, canManageAgencyFleet } from '@/lib/auth/portals';

@@ -32,6 +32,11 @@ export type AgencyProfileData = Pick<
   | 'rating'
   | 'review_count'
   | 'created_at'
+  | 'opening_hours'
+  | 'languages'
+  | 'cancellation_policy'
+  | 'delivery_fee_airport'
+  | 'delivery_fee_port'
 >;
 
 export function toAgencyProfile(agency: Agency): AgencyProfileData {
@@ -50,6 +55,11 @@ export function toAgencyProfile(agency: Agency): AgencyProfileData {
     rating: Number(agency.rating) || 0,
     review_count: Number(agency.review_count) || 0,
     created_at: agency.created_at,
+    opening_hours: agency.opening_hours?.trim() || null,
+    languages: Array.isArray(agency.languages) ? agency.languages : [],
+    cancellation_policy: agency.cancellation_policy?.trim() || null,
+    delivery_fee_airport: agency.delivery_fee_airport == null ? null : Number(agency.delivery_fee_airport),
+    delivery_fee_port: agency.delivery_fee_port == null ? null : Number(agency.delivery_fee_port),
   };
 }
 

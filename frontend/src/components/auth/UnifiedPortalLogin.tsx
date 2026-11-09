@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   AlertCircle,
@@ -39,7 +39,11 @@ import {
   type LoginPortal,
 } from '@/lib/auth/login-portals';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
-import { USER_ROLES } from '@clickdrive/shared';
+import { USER_ROLES } from '@clickdrive/shared/roles';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { delocalizeHref, localizeHref } from '@/lib/i18n/routing';
+import { interpolate } from '@/lib/i18n/format';
+import { LOGIN_FR, type LoginMessages } from '@/lib/i18n/messages/login.fr';
 
 const MAX_ATTEMPTS = 5;
 const LOCK_SECONDS = 30;
@@ -53,41 +57,15 @@ type FieldErrors = {
 };
 type LoginStatus = 'idle' | 'submitting' | 'resetting' | 'success';
 
-const PORTAL_COPY: Record<
-  LoginPortal,
-  {
-    eyebrow: string;
-    title: string;
-    titleAccent: string;
-    copy: string;
-    accessLabel: string;
-    formSubtitle: string;
-    emailPlaceholder: string;
-    emailLabel: string;
-    trust: string;
-    help: string;
-    submitLabel: string;
-  }
-> = {
-  client: {
-    eyebrow: 'Espace client',
-    title: 'Vos trajets,',
-    titleAccent: 'vos réservations.',
-    copy: 'Retrouvez vos demandes, devis PDF et l’historique de vos locations à Nador.',
-    accessLabel: 'Espace client',
-    formSubtitle: 'Connectez-vous pour synchroniser vos réservations et favoris.',
-    emailPlaceholder: 'vous@example.com',
-    emailLabel: 'Adresse e-mail',
-    trust: 'Connexion sécurisée. Google disponible pour les clients.',
-    help: 'Utilisez « Mot de passe oublié » ou contactez ClickDrive si vous ne retrouvez pas votre compte.',
-    submitLabel: 'Se connecter',
-  },
+type PortalCopy = LoginMessages['client'];
+
+/** Portails agence et administration : en français, comme leurs tableaux de bord */
+const PRO_PORTAL_COPY: Record<Exclude<LoginPortal, 'client'>, PortalCopy> = {
   agency: {
     eyebrow: 'Portail partenaire',
     title: 'Votre flotte,',
     titleAccent: 'sous contrôle.',
     copy: 'Gérez véhicules, tarifs et réservations depuis un seul tableau de bord.',
-    accessLabel: 'Portail agence',
     formSubtitle: 'E-mail professionnel pour accéder à votre flotte et vos réservations.',
     emailPlaceholder: 'contact@votre-agence.ma',
     emailLabel: 'E-mail professionnel',
@@ -100,7 +78,6 @@ const PORTAL_COPY: Record<
     title: 'Votre parc,',
     titleAccent: 'sous contrôle.',
     copy: 'Validez les agences, la commission et la marketplace depuis l’administration.',
-    accessLabel: 'Espace administrateur',
     formSubtitle: 'Connectez-vous pour gérer la plateforme ClickDrive.',
     emailPlaceholder: 'admin@clickdrive.ma',
     emailLabel: 'Adresse e-mail',
@@ -110,15 +87,16 @@ const PORTAL_COPY: Record<
   },
 };
 
-const PORTAL_FEATURES: Record<
-  LoginPortal,
+function portalCopy(portal: LoginPortal, s: LoginMessages): PortalCopy {
+  return portal === 'client' ? s.client : PRO_PORTAL_COPY[portal];
+}
+
+const CLIENT_FEATURE_ICONS = [CarFront, UserRound, Calendar];
+
+const PRO_PORTAL_FEATURES: Record<
+  Exclude<LoginPortal, 'client'>,
   { icon: React.ComponentType<{ className?: string }>; label: string }[]
 > = {
-  client: [
-    { icon: CarFront, label: 'Locations' },
-    { icon: UserRound, label: 'Profil' },
-    { icon: Calendar, label: 'Historique' },
-  ],
   agency: [
     { icon: CarFront, label: 'Flotte' },
     { icon: Building2, label: 'Agence' },
@@ -129,11 +107,6 @@ const PORTAL_FEATURES: Record<
     { icon: UsersRound, label: 'Agences' },
     { icon: MessageSquare, label: 'Demandes' },
   ],
-};
-
-const URL_ERROR_MESSAGES: Record<string, string> = {
-  forbidden: 'Vous n’avez pas accès à cet espace avec ce compte.',
-  auth_failed: 'La connexion a échoué ou a été annulée. Réessayez.',
 };
 
 const loginStyles = `
@@ -593,17 +566,20 @@ function LoginStyles() {
 }
 
 /* Logo sur fond clair (le gris de « Drive » manque de contraste sur le panneau graphite) */
-function BrandLogo() {
+function BrandLogo({ s }: { s: LoginMessages }) {
   return (
-    <Link href="/" className="cd-logo" aria-label="ClickDrive — Accueil">
+    <Link href="/" className="cd-logo" aria-label={s.logoAria}>
       <Image src={brandLogo} alt="ClickDrive" sizes="168px" priority />
     </Link>
   );
 }
 
-function BrandPanel({ portal }: { portal: LoginPortal }) {
-  const copy = PORTAL_COPY[portal];
-  const features = PORTAL_FEATURES[portal];
+function BrandPanel({ portal, s }: { portal: LoginPortal; s: LoginMessages }) {
+  const copy = portalCopy(portal, s);
+  const features =
+    portal === 'client'
+      ? s.clientFeatures.map((label, index) => ({ icon: CLIENT_FEATURE_ICONS[index] ?? CarFront, label }))
+      : PRO_PORTAL_FEATURES[portal];
 
   return (
     <aside className="cd-brand" aria-label="ClickDrive">
@@ -631,9 +607,9 @@ function BrandPanel({ portal }: { portal: LoginPortal }) {
       <div className="cd-brand-footer">
         <span className="cd-location">
           <MapPin aria-hidden="true" />
-          Nador, Maroc
+          {s.location}
         </span>
-        <span>Votre activité. Une seule interface.</span>
+        <span>{s.tagline}</span>
       </div>
     </aside>
   );
@@ -642,14 +618,22 @@ function BrandPanel({ portal }: { portal: LoginPortal }) {
 function PortalLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, locale } = useTranslation();
   const portal = parseLoginPortal(searchParams?.get('portal'));
+  // Client : langue de la page ; agence et administration : français, comme leurs espaces
+  const uiLocale = portal === 'client' ? locale : 'fr';
+  const s: LoginMessages = portal === 'client' ? (t.login ?? LOGIN_FR) : LOGIN_FR;
   const isRegistration = portal === 'client' && searchParams?.get('mode') === 'signup';
-  const copy = PORTAL_COPY[portal];
+  const copy = portalCopy(portal, s);
 
+  // Destination après connexion : vérifiée sur le chemin français, puis rendue dans la langue de la page
   const redirectParam = searchParams?.get('redirect');
-  const redirectUrl = isSafeRedirect(redirectParam) && canPortalAccessRedirect(portal, redirectParam)
-    ? redirectParam
-    : PORTAL_DEFAULT_REDIRECT[portal];
+  const destinationFor = (target: LoginPortal) => {
+    const requested = isSafeRedirect(redirectParam) ? delocalizeHref(redirectParam) : null;
+    const path = requested && canPortalAccessRedirect(target, requested) ? requested : PORTAL_DEFAULT_REDIRECT[target];
+    return localizeHref(path, uiLocale);
+  };
+  const redirectUrl = destinationFor(portal);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -687,10 +671,10 @@ function PortalLoginForm() {
 
   useEffect(() => {
     const code = searchParams?.get('error');
-    if (code && URL_ERROR_MESSAGES[code]) {
-      setError(URL_ERROR_MESSAGES[code]);
+    if (code && s.urlErrors[code]) {
+      setError(s.urlErrors[code]);
     }
-  }, [searchParams]);
+  }, [searchParams, s]);
 
   useEffect(() => {
     if (lockUntil === null) return;
@@ -721,15 +705,15 @@ function PortalLoginForm() {
     setNotice(null);
     const normalizedEmail = email.trim();
     const nextErrors: FieldErrors = {};
-    if (isRegistration && !fullName.trim()) nextErrors.name = 'Saisissez votre nom complet.';
-    if (!normalizedEmail) nextErrors.email = 'Saisissez votre adresse e-mail.';
-    else if (emailRef.current?.validity.typeMismatch) nextErrors.email = 'Adresse e-mail invalide.';
-    if (!password) nextErrors.password = 'Saisissez votre mot de passe.';
+    if (isRegistration && !fullName.trim()) nextErrors.name = s.errName;
+    if (!normalizedEmail) nextErrors.email = s.errEmail;
+    else if (emailRef.current?.validity.typeMismatch) nextErrors.email = s.errEmailInvalid;
+    if (!password) nextErrors.password = s.errPassword;
     else if (isRegistration && password.length < MIN_PASSWORD_LENGTH) {
-      nextErrors.password = `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`;
+      nextErrors.password = interpolate(s.errPasswordLength, { min: MIN_PASSWORD_LENGTH });
     }
     if (isRegistration && password !== passwordConfirmation) {
-      nextErrors.passwordConfirmation = 'Les mots de passe ne correspondent pas.';
+      nextErrors.passwordConfirmation = s.errMismatch;
     }
     setFieldErrors(nextErrors);
     if (nextErrors.name || nextErrors.email || nextErrors.password || nextErrors.passwordConfirmation) {
@@ -743,12 +727,12 @@ function PortalLoginForm() {
 
     try {
       if (!isSupabaseConfigured()) {
-        setError('La connexion est momentanément indisponible. Contactez ClickDrive.');
+        setError(s.errUnavailable);
         return;
       }
       const supabase = createClient();
       if (!supabase) {
-        setError('Service indisponible. Réessayez dans quelques instants.');
+        setError(s.errService);
         return;
       }
 
@@ -758,7 +742,7 @@ function PortalLoginForm() {
           password,
           options: {
             data: { full_name: fullName.trim() },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/account')}`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(localizeHref('/account', uiLocale))}`,
           },
         })
         : await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
@@ -767,19 +751,17 @@ function PortalLoginForm() {
       if (signInError) {
         if (signInError.status === 429) {
           startCooldown();
-          setError('Trop de tentatives. Patientez avant de réessayer.');
+          setError(s.errTooMany);
         } else if (signInError.status !== undefined && signInError.status >= 500) {
-          setError('Service indisponible. Réessayez dans quelques instants.');
+          setError(s.errService);
         } else {
           const nextAttempts = attempts + 1;
           if (nextAttempts >= MAX_ATTEMPTS) {
             startCooldown();
-            setError('Plusieurs tentatives ont échoué. Patientez avant de réessayer.');
+            setError(s.errAttempts);
           } else {
             setAttempts(nextAttempts);
-            setError(isRegistration
-              ? 'Création du compte impossible. Vérifiez les informations saisies ou connectez-vous si vous possédez déjà un compte.'
-              : 'Connexion refusée. Vérifiez vos identifiants.');
+            setError(isRegistration ? s.errSignup : s.errLogin);
           }
           setPassword('');
           window.requestAnimationFrame(() => passwordRef.current?.focus());
@@ -789,12 +771,12 @@ function PortalLoginForm() {
 
       if (!data.session || !data.user) {
         if (isRegistration && data.user) {
-          setNotice('Compte créé. Consultez votre e-mail pour confirmer votre adresse avant de vous connecter.');
+          setNotice(s.signupNotice);
           setPassword('');
           setPasswordConfirmation('');
           return;
         }
-        setError('La connexion n’a pas abouti. Réessayez.');
+        setError(s.errIncomplete);
         return;
       }
 
@@ -807,9 +789,7 @@ function PortalLoginForm() {
       const authenticatedPortal = role ? portalForRole(role) : null;
       if (profileError || !authenticatedPortal) {
         await supabase.auth.signOut();
-        setError(profileError
-          ? 'Impossible de vérifier le rôle de votre compte. Réessayez.'
-          : 'Ce compte ne possède pas de rôle de portail autorisé.');
+        setError(profileError ? s.errRole : s.errNoPortal);
         return;
       }
 
@@ -830,17 +810,11 @@ function PortalLoginForm() {
       }
 
       setStatus('success');
-      const destination = isSafeRedirect(redirectParam) &&
-        canPortalAccessRedirect(authenticatedPortal, redirectParam)
-        ? redirectParam
-        : PORTAL_DEFAULT_REDIRECT[authenticatedPortal];
-      router.replace(destination);
+      router.replace(destinationFor(authenticatedPortal));
       router.refresh();
       authenticated = true;
     } catch {
-      setError(isRegistration
-        ? 'Création du compte impossible. Vérifiez votre réseau et réessayez.'
-        : 'Connexion impossible. Vérifiez votre réseau.');
+      setError(isRegistration ? s.errSignupNetwork : s.errLoginNetwork);
     } finally {
       if (!authenticated) {
         requestPending.current = false;
@@ -856,7 +830,7 @@ function PortalLoginForm() {
 
     const normalizedEmail = email.trim();
     if (!normalizedEmail || emailRef.current?.validity.typeMismatch) {
-      setFieldErrors((c) => ({ ...c, email: 'Saisissez votre e-mail pour recevoir le lien.' }));
+      setFieldErrors((c) => ({ ...c, email: s.errResetEmail }));
       emailRef.current?.focus();
       return;
     }
@@ -866,16 +840,16 @@ function PortalLoginForm() {
     try {
       const supabase = createClient();
       if (!supabase || !isSupabaseConfigured()) {
-        setError('Réinitialisation indisponible pour le moment.');
+        setError(s.errResetUnavailable);
         return;
       }
-      const resetReturn = loginUrl(portal);
+      const resetReturn = localizeHref(loginUrl(portal), uiLocale);
       await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(resetReturn)}`,
       });
-      setNotice('Si un compte existe pour cet e-mail, un lien de réinitialisation vient d’être envoyé.');
+      setNotice(s.resetNotice);
     } catch {
-      setError('Envoi impossible. Réessayez.');
+      setError(s.errResetSend);
     } finally {
       requestPending.current = false;
       setStatus('idle');
@@ -885,11 +859,11 @@ function PortalLoginForm() {
 
   const liveMessage =
     status === 'submitting'
-      ? isRegistration ? 'Création du compte en cours.' : 'Connexion en cours.'
+      ? isRegistration ? s.liveSignup : s.liveLogin
       : status === 'resetting'
-        ? 'Envoi du lien de réinitialisation.'
+        ? s.liveReset
         : status === 'success'
-          ? isRegistration ? 'Compte créé.' : 'Connexion réussie. Redirection en cours.'
+          ? isRegistration ? s.liveSignupDone : s.liveLoginDone
           : '';
 
   const passwordDescribedBy = fieldErrors.password
@@ -899,15 +873,15 @@ function PortalLoginForm() {
       : undefined;
 
   return (
-    <main lang="fr" className={`cd-login`}>
+    <main lang={uiLocale} dir={uiLocale === 'ar' ? 'rtl' : 'ltr'} className={`cd-login`}>
       <LoginStyles />
-      <BrandPanel portal={portal} />
-      <section className="cd-access" aria-label="Connexion ClickDrive">
+      <BrandPanel portal={portal} s={s} />
+      <section className="cd-access" aria-label={s.accessAria}>
         <div className="cd-topbar">
-          <BrandLogo />
-          <Link href="/" className="cd-back" aria-label="Retour au site">
-            <ArrowLeft aria-hidden="true" />
-            <span>Retour au site</span>
+          <BrandLogo s={s} />
+          <Link href="/" className="cd-back">
+            <ArrowLeft aria-hidden="true" className="rtl:rotate-180" />
+            <span>{s.back}</span>
           </Link>
         </div>
 
@@ -922,14 +896,14 @@ function PortalLoginForm() {
         <div className="cd-form-content">
           <div className="cd-card">
             {portal !== 'admin' && (
-              <nav className="cd-portal-tabs" aria-label="Type de compte">
+              <nav className="cd-portal-tabs" aria-label={s.accountType}>
                 <Link
                   href={loginUrl('client')}
                   className="cd-portal-tab"
                   aria-current={portal === 'client' ? 'page' : undefined}
                 >
                   <UserRound aria-hidden="true" />
-                  Client
+                  {s.tabClient}
                 </Link>
                 <Link
                   href={loginUrl('agency')}
@@ -938,7 +912,7 @@ function PortalLoginForm() {
                 >
                   <Building2 aria-hidden="true" />
                   <span>
-                    Agence<span className="cd-tab-extra"> partenaire</span>
+                    {s.tabAgency}<span className="cd-tab-extra">{s.tabAgencyExtra}</span>
                   </span>
                 </Link>
               </nav>
@@ -947,15 +921,15 @@ function PortalLoginForm() {
               <div className="cd-admin-note">
                 <span>
                   <ShieldCheck aria-hidden="true" />
-                  Accès réservé — administration
+                  {s.adminNote}
                 </span>
-                <Link href={loginUrl('client')}>Espace client</Link>
+                <Link href={loginUrl('client')}>{s.clientSpace}</Link>
               </div>
             )}
 
             <header className="cd-form-header">
-              <h1>{isRegistration ? 'Créer un compte client' : 'Connexion'}</h1>
-              <p>{isRegistration ? 'Créez votre espace pour suivre vos demandes et réservations.' : copy.formSubtitle}</p>
+              <h1>{isRegistration ? s.signupTitle : s.loginTitle}</h1>
+              <p>{isRegistration ? s.signupSubtitle : copy.formSubtitle}</p>
             </header>
 
             {error && (
@@ -974,7 +948,7 @@ function PortalLoginForm() {
             <form className="cd-form" noValidate onSubmit={handleSubmit} aria-busy={busy}>
               {isRegistration && (
                 <div className="cd-field">
-                  <label htmlFor="cd-login-name">Nom complet</label>
+                  <label htmlFor="cd-login-name">{s.fullName}</label>
                   <div className="cd-input-wrap">
                     <UserRound aria-hidden="true" className="cd-input-icon" />
                     <input
@@ -989,7 +963,7 @@ function PortalLoginForm() {
                         setFullName(event.target.value);
                         setFieldErrors((current) => ({ ...current, name: undefined }));
                       }}
-                      placeholder="Votre nom"
+                      placeholder={s.namePlaceholder}
                       disabled={busy}
                       aria-invalid={Boolean(fieldErrors.name)}
                       aria-describedby={fieldErrors.name ? 'cd-err-name' : undefined}
@@ -1031,13 +1005,13 @@ function PortalLoginForm() {
               <div className="cd-field">
                 {portal !== 'admin' && !isRegistration ? (
                   <div className="cd-label-row">
-                    <label htmlFor="cd-login-password">Mot de passe</label>
+                    <label htmlFor="cd-login-password">{s.password}</label>
                     <button type="button" className="cd-link-btn" onClick={handleForgotPassword} disabled={busy || locked}>
-                      {status === 'resetting' ? 'Envoi…' : 'Mot de passe oublié ?'}
+                      {status === 'resetting' ? s.sending : s.forgot}
                     </button>
                   </div>
                 ) : (
-                  <label htmlFor="cd-login-password">Mot de passe</label>
+                  <label htmlFor="cd-login-password">{s.password}</label>
                 )}
                 <div className="cd-input-wrap">
                   <LockKeyhole aria-hidden="true" className="cd-input-icon" />
@@ -1055,7 +1029,7 @@ function PortalLoginForm() {
                     onKeyDown={(e) => setCapsLock(e.getModifierState('CapsLock'))}
                     onKeyUp={(e) => setCapsLock(e.getModifierState('CapsLock'))}
                     onBlur={() => setCapsLock(false)}
-                    placeholder="Votre mot de passe"
+                    placeholder={s.passwordPlaceholder}
                     disabled={busy}
                     aria-invalid={Boolean(fieldErrors.password)}
                     aria-describedby={passwordDescribedBy}
@@ -1067,7 +1041,7 @@ function PortalLoginForm() {
                     onClick={() => setShowPassword((v) => !v)}
                     disabled={busy}
                     aria-controls="cd-login-password"
-                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    aria-label={showPassword ? s.hidePassword : s.showPassword}
                   >
                     {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                   </button>
@@ -1075,15 +1049,15 @@ function PortalLoginForm() {
                 {fieldErrors.password && <p id="cd-err-password" className="cd-field-error">{fieldErrors.password}</p>}
                 {isRegistration && !fieldErrors.password && (
                   <p id="cd-password-hint" className="cd-hint">
-                    {MIN_PASSWORD_LENGTH} caractères minimum.
+                    {interpolate(s.minChars, { min: MIN_PASSWORD_LENGTH })}
                   </p>
                 )}
-                {capsLock && <p className="cd-caps-hint">Verrouillage majuscules activé.</p>}
+                {capsLock && <p className="cd-caps-hint">{s.capsLock}</p>}
               </div>
 
               {isRegistration && (
                 <div className="cd-field">
-                  <label htmlFor="cd-password-confirmation">Confirmer le mot de passe</label>
+                  <label htmlFor="cd-password-confirmation">{s.confirmPassword}</label>
                   <div className="cd-input-wrap">
                     <LockKeyhole aria-hidden="true" className="cd-input-icon" />
                     <input
@@ -1097,7 +1071,7 @@ function PortalLoginForm() {
                         setPasswordConfirmation(event.target.value);
                         setFieldErrors((current) => ({ ...current, passwordConfirmation: undefined }));
                       }}
-                      placeholder="Confirmez votre mot de passe"
+                      placeholder={s.confirmPlaceholder}
                       disabled={busy}
                       aria-invalid={Boolean(fieldErrors.passwordConfirmation)}
                       aria-describedby={fieldErrors.passwordConfirmation ? 'cd-err-confirmation' : undefined}
@@ -1114,45 +1088,45 @@ function PortalLoginForm() {
                 {status === 'submitting' ? (
                   <>
                     <Loader2 className="cd-spinner" aria-hidden="true" />
-                    {isRegistration ? 'Création…' : 'Connexion…'}
+                    {isRegistration ? s.creating : s.connecting}
                   </>
                 ) : status === 'success' ? (
                   <>
                     <Check aria-hidden="true" />
-                    {isRegistration ? 'Compte créé' : 'Connexion réussie'}
+                    {isRegistration ? s.created : s.connected}
                   </>
                 ) : locked ? (
-                  <>Réessayer dans {lockLeft} s</>
+                  <>{interpolate(s.retryIn, { seconds: lockLeft })}</>
                 ) : (
                   <>
-                    {isRegistration ? 'Créer mon compte' : copy.submitLabel}
-                    <ArrowRight aria-hidden="true" />
+                    {isRegistration ? s.createAccount : copy.submitLabel}
+                    <ArrowRight aria-hidden="true" className="rtl:rotate-180" />
                   </>
                 )}
               </button>
-              {locked && <p className="cd-countdown">Patientez avant une nouvelle tentative.</p>}
+              {locked && <p className="cd-countdown">{s.wait}</p>}
               <p className="cd-sr-only" role="status" aria-live="polite">{liveMessage}</p>
             </form>
 
             {portal === 'client' && (
               <div className="cd-oauth">
-                <div className="cd-oauth-divider">ou</div>
-                <GoogleSignInButton variant="light" next={redirectUrl} label="Continuer avec Google" />
+                <div className="cd-oauth-divider">{s.or}</div>
+                <GoogleSignInButton variant="light" next={redirectUrl} label={s.google} />
               </div>
             )}
 
             {portal === 'client' && (
               <p className="cd-join">
-                {isRegistration ? 'Vous avez déjà un compte ? ' : 'Nouveau sur ClickDrive ? '}
+                {isRegistration ? s.haveAccount : s.newHere}{' '}
                 <Link href={isRegistration ? loginUrl('client') : `${LOGIN_PATH}?portal=client&mode=signup`}>
-                  {isRegistration ? 'Se connecter' : 'Créer un compte'}
+                  {isRegistration ? s.signIn : s.signUp}
                 </Link>
               </p>
             )}
 
             {portal === 'agency' && (
               <p className="cd-join">
-                Pas encore partenaire ? <Link href="/agency/join">Rejoindre le réseau</Link>
+                {s.notPartner} <Link href="/agency/join">{s.join}</Link>
               </p>
             )}
           </div>
@@ -1163,14 +1137,14 @@ function PortalLoginForm() {
           </div>
           <details className="cd-help">
             <summary>
-              Un problème d’accès ?
+              {s.accessProblem}
               <ChevronDown aria-hidden="true" />
             </summary>
             <p>{copy.help}</p>
           </details>
         </div>
 
-        <p className="cd-access-footer">© {new Date().getFullYear()} ClickDrive · Nador, Maroc</p>
+        <p className="cd-access-footer">© {new Date().getFullYear()} ClickDrive · {s.location}</p>
       </section>
     </main>
   );

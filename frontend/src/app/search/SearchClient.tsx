@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import motoHeroImage from '../../../public/moto.jpg';
 import carHeroImage from '../../../public/voiture.jpg';
@@ -18,19 +18,20 @@ import {
   ALL_CATEGORIES,
   CatalogFilters,
   DEFAULT_FILTERS,
-  FUEL_LABELS,
   PRICE_CEILING,
-  TRANSMISSION_LABELS,
   countActiveFilters,
   type CatalogFilterState,
 } from '@/components/search/CatalogFilters';
 import { apiFetch } from '@/lib/api/client';
 import { formatLocalDate, getEffectiveRentalDates } from '@/lib/utils/date-only';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatNumber } from '@/lib/i18n/format';
+import { categoryLabel, fuelLabel, locationLabel, transmissionLabel } from '@/lib/i18n/labels';
 import type { Vehicle, Agency } from '@/types';
-import { catalogFacets, sortByRelevance, RELEVANCE_EXPLANATION } from '@/lib/catalog/discovery';
-import { CATALOG_PATHS, VEHICLE_TYPE_LABELS, vehicleTypeOf, type VehicleType } from '@/lib/vehicles/kind';
+import { catalogFacets, sortByRelevance } from '@/lib/catalog/discovery';
+import { CATALOG_PATHS, vehicleTypeOf, type VehicleType } from '@/lib/vehicles/kind';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { BrandMarquee, normalizeBrandKey } from '@/components/shared/BrandMarquee';
 import {
@@ -48,33 +49,13 @@ import {
   X,
 } from 'lucide-react';
 
-/** « 2026-11-08 » → « 8 nov. » (date locale, sans décalage de fuseau) */
-function shortDate(value: string): string {
-  const [year, month, day] = value.split('-').map(Number);
-  if (!year || !month || !day) return value;
-  return new Date(year, month - 1, day).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-}
-
 // « Meilleures agences » retiré : il triait sur une note par défaut, sans avis réels
 type SortOption = 'price_asc' | 'price_desc' | 'featured';
 
-const SORT_LABELS: Record<SortOption, string> = {
-  featured: 'Recommandés',
-  price_asc: 'Prix croissant',
-  price_desc: 'Prix décroissant',
-};
+const SORT_OPTIONS: SortOption[] = ['featured', 'price_asc', 'price_desc'];
 
 function normalize(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-}
-
-function formatDisplayDate(value: string): string {
-  const [year, month, day] = value.split('-').map(Number);
-  if (!year || !month || !day) return value;
-  return new Date(year, month - 1, day).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-  });
 }
 
 export interface SearchPreload {
@@ -85,6 +66,10 @@ export interface SearchPreload {
 
 function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | null; vehicleType: VehicleType }) {
   const searchParams = useSearchParams();
+  const { t, locale, fmt, plural, date } = useTranslation();
+  const catalog = t.catalog;
+  // « 2026-11-08 » → « 8 nov. » dans la langue de la page (date sans heure : même jour partout)
+  const shortDate = (value: string) => date(value, 'dayMonth');
 
   const initialCategory = searchParams.get('category') || ALL_CATEGORIES;
   const initialBrand = searchParams.get('brand') || 'ALL';
@@ -288,13 +273,13 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
   // Puces des filtres actifs, chacune retirable individuellement
   const activeChips: { key: string; label: string; clear: Partial<CatalogFilterState> }[] = [];
   if (filters.category !== ALL_CATEGORIES) {
-    activeChips.push({ key: 'category', label: filters.category, clear: { category: ALL_CATEGORIES } });
+    activeChips.push({ key: 'category', label: categoryLabel(t, filters.category), clear: { category: ALL_CATEGORIES } });
   }
   if (filters.transmission !== 'ALL') {
-    activeChips.push({ key: 'transmission', label: TRANSMISSION_LABELS[filters.transmission], clear: { transmission: 'ALL' } });
+    activeChips.push({ key: 'transmission', label: transmissionLabel(t, filters.transmission), clear: { transmission: 'ALL' } });
   }
   if (filters.fuel !== 'ALL') {
-    activeChips.push({ key: 'fuel', label: FUEL_LABELS[filters.fuel], clear: { fuel: 'ALL' } });
+    activeChips.push({ key: 'fuel', label: fuelLabel(t, filters.fuel), clear: { fuel: 'ALL' } });
   }
   if (filters.brand !== 'ALL') {
     activeChips.push({ key: 'brand', label: filters.brand, clear: { brand: 'ALL' } });
@@ -303,16 +288,15 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
     activeChips.push({ key: 'brandQuery', label: `« ${filters.brandQuery.trim()} »`, clear: { brandQuery: '' } });
   }
   if (filters.agency !== 'ALL') {
-    activeChips.push({ key: 'agency', label: agencyName ?? 'Agence', clear: { agency: 'ALL' } });
+    activeChips.push({ key: 'agency', label: agencyName ?? catalog.agencyFallback, clear: { agency: 'ALL' } });
   }
   if (filters.maxPrice < PRICE_CEILING) {
-    activeChips.push({ key: 'price', label: `≤ ${formatNumber(filters.maxPrice)} MAD/jour`, clear: { maxPrice: PRICE_CEILING } });
+    activeChips.push({ key: 'price', label: fmt(catalog.priceChip, { amount: formatNumber(filters.maxPrice, locale) }), clear: { maxPrice: PRICE_CEILING } });
   }
 
   const hasPeriod = Boolean(searchPeriod.startDate && searchPeriod.endDate);
-  const locationLabel = initialLocation || 'Nador et sa région';
+  const placeLabel = initialLocation ? locationLabel(t, initialLocation) : catalog.regionDefault;
   const isMotoView = vehicleType === 'MOTORCYCLE';
-  const resultNoun = isMotoView ? 'moto' : 'voiture';
   // Bascule voitures / motos en conservant le lieu et les dates de la recherche
   const switchQuery = (() => {
     const query = new URLSearchParams();
@@ -358,34 +342,34 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
             className="pointer-events-none absolute -end-24 -top-24 h-72 w-72 rounded-full bg-[#E63946]/20 blur-3xl"
           />
           <div className="relative mx-auto max-w-[1360px] px-4 pb-20 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-24">
-            <nav aria-label="Fil d’Ariane" className="mb-4 flex items-center gap-1.5 text-xs font-medium text-slate-400">
-              <Link href="/" className="transition-colors hover:text-white">Accueil</Link>
+            <nav aria-label={catalog.breadcrumbAria} className="mb-4 flex items-center gap-1.5 text-xs font-medium text-slate-400">
+              <Link href="/" className="transition-colors hover:text-white">{catalog.home}</Link>
               <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
-              <span aria-current="page" className="text-slate-200">{isMotoView ? 'Motos' : 'Voitures'}</span>
+              <span aria-current="page" className="text-slate-200">{isMotoView ? catalog.motosCrumb : catalog.carsCrumb}</span>
             </nav>
 
             <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-on-dark">
               <span className="h-px w-6 bg-[#E63946]" aria-hidden="true" />
-              Catalogue ClickDrive
+              {catalog.eyebrow}
             </p>
             <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
-              {isMotoView ? 'Location de moto à Nador' : 'Location de voiture à Nador'}
+              {isMotoView ? catalog.titleMoto : catalog.titleCar}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300">
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <MapPin className="h-4 w-4 shrink-0 text-accent-text" aria-hidden="true" />
-                <span className="truncate">{locationLabel}</span>
+                <span className="truncate">{placeLabel}</span>
               </span>
               {hasPeriod && (
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays className="h-4 w-4 shrink-0 text-accent-text" aria-hidden="true" />
-                  Du {formatDisplayDate(searchPeriod.startDate)} au {formatDisplayDate(searchPeriod.endDate)}
+                  {fmt(catalog.period, { start: shortDate(searchPeriod.startDate), end: shortDate(searchPeriod.endDate) })}
                 </span>
               )}
             </div>
 
             {/* Catalogues séparés : voitures / motos */}
-            <nav aria-label="Type de véhicule" className="mt-5 inline-flex rounded-2xl bg-white/8 p-1 ring-1 ring-white/10">
+            <nav aria-label={catalog.typeNavAria} className="mt-5 inline-flex rounded-2xl bg-white/8 p-1 ring-1 ring-white/10">
               {(['CAR', 'MOTORCYCLE'] as const).map((type) => {
                 const active = type === vehicleType;
                 const Icon = type === 'MOTORCYCLE' ? Motorbike : Car;
@@ -401,7 +385,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     }
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    {VEHICLE_TYPE_LABELS[type].plural}
+                    {t.vehicle.type[type].plural}
                     {!vehiclesLoading && (
                       <span className={active ? 'font-semibold text-slate-500' : 'font-medium text-slate-400'}>
                         {typeCounts[type]}
@@ -428,14 +412,14 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                 <Search className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold text-[#0B1220]">{locationLabel}</span>
+                <span className="block truncate text-[15px] font-bold text-[#0B1220]">{placeLabel}</span>
                 <span className="block truncate text-[13px] text-slate-600">
-                  {hasPeriod ? `${shortDate(searchPeriod.startDate)} → ${shortDate(searchPeriod.endDate)}` : 'Dates flexibles'}
-                  {filters.category && filters.category !== ALL_CATEGORIES ? ` · ${filters.category}` : ''}
+                  {hasPeriod ? `${shortDate(searchPeriod.startDate)} → ${shortDate(searchPeriod.endDate)}` : catalog.flexibleDates}
+                  {filters.category && filters.category !== ALL_CATEGORIES ? ` · ${categoryLabel(t, filters.category)}` : ''}
                 </span>
               </span>
               <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-[#0B1220]">
-                {mobileSearchOpen ? 'Fermer' : 'Modifier'}
+                {mobileSearchOpen ? catalog.close : catalog.edit}
                 <ChevronDown
                   className={cn('h-4 w-4 transition-transform motion-reduce:transition-none', mobileSearchOpen && 'rotate-180')}
                   aria-hidden="true"
@@ -461,7 +445,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
         <div className="mx-auto max-w-[1360px] px-4 pt-8 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-8">
             {/* Sidebar filtres (desktop) */}
-            <aside className="hidden lg:block" aria-label="Filtres de recherche">
+            <aside className="hidden lg:block" aria-label={catalog.filtersAria}>
               <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
                 <CatalogFilters
                   filters={filters}
@@ -482,27 +466,31 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     tabIndex={-1}
                     className="scroll-mt-32 text-lg font-extrabold text-[#0B1220] outline-none sm:text-xl"
                   >
-                    {vehiclesLoading ? (
-                      `Recherche des ${resultNoun}s…`
-                    ) : vehiclesError ? (
-                      'Disponibilités non vérifiées'
-                    ) : (
-                      <>
-                        {filteredVehicles.length} {resultNoun}{filteredVehicles.length > 1 ? 's' : ''}
-                        {hasPeriod ? ' disponible' + (filteredVehicles.length > 1 ? 's' : '') : ''}
-                      </>
-                    )}
+                    {vehiclesLoading
+                      ? isMotoView
+                        ? catalog.searchingMoto
+                        : catalog.searchingCar
+                      : vehiclesError
+                        ? catalog.notVerified
+                        : plural(
+                            filteredVehicles.length,
+                            isMotoView
+                              ? hasPeriod
+                                ? catalog.resultsMotoAvailable
+                                : catalog.resultsMoto
+                              : hasPeriod
+                                ? catalog.resultsCarAvailable
+                                : catalog.resultsCar
+                          )}
                   </h2>
                   {!vehiclesLoading && !vehiclesError && (
                     <p className="mt-0.5 text-[13px] text-ink-tertiary" aria-live="polite">
-                      {hasPeriod
-                        ? 'Seuls les véhicules libres sur toute votre période sont affichés.'
-                        : 'Statut du jour affiché. Lancez la recherche avec vos dates pour vérifier la disponibilité sur votre période.'}
+                      {hasPeriod ? catalog.periodNote : catalog.todayNote}
                       {/* Explication du classement : visible sur tablette et ordinateur ; sur mobile, elle est
                         lue par les lecteurs d'écran mais ne repousse pas les résultats sous le premier écran */}
                       {sortBy === 'featured' && (
                         <span className="sr-only sm:not-sr-only sm:block sm:text-xs sm:text-ink-secondary">
-                          Classement : {RELEVANCE_EXPLANATION}
+                          {fmt(catalog.ranking, { explanation: catalog.relevance })}
                         </span>
                       )}
                     </p>
@@ -516,7 +504,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     className="inline-flex h-11 flex-none items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 sm:flex-none lg:hidden"
                   >
                     <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                    Filtres
+                    {catalog.filters}
                     {activeFilterCount > 0 && (
                       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 text-[11px] text-white">
                         {activeFilterCount}
@@ -529,16 +517,16 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       className="pointer-events-none absolute start-3 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-slate-400 sm:block"
                       aria-hidden="true"
                     />
-                    <label htmlFor="sort-select" className="sr-only">Trier par</label>
+                    <label htmlFor="sort-select" className="sr-only">{catalog.sortBy}</label>
                     <select
                       id="sort-select"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortOption)}
                       className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white pe-9 ps-3.5 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10 sm:w-56 sm:ps-9"
                     >
-                      {(Object.keys(SORT_LABELS) as SortOption[]).map((option) => (
+                      {SORT_OPTIONS.map((option) => (
                         <option key={option} value={option}>
-                          {SORT_LABELS[option]}
+                          {catalog.sort[option]}
                         </option>
                       ))}
                     </select>
@@ -551,14 +539,14 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
               </div>
 
               {activeChips.length > 0 && (
-                <div className="mt-4 flex flex-wrap items-center gap-2" aria-label="Filtres actifs">
+                <div className="mt-4 flex flex-wrap items-center gap-2" aria-label={catalog.activeFiltersAria}>
                   {activeChips.map((chip) => (
                     <button
                       key={chip.key}
                       type="button"
                       onClick={() => updateFilters(chip.clear)}
                       className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white pe-2 ps-3 text-xs font-semibold text-slate-700 transition-colors hover:border-[#E63946]/40 hover:text-accent-text"
-                      aria-label={`Retirer le filtre ${chip.label}`}
+                      aria-label={fmt(catalog.removeFilter, { label: chip.label })}
                     >
                       <span className="truncate">{chip.label}</span>
                       <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -569,7 +557,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     onClick={resetFilters}
                     className="h-8 px-2 text-xs font-bold text-accent-text hover:underline"
                   >
-                    Tout effacer
+                    {catalog.clearAll}
                   </button>
                 </div>
               )}
@@ -585,8 +573,8 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       <AlertTriangle className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-[#0B1220]">Impossible de charger les véhicules</p>
-                      <p className="mt-0.5 text-sm text-slate-600">{vehiclesError}</p>
+                      <p className="font-bold text-[#0B1220]">{catalog.loadErrorTitle}</p>
+                      <p className="mt-0.5 text-sm text-slate-600">{catalog.loadError}</p>
                     </div>
                     <button
                       type="button"
@@ -594,11 +582,11 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-4 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
                     >
                       <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                      Réessayer
+                      {catalog.retry}
                     </button>
                   </div>
                 ) : vehiclesLoading ? (
-                  <div role="status" aria-label={`Chargement des ${resultNoun}s`} className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div role="status" aria-label={isMotoView ? catalog.loadingMoto : catalog.loadingCar} className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {Array.from({ length: 6 }, (_, i) => (
                       <VehicleCardSkeleton key={i} />
                     ))}
@@ -622,20 +610,22 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     <h3 className="mt-4 text-lg font-extrabold text-[#0B1220]">
                       {typeScopedVehicles.length === 0 && !hasPeriod
                         ? isMotoView
-                          ? 'Aucune moto proposée pour le moment'
-                          : 'Aucune voiture proposée pour le moment'
+                          ? catalog.emptyMotoNone
+                          : catalog.emptyCarNone
                         : isMotoView
-                          ? 'Aucune moto ne correspond à votre recherche'
-                          : 'Aucune voiture ne correspond à votre recherche'}
+                          ? catalog.emptyMotoMatch
+                          : catalog.emptyCarMatch}
                     </h3>
                     <p className="mt-1.5 text-sm text-slate-500">
                       {typeScopedVehicles.length === 0 && !hasPeriod
                         ? isMotoView
-                          ? 'Les agences partenaires n’ont pas encore publié de motos ou de scooters. Revenez bientôt.'
-                          : 'Les agences partenaires n’ont pas encore publié de voitures.'
+                          ? catalog.emptyMotoNoneText
+                          : catalog.emptyCarNoneText
                         : typeScopedVehicles.length === 0
-                          ? `Aucune ${resultNoun} n’est disponible pour ces dates. Essayez une autre période.`
-                          : 'Élargissez votre budget, changez de catégorie ou retirez certains filtres.'}
+                          ? isMotoView
+                            ? catalog.emptyMotoDates
+                            : catalog.emptyCarDates
+                          : catalog.emptyFiltersText}
                     </p>
                     {typeScopedVehicles.length === 0 && typeCounts[isMotoView ? 'CAR' : 'MOTORCYCLE'] > 0 && (
                       <Link
@@ -643,7 +633,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                         className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-[13px] font-bold text-[#0B1220] transition-colors hover:bg-slate-50"
                       >
                         {isMotoView ? <Car className="h-4 w-4" aria-hidden="true" /> : <Motorbike className="h-4 w-4" aria-hidden="true" />}
-                        {isMotoView ? 'Voir les voitures disponibles' : 'Voir les motos disponibles'}
+                        {isMotoView ? catalog.seeCars : catalog.seeMotos}
                       </Link>
                     )}
                     {activeFilterCount > 0 && (
@@ -653,7 +643,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                         className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-5 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
                       >
                         <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                        Réinitialiser les filtres
+                        {catalog.resetFilters}
                       </button>
                     )}
                   </div>
@@ -667,7 +657,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
           open={mobileFilterOpen}
           onClose={() => setMobileFilterOpen(false)}
           resultCount={filteredVehicles.length}
-          resultNoun={resultNoun}
+          isMoto={isMotoView}
           activeCount={activeFilterCount}
           onReset={resetFilters}
         >
@@ -699,7 +689,7 @@ function MobileFilterDrawer({
   open,
   onClose,
   resultCount,
-  resultNoun,
+  isMoto,
   activeCount,
   onReset,
   children,
@@ -707,13 +697,15 @@ function MobileFilterDrawer({
   open: boolean;
   onClose: () => void;
   resultCount: number;
-  resultNoun: string;
+  isMoto: boolean;
   activeCount: number;
   onReset: () => void;
   children: React.ReactNode;
 }) {
   // Panneau modal : focus sur « Fermer », Tab piégé, Échap, page inerte, focus rendu au bouton « Filtres »
   const dialogRef = useModalDialog<HTMLDivElement>(open, { onClose });
+  const { t, plural } = useTranslation();
+  const catalog = t.catalog;
 
   if (!open) return null;
 
@@ -721,7 +713,7 @@ function MobileFilterDrawer({
     <div className="fixed inset-0 z-[60] lg:hidden">
       <button
         type="button"
-        aria-label="Fermer les filtres"
+        aria-label={catalog.closeFilters}
         tabIndex={-1}
         data-modal-backdrop
         onClick={onClose}
@@ -738,14 +730,14 @@ function MobileFilterDrawer({
         <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-200 sm:hidden" aria-hidden="true" />
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
           <h2 id="mobile-filters-title" className="text-base font-extrabold text-[#0B1220]">
-            Filtres
+            {catalog.filters}
           </h2>
           <button
             data-autofocus
             type="button"
             onClick={onClose}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
-            aria-label="Fermer"
+            aria-label={catalog.close}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -758,14 +750,14 @@ function MobileFilterDrawer({
             disabled={activeCount === 0}
             className="h-12 flex-1 rounded-xl border border-slate-200 text-[13px] font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40"
           >
-            Réinitialiser
+            {catalog.reset}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="h-12 flex-[1.4] rounded-xl bg-action text-[13px] font-bold text-white transition-colors hover:bg-action-hover"
           >
-            Voir {resultCount} {resultNoun}{resultCount > 1 ? 's' : ''}
+            {plural(resultCount, isMoto ? catalog.showMoto : catalog.showCar)}
           </button>
         </div>
       </div>
@@ -774,11 +766,12 @@ function MobileFilterDrawer({
 }
 
 export function SearchClient({ preload, vehicleType = 'CAR' }: { preload: SearchPreload | null; vehicleType?: VehicleType }) {
+  const { t } = useTranslation();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#F5F6F8] p-8 text-center text-sm text-ink-tertiary">
-          {vehicleType === 'MOTORCYCLE' ? 'Chargement des motos disponibles à Nador…' : 'Chargement des voitures disponibles à Nador…'}
+          {vehicleType === 'MOTORCYCLE' ? t.catalog.suspenseMoto : t.catalog.suspenseCar}
         </div>
       }
     >

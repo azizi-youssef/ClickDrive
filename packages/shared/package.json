@@ -8,6 +8,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./booking-status": {
+      "types": "./dist/booking-status.d.ts",
+      "default": "./dist/booking-status.js"
+    },
+    "./booking-state-machine": {
+      "types": "./dist/booking-state-machine.d.ts",
+      "default": "./dist/booking-state-machine.js"
+    },
+    "./roles": {
+      "types": "./dist/roles.d.ts",
+      "default": "./dist/roles.js"
+    },
+    "./booking-schema": {
+      "types": "./dist/booking-schema.d.ts",
+      "default": "./dist/booking-schema.js"
     }
   },
   "scripts": {
@@ -19,5 +35,6 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3"
-  }
+  },
+  "sideEffects": false
 }

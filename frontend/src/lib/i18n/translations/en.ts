@@ -15,6 +15,7 @@ export const en: Translations = {
     allRightsReserved: 'All rights reserved.',
     morocco: 'Morocco',
     nador: 'Nador',
+    skipToContent: 'Skip to main content',
   },
   nav: {
     home: 'Home',
@@ -79,6 +80,8 @@ export const en: Translations = {
     station: 'Nador ONCF station',
     marchica: 'Marchica Lagoon Resort',
     searchBtn: 'Search',
+    allTypes: "All types",
+    formAria: "Search for a rental car",
     category: 'Category',
     dateError: 'Choose a pickup date from today onwards and a return date after the pickup.',
     sameLocation: 'Same return location',
@@ -136,9 +139,8 @@ export const en: Translations = {
   },
   cookie: {
     title: 'Cookie settings',
-    desc: 'ClickDrive uses cookies that are necessary for the site to work and for audience measurement to improve your experience.',
-    accept: 'Accept all',
-    decline: 'Decline',
+    desc: 'ClickDrive only uses cookies the site needs to work (sign-in, language, preferences). No advertising or audience-measurement cookies.',
+    ok: 'Got it',
     privacy: 'Privacy policy',
     mentions: 'Legal notice',
   },

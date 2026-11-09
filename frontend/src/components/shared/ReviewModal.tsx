@@ -4,6 +4,7 @@ import React, { useId, useState } from 'react';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { Star, X, Send, CheckCircle2, AlertCircle, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -19,8 +20,6 @@ export interface ReviewModalProps {
 
 type FormState = 'idle' | 'sending' | 'success' | 'error';
 
-const RATING_LABELS = ['', 'Mauvais', 'Passable', 'Bien', 'Très bien', 'Excellent'];
-
 /* ── Star Rating Input ──────────────────────────────────────────────────── */
 
 function StarRating({
@@ -30,6 +29,8 @@ function StarRating({
   value: number;
   onChange: (n: number) => void;
 }) {
+  const { t, plural } = useTranslation();
+  const c = t.account.review;
   const [hovered, setHovered] = useState(0);
 
   return (
@@ -43,7 +44,8 @@ function StarRating({
           onMouseEnter={() => setHovered(n)}
           onMouseLeave={() => setHovered(0)}
           className="transition-transform hover:scale-110"
-          aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+          aria-label={plural(n, c.starAria)}
+          aria-pressed={value === n}
         >
           <Star
             className={`h-8 w-8 transition-colors ${
@@ -55,8 +57,8 @@ function StarRating({
         </button>
       ))}
       {(hovered || value) > 0 && (
-        <span className="ml-2 text-sm font-semibold text-slate-700">
-          {RATING_LABELS[hovered || value]}
+        <span className="ms-2 text-sm font-semibold text-slate-700">
+          {c.ratings[hovered || value]}
         </span>
       )}
     </div>
@@ -74,6 +76,8 @@ export function ReviewModal({
   onClose,
   onSuccess,
 }: ReviewModalProps) {
+  const { t, locale, fmt } = useTranslation();
+  const c = t.account.review;
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [state, setState] = useState<FormState>('idle');
@@ -83,8 +87,8 @@ export function ReviewModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (rating === 0) { setError('Veuillez attribuer une note en étoiles.'); return; }
-    if (comment.trim().length < 10) { setError('Le commentaire doit faire au moins 10 caractères.'); return; }
+    if (rating === 0) { setError(c.errRating); return; }
+    if (comment.trim().length < 10) { setError(c.errComment); return; }
 
     setState('sending');
     setError(null);
@@ -98,14 +102,15 @@ export function ReviewModal({
 
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error || 'Erreur lors de l\'envoi.');
+        // Les messages du serveur sont en français : ailleurs, message générique traduit
+        throw new Error((locale === 'fr' && data.error) || c.errSend);
       }
 
       setState('success');
       onSuccess?.();
     } catch (err: unknown) {
       setState('error');
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+      setError(err instanceof Error && err.message ? err.message : c.errSend);
     }
   }
 
@@ -127,16 +132,17 @@ export function ReviewModal({
         <div className="relative bg-[#0B1220] px-6 py-5">
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-full p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"
-            aria-label="Fermer"
+            type="button"
+            className="absolute end-4 top-4 rounded-full p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"
+            aria-label={c.close}
           >
             <X className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-3">
             <MessageSquare className="h-5 w-5 text-amber-400" />
             <div>
-              <p className="text-xs font-semibold text-white/60">Avis vérifié</p>
-              <h2 id={titleId} className="text-sm font-bold text-white">Évaluez votre expérience</h2>
+              <p className="text-xs font-semibold text-white/60">{c.verified}</p>
+              <h2 id={titleId} className="text-sm font-bold text-white">{c.title}</h2>
             </div>
           </div>
         </div>
@@ -150,7 +156,7 @@ export function ReviewModal({
           )}
           <div>
             <p className="text-sm font-bold text-slate-900">{vehicleName}</p>
-            <p className="text-xs text-slate-500">{agencyName} · Réf. {bookingRef}</p>
+            <p className="text-xs text-slate-500">{agencyName} · {fmt(c.reference, { reference: bookingRef })}</p>
           </div>
         </div>
 
@@ -161,39 +167,41 @@ export function ReviewModal({
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle2 className="h-7 w-7 text-emerald-600" />
               </div>
-              <p className="font-bold text-slate-900">Merci pour votre avis !</p>
+              <p className="font-bold text-slate-900">{c.doneTitle}</p>
               <p className="mt-1 text-sm text-slate-500">
-                Votre retour aide les autres voyageurs à choisir la meilleure agence.
+                {c.doneText}
               </p>
               <button
+                type="button"
                 onClick={onClose}
                 className="mt-5 rounded-xl bg-[#0B1220] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Fermer
+                {c.close}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Stars */}
               <div>
-                <p className="mb-2 text-sm font-semibold text-slate-700">Note globale *</p>
+                <p className="mb-2 text-sm font-semibold text-slate-700">{c.rating}</p>
                 <StarRating value={rating} onChange={setRating} />
               </div>
 
               {/* Comment */}
               <div>
                 <label htmlFor="review-comment" className="mb-1.5 block text-sm font-semibold text-slate-700">
-                  Votre commentaire *
+                  {c.comment}
                 </label>
                 <textarea
                   id="review-comment"
                   rows={4}
-                  placeholder="Décrivez votre expérience avec ce véhicule et cette agence..."
+                  maxLength={500}
+                  placeholder={c.placeholder}
                   value={comment}
                   onChange={(e) => { setComment(e.target.value); setError(null); }}
                   className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-[#E63946] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#E63946]"
                 />
-                <p className="mt-1 text-right text-xs text-slate-400">{comment.length} / 500</p>
+                <p className="mt-1 text-end text-xs text-slate-400">{comment.length} / 500</p>
               </div>
 
               {/* Error */}
@@ -214,18 +222,18 @@ export function ReviewModal({
                 {state === 'sending' ? (
                   <>
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Envoi en cours…
+                    {c.sending}
                   </>
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Publier mon avis
+                    {c.publish}
                   </>
                 )}
               </button>
 
               <p className="text-center text-[11px] text-slate-400">
-                Avis vérifiés — réservé aux clients ayant effectué la location.
+                {c.notice}
               </p>
             </form>
           )}

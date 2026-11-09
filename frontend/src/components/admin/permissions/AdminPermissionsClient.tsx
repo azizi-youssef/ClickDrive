@@ -2,19 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Shield,
   ShieldCheck,
-  ShieldAlert,
   Users,
-  Check,
-  Minus,
   Key,
-  Search,
   Building2,
   RefreshCw,
   AlertCircle,
   CheckCircle2,
-  UserCheck,
 } from 'lucide-react';
 import {
   KpiCard,
@@ -26,9 +20,8 @@ import {
   EmptyState,
   Btn,
   StatusBadge,
-  ErrorBanner,
 } from '@/components/admin/AdminUI';
-import { USER_ROLES, type UserRole } from '@clickdrive/shared';
+import { type UserRole } from '@clickdrive/shared/roles';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 
 interface PermUser {
@@ -242,6 +235,12 @@ export function AdminPermissionsClient() {
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           <span>{actionSuccess}</span>
+        </div>
+      )}
+      {error && (
+        <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+          <span>{error}</span>
         </div>
       )}
       {actionError && (

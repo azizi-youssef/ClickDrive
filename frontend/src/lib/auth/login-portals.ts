@@ -1,4 +1,5 @@
-import { isAgencyRole, isPlatformAdminRole, type UserRole } from '@clickdrive/shared';
+import { isAgencyRole, isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
+import { type UserRole } from '@clickdrive/shared/roles';
 
 export type LoginPortal = 'client' | 'agency' | 'admin';
 

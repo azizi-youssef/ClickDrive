@@ -12,15 +12,11 @@ import {
   Car,
   User,
   Phone,
-  FileText,
   Search,
   Loader2,
-  ShieldAlert,
-  Gauge,
-  Fuel,
   RefreshCw,
 } from 'lucide-react';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export type RentalItem = {
   id: string;
@@ -102,8 +98,8 @@ export function AgencyRentalsPanel({
         throw new Error(json.error || 'Erreur lors du chargement des opérations.');
       }
       setRentals(json.data ?? []);
-    } catch (err: any) {
-      setError(err.message || 'Impossible de contacter le serveur.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Impossible de contacter le serveur.');
     } finally {
       setLoading(false);
     }
@@ -161,8 +157,8 @@ export function AgencyRentalsPanel({
 
       setActiveHandover(null);
       void loadRentals();
-    } catch (err: any) {
-      setHandoverError(err.message);
+    } catch (err: unknown) {
+      setHandoverError((err instanceof Error ? err.message : '') || 'Erreur lors de la validation');
     } finally {
       setHandoverBusy(false);
     }

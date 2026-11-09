@@ -10,6 +10,17 @@ import {
 } from '@/lib/availability/status';
 import { formatLocalDate } from '@/lib/utils/date-only';
 
+const EXPIRY_INTERVAL_MS = 10 * 60_000;
+let lastExpiryAt = 0;
+
+/** Vrai au plus une fois toutes les 10 minutes (par instance serveur) */
+export function shouldExpireCompletedBookings(now = Date.now()): boolean {
+  if (now - lastExpiryAt < EXPIRY_INTERVAL_MS) return false;
+  lastExpiryAt = now;
+  return true;
+}
+
+
 function requireSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -94,11 +105,14 @@ export class VehiclesService {
 
     // Date-specific availability is computed in PostgreSQL to share one source of truth.
     if (filters?.startDate && filters?.endDate) {
-      // Nettoyage des locations terminées (statuts véhicules), séparé de la vérification
-      // en lecture seule. Facultatif : la disponibilité ignore déjà les réservations passées.
-      const { error: expireError } = await supabase.rpc('expire_completed_bookings');
-      if (expireError) {
-        console.warn('[VehiclesService] Booking expiry skipped:', expireError.message);
+      // Nettoyage des locations terminées (statuts véhicules) : une écriture en base, donc au plus
+      // une fois toutes les 10 minutes par instance ; la tâche planifiée le fait aussi toutes les 15 min.
+      // Facultatif pour cette lecture : la disponibilité ignore déjà les réservations passées.
+      if (shouldExpireCompletedBookings()) {
+        const { error: expireError } = await supabase.rpc('expire_completed_bookings');
+        if (expireError) {
+          console.warn('[VehiclesService] Booking expiry skipped:', expireError.message);
+        }
       }
 
       const availability: { vehicle_id: string; available: boolean }[] = [];

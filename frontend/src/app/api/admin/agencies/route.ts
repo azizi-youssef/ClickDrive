@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { AccessPermission } from '@clickdrive/shared';
+import type { AccessPermission } from '@clickdrive/shared/roles';
 import { requirePlatformPermissionApi } from '@/lib/auth/access-api';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { createAgencyWithAuthSchema } from '@/lib/validations/agency-access';

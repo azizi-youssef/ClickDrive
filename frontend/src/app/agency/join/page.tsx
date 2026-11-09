@@ -3,6 +3,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { PartnerPlans } from '@/components/agency/join/PartnerPlans';
+import { track } from '@/lib/analytics/track';
 import {
   ArrowRight,
   ArrowLeft,
@@ -67,22 +70,65 @@ export default function AgencyJoinPage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [fleetSize, setFleetSize] = useState('5 à 15 véhicules');
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [reference, setReference] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Demande enregistrée comme message « partenariat agence » : alerte à l'équipe, accusé à l'agence
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // À connecter à votre API d'inscription agence.
-    // Ne pas considérer cette étape comme un envoi réel au serveur.
-    setSubmitted(true);
+    setSending(true);
+    setSendError(null);
+    const website = String(new FormData(e.currentTarget).get('website') ?? '');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: managerName,
+          email,
+          phone,
+          category: 'agency-partner',
+          subject: `Inscription agence : ${agencyName}`.slice(0, 150),
+          message: `Demande d'inscription d'une agence partenaire.\nAgence : ${agencyName}\nResponsable : ${managerName}\nAdresse : ${address}\nTaille de flotte : ${fleetSize}`,
+          website,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { success?: boolean; reference?: string; error?: string } | null;
+      if (!res.ok || !json?.success || !json.reference) throw new Error(json?.error ?? 'Envoi impossible pour le moment.');
+      setReference(json.reference);
+      track('Contact envoyé', { categorie: 'agency-partner' });
+      setSubmitted(true);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Envoi impossible pour le moment.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-[#F5F6F8] text-[#0B1220]">
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#0B1220]">
+        {/* Background photo */}
+        <Image
+          src="/join.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover object-center opacity-30"
+          aria-hidden="true"
+        />
+
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0B1220]/60 via-[#0B1220]/50 to-[#0B1220]/80"
+        />
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
               'linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px)',
@@ -160,13 +206,12 @@ export default function AgencyJoinPage() {
                   <CheckCircle2 className="h-9 w-9" />
                 </div>
 
-                <h2 className="mt-5 text-2xl font-bold text-white">
-                  Demande préparée !
+                <h2 className="mt-5 text-2xl font-bold text-white" role="status">
+                  Demande envoyée
                 </h2>
                 <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-300">
-                  Votre formulaire a été validé dans cette interface.
-                  La transmission à notre équipe nécessite encore la
-                  connexion au service d'inscription.
+                  {reference ? <>Référence <strong className="font-mono text-white">{reference}</strong>. </> : null}
+                  Notre équipe vous recontacte sous 24 h ouvrées pour vérifier votre agence et préparer votre mise en ligne.
                 </p>
               </div>
 
@@ -180,6 +225,7 @@ export default function AgencyJoinPage() {
                     ['Agence', agencyName],
                     ['Responsable', managerName],
                     ['Téléphone', phone],
+                    ['E-mail', email],
                     ['Adresse', address],
                     ['Taille de flotte', fleetSize],
                   ].map(([label, value]) => (
@@ -395,6 +441,34 @@ export default function AgencyJoinPage() {
                     </div>
                   </div>
 
+                  {/* EMAIL */}
+                  <div>
+                    <label htmlFor="join-email" className="mb-2 block text-xs font-bold text-slate-700">
+                      E-mail
+                      <span className="ml-1 text-[#E63946]">*</span>
+                    </label>
+                    <input
+                      id="join-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      dir="ltr"
+                      required
+                      maxLength={254}
+                      placeholder="contact@votre-agence.ma"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputClass}
+                    />
+                    <p className="mt-1.5 text-[11px] text-slate-500">Pour recevoir l’accès à votre espace agence et les demandes de réservation.</p>
+                  </div>
+
+                  {/* Champ piège pour les robots : hors écran, ignoré au clavier et par les lecteurs d'écran */}
+                  <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                    <label htmlFor="join-website">Site web</label>
+                    <input id="join-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+                  </div>
+
                   {/* ADDRESS */}
                   <div>
                     <label
@@ -456,11 +530,17 @@ export default function AgencyJoinPage() {
 
                   {/* SUBMIT */}
                   <div className="border-t border-slate-100 pt-5">
+                    {sendError && (
+                      <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                        {sendError}
+                      </p>
+                    )}
                     <button
                       type="submit"
-                      className="group inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-[#E63946] px-5 text-sm font-bold text-white shadow-lg shadow-[#E63946]/15 transition-all hover:-translate-y-0.5 hover:bg-[#C92F3B] hover:shadow-xl hover:shadow-[#E63946]/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E63946]/20 active:translate-y-0"
+                      disabled={sending}
+                      className="disabled:cursor-wait disabled:opacity-70 group inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-[#E63946] px-5 text-sm font-bold text-white shadow-lg shadow-[#E63946]/15 transition-all hover:-translate-y-0.5 hover:bg-[#C92F3B] hover:shadow-xl hover:shadow-[#E63946]/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E63946]/20 active:translate-y-0"
                     >
-                      Envoyer ma demande
+                      {sending ? 'Envoi en cours…' : 'Envoyer ma demande'}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </button>
 
@@ -491,6 +571,8 @@ export default function AgencyJoinPage() {
           </div>
         )}
       </section>
+
+      {!submitted && <PartnerPlans />}
 
       {/* BOTTOM CTA */}
       {!submitted && (

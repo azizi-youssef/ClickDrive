@@ -123,12 +123,14 @@ class CommissionService {
       this.cachedRate = safeRate;
       this.lastFetched = Date.now();
       return { success: true, rate: safeRate };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[CommissionService] updateCommissionRate error:', err);
+      // Les erreurs Supabase sont des objets { message }, pas toujours des instances d'Error
+      const message = err && typeof err === 'object' && 'message' in err ? String(err.message) : null;
       return {
         success: false,
         rate: this.cachedRate,
-        error: err.message ?? 'Erreur base de données',
+        error: message ?? 'Erreur base de données',
       };
     }
   }

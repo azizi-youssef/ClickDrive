@@ -1,7 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPlatformAdminRole } from '@clickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { isPublicLoginPath, loginUrl, type LoginPortal } from '@/lib/auth/login-portals';
+import { LOCALE_HEADER, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/config';
+import { localizeHref } from '@/lib/i18n/routing';
 
 /**
  * Garde des espaces privés (première barrière, côté navigation).
@@ -48,17 +50,35 @@ function markPrivate(response: NextResponse): NextResponse {
   return response;
 }
 
-function redirectToLogin(request: NextRequest, area: PrivateArea, error?: string): NextResponse {
+function redirectToLogin(request: NextRequest, area: PrivateArea, locale: Locale, error?: string): NextResponse {
   const path = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  return markPrivate(
-    NextResponse.redirect(new URL(loginUrl(PORTAL_FOR_AREA[area], { redirect: path, error }), request.url))
-  );
+  const target = localizeHref(loginUrl(PORTAL_FOR_AREA[area], { redirect: path, error }), locale);
+  return markPrivate(NextResponse.redirect(new URL(target, request.url)));
 }
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+export type SessionRouting = {
+  /** Chemin français canonique de la page (sans préfixe de langue) */
+  path?: string;
+  /** Langue de la requête, transmise au rendu serveur par un en-tête */
+  locale?: Locale;
+  /** Adresse interne à servir (adresse préfixée par une langue) */
+  rewrite?: URL;
+};
 
-  const path = request.nextUrl.pathname;
+export async function updateSession(request: NextRequest, routing: SessionRouting = {}) {
+  const locale = routing.locale ?? DEFAULT_LOCALE;
+  // Réponse qui laisse passer la requête (ou la réécrit), en-tête de langue compris ; recréée quand
+  // Supabase rafraîchit les cookies de session
+  const forward = () => {
+    const headers = new Headers(request.headers);
+    headers.set(LOCALE_HEADER, locale);
+    return routing.rewrite
+      ? NextResponse.rewrite(routing.rewrite, { request: { headers } })
+      : NextResponse.next({ request: { headers } });
+  };
+  let supabaseResponse = forward();
+
+  const path = routing.path ?? request.nextUrl.pathname;
   const area = privateAreaFor(path);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -84,7 +104,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse = forward();
         cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
       },
     },
@@ -96,7 +116,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!area) return supabaseResponse;
-  if (!user) return redirectToLogin(request, area);
+  if (!user) return redirectToLogin(request, area, locale);
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -106,14 +126,14 @@ export async function updateSession(request: NextRequest) {
 
   // Session sans profil exploitable : accès refusé (jamais de rôle supposé)
   if (profileError || !profile?.role) {
-    return redirectToLogin(request, area, 'forbidden');
+    return redirectToLogin(request, area, locale, 'forbidden');
   }
 
   const role = String(profile.role);
   const isSuperAdmin = isPlatformAdminRole(role);
 
   if (area === 'admin' && !isSuperAdmin) {
-    return redirectToLogin(request, 'admin', 'forbidden');
+    return redirectToLogin(request, 'admin', locale, 'forbidden');
   }
 
   if (area === 'agency' && !isSuperAdmin) {
@@ -129,7 +149,7 @@ export async function updateSession(request: NextRequest) {
         const agency = Array.isArray(row.agencies) ? row.agencies[0] : row.agencies;
         return typeof agency === 'object' && agency !== null && 'status' in agency && agency.status === 'SUSPENDED';
       });
-      return redirectToLogin(request, 'agency', isSuspended ? 'suspended' : 'forbidden');
+      return redirectToLogin(request, 'agency', locale, isSuspended ? 'suspended' : 'forbidden');
     }
   }
 

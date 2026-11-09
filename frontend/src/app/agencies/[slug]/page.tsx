@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { AgencyProfile } from './AgencyProfile';
 import { loadAgencyVehicles, loadPublicAgency, toAgencyProfile } from './data';
+import { loadAgencyResponseTime } from '@/lib/bookings/response-time';
+import { I18nScope } from '@/components/i18n/I18nScope';
 
 // Rendu à la requête : la flotte et son statut du jour évoluent en continu
 export const dynamic = 'force-dynamic';
@@ -19,6 +21,10 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
   const agency = await loadPublicAgency(slug);
   if (!agency) notFound();
 
-  const vehicles = await loadAgencyVehicles(agency.id);
-  return <AgencyProfile agency={toAgencyProfile(agency)} initialVehicles={vehicles} />;
+  const [vehicles, responseTime] = await Promise.all([loadAgencyVehicles(agency.id), loadAgencyResponseTime(agency.id)]);
+  return (
+    <I18nScope namespaces={['agencies']}>
+      <AgencyProfile agency={toAgencyProfile(agency)} initialVehicles={vehicles} responseTime={responseTime} />
+    </I18nScope>
+  );
 }

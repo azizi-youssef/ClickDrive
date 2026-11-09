@@ -3,6 +3,7 @@ import { serverError } from '@/lib/api/server-error';
 import { requirePlatformAdminApi } from '@/lib/auth/admin-api';
 import { agenciesService } from '@/lib/services/agencies.service';
 import { vehiclesService } from '@/lib/services/vehicles.service';
+import { toPublicAgencies } from '@/lib/agencies/public';
 
 export async function GET(req: NextRequest) {
   const onlyActive = req.nextUrl.searchParams.get('onlyActive') !== 'false';
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: withCounts,
+      data: onlyActive ? toPublicAgencies(withCounts) : withCounts,
       meta: { total: withCounts.length },
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error: unknown) {

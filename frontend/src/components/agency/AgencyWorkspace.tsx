@@ -4,13 +4,12 @@ import { createClient } from '@/lib/supabase/client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Car, LayoutDashboard } from 'lucide-react';
-import { canPerformAgencyBookingAction } from '@clickdrive/shared';
+import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { signOutEverywhere } from '@/lib/auth/client';
 import { canManageAgencyBookings, canManageAgencyFleet } from '@/lib/auth/portals';
 import { Sidebar, type AgencySection } from '@/components/agency/shell/Sidebar';
 import { Topbar } from '@/components/agency/shell/Topbar';
-import { EmptyState, ErrorBanner, Toast } from '@/components/agency/shell/Feedback';
+import { Toast } from '@/components/agency/shell/Feedback';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 import { DateRangeInputs, FilterChips } from '@/components/agency/shell/Controls';
 import { RANGE_PRESETS, resolveRange, type RangePreset } from '@/lib/design/tokens';
@@ -41,6 +40,7 @@ import AgencyAccessPanel from '@/components/agency/AgencyAccessPanel';
 import { FleetCapacityCard } from '@/components/agency/subscription/FleetCapacityCard';
 import { AgencySubscriptionPanel } from '@/components/agency/subscription/AgencySubscriptionPanel';
 import type { AgencySubscription } from '@/types';
+import type { UserRole } from '@clickdrive/shared/roles';
 import { AGENCY_SECTIONS } from '@/components/agency/shell/Sidebar';
 
 export type AgencyIdentity = {
@@ -76,11 +76,11 @@ async function readJson(response: Response): Promise<unknown> {
 }
 
 function canActOnBookings(role: string | undefined): boolean {
-  return role ? canManageAgencyBookings(role as any) : false;
+  return role ? canManageAgencyBookings(role as UserRole) : false;
 }
 
 function canEditFleet(role: string | undefined): boolean {
-  return role ? canManageAgencyFleet(role as any) : false;
+  return role ? canManageAgencyFleet(role as UserRole) : false;
 }
 
 export function AgencyWorkspace({
@@ -616,7 +616,6 @@ export function AgencyWorkspace({
                 agencyId={agency.id}
                 vehicleType={section === 'fleet_motos' ? 'MOTORCYCLE' : 'CAR'}
                 canManage={canEditFleet(profile?.role)}
-                onOpenCalendar={() => setSection('calendar')}
                 onNotify={notify}
               />
             </div>

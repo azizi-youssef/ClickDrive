@@ -1,19 +1,23 @@
 'use client';
 
+import { track } from '@/lib/analytics/track';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Vehicle } from '@/types';
-import { calculateBookingPrice, calculateRentalDays } from '@/lib/utils/pricing';
-import { cn, formatNumber } from '@/lib/utils';
+import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatNumber } from '@/lib/i18n/format';
+import { categoryLabel, fuelLabel, licenseLabel, meetingPointText, transmissionLabel } from '@/lib/i18n/labels';
 import { MEETING_POINTS, getMeetingPoint, type MeetingPoint } from '@/lib/constants/meetingPoints';
 import { MeetingPointBadge } from './MeetingPointBadge';
 import { addDateDays, formatLocalDate, isValidDateOnly } from '@/lib/utils/date-only';
 import { notifyRealtimeChange } from '@/lib/supabase/realtime';
-import { isMotorcycle, motorcycleLicenseLabel } from '@/lib/vehicles/kind';
+import { isMotorcycle } from '@/lib/vehicles/kind';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import {
   AlertCircle,
@@ -33,6 +37,7 @@ import {
   MessageSquare,
   Pencil,
   Plane,
+  Ship,
   Send,
   ShieldCheck,
   Sparkles,
@@ -62,23 +67,19 @@ type FieldErrors = Partial<Record<
   string
 >>;
 
-const STEPS: { num: StepNumber; label: string; short: string }[] = [
-  { num: 1, label: 'Vos coordonnées', short: 'Coordonnées' },
-  { num: 2, label: 'Votre location', short: 'Location' },
-  { num: 3, label: 'Options & notes', short: 'Options' },
-  { num: 4, label: 'Vérification', short: 'Vérification' },
+/** Libellés traduits : t.booking.modal.steps */
+const STEPS: { num: StepNumber; key: 'contact' | 'rental' | 'options' | 'review' }[] = [
+  { num: 1, key: 'contact' },
+  { num: 2, key: 'rental' },
+  { num: 3, key: 'options' },
+  { num: 4, key: 'review' },
 ];
 
+/** Valeurs envoyées au serveur (françaises) ; libellés traduits : t.booking.countries */
 const COUNTRIES = ['Maroc', 'France', 'Espagne', 'Belgique', 'Pays-Bas', 'Allemagne', 'Autre'];
 
-const DELIVERY_OPTIONS: { key: DeliveryType; label: string }[] = [
-  { key: 'AIRPORT', label: 'Aéroport' },
-  { key: 'AGENCY_PICKUP', label: 'En agence' },
-  { key: 'HOTEL', label: 'Hôtel' },
-  { key: 'ADDRESS', label: 'Adresse en ville' },
-];
-
-const FUEL_LABELS: Record<string, string> = { DIESEL: 'Diesel', GASOLINE: 'Essence', HYBRID: 'Hybride', ELECTRIC: 'Électrique' };
+/** Libellés traduits : t.booking.delivery */
+const DELIVERY_OPTIONS: DeliveryType[] = ['AIRPORT', 'AGENCY_PICKUP', 'HOTEL', 'ADDRESS'];
 
 /** Aligne un lieu saisi ailleurs (ex. « Aeroport … ») sur le point de rendez-vous officiel correspondant. */
 function toMeetingPointName(location?: string): string | undefined {
@@ -109,16 +110,6 @@ function MeetingPointIcon({ point, className }: { point: MeetingPoint; className
   }
 }
 
-function formatMad(value: number): string {
-  return `${formatNumber(value)} MAD`;
-}
-
-function formatLongDate(value: string): string {
-  if (!isValidDateOnly(value)) return value;
-  const [y, m, d] = value.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
 /** Masque un numéro d'identité dans le récapitulatif (ex. S1•••56). */
 function maskId(value: string): string {
   const v = value.trim();
@@ -140,6 +131,7 @@ function Field({
   label,
   required,
   optional,
+  optionalLabel,
   error,
   hint,
   className,
@@ -149,6 +141,7 @@ function Field({
   label: string;
   required?: boolean;
   optional?: boolean;
+  optionalLabel?: string;
   error?: string;
   hint?: string;
   className?: string;
@@ -163,7 +156,7 @@ function Field({
             *
           </span>
         )}
-        {optional && <span className="text-xs font-medium text-slate-400">(facultatif)</span>}
+        {optional && <span className="text-xs font-medium text-slate-400">{optionalLabel}</span>}
       </label>
       {children}
       {error ? (
@@ -193,6 +186,17 @@ export function BookingRequestModal({
 }: BookingRequestModalProps) {
   const uid = useId();
   const reduceMotion = useReducedMotion();
+  const { t, locale, fmt, plural, date } = useTranslation();
+  const m = t.booking.modal;
+  const formatMad = (value: number) => `${formatNumber(value, locale)} MAD`;
+  // « sam. 12 juil. » dans la langue de la page
+  const formatLongDate = (value: string) =>
+    isValidDateOnly(value)
+      ? new Intl.DateTimeFormat(`${locale}-u-nu-latn`, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+          new Date(`${value}T00:00:00Z`)
+        )
+      : value;
+  const pointName = (location: string) => meetingPointText(t, getMeetingPoint(location)).shortName;
   const today = formatLocalDate(new Date());
   const requestedStartDate =
     defaultStartDate && isValidDateOnly(defaultStartDate) && defaultStartDate >= today
@@ -213,6 +217,8 @@ export function BookingRequestModal({
   const [confirmedBookingRef, setConfirmedBookingRef] = useState<string | null>(null);
   const [confirmedPdfUrl, setConfirmedPdfUrl] = useState<string | null>(null);
   const [agencyWhatsAppUrl, setAgencyWhatsAppUrl] = useState<string | null>(null);
+  // Suivi sans compte (lien signé) ; à défaut, l'espace client
+  const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
   const idempotencyRequestRef = useRef<{ body: string; key: string } | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [consent, setConsent] = useState(false);
@@ -240,13 +246,15 @@ export function BookingRequestModal({
   // Étape 3 : Options & Notes
   const [flightNumber, setFlightNumber] = useState('');
   const [flightArrivalTime, setFlightArrivalTime] = useState('');
+  const [ferryCrossing, setFerryCrossing] = useState('');
+  const [ferryArrivalTime, setFerryArrivalTime] = useState('');
   const [childSeat, setChildSeat] = useState(false);
   const [additionalDriver, setAdditionalDriver] = useState(false);
   const [customerNotes, setCustomerNotes] = useState('');
 
   // Calculs financiers (moteur existant)
   const totalDays = calculateRentalDays(startDate, endDate);
-  const pricing = calculateBookingPrice(vehicle.daily_price, totalDays, 15.00);
+  const pricing = calculateRentalPrice(vehicle, totalDays);
 
   // Dialogue modal : focus initial (premier champ), piège Tab, Échap (sauf pendant l'envoi),
   // page en arrière-plan inerte, défilement bloqué, focus rendu au bouton d'ouverture
@@ -285,22 +293,23 @@ export function BookingRequestModal({
   // Validation Étape 1 — mêmes règles que le schéma serveur (bookingRequestSchema)
   const validateStep1 = (): boolean => {
     const next: FieldErrors = {};
-    if (firstName.trim().length < 2) next.firstName = 'Saisissez votre prénom (2 caractères minimum).';
-    if (lastName.trim().length < 2) next.lastName = 'Saisissez votre nom (2 caractères minimum).';
-    if (cin.trim().length < 3) next.cin = 'Saisissez le numéro de votre CIN ou passeport.';
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = 'Adresse e-mail invalide.';
-    if (phone.replace(/[^\d]/g, '').length < 8) next.phone = 'Saisissez un numéro valide (8 chiffres minimum).';
+    if (firstName.trim().length < 2) next.firstName = m.err.firstName;
+    if (lastName.trim().length < 2) next.lastName = m.err.lastName;
+    // Pièces facultatives à ce stade : contrôlées seulement si le client les renseigne
+    if (cin.trim() && cin.trim().length < 3) next.cin = m.err.cin;
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = m.err.email;
+    if (phone.replace(/[^\d]/g, '').length < 8) next.phone = m.err.phone;
     if (!isValidDateOnly(birthDate) || birthDate >= today) {
-      next.birthDate = 'Saisissez votre date de naissance.';
+      next.birthDate = m.err.birthDate;
     } else if (typeof vehicle.min_driver_age === 'number' && vehicle.min_driver_age > 0 && ageOn(birthDate, startDate) < vehicle.min_driver_age) {
       // Seule règle d'âge appliquée : celle renseignée par l'agence pour ce véhicule
-      next.birthDate = `L’agence demande un âge minimum de ${vehicle.min_driver_age} ans pour ce véhicule.`;
+      next.birthDate = fmt(m.err.minAge, { age: vehicle.min_driver_age });
     }
-    if (licenseNumber.trim().length < 3) next.licenseNumber = 'Saisissez le numéro de votre permis de conduire.';
-    if (!isValidDateOnly(licenseExpiry)) {
-      next.licenseExpiry = 'Saisissez la date d’expiration de votre permis.';
-    } else if (licenseExpiry < today) {
-      next.licenseExpiry = 'Votre permis de conduire est expiré.';
+    if (licenseNumber.trim() && licenseNumber.trim().length < 3) next.licenseNumber = m.err.licenseNumber;
+    if (licenseExpiry && !isValidDateOnly(licenseExpiry)) {
+      next.licenseExpiry = m.err.licenseExpiryInvalid;
+    } else if (licenseExpiry && licenseExpiry < today) {
+      next.licenseExpiry = m.err.licenseExpired;
     }
     setErrors(next);
     focusFirstError(next);
@@ -310,10 +319,10 @@ export function BookingRequestModal({
   // Validation Étape 2 — période valide et permis valable jusqu'au retour (règle serveur)
   const validateStep2 = (): boolean => {
     const next: FieldErrors = {};
-    if (!isValidDateOnly(startDate) || startDate < today) next.startDate = 'La date de départ ne peut pas être passée.';
-    if (!isValidDateOnly(endDate) || endDate <= startDate) next.endDate = 'La date de retour doit être postérieure au départ.';
+    if (!isValidDateOnly(startDate) || startDate < today) next.startDate = m.err.startDate;
+    if (!isValidDateOnly(endDate) || endDate <= startDate) next.endDate = m.err.endDate;
     else if (isValidDateOnly(licenseExpiry) && licenseExpiry < endDate) {
-      next.endDate = 'Votre permis doit être valide jusqu’à la date de retour (voir étape 1).';
+      next.endDate = m.err.licenseUntilReturn;
     }
     setErrors(next);
     focusFirstError(next);
@@ -337,7 +346,7 @@ export function BookingRequestModal({
   const handleSubmitBookingRequest = async () => {
     if (isSubmitting) return;
     if (!consent) {
-      setErrors({ consent: 'Acceptez les conditions pour envoyer votre demande.' });
+      setErrors({ consent: m.err.consent });
       focusFirstError({ consent: 'x' });
       return;
     }
@@ -351,6 +360,8 @@ export function BookingRequestModal({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         cin: cin.trim().toUpperCase(),
+        // Langue du client : e-mails et messages de suivi dans sa langue
+        locale,
         email: email.trim() || `${phone.replace(/[^0-9]/g, '')}@clickdrive.ma`,
         phone: phone.trim(),
         country,
@@ -366,6 +377,9 @@ export function BookingRequestModal({
         dropoffLocation,
         flightNumber: flightNumber.trim() || undefined,
         flightArrivalTime: flightArrivalTime.trim() || undefined,
+        ferryDetails: isPortPickup && (ferryCrossing.trim() || ferryArrivalTime)
+          ? [ferryCrossing.trim(), ferryArrivalTime ? `arrivée ${ferryArrivalTime}` : ''].filter(Boolean).join(' · ').slice(0, 160)
+          : undefined,
         childSeat: isMotorcycle(vehicle) ? false : childSeat,
         additionalDriver,
         customerNotes: customerNotes.trim() || undefined,
@@ -387,11 +401,22 @@ export function BookingRequestModal({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Erreur lors de la transmission de la demande');
+        // Messages du serveur rédigés en français : dans une autre langue, message traduit selon le code HTTP
+        const translated =
+          response.status === 409
+            ? m.errConflict
+            : response.status === 429
+              ? m.errRateLimit
+              : response.status >= 500
+                ? m.errUnavailable
+                : m.errInvalid;
+        throw new Error(locale === 'fr' ? data.error || translated : translated);
       }
 
       setConfirmedBookingRef(data.reference);
       setConfirmedPdfUrl(typeof data.pdfUrl === 'string' ? data.pdfUrl : null);
+      setTrackingUrl(typeof data.trackingUrl === 'string' ? data.trackingUrl : null);
+      track('Demande envoyée', { type: isMoto ? 'moto' : 'voiture' });
       if (data.agencyWhatsAppUrl) {
         setAgencyWhatsAppUrl(data.agencyWhatsAppUrl);
       }
@@ -400,7 +425,7 @@ export function BookingRequestModal({
       setDirection(1);
       setCurrentStep(5); // Écran de confirmation
     } catch (err: unknown) {
-      setSubmissionError(err instanceof Error && err.message ? err.message : 'Une erreur est survenue lors de l’envoi de votre demande.');
+      setSubmissionError(err instanceof Error && err.message ? err.message : m.sendError);
     } finally {
       setIsSubmitting(false);
     }
@@ -408,8 +433,10 @@ export function BookingRequestModal({
 
   const vehicleTitle = `${vehicle.brand} ${vehicle.model} ${vehicle.year}`;
   const isMoto = isMotorcycle(vehicle);
-  const motoLicenseLabel = motorcycleLicenseLabel(vehicle.license_required);
-  const stepMeta = currentStep <= 4 ? STEPS[currentStep - 1] : null;
+  // Prise en charge au port : la traversée en ferry remplace le numéro de vol
+  const isPortPickup = getMeetingPoint(pickupLocation).type === 'PORT';
+  const motoLicenseLabel = licenseLabel(t, vehicle.license_required);
+  const stepMeta = currentStep <= 4 ? { ...STEPS[currentStep - 1], label: m.steps[STEPS[currentStep - 1].key] } : null;
   const progress = currentStep <= 4 ? (currentStep / 4) * 100 : 100;
   const motionProps = reduceMotion
     ? {}
@@ -457,7 +484,7 @@ export function BookingRequestModal({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Marketplace · <span className="text-accent-on-dark">Demande de réservation</span>
+                {m.eyebrow} · <span className="text-accent-on-dark">{m.eyebrowRequest}</span>
               </p>
               <h2 id={`${uid}-title`} className="mt-1 truncate text-lg font-extrabold sm:text-xl">
                 {vehicleTitle}
@@ -474,7 +501,7 @@ export function BookingRequestModal({
               onClick={requestClose}
               disabled={isSubmitting}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-40"
-              aria-label="Fermer la demande de réservation"
+              aria-label={m.close}
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -483,12 +510,12 @@ export function BookingRequestModal({
 
         {/* ── Indicateur d'étapes ───────────────────────────────── */}
         {stepMeta && (
-          <nav aria-label="Étapes de la demande" className="shrink-0 border-b border-slate-200 bg-canvas px-4 py-3 sm:px-6 sm:py-4">
+          <nav aria-label={m.stepsAria} className="shrink-0 border-b border-slate-200 bg-canvas px-4 py-3 sm:px-6 sm:py-4">
             {/* Mobile : étape courante + progression */}
             <div className="sm:hidden">
               <div className="flex items-center justify-between text-[13px]">
                 <span className="font-extrabold text-ink">
-                  Étape {currentStep} sur 4 · {stepMeta.label}
+                  {fmt(m.stepOf, { current: currentStep, label: stepMeta.label })}
                 </span>
                 <span className="font-semibold text-slate-500 tabular-nums">{Math.round(progress)} %</span>
               </div>
@@ -527,8 +554,8 @@ export function BookingRequestModal({
                         {done ? <Check className="h-4 w-4" aria-hidden="true" /> : step.num}
                       </span>
                       <span className="whitespace-nowrap">
-                        {step.label}
-                        {done && <span className="sr-only"> (terminée, modifier)</span>}
+                        {m.steps[step.key]}
+                        {done && <span className="sr-only">{m.stepDone}</span>}
                       </span>
                     </button>
                     {i < STEPS.length - 1 && (
@@ -550,7 +577,7 @@ export function BookingRequestModal({
 
         {/* Annonce des changements d'étape aux lecteurs d'écran */}
         <p className="sr-only" aria-live="polite">
-          {stepMeta ? `Étape ${currentStep} sur 4 : ${stepMeta.label}` : 'Demande envoyée'}
+          {stepMeta ? fmt(m.stepAnnounce, { current: currentStep, label: stepMeta.label }) : m.sent}
         </p>
 
         {/* ── Contenu ───────────────────────────────────────────── */}
@@ -559,7 +586,7 @@ export function BookingRequestModal({
             <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-[#F8C9CD] bg-[#FFF4F5] p-3.5 text-sm text-[#9B1C26]">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <div>
-                <p className="font-bold">La demande n’a pas pu être envoyée</p>
+                <p className="font-bold">{m.sendFailed}</p>
                 <p className="mt-0.5">{submissionError}</p>
               </div>
             </div>
@@ -567,7 +594,7 @@ export function BookingRequestModal({
           {errorCount > 0 && !errors.consent && (
             <p role="alert" className="mb-4 flex items-center gap-2 rounded-xl bg-[#FFF4F5] px-3.5 py-2.5 text-[13px] font-semibold text-[#9B1C26]">
               <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {errorCount === 1 ? '1 champ à corriger.' : `${errorCount} champs à corriger.`}
+              {plural(errorCount, m.fieldsToFix)}
             </p>
           )}
 
@@ -576,44 +603,45 @@ export function BookingRequestModal({
               {/* ================= ÉTAPE 1 : COORDONNÉES ================= */}
               {currentStep === 1 && (
                 <section aria-labelledby={`${uid}-step1`} className="space-y-5">
-                  <StepHeading id={`${uid}-step1`} title="Vos coordonnées et votre permis">
-                    Ces informations permettent à l’agence de préparer votre dossier. Les champs marqués{' '}
-                    <span className="text-accent-text">*</span> sont obligatoires.
+                  <StepHeading id={`${uid}-step1`} title={m.step1Title}>
+                    {m.step1Intro.split('{star}')[0]}
+                    <span className="text-accent-text">*</span>
+                    {m.step1Intro.split('{star}')[1]}
                   </StepHeading>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field id={`${uid}-firstName`} label="Prénom" required error={errors.firstName}>
+                    <Field id={`${uid}-firstName`} label={m.firstName} required error={errors.firstName}>
                       <input id={`${uid}-firstName`} data-autofocus type="text" autoComplete="given-name" value={firstName}
                         onChange={(e) => { setFirstName(e.target.value); clearError('firstName'); }}
                         placeholder="Youssef" className={inputClass} {...invalid('firstName')} />
                     </Field>
-                    <Field id={`${uid}-lastName`} label="Nom" required error={errors.lastName}>
+                    <Field id={`${uid}-lastName`} label={m.lastName} required error={errors.lastName}>
                       <input id={`${uid}-lastName`} type="text" autoComplete="family-name" value={lastName}
                         onChange={(e) => { setLastName(e.target.value); clearError('lastName'); }}
                         placeholder="Azizi" className={inputClass} {...invalid('lastName')} />
                     </Field>
-                    <Field id={`${uid}-phone`} label="Téléphone / WhatsApp" required error={errors.phone} hint="Format international conseillé, ex. +212 6 12 34 56 78">
+                    <Field id={`${uid}-phone`} label={m.phone} required error={errors.phone} hint={m.phoneHint}>
                       <input id={`${uid}-phone`} type="tel" inputMode="tel" autoComplete="tel" value={phone}
                         onChange={(e) => { setPhone(e.target.value); clearError('phone'); }}
                         placeholder="+212 6 12 34 56 78" className={inputClass}
                         aria-invalid={Boolean(errors.phone) || undefined}
                         aria-describedby={errors.phone ? `${uid}-phone-error` : `${uid}-phone-hint`} />
                     </Field>
-                    <Field id={`${uid}-email`} label="E-mail" optional error={errors.email} hint="Pour recevoir le suivi de votre demande.">
+                    <Field id={`${uid}-email`} label={m.email} optional optionalLabel={m.optional} error={errors.email} hint={m.emailHint}>
                       <input id={`${uid}-email`} type="email" inputMode="email" autoComplete="email" value={email}
                         onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
-                        placeholder="vous@exemple.com" className={inputClass}
+                        placeholder={m.emailPlaceholder} className={inputClass}
                         aria-invalid={Boolean(errors.email) || undefined}
                         aria-describedby={errors.email ? `${uid}-email-error` : `${uid}-email-hint`} />
                     </Field>
-                    <Field id={`${uid}-country`} label="Pays de résidence" required>
+                    <Field id={`${uid}-country`} label={m.country} required>
                       <select id={`${uid}-country`} autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass}>
                         {COUNTRIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>{t.booking.countries[c] ?? c}</option>
                         ))}
                       </select>
                     </Field>
-                    <Field id={`${uid}-birthDate`} label="Date de naissance" required error={errors.birthDate}>
+                    <Field id={`${uid}-birthDate`} label={m.birthDate} required error={errors.birthDate}>
                       <input id={`${uid}-birthDate`} type="date" autoComplete="bday" max={today} value={birthDate}
                         onChange={(e) => { setBirthDate(e.target.value); clearError('birthDate'); }}
                         className={inputClass} {...invalid('birthDate')} />
@@ -621,26 +649,25 @@ export function BookingRequestModal({
                   </div>
 
                   <fieldset className="rounded-2xl border border-slate-200 p-4">
-                    <legend className="px-1.5 text-[13px] font-extrabold text-ink">Pièce d’identité et permis</legend>
+                    <legend className="px-1.5 text-[13px] font-extrabold text-ink">{m.idAndLicense} <span className="font-semibold text-slate-500">{m.optional}</span></legend>
+                    <p className="mb-3 text-xs leading-5 text-slate-600">{m.idAndLicenseIntro}</p>
                     {isMoto && (
                       <p className="mb-3 rounded-xl bg-canvas px-3 py-2.5 text-xs leading-5 text-slate-700">
-                        {motoLicenseLabel
-                          ? <>Pour cette moto, l’agence exige le <strong>{motoLicenseLabel}</strong>. Indiquez le numéro de ce permis et présentez-le en original à la remise.</>
-                          : <>Pour une moto, indiquez le permis que vous présenterez à la remise ; l’agence confirmera s’il convient.</>}
+                        {motoLicenseLabel ? fmt(m.motoLicenseRequired, { license: motoLicenseLabel }) : m.motoLicenseAny}
                       </p>
                     )}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <Field id={`${uid}-cin`} label="N° CIN ou passeport" required error={errors.cin} className="sm:col-span-2">
+                      <Field id={`${uid}-cin`} label={m.cin} error={errors.cin} className="sm:col-span-2">
                         <input id={`${uid}-cin`} type="text" autoComplete="off" spellCheck={false} value={cin}
                           onChange={(e) => { setCin(e.target.value.toUpperCase()); clearError('cin'); }}
-                          placeholder="Ex. S123456" className={cn(inputClass, 'uppercase tracking-wide')} {...invalid('cin')} />
+                          placeholder={m.cinPlaceholder} className={cn(inputClass, 'uppercase tracking-wide')} {...invalid('cin')} />
                       </Field>
-                      <Field id={`${uid}-licenseNumber`} label="N° de permis de conduire" required error={errors.licenseNumber}>
+                      <Field id={`${uid}-licenseNumber`} label={m.licenseNumber} error={errors.licenseNumber}>
                         <input id={`${uid}-licenseNumber`} type="text" autoComplete="off" spellCheck={false} value={licenseNumber}
                           onChange={(e) => { setLicenseNumber(e.target.value); clearError('licenseNumber'); }}
-                          placeholder="Ex. 04/123456" className={inputClass} {...invalid('licenseNumber')} />
+                          placeholder={m.licensePlaceholder} className={inputClass} {...invalid('licenseNumber')} />
                       </Field>
-                      <Field id={`${uid}-licenseExpiry`} label="Expiration du permis" required error={errors.licenseExpiry}>
+                      <Field id={`${uid}-licenseExpiry`} label={m.licenseExpiry} error={errors.licenseExpiry}>
                         <input id={`${uid}-licenseExpiry`} type="date" min={today} value={licenseExpiry}
                           onChange={(e) => { setLicenseExpiry(e.target.value); clearError('licenseExpiry'); }}
                           className={inputClass} {...invalid('licenseExpiry')} />
@@ -651,16 +678,16 @@ export function BookingRequestModal({
                   <aside className="rounded-2xl bg-canvas p-4 text-[13px] leading-relaxed text-slate-600">
                     <p className="flex items-center gap-2 font-extrabold text-ink">
                       <LockKeyhole className="h-4 w-4 text-accent-text" aria-hidden="true" />
-                      Vos données personnelles
+                      {m.privacyTitle}
                     </p>
                     <ul className="mt-2 list-disc space-y-1 ps-5">
-                      <li><strong>Pourquoi :</strong> préparer le contrat et vérifier votre éligibilité à la location.</li>
-                      <li><strong>Avec qui :</strong> uniquement l’agence {vehicle.agency?.name ?? 'partenaire'} qui propose ce véhicule.</li>
-                      <li><strong>Protection :</strong> envoi chiffré (HTTPS) ; seule l’agence concernée accède à votre dossier.</li>
-                      <li><strong>Documents :</strong> aucune photo demandée ici — l’agence vérifie vos pièces originales à la remise des clés.</li>
+                      <li><strong>{m.privacyWhy}</strong> {m.privacyWhyText}</li>
+                      <li><strong>{m.privacyWho}</strong> {fmt(m.privacyWhoText, { agency: vehicle.agency?.name ?? m.partnerAgency })}</li>
+                      <li><strong>{m.privacyProtection}</strong> {m.privacyProtectionText}</li>
+                      <li><strong>{m.privacyDocs}</strong> {m.privacyDocsText}</li>
                     </ul>
                     <Link href="/confidentialite" target="_blank" className="mt-2 inline-flex min-h-9 items-center font-bold text-accent-text hover:underline">
-                      Lire la politique de confidentialité
+                      {m.privacyLink}
                     </Link>
                   </aside>
                 </section>
@@ -669,8 +696,8 @@ export function BookingRequestModal({
               {/* ================= ÉTAPE 2 : LOCATION ================= */}
               {currentStep === 2 && (
                 <section aria-labelledby={`${uid}-step2`} className="space-y-5">
-                  <StepHeading id={`${uid}-step2`} title="Votre location">
-                    Quand et où souhaitez-vous récupérer puis rendre le véhicule ?
+                  <StepHeading id={`${uid}-step2`} title={m.step2Title}>
+                    {m.step2Intro}
                   </StepHeading>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -678,10 +705,10 @@ export function BookingRequestModal({
                     <fieldset className="rounded-2xl border border-slate-200 p-4">
                       <legend className="flex items-center gap-2 px-1.5 text-[13px] font-extrabold text-ink">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                        Prise en charge
+                        {m.pickup}
                       </legend>
                       <div className="grid grid-cols-[minmax(0,1fr)_108px] gap-2">
-                        <Field id={`${uid}-startDate`} label="Date" required error={errors.startDate}>
+                        <Field id={`${uid}-startDate`} label={m.date} required error={errors.startDate}>
                           <input id={`${uid}-startDate`} type="date" min={today} value={startDate}
                             onChange={(e) => {
                               const nextStart = e.target.value;
@@ -691,7 +718,7 @@ export function BookingRequestModal({
                             }}
                             className={inputClass} {...invalid('startDate')} />
                         </Field>
-                        <Field id={`${uid}-pickupTime`} label="Heure">
+                        <Field id={`${uid}-pickupTime`} label={m.time}>
                           <input id={`${uid}-pickupTime`} type="time" step={1800} value={pickupTime}
                             onChange={(e) => setPickupTime(e.target.value || '10:00')} className={inputClass} />
                         </Field>
@@ -702,15 +729,15 @@ export function BookingRequestModal({
                     <fieldset className="rounded-2xl border border-slate-200 p-4">
                       <legend className="flex items-center gap-2 px-1.5 text-[13px] font-extrabold text-ink">
                         <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
-                        Restitution
+                        {m.dropoff}
                       </legend>
                       <div className="grid grid-cols-[minmax(0,1fr)_108px] gap-2">
-                        <Field id={`${uid}-endDate`} label="Date" required error={errors.endDate}>
+                        <Field id={`${uid}-endDate`} label={m.date} required error={errors.endDate}>
                           <input id={`${uid}-endDate`} type="date" min={isValidDateOnly(startDate) ? addDateDays(startDate, 1) : today} value={endDate}
                             onChange={(e) => { setEndDate(e.target.value); clearError('endDate'); }}
                             className={inputClass} {...invalid('endDate')} />
                         </Field>
-                        <Field id={`${uid}-dropoffTime`} label="Heure">
+                        <Field id={`${uid}-dropoffTime`} label={m.time}>
                           <input id={`${uid}-dropoffTime`} type="time" step={1800} value={dropoffTime}
                             onChange={(e) => setDropoffTime(e.target.value || '10:00')} className={inputClass} />
                         </Field>
@@ -720,14 +747,14 @@ export function BookingRequestModal({
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-ink px-4 py-3 text-sm text-white" aria-live="polite">
                     <CalendarDays className="h-4 w-4 text-accent-on-dark" aria-hidden="true" />
-                    <strong>{pricing.number_of_days} jour{pricing.number_of_days > 1 ? 's' : ''}</strong>
+                    <strong>{plural(pricing.number_of_days, m.days)}</strong>
                     <span className="text-slate-300">
                       {formatLongDate(startDate)} {pickupTime} → {formatLongDate(endDate)} {dropoffTime}
                     </span>
                   </div>
 
                   <fieldset>
-                    <legend className="mb-2 text-[13px] font-extrabold text-ink">Point de prise en charge</legend>
+                    <legend className="mb-2 text-[13px] font-extrabold text-ink">{m.meetingPoint}</legend>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {MEETING_POINTS.map((mp) => {
                         const selected = pickupLocation === mp.name;
@@ -756,8 +783,8 @@ export function BookingRequestModal({
                               <MeetingPointIcon point={mp} className="h-4 w-4" />
                             </span>
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-bold text-ink">{mp.shortName}</span>
-                              <span className="block truncate text-xs text-slate-500">{mp.badgeLabel}</span>
+                              <span className="block truncate text-sm font-bold text-ink">{meetingPointText(t, mp).shortName}</span>
+                              <span className="block truncate text-xs text-slate-500">{meetingPointText(t, mp).badgeLabel}</span>
                             </span>
                             <span
                               className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', selected ? 'border-brand bg-action text-white' : 'border-slate-300')}
@@ -772,27 +799,27 @@ export function BookingRequestModal({
                   </fieldset>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field id={`${uid}-dropoff`} label="Lieu de restitution" required>
+                    <Field id={`${uid}-dropoff`} label={m.dropoffPlace} required>
                       <select id={`${uid}-dropoff`} value={dropoffLocation} onChange={(e) => setDropoffLocation(e.target.value)} className={inputClass}>
                         {!MEETING_POINTS.some((mp) => mp.name === dropoffLocation) && <option value={dropoffLocation}>{dropoffLocation}</option>}
                         {MEETING_POINTS.map((mp) => (
                           <option key={mp.id} value={mp.name}>
-                            {mp.name === pickupLocation ? `${mp.shortName} (même lieu)` : mp.shortName}
+                            {mp.name === pickupLocation ? fmt(m.samePlace, { place: meetingPointText(t, mp).shortName }) : meetingPointText(t, mp).shortName}
                           </option>
                         ))}
                       </select>
                     </Field>
-                    <Field id={`${uid}-delivery`} label="Mode de remise" required>
+                    <Field id={`${uid}-delivery`} label={m.deliveryMode} required>
                       <select id={`${uid}-delivery`} value={deliveryType} onChange={(e) => setDeliveryType(e.target.value as DeliveryType)} className={inputClass}>
-                        {DELIVERY_OPTIONS.map((o) => (
-                          <option key={o.key} value={o.key}>{o.label}</option>
+                        {DELIVERY_OPTIONS.map((key) => (
+                          <option key={key} value={key}>{t.booking.delivery[key]}</option>
                         ))}
                       </select>
                     </Field>
                   </div>
 
                   <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Consignes d’accueil</p>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{m.welcomeInstructions}</p>
                     <MeetingPointBadge location={pickupLocation} showInstructions />
                   </div>
                 </section>
@@ -801,22 +828,42 @@ export function BookingRequestModal({
               {/* ================= ÉTAPE 3 : OPTIONS ================= */}
               {currentStep === 3 && (
                 <section aria-labelledby={`${uid}-step3`} className="space-y-5">
-                  <StepHeading id={`${uid}-step3`} title="Options et précisions">
-                    Facultatif — ces informations aident l’agence à préparer votre accueil.
+                  <StepHeading id={`${uid}-step3`} title={m.step3Title}>
+                    {m.step3Intro}
                   </StepHeading>
+
+                  {isPortPickup && (
+                    <fieldset className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4">
+                      <legend className="flex items-center gap-2 px-1.5 text-[13px] font-extrabold text-ink">
+                        <Ship className="h-4 w-4 text-sky-700" aria-hidden="true" />
+                        {m.ferryTitle}
+                      </legend>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field id={`${uid}-ferry`} label={m.ferryCrossing} optional optionalLabel={m.optional}>
+                          <input id={`${uid}-ferry`} type="text" maxLength={120} value={ferryCrossing} onChange={(e) => setFerryCrossing(e.target.value)}
+                            placeholder={m.ferryPlaceholder} className={inputClass} />
+                        </Field>
+                        <Field id={`${uid}-ferry-arrival`} label={m.ferryArrival} optional optionalLabel={m.optional}>
+                          <input id={`${uid}-ferry-arrival`} type="time" value={ferryArrivalTime} onChange={(e) => setFerryArrivalTime(e.target.value)}
+                            className={inputClass} />
+                        </Field>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-600">{m.ferryNote}</p>
+                    </fieldset>
+                  )}
 
                   {deliveryType === 'AIRPORT' && (
                     <fieldset className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4">
                       <legend className="flex items-center gap-2 px-1.5 text-[13px] font-extrabold text-ink">
                         <Plane className="h-4 w-4 text-sky-700" aria-hidden="true" />
-                        Accueil à l’aéroport Nador Al-Aroui
+                        {m.airportTitle}
                       </legend>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <Field id={`${uid}-flight`} label="N° de vol" optional>
+                        <Field id={`${uid}-flight`} label={m.flightNumber} optional optionalLabel={m.optional}>
                           <input id={`${uid}-flight`} type="text" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)}
-                            placeholder="Ex. AT 1234" className={inputClass} />
+                            placeholder={m.flightPlaceholder} className={inputClass} />
                         </Field>
-                        <Field id={`${uid}-arrival`} label="Heure d’atterrissage" optional>
+                        <Field id={`${uid}-arrival`} label={m.landingTime} optional optionalLabel={m.optional}>
                           <input id={`${uid}-arrival`} type="time" value={flightArrivalTime} onChange={(e) => setFlightArrivalTime(e.target.value)}
                             className={inputClass} />
                         </Field>
@@ -825,13 +872,13 @@ export function BookingRequestModal({
                   )}
 
                   <fieldset>
-                    <legend className="mb-2 text-[13px] font-extrabold text-ink">Options sur demande</legend>
+                    <legend className="mb-2 text-[13px] font-extrabold text-ink">{m.optionsTitle}</legend>
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                       {[
                         ...(isMoto
                           ? []
-                          : [{ checked: childSeat, set: setChildSeat, icon: Baby, title: 'Siège enfant ou rehausseur', desc: 'Selon disponibilité de l’agence' }]),
-                        { checked: additionalDriver, set: setAdditionalDriver, icon: UserPlus, title: 'Conducteur additionnel', desc: 'Second permis présenté à la signature' },
+                          : [{ checked: childSeat, set: setChildSeat, icon: Baby, title: m.childSeat, desc: m.childSeatDesc }]),
+                        { checked: additionalDriver, set: setAdditionalDriver, icon: UserPlus, title: m.extraDriver, desc: m.extraDriverDesc },
                       ].map(({ checked, set, icon: Icon, title, desc }) => (
                         <label
                           key={title}
@@ -848,7 +895,7 @@ export function BookingRequestModal({
                             <span className="block text-sm font-bold text-ink">{title}</span>
                             <span className="block text-xs text-slate-500">{desc}</span>
                             <span className="mt-1.5 inline-block rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-slate-500 ring-1 ring-slate-200">
-                              Tarif fixé par l’agence
+                              {m.agencyPrice}
                             </span>
                           </span>
                           <span
@@ -861,14 +908,14 @@ export function BookingRequestModal({
                       ))}
                     </div>
                     <p className="mt-2 text-xs text-slate-500">
-                      Ces options ne sont pas incluses dans le total estimé : l’agence vous indiquera leur prix éventuel.
+                      {m.optionsNote}
                     </p>
                   </fieldset>
 
-                  <Field id={`${uid}-notes`} label="Message pour l’agence" optional hint={`${customerNotes.length}/500 caractères`}>
+                  <Field id={`${uid}-notes`} label={m.notes} optional optionalLabel={m.optional} hint={fmt(m.notesCount, { count: customerNotes.length })}>
                     <textarea id={`${uid}-notes`} rows={4} maxLength={500} value={customerNotes}
                       onChange={(e) => setCustomerNotes(e.target.value)}
-                      placeholder="Horaires, bagages volumineux, adresse de l’hôtel…"
+                      placeholder={m.notesPlaceholder}
                       aria-describedby={`${uid}-notes-hint`}
                       className={cn(inputClass, 'h-auto min-h-28 py-3 leading-relaxed')} />
                   </Field>
@@ -878,77 +925,102 @@ export function BookingRequestModal({
               {/* ================= ÉTAPE 4 : VÉRIFICATION ================= */}
               {currentStep === 4 && (
                 <section aria-labelledby={`${uid}-step4`} className="space-y-4">
-                  <StepHeading id={`${uid}-step4`} title="Vérifiez votre demande">
-                    Relisez les informations avant l’envoi. Vous pouvez modifier chaque section.
+                  <StepHeading id={`${uid}-step4`} title={m.step4Title}>
+                    {m.step4Intro}
                   </StepHeading>
 
-                  <SummaryBlock title="Véhicule">
+                  <SummaryBlock title={m.vehicle} editLabel={m.edit}>
                     <p className="font-bold text-ink">{vehicleTitle}</p>
                     <p className="text-slate-500">
-                      {vehicle.transmission === 'AUTOMATIC' ? 'Automatique' : 'Manuelle'} · {FUEL_LABELS[vehicle.fuel] ?? vehicle.fuel} · {vehicle.category}
+                      {transmissionLabel(t, vehicle.transmission)} · {fuelLabel(t, vehicle.fuel)} · {categoryLabel(t, vehicle.category)}
                     </p>
-                    {vehicle.agency?.name && <p className="mt-1 text-slate-600">Agence : <strong>{vehicle.agency.name}</strong></p>}
+                    {vehicle.agency?.name && <p className="mt-1 text-slate-600">{m.agency} <strong>{vehicle.agency.name}</strong></p>}
                   </SummaryBlock>
 
-                  <SummaryBlock title="Location" onEdit={() => goToStep(2)}>
+                  <SummaryBlock title={m.rental} editLabel={m.edit} onEdit={() => goToStep(2)}>
                     <p className="font-bold text-ink">
                       {formatLongDate(startDate)} {pickupTime} → {formatLongDate(endDate)} {dropoffTime}
-                      <span className="ms-2 font-semibold text-slate-500">({pricing.number_of_days} j)</span>
+                      <span className="ms-2 font-semibold text-slate-500">({plural(pricing.number_of_days, m.days)})</span>
                     </p>
-                    <p className="text-slate-600">Prise en charge : {getMeetingPoint(pickupLocation).shortName}</p>
+                    <p className="text-slate-600">{fmt(m.pickupLine, { place: pointName(pickupLocation) })}</p>
                     <p className="text-slate-600">
-                      Restitution : {dropoffLocation === pickupLocation ? 'même lieu' : getMeetingPoint(dropoffLocation).shortName}
+                      {fmt(m.dropoffLine, { place: dropoffLocation === pickupLocation ? m.samePlaceShort : pointName(dropoffLocation) })}
                     </p>
-                    <p className="text-slate-600">Mode de remise : {DELIVERY_OPTIONS.find((o) => o.key === deliveryType)?.label}</p>
+                    <p className="text-slate-600">{fmt(m.deliveryLine, { mode: t.booking.delivery[deliveryType] })}</p>
                   </SummaryBlock>
 
-                  <SummaryBlock title="Vos coordonnées" onEdit={() => goToStep(1)}>
+                  <SummaryBlock title={m.yourDetails} editLabel={m.edit} onEdit={() => goToStep(1)}>
                     <p className="font-bold text-ink">{firstName} {lastName}</p>
                     <p className="text-slate-600">{phone}{email ? ` · ${email}` : ''}</p>
-                    <p className="text-slate-600">Pièce d’identité : {maskId(cin)} · Permis : {maskId(licenseNumber)}</p>
+                    <p className="text-slate-600">
+                      {fmt(m.idLine, {
+                        id: cin.trim() ? maskId(cin) : m.showAtPickup,
+                        license: licenseNumber.trim() ? maskId(licenseNumber) : m.showAtPickup,
+                      })}
+                    </p>
                   </SummaryBlock>
 
-                  <SummaryBlock title="Options" onEdit={() => goToStep(3)}>
-                    {childSeat || additionalDriver || flightNumber || customerNotes ? (
+                  <SummaryBlock title={m.options} editLabel={m.edit} onEdit={() => goToStep(3)}>
+                    {childSeat || additionalDriver || flightNumber || customerNotes || (isPortPickup && (ferryCrossing || ferryArrivalTime)) ? (
                       <ul className="space-y-0.5 text-slate-600">
-                        {childSeat && !isMoto && <li>Siège enfant ou rehausseur</li>}
-                        {additionalDriver && <li>Conducteur additionnel</li>}
-                        {flightNumber && <li>Vol {flightNumber}{flightArrivalTime ? ` · arrivée ${flightArrivalTime}` : ''}</li>}
+                        {childSeat && !isMoto && <li>{m.childSeat}</li>}
+                        {additionalDriver && <li>{m.extraDriver}</li>}
+                        {flightNumber && (
+                          <li>
+                            {fmt(m.flightLine, { flight: flightNumber })}
+                            {flightArrivalTime ? ` · ${fmt(m.ferryArrivalShort, { time: flightArrivalTime })}` : ''}
+                          </li>
+                        )}
+                        {isPortPickup && (ferryCrossing || ferryArrivalTime) && (
+                          <li>
+                            {fmt(m.ferryLine, {
+                              details: [ferryCrossing.trim(), ferryArrivalTime ? fmt(m.ferryArrivalShort, { time: ferryArrivalTime }) : '']
+                                .filter(Boolean)
+                                .join(' · '),
+                            })}
+                          </li>
+                        )}
                         {customerNotes && <li className="line-clamp-2">« {customerNotes} »</li>}
                       </ul>
                     ) : (
-                      <p className="text-slate-500">Aucune option</p>
+                      <p className="text-slate-500">{m.noOptions}</p>
                     )}
                   </SummaryBlock>
 
                   <div className="rounded-2xl bg-ink p-4 text-sm text-white sm:p-5">
                     <dl className="space-y-2">
                       <div className="flex justify-between gap-3 text-slate-300">
-                        <dt>{formatMad(pricing.daily_price)} × {pricing.number_of_days} jour{pricing.number_of_days > 1 ? 's' : ''}</dt>
+                        <dt>
+                          {formatMad(pricing.daily_price)} × {plural(pricing.number_of_days, m.days)}
+                          {pricing.applied_rate !== 'daily' && (
+                            <span className="block text-xs font-semibold text-emerald-300">
+                              {pricing.applied_rate === 'monthly' ? t.booking.card.monthlyApplied : t.booking.card.weeklyApplied}
+                            </span>
+                          )}
+                        </dt>
                         <dd className="font-semibold text-white tabular-nums">{formatMad(pricing.subtotal)}</dd>
                       </div>
                       <div className="flex justify-between gap-3 border-t border-white/10 pt-3 text-base font-extrabold">
-                        <dt>Total estimé</dt>
+                        <dt>{t.booking.card.estimatedTotal}</dt>
                         <dd className="tabular-nums">{formatMad(pricing.total)}</dd>
                       </div>
                       {(vehicle.deposit ?? 0) > 0 && (
                         <div className="flex justify-between gap-3 text-[13px] text-slate-300">
-                          <dt>Caution remboursable (à l’agence)</dt>
+                          <dt>{m.depositAtAgency}</dt>
                           <dd className="tabular-nums">{formatMad(vehicle.deposit)}</dd>
                         </div>
                       )}
                     </dl>
                     <p className="mt-3 text-xs leading-relaxed text-slate-400">
-                      Le règlement se fait à l’agence, à la remise des clés. Options éventuelles en sus.
+                      {m.paymentNote}
                     </p>
                   </div>
 
                   <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-900">
                     <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
                     <p>
-                      <strong>Ceci est une demande, pas une réservation confirmée.</strong> Le véhicule vous est réservé
-                      lorsque l’agence {vehicle.agency?.name ?? 'partenaire'} accepte votre demande ; elle établit ensuite le
-                      contrat à la remise des clés.
+                      <strong>{m.requestNotBooking}</strong>{' '}
+                      {fmt(m.requestNotBookingText, { agency: vehicle.agency?.name ?? m.partnerAgency })}
                     </p>
                   </div>
 
@@ -964,11 +1036,11 @@ export function BookingRequestModal({
                         className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
                       />
                       <span className="text-[13px] leading-relaxed text-slate-700">
-                        J’accepte les{' '}
-                        <Link href="/cgv" target="_blank" className="font-bold text-ink underline underline-offset-2">conditions générales</Link>{' '}
-                        et la{' '}
-                        <Link href="/confidentialite" target="_blank" className="font-bold text-ink underline underline-offset-2">politique de confidentialité</Link>,
-                        et j’autorise la transmission de ma demande à l’agence.
+                        {m.consentBefore}{' '}
+                        <Link href="/cgv" target="_blank" className="font-bold text-ink underline underline-offset-2">{m.consentTerms}</Link>{' '}
+                        {m.consentAnd}{' '}
+                        <Link href="/confidentialite" target="_blank" className="font-bold text-ink underline underline-offset-2">{m.consentPrivacy}</Link>
+                        {m.consentAfter}
                       </span>
                     </label>
                     {errors.consent && (
@@ -992,29 +1064,25 @@ export function BookingRequestModal({
                     <CheckCircle2 className="h-9 w-9" aria-hidden="true" />
                   </motion.span>
                   <h3 id={`${uid}-done`} tabIndex={-1} data-step-heading className="mt-4 text-xl font-extrabold text-ink outline-none">
-                    Votre demande a bien été envoyée
+                    {m.doneTitle}
                   </h3>
                   <p className="mt-1.5 text-sm text-slate-600">
-                    L’agence <strong>{vehicle.agency?.name ?? 'partenaire'}</strong> va vérifier la disponibilité et revenir vers vous.
+                    {fmt(m.doneText, { agency: vehicle.agency?.name ?? m.partnerAgency })}
                   </p>
 
                   {confirmedBookingRef && (
                     <div className="mt-5 rounded-2xl border border-slate-200 bg-canvas p-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Référence de votre demande</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{m.reference}</p>
                       <p className="mt-1 font-mono text-xl font-black tracking-wider text-ink">{confirmedBookingRef}</p>
                       <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">
                         <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                        En attente de validation par l’agence
+                        {m.pending}
                       </span>
                     </div>
                   )}
 
                   <ol className="mt-5 space-y-2.5 text-start text-sm text-slate-600">
-                    {[
-                      'Votre demande apparaît dans l’espace de l’agence sur ClickDrive.',
-                      'L’agence confirme la disponibilité et vous recontacte.',
-                      'Vous signez le contrat et réglez à l’agence lors de la remise des clés.',
-                    ].map((item, i) => (
+                    {[m.next1, m.next2, m.next3].map((item, i) => (
                       <li key={item} className="flex gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">{i + 1}</span>
                         {item}
@@ -1031,16 +1099,16 @@ export function BookingRequestModal({
                         className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-ink transition-colors hover:border-slate-400"
                       >
                         <Download className="h-4 w-4" aria-hidden="true" />
-                        Télécharger le PDF
+                        {m.downloadPdf}
                       </a>
                     )}
                     {confirmedBookingRef && (
                       <Link
-                        href={`/account/bookings/${encodeURIComponent(confirmedBookingRef)}`}
+                        href={trackingUrl ?? `/account/bookings/${encodeURIComponent(confirmedBookingRef)}`}
                         className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white transition-colors hover:bg-slate-800"
                       >
                         <Clock className="h-4 w-4 text-accent-on-dark" aria-hidden="true" />
-                        Suivre ma demande
+                        {m.track}
                       </Link>
                     )}
                   </div>
@@ -1052,7 +1120,7 @@ export function BookingRequestModal({
                       className="mt-2.5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition-colors hover:bg-emerald-700"
                     >
                       <MessageSquare className="h-4 w-4" aria-hidden="true" />
-                      Prévenir l’agence sur WhatsApp
+                      {m.notifyAgency}
                     </a>
                   )}
                 </section>
@@ -1069,7 +1137,7 @@ export function BookingRequestModal({
               onClick={onClose}
               className="ms-auto flex min-h-12 w-full items-center justify-center rounded-xl bg-ink px-6 text-sm font-bold text-white transition-colors hover:bg-slate-800 sm:w-auto"
             >
-              Fermer
+              {m.closeButton}
             </button>
           ) : (
             <>
@@ -1081,13 +1149,13 @@ export function BookingRequestModal({
                   className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 sm:px-5"
                 >
                   <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-                  <span className="hidden sm:inline">Précédent</span>
-                  <span className="sr-only sm:hidden">Étape précédente</span>
+                  <span className="hidden sm:inline">{m.previous}</span>
+                  <span className="sr-only sm:hidden">{m.previousStep}</span>
                 </button>
               ) : (
                 <p className="hidden items-center gap-1.5 text-xs text-slate-500 sm:flex">
                   <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                  Demande gratuite et sans engagement
+                  {m.freeRequest}
                 </p>
               )}
 
@@ -1097,7 +1165,7 @@ export function BookingRequestModal({
                   onClick={handleNext}
                   className="ms-auto flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink px-6 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:flex-none"
                 >
-                  Continuer
+                  {m.continue}
                   <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </button>
               ) : (
@@ -1111,12 +1179,12 @@ export function BookingRequestModal({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                      Envoi en cours…
+                      {m.sending}
                     </>
                   ) : (
                     <>
                       <Send className="h-4 w-4" aria-hidden="true" />
-                      Envoyer ma demande de réservation
+                      {m.send}
                     </>
                   )}
                 </button>
@@ -1146,7 +1214,17 @@ function StepHeading({ id, title, children }: { id: string; title: string; child
   );
 }
 
-function SummaryBlock({ title, onEdit, children }: { title: string; onEdit?: () => void; children: React.ReactNode }) {
+function SummaryBlock({
+  title,
+  editLabel,
+  onEdit,
+  children,
+}: {
+  title: string;
+  editLabel: string;
+  onEdit?: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl border border-slate-200 p-4 text-sm">
       <div className="mb-1.5 flex items-center justify-between gap-3">
@@ -1158,7 +1236,7 @@ function SummaryBlock({ title, onEdit, children }: { title: string; onEdit?: () 
             className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-bold text-accent-text hover:bg-[#FFF4F5]"
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-            Modifier
+            {editLabel}
             <span className="sr-only"> : {title}</span>
           </button>
         )}

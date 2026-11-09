@@ -1,11 +1,16 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import {
   ArrowRight,
   Building2,
   CalendarCheck,
+  Clock3,
+  Languages,
+  Plane,
+  Ship,
+  Undo2,
   Car,
   ChevronRight,
   ExternalLink,
@@ -26,25 +31,44 @@ import { isMotorcycle } from '@/lib/vehicles/kind';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/types';
 import type { AgencyProfileData } from './data';
+import type { AgencyResponseTime } from '@/lib/bookings/response-time';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatDecimal, formatNumber } from '@/lib/i18n/format';
 
 type FleetType = 'ALL' | 'CAR' | 'MOTORCYCLE';
 type FleetSort = 'featured' | 'price_asc' | 'price_desc';
 
-const SORT_LABELS: Record<FleetSort, string> = {
-  featured: 'Disponibles d’abord',
-  price_asc: 'Prix croissant',
-  price_desc: 'Prix décroissant',
-};
+const SORT_OPTIONS: FleetSort[] = ['featured', 'price_asc', 'price_desc'];
 
-const plural = (count: number, one: string, many: string) => `${count} ${count > 1 ? many : one}`;
+/** Tranche du délai de réponse médian (minutes) → clé de t.agencies.responseTime */
+function responseBucket(minutes: number) {
+  if (minutes <= 30) return 'under30' as const;
+  if (minutes <= 60) return 'under60' as const;
+  if (minutes <= 120) return 'under120' as const;
+  if (minutes <= 360) return 'under360' as const;
+  if (minutes <= 24 * 60) return 'under1440' as const;
+  return 'over1440' as const;
+}
 const sameText = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
  * Fiche publique d'une agence partenaire.
  * Rendu serveur (données passées par la page) ; la flotte reste rafraîchie en direct (Supabase Realtime + 20 s).
- * Uniquement des informations réelles : pas d'horaires en base, pas de paiement ni de caution via ClickDrive.
+ * Uniquement des informations réelles, renseignées par l'agence ou mesurées (délai de réponse) ;
+ * pas de paiement ni de caution via ClickDrive.
  */
-export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfileData; initialVehicles: Vehicle[] | null }) {
+export function AgencyProfile({
+  agency,
+  initialVehicles,
+  responseTime = null,
+}: {
+  agency: AgencyProfileData;
+  initialVehicles: Vehicle[] | null;
+  /** Délai de réponse mesuré (au moins 3 réponses), sinon null */
+  responseTime?: AgencyResponseTime | null;
+}) {
+  const { t, locale, fmt, plural } = useTranslation();
+  const p = t.agencies.profile;
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles ?? []);
   const [fleetLoading, setFleetLoading] = useState(initialVehicles === null);
   const [fleetType, setFleetType] = useState<FleetType>('ALL');
@@ -95,24 +119,36 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
     Number.isFinite(agency.latitude) && Number.isFinite(agency.longitude) && (agency.latitude !== 0 || agency.longitude !== 0);
   const mapsUrl = hasCoordinates ? `https://www.google.com/maps/search/?api=1&query=${agency.latitude},${agency.longitude}` : null;
   const memberSince = agency.created_at
-    ? new Date(agency.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    ? new Intl.DateTimeFormat(`${locale}-u-nu-latn`, { month: 'long', year: 'numeric', timeZone: 'Africa/Casablanca' }).format(new Date(agency.created_at))
     : null;
   const hasReviews = agency.review_count > 0 && agency.rating > 0;
-  const fleetLabel = vehicles.length > 0 ? `Voir les ${plural(vehicles.length, 'véhicule', 'véhicules')}` : 'Voir la flotte';
+
+  // Infos pratiques renseignées par l'agence (rien d'affiché pour un champ vide)
+  const fee = (value: number | null | undefined) =>
+    value == null ? null : value === 0 ? p.free : fmt(p.feePayable, { amount: formatNumber(value, locale) });
+  const languageLabels = (agency.languages ?? []).map((code) => t.agencies.spokenLanguages[code]).filter(Boolean);
+  const practical = [
+    { key: 'hours', icon: Clock3, label: p.hours, value: agency.opening_hours },
+    { key: 'languages', icon: Languages, label: p.languages, value: languageLabels.length ? languageLabels.join(', ') : null },
+    { key: 'airport', icon: Plane, label: p.airportDelivery, value: fee(agency.delivery_fee_airport) },
+    { key: 'port', icon: Ship, label: p.portDelivery, value: fee(agency.delivery_fee_port) },
+    { key: 'cancellation', icon: Undo2, label: p.cancellation, value: agency.cancellation_policy },
+  ].filter((item): item is typeof item & { value: string } => Boolean(item.value));
+  const fleetLabel = vehicles.length > 0 ? plural(vehicles.length, p.seeVehicles) : p.seeFleet;
   const fleetBreakdown = hasBothTypes
-    ? `${plural(cars.length, 'voiture', 'voitures')} · ${plural(motos.length, 'moto', 'motos')}`
+    ? `${plural(cars.length, p.cars)} · ${plural(motos.length, p.motos)}`
     : motos.length > 0
-      ? plural(motos.length, 'moto', 'motos')
-      : plural(cars.length, 'voiture', 'voitures');
+      ? plural(motos.length, p.motos)
+      : plural(cars.length, p.cars);
 
   return (
     <div className="min-h-screen bg-[#F5F6F8] pb-20">
       {/* Fil d'Ariane */}
       <div className="border-b border-slate-200 bg-white">
-        <nav aria-label="Fil d’Ariane" className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-4 py-3 text-xs font-medium text-slate-500 sm:px-6 lg:px-8">
-          <Link href="/" className="rounded hover:text-[#0B1220]">Accueil</Link>
+        <nav aria-label={t.agencies.list.breadcrumbAria} className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-4 py-3 text-xs font-medium text-slate-500 sm:px-6 lg:px-8">
+          <Link href="/" className="rounded hover:text-[#0B1220]">{t.agencies.list.home}</Link>
           <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-400 rtl:rotate-180" />
-          <Link href="/agencies" className="rounded hover:text-[#0B1220]">Agences</Link>
+          <Link href="/agencies" className="rounded hover:text-[#0B1220]">{t.agencies.list.agencies}</Link>
           <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-400 rtl:rotate-180" />
           <span aria-current="page" className="min-w-0 truncate font-semibold text-[#0B1220]">{agency.name}</span>
         </nav>
@@ -139,7 +175,7 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                   </h1>
                   {agency.verified && (
                     <Badge variant="verified" icon>
-                      Partenaire vérifié
+                      {p.verifiedPartner}
                     </Badge>
                   )}
                 </div>
@@ -155,9 +191,9 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                       rel="noopener noreferrer"
                       className="tap-44 inline-flex min-h-8 items-center gap-1 font-semibold text-[#0B1220] underline-offset-4 hover:underline"
                     >
-                      Voir sur la carte
+                      {p.seeOnMap}
                       <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span className="sr-only">(s’ouvre dans Google Maps)</span>
+                      <span className="sr-only">{p.opensInMaps}</span>
                     </a>
                   )}
                 </p>
@@ -165,11 +201,11 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                   {hasReviews ? (
                     <span className="inline-flex items-center gap-1 font-bold text-amber-700">
                       <Star className="h-4 w-4 fill-current" aria-hidden="true" />
-                      {agency.rating.toFixed(1)}
-                      <span className="font-normal text-slate-500">({plural(agency.review_count, 'avis', 'avis')})</span>
+                      {formatDecimal(agency.rating, locale)}
+                      <span className="font-normal text-slate-500">{plural(agency.review_count, p.reviews)}</span>
                     </span>
                   ) : (
-                    <span className="text-slate-500">Nouveau partenaire · pas encore d’avis</span>
+                    <span className="text-slate-500">{p.newPartner}</span>
                   )}
                 </p>
               </div>
@@ -184,34 +220,34 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </a>
               <a
-                href={clickdriveWhatsAppUrl(`Bonjour ClickDrive, j'ai une question concernant l'agence partenaire ${agency.name} à ${agency.city}.`)}
+                href={clickdriveWhatsAppUrl(fmt(p.whatsappQuestion, { agency: agency.name, city: agency.city }))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-[#0B1220] transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
               >
                 <MessageSquare className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                Poser une question
-                <span className="sr-only">(WhatsApp, nouvel onglet)</span>
+                {p.askQuestion}
+                <span className="sr-only">{p.whatsappNewTab}</span>
               </a>
             </div>
           </div>
 
           {/* Faits réels de l'agence */}
-          <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-100 pt-6 sm:grid-cols-4">
+          <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-100 pt-6 sm:grid-cols-3 lg:grid-cols-5">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Flotte</dt>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.fleet}</dt>
               <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">
-                {fleetLoading ? '…' : plural(vehicles.length, 'véhicule', 'véhicules')}
+                {fleetLoading ? '…' : plural(vehicles.length, p.vehicles)}
               </dd>
               {!fleetLoading && vehicles.length > 0 && <dd className="text-xs text-slate-500">{fleetBreakdown}</dd>}
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">À partir de</dt>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.from}</dt>
               <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">
                 {minPrice !== null ? (
                   <>
-                    <span className="tabular-nums">{minPrice.toLocaleString('fr-FR')}</span> DH
-                    <span className="text-sm font-semibold text-slate-500"> / jour</span>
+                    <span className="tabular-nums">{formatNumber(minPrice, locale)}</span> DH
+                    <span className="text-sm font-semibold text-slate-500"> {p.perDay}</span>
                   </>
                 ) : (
                   '—'
@@ -220,16 +256,46 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
             </div>
             {memberSince && (
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sur ClickDrive depuis</dt>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.memberSince}</dt>
                 <dd className="mt-1 text-lg font-extrabold capitalize text-[#0B1220]">{memberSince}</dd>
               </div>
             )}
+            {responseTime && (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.answers}</dt>
+                <dd className="mt-1 text-lg font-extrabold first-letter:uppercase text-[#0B1220]">
+                  {t.agencies.responseTime[responseBucket(responseTime.medianMinutes)]}
+                </dd>
+                <dd className="text-xs text-slate-500">{plural(responseTime.responses, p.responseMedian)}</dd>
+              </div>
+            )}
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Paiement</dt>
-              <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">À l’agence</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.payment}</dt>
+              <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">{p.atAgency}</dd>
             </div>
           </dl>
         </section>
+
+        {practical.length > 0 && (
+          <section aria-labelledby="agency-practical" className="mt-6 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7">
+            <h2 id="agency-practical" className="text-lg font-extrabold text-[#0B1220]">
+              {p.practical}
+            </h2>
+            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+              {practical.map(({ key, icon: Icon, label, value }) => (
+                <div key={key} className="flex gap-3">
+                  <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
+                    <dd className="mt-0.5 whitespace-pre-line text-sm leading-6 text-slate-700">{value}</dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {/* À propos : uniquement si l'agence a rédigé une présentation */}
@@ -237,9 +303,10 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
             <section aria-labelledby="agency-about" className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7">
               <h2 id="agency-about" className="flex items-center gap-2 text-lg font-extrabold text-[#0B1220]">
                 <Building2 className="h-5 w-5 text-slate-400" aria-hidden="true" />
-                À propos de {agency.name}
+                {fmt(p.about, { agency: agency.name })}
               </h2>
               <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-slate-600">{agency.description}</p>
+              {locale !== 'fr' && <p className="mt-2 text-xs text-slate-500">{p.agencyTextNote}</p>}
             </section>
           )}
 
@@ -249,17 +316,13 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
             className={cn('rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7', !agency.description.trim() && 'lg:col-span-2')}
           >
             <h2 id="agency-how" className="text-lg font-extrabold text-[#0B1220]">
-              Réserver chez {agency.name}
+              {fmt(p.bookWith, { agency: agency.name })}
             </h2>
             <ol className={cn('mt-4 grid gap-4', !agency.description.trim() && 'sm:grid-cols-3')}>
               {[
-                { icon: Car, title: 'Choisissez un véhicule', text: 'Comparez la flotte ci-dessous et vos dates.' },
-                { icon: Send, title: 'Envoyez votre demande', text: 'Gratuit et sans engagement.' },
-                {
-                  icon: CalendarCheck,
-                  title: 'L’agence confirme',
-                  text: 'Disponibilité et horaires confirmés ; contrat et caution réglés à l’agence.',
-                },
+                { icon: Car, title: p.step1Title, text: p.step1Text },
+                { icon: Send, title: p.step2Title, text: p.step2Text },
+                { icon: CalendarCheck, title: p.step3Title, text: p.step3Text },
               ].map(({ icon: Icon, title, text }, index) => (
                 <li key={title} className="flex gap-3">
                   <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white">
@@ -278,7 +341,7 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
             {agency.verified && (
               <p className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500">
                 <FileSignature className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                Agence vérifiée par ClickDrive avant sa mise en ligne (registre de commerce, assurance, flotte).
+                {p.verifiedNote}
               </p>
             )}
           </section>
@@ -289,26 +352,26 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 id={fleetTitleId} className="text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[28px]">
-                La flotte de {agency.name}
+                {fmt(p.fleetTitle, { agency: agency.name })}
               </h2>
               <p className="mt-1 text-sm text-slate-600" aria-live="polite">
                 {fleetLoading
-                  ? 'Chargement des véhicules…'
+                  ? p.loadingVehicles
                   : shown.length === 0
-                    ? 'Aucun véhicule publié pour le moment.'
-                    : `${plural(shown.length, 'véhicule affiché', 'véhicules affichés')} · prix par jour, confirmés par l’agence`}
+                    ? p.noVehicles
+                    : `${plural(shown.length, p.shown)} · ${p.pricesNote}`}
               </p>
             </div>
 
             {vehicles.length > 1 && (
               <div className="flex flex-wrap items-center gap-2">
                 {hasBothTypes && (
-                  <div role="group" aria-label="Type de véhicule" className="inline-flex rounded-xl bg-slate-200/60 p-1">
+                  <div role="group" aria-label={p.typeAria} className="inline-flex rounded-xl bg-slate-200/60 p-1">
                     {(
                       [
-                        { value: 'ALL', label: 'Tout', count: vehicles.length, icon: null },
-                        { value: 'CAR', label: 'Voitures', count: cars.length, icon: Car },
-                        { value: 'MOTORCYCLE', label: 'Motos', count: motos.length, icon: Motorbike },
+                        { value: 'ALL', label: p.all, count: vehicles.length, icon: null },
+                        { value: 'CAR', label: p.carsLabel, count: cars.length, icon: Car },
+                        { value: 'MOTORCYCLE', label: p.motosLabel, count: motos.length, icon: Motorbike },
                       ] as const
                     ).map(({ value, label, count, icon: Icon }) => (
                       <button
@@ -329,7 +392,7 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                   </div>
                 )}
                 <label htmlFor="agency-fleet-sort" className="sr-only">
-                  Trier la flotte
+                  {p.sortFleet}
                 </label>
                 <select
                   id="agency-fleet-sort"
@@ -337,9 +400,9 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
                   onChange={(event) => setSort(event.target.value as FleetSort)}
                   className="min-h-11 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-[#0B1220] outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
                 >
-                  {(Object.keys(SORT_LABELS) as FleetSort[]).map((option) => (
+                  {SORT_OPTIONS.map((option) => (
                     <option key={option} value={option}>
-                      {SORT_LABELS[option]}
+                      {p.sort[option]}
                     </option>
                   ))}
                 </select>
@@ -357,13 +420,13 @@ export function AgencyProfile({ agency, initialVehicles }: { agency: AgencyProfi
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
               <Car className="mx-auto h-8 w-8 text-slate-300" aria-hidden="true" />
               <p className="mt-3 text-sm font-semibold text-slate-700">
-                {agency.name} n’a pas encore publié de véhicule.
+                {fmt(p.noneYet, { agency: agency.name })}
               </p>
               <Link
                 href="/search"
                 className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white hover:bg-slate-800"
               >
-                Voir tout le catalogue
+                {p.fullCatalog}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
             </div>

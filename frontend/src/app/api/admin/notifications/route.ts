@@ -49,7 +49,7 @@ export async function GET() {
         bookingRef: m.bookingRef || '—',
         status: m.status,
         type: m.type,
-        snippet: (m.payloadSummary as any)?.snippet || (m.payloadSummary as any)?.body || 'Notification WhatsApp',
+        snippet: String(m.payloadSummary?.snippet || m.payloadSummary?.body || 'Notification WhatsApp'),
         timestamp: m.sentAt,
       })),
       ...(dbLogs || []).map((db) => {

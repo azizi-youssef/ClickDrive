@@ -1,4 +1,5 @@
-import { redirect } from 'next/navigation';
+import { I18nScope } from '@/components/i18n/I18nScope';
+import { redirectLocalized } from '@/lib/i18n/server';
 import { SearchClient } from './SearchClient';
 import { catalogQuery, loadCatalogPreload, single, type CatalogSearchParams } from './preload';
 import { CATALOG_PATHS, parseVehicleTypeParam, typeOfCategory } from '@/lib/vehicles/kind';
@@ -13,9 +14,13 @@ export const dynamic = 'force-dynamic';
 export default async function SearchPage({ searchParams }: { searchParams: Promise<CatalogSearchParams> }) {
   const params = await searchParams;
   if (parseVehicleTypeParam(single(params.type)) === 'MOTORCYCLE' || typeOfCategory(single(params.category)) === 'MOTORCYCLE') {
-    redirect(`${CATALOG_PATHS.MOTORCYCLE}${catalogQuery(params, ['type'])}`);
+    await redirectLocalized(`${CATALOG_PATHS.MOTORCYCLE}${catalogQuery(params, ['type'])}`);
   }
 
   const preload = await loadCatalogPreload(params, 'SearchPage');
-  return <SearchClient preload={preload} vehicleType="CAR" />;
+  return (
+    <I18nScope namespaces={['searchBar', 'brands', 'catalog']}>
+      <SearchClient preload={preload} vehicleType="CAR" />
+    </I18nScope>
+  );
 }

@@ -7,7 +7,7 @@ import React, {
   useState,
   useId,
 } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
@@ -37,219 +37,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOGIN_PATH } from '@/lib/auth/login-portals';
-import { createClient } from '@/lib/supabase/client';
 import {
   fetchClientAuthProfile,
   signOutEverywhere,
   type ClientAuthProfile,
 } from '@/lib/auth/client';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { delocalizeHref, localizeHref } from '@/lib/i18n/routing';
+import type { NavbarMessages } from '@/lib/i18n/messages/navbar';
 import { LanguageSelector } from '@/components/shared/LanguageSelector';
 import { Magnet } from '@/components/ui/react-bits';
-
-/* ====================================================================== */
-/* LOCALIZATION DICTIONARY                                                */
-/* ====================================================================== */
-
-interface NavStrings {
-  motos: string;
-  verifiedAgencies: string;
-  airport: string;
-  port: string;
-  becomePartner: string;
-  account: string;
-  sessionChecking: string;
-  sessionError: string;
-  retry: string;
-  whatsapp: string;
-  home: string;
-  cars: string;
-  agencies: string;
-  destinations: string;
-  howItWorks: string;
-  faqHelp: string;
-  findCar: string;
-  search: string;
-  login: string;
-  signup: string;
-  signOut: string;
-  signingOut: string;
-  destinationsTitle: string;
-  destinationsSubtitle: string;
-  arrivalHubs: string;
-  arrivalHubsDesc: string;
-  categoriesHubs: string;
-  categoriesHubsDesc: string;
-  viewAllCars: string;
-  searchFleet: string;
-  allAgenciesVerified: string;
-  navigation: string;
-  closeMenu: string;
-  openMenu: string;
-  myAccount: string;
-  partnerFleetNotice: string;
-  partnerFleetDesc: string;
-  needAssistance: string;
-  whatsappHelp: string;
-  badgeVerified: string;
-  badgePricing: string;
-  badgeSupport: string;
-  locationTag: string;
-  adminBadge: string;
-  agencyBadge: string;
-  customerBadge: string;
-}
-
-const STRINGS: Record<string, NavStrings> = {
-  fr: {
-    verifiedAgencies: 'Agences partenaires vérifiées',
-    airport: 'Aéroport Nador-Al Aroui',
-    port: 'Port Beni Ansar',
-    becomePartner: 'Devenir partenaire',
-    account: 'Compte',
-    sessionChecking: 'Vérification…',
-    sessionError: 'Session à vérifier',
-    retry: 'Réessayer',
-    whatsapp: 'WhatsApp',
-    home: 'Accueil',
-    cars: 'Voitures',
-    motos: 'Motos',
-    agencies: 'Agences',
-    destinations: 'Destinations',
-    howItWorks: 'Fonctionnement',
-    faqHelp: 'Aide',
-    findCar: 'Trouver un véhicule',
-    search: 'Rechercher',
-    login: 'Se connecter',
-    signup: 'Créer un compte',
-    signOut: 'Déconnexion',
-    signingOut: 'Déconnexion…',
-    destinationsTitle: 'Destinations & Prise en charge',
-    destinationsSubtitle: "Trouvez un véhicule selon votre point d'arrivée à Nador",
-    arrivalHubs: 'Lieux de prise en charge',
-    arrivalHubsDesc: 'Aéroport, port & Marchica',
-    categoriesHubs: 'Par type de véhicule',
-    categoriesHubsDesc: 'Flotte disponible immédiatement',
-    viewAllCars: 'Voir tous les véhicules',
-    searchFleet: 'Explorer la flotte',
-    allAgenciesVerified: 'Agences locales vérifiées par ClickDrive avant leur mise en ligne',
-    navigation: 'Navigation principale',
-    closeMenu: 'Fermer le menu',
-    openMenu: 'Ouvrir le menu de navigation',
-    myAccount: 'Mon espace',
-    partnerFleetNotice: 'Pas encore fixé ?',
-    partnerFleetDesc: 'Comparez la flotte de toutes les agences partenaires de Nador.',
-    needAssistance: 'Assistance client directe',
-    whatsappHelp: 'Assistance WhatsApp ClickDrive',
-    badgeVerified: 'Partenaires vérifiés',
-    badgePricing: 'Prix transparents',
-    badgeSupport: 'Support local',
-    locationTag: "Nador · Région de l'Oriental · Maroc",
-    adminBadge: 'Administrateur',
-    agencyBadge: 'Agence',
-    customerBadge: 'Client',
-  },
-  ar: {
-    verifiedAgencies: 'وكالات شريكة معتمدة',
-    airport: 'مطار الناظور العروي',
-    port: 'ميناء بني انصار',
-    becomePartner: 'انضم كشريك',
-    account: 'الحساب',
-    sessionChecking: 'جاري التحقق…',
-    sessionError: 'تحقق من الجلسة',
-    retry: 'إعادة المحاولة',
-    whatsapp: 'واتساب',
-    home: 'الرئيسية',
-    cars: 'السيارات',
-    motos: 'الدراجات النارية',
-    agencies: 'الوكالات',
-    destinations: 'الوجهات',
-    howItWorks: 'كيف يعمل',
-    faqHelp: 'المساعدة',
-    findCar: 'ابحث عن سيارة',
-    search: 'بحث',
-    login: 'تسجيل الدخول',
-    signup: 'إنشاء حساب',
-    signOut: 'تسجيل الخروج',
-    signingOut: 'جاري الخروج…',
-    destinationsTitle: 'الوجهات ونقاط الاستلام',
-    destinationsSubtitle: 'ابحث عن سيارة متوفرة حسب نقطة وصولك إلى الناظور',
-    arrivalHubs: 'أماكن الاستلام',
-    arrivalHubsDesc: 'المطار، الميناء ووسط المدينة',
-    categoriesHubs: 'حسب نوع السيارة',
-    categoriesHubsDesc: 'أسطول جاهز للاستلام الفوري',
-    viewAllCars: 'عرض جميع السيارات',
-    searchFleet: 'تصفح الأسطول',
-    allAgenciesVerified: 'وكالات محلية تتحقق منها ClickDrive قبل نشرها',
-    navigation: 'القائمة الرئيسية',
-    closeMenu: 'إغلاق القائمة',
-    openMenu: 'فتح قائمة التنقل',
-    myAccount: 'حسابي',
-    partnerFleetNotice: 'لم تحدد بعد؟',
-    partnerFleetDesc: 'قارن أساطيل جميع الوكالات الشريكة في الناظور.',
-    needAssistance: 'مساعدة فورية',
-    whatsappHelp: 'مساعدة واتساب كاردرايف',
-    badgeVerified: 'وكالات معتمدة',
-    badgePricing: 'أسعار واضحة',
-    badgeSupport: 'دعم محلي',
-    locationTag: 'الناظور · الجهة الشرقية · المغرب',
-    adminBadge: 'مدير النظام',
-    agencyBadge: 'وكالة',
-    customerBadge: 'زبون',
-  },
-  en: {
-    verifiedAgencies: 'Verified Partner Agencies',
-    airport: 'Nador Al-Aroui Airport',
-    port: 'Beni Ansar Port',
-    becomePartner: 'Partner with us',
-    account: 'Account',
-    sessionChecking: 'Checking…',
-    sessionError: 'Session status',
-    retry: 'Retry',
-    whatsapp: 'WhatsApp',
-    home: 'Home',
-    cars: 'Cars',
-    motos: 'Motorbikes',
-    agencies: 'Agencies',
-    destinations: 'Destinations',
-    howItWorks: 'How it works',
-    faqHelp: 'Help',
-    findCar: 'Find a vehicle',
-    search: 'Search',
-    login: 'Sign in',
-    signup: 'Create account',
-    signOut: 'Sign out',
-    signingOut: 'Signing out…',
-    destinationsTitle: 'Destinations & Pickup Points',
-    destinationsSubtitle: 'Find an available vehicle based on your arrival point in Nador',
-    arrivalHubs: 'Pickup locations',
-    arrivalHubsDesc: 'Airport, Port & Marchica',
-    categoriesHubs: 'By vehicle type',
-    categoriesHubsDesc: 'Immediately available vehicles',
-    viewAllCars: 'See all vehicles',
-    searchFleet: 'Browse Fleet',
-    allAgenciesVerified: 'Local agencies checked by ClickDrive before going live',
-    navigation: 'Main navigation',
-    closeMenu: 'Close menu',
-    openMenu: 'Open navigation menu',
-    myAccount: 'My space',
-    partnerFleetNotice: 'Not sure yet?',
-    partnerFleetDesc: 'Compare the fleets of every partner agency in Nador.',
-    needAssistance: 'Direct customer support',
-    whatsappHelp: 'ClickDrive WhatsApp Support',
-    badgeVerified: 'Verified Partners',
-    badgePricing: 'Transparent Pricing',
-    badgeSupport: 'Local support',
-    locationTag: 'Nador · Oriental Region · Morocco',
-    adminBadge: 'Administrator',
-    agencyBadge: 'Agency',
-    customerBadge: 'Customer',
-  },
-};
-
-function getStrings(locale: string): NavStrings {
-  return STRINGS[locale] || STRINGS.fr;
-}
 
 /* ====================================================================== */
 /* ACCOUNT HELPERS                                                        */
@@ -262,43 +59,34 @@ function accountHref(profile: ClientAuthProfile): string {
   return '/account';
 }
 
-function accountMenuItems(
-  profile: ClientAuthProfile,
-  locale: string
-): { label: string; href: string }[] {
-  const isAr = locale === 'ar';
-  const isEn = locale === 'en';
-
+function accountMenuItems(profile: ClientAuthProfile, strings: NavbarMessages): { label: string; href: string }[] {
+  const menu = strings.menu;
   if (profile.canAccessAdmin) {
     return [
-      { label: isAr ? 'لوحة التحكم' : isEn ? 'Dashboard' : 'Tableau de bord', href: '/admin' },
-      { label: isAr ? 'الوكالات' : isEn ? 'Agencies' : 'Agences', href: '/admin/agencies' },
-      { label: isAr ? 'الحجوزات' : isEn ? 'Bookings' : 'Réservations', href: '/admin/bookings' },
-      { label: isAr ? 'الإعدادات' : isEn ? 'Settings' : 'Paramètres', href: '/admin/settings' },
+      { label: menu.dashboard, href: '/admin' },
+      { label: menu.agencies, href: '/admin/agencies' },
+      { label: menu.bookings, href: '/admin/bookings' },
+      { label: menu.settings, href: '/admin/settings' },
     ];
   }
   if (profile.canAccessAgency) {
     return [
-      { label: isAr ? 'لوحة التحكم' : isEn ? 'Dashboard' : 'Tableau de bord', href: '/agency' },
-      { label: isAr ? 'أسطول سياراتي' : isEn ? 'My Fleet' : 'Mes véhicules', href: '/agency?tab=fleet' },
-      { label: isAr ? 'الحجوزات' : isEn ? 'Bookings' : 'Réservations', href: '/agency?tab=bookings' },
+      { label: menu.dashboard, href: '/agency' },
+      { label: menu.myFleet, href: '/agency?tab=fleet' },
+      { label: menu.bookings, href: '/agency?tab=bookings' },
     ];
   }
   if (profile.role !== 'CUSTOMER') {
-    return [{ label: isAr ? 'الرئيسية' : isEn ? 'Home' : 'Accueil', href: '/' }];
+    return [{ label: menu.home, href: '/' }];
   }
   return [
-    { label: isAr ? 'حسابي' : isEn ? 'My Account' : 'Mon espace', href: '/account' },
-    { label: isAr ? 'حجوزاتي' : isEn ? 'My Bookings' : 'Mes réservations', href: '/account?tab=bookings' },
-    { label: isAr ? 'ملفي الشخصي' : isEn ? 'My Profile' : 'Mon profil', href: '/account?tab=profile' },
+    { label: menu.myAccount, href: '/account' },
+    { label: menu.myBookings, href: '/account?tab=bookings' },
+    { label: menu.myProfile, href: '/account?tab=profile' },
   ];
 }
 
-function accountIdentity(
-  profile: ClientAuthProfile,
-  locale: string
-): { name: string; badge: string } {
-  const strings = getStrings(locale);
+function accountIdentity(profile: ClientAuthProfile, strings: NavbarMessages): { name: string; badge: string } {
   if (profile.canAccessAdmin) {
     return { name: profile.displayName, badge: strings.adminBadge };
   }
@@ -318,7 +106,7 @@ function AccountAvatar({
   profile: ClientAuthProfile;
   className?: string;
 }) {
-  const identity = accountIdentity(profile, 'fr');
+  const identity = { name: profile.canAccessAgency ? profile.agencyName || profile.displayName : profile.displayName };
   const avatarUrl = profile.canAccessAgency
     ? profile.agencyLogoUrl?.trim() || profile.avatarUrl?.trim()
     : profile.avatarUrl?.trim();
@@ -355,141 +143,33 @@ function AccountAvatar({
 
 interface DestinationDef {
   id: string;
+  key: keyof NavbarMessages['destinationItems'];
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   section: 'arrival' | 'category';
-  title: Record<string, string>;
-  shortTitle: Record<string, string>;
-  desc: Record<string, string>;
-  tag?: Record<string, string>;
 }
 
+/** Textes : t.navbar.destinationItems[key] */
 const DESTINATION_ITEMS: DestinationDef[] = [
-  {
-    id: 'airport',
-    href: '/location-voiture-nador-aeroport',
-    icon: Plane,
-    section: 'arrival',
-    title: {
-      fr: 'Aéroport Nador-Al Aroui',
-      ar: 'مطار الناظور العروي',
-      en: 'Nador Al-Aroui Airport',
-    },
-    shortTitle: {
-      fr: 'Aéroport Nador',
-      ar: 'مطار الناظور',
-      en: 'Nador Airport',
-    },
-    desc: {
-      fr: 'Prise en charge directe dès la descente de votre vol',
-      ar: 'استلام مباشر فور نزولك من الطائرة',
-      en: 'Direct pickup upon flight arrival',
-    },
-    tag: {
-      fr: 'Populaire',
-      ar: 'الأكثر طلباً',
-      en: 'Popular',
-    },
-  },
-  {
-    id: 'port',
-    href: '/location-voiture-beni-ansar',
-    icon: Anchor,
-    section: 'arrival',
-    title: {
-      fr: 'Port de Beni Ansar',
-      ar: 'ميناء بني انصار',
-      en: 'Beni Ansar Port',
-    },
-    shortTitle: {
-      fr: 'Port Beni Ansar',
-      ar: 'ميناء بني انصار',
-      en: 'Beni Ansar Port',
-    },
-    desc: {
-      fr: 'Solutions pour arrivées en ferry et voyageurs MRE',
-      ar: 'مثالي لوصول البواخر ومغاربة العالم',
-      en: 'Ideal for ferry arrivals and travelers',
-    },
-  },
-  {
-    id: 'nador-center',
-    href: '/location-voiture-nador',
-    icon: MapPin,
-    section: 'arrival',
-    title: {
-      fr: 'Nador Centre & Marchica',
-      ar: 'وسط الناظور ومارشيكا',
-      en: 'Nador Downtown & Marchica',
-    },
-    shortTitle: {
-      fr: 'Nador Centre',
-      ar: 'وسط الناظور',
-      en: 'Nador Centre',
-    },
-    desc: {
-      fr: 'Véhicules disponibles au cœur de la ville',
-      ar: 'سيارات متوفرة في قلب المدينة والمحلات',
-      en: 'Vehicles available in the city center',
-    },
-  },
-  {
-    id: 'suv',
-    href: '/location-voiture-nador-suv',
-    icon: CarFront,
-    section: 'category',
-    title: {
-      fr: 'SUV & 4x4 à Nador',
-      ar: 'سيارات SUV و 4x4',
-      en: 'SUV & 4x4 in Nador',
-    },
-    shortTitle: {
-      fr: 'SUV & 4x4',
-      ar: 'SUV و 4x4',
-      en: 'SUV & 4x4',
-    },
-    desc: {
-      fr: 'Duster, Tucson et véhicules tout-terrain',
-      ar: 'داستر، توسان وسيارات للطرق الوعرة',
-      en: 'Duster, Tucson & crossover vehicles',
-    },
-  },
-  {
-    id: 'auto',
-    href: '/location-voiture-nador-automatique',
-    icon: Sparkles,
-    section: 'category',
-    title: {
-      fr: 'Boîte automatique',
-      ar: 'ناقل حركة أوتوماتيكي',
-      en: 'Automatic Gearbox',
-    },
-    shortTitle: {
-      fr: 'Automatique',
-      ar: 'أوتوماتيك',
-      en: 'Automatic',
-    },
-    desc: {
-      fr: 'Conduite souple et confort optimal',
-      ar: 'سياقة سلسة وراحة تامة في السياقة',
-      en: 'Smooth driving and effortless comfort',
-    },
-  },
+  { id: 'airport', key: 'airport', href: '/location-voiture-nador-aeroport', icon: Plane, section: 'arrival' },
+  { id: 'port', key: 'port', href: '/location-voiture-beni-ansar', icon: Anchor, section: 'arrival' },
+  { id: 'nador-center', key: 'center', href: '/location-voiture-nador', icon: MapPin, section: 'arrival' },
+  { id: 'suv', key: 'suv', href: '/location-voiture-nador-suv', icon: CarFront, section: 'category' },
+  { id: 'auto', key: 'automatic', href: '/location-voiture-nador-automatique', icon: Sparkles, section: 'category' },
 ];
 
-function getLocalized(record: Record<string, string>, locale: string): string {
-  return record[locale] || record.fr || record.en || '';
-}
 
 /* ====================================================================== */
 /* MAIN NAVBAR COMPONENT                                                  */
 /* ====================================================================== */
 
 export function Navbar() {
-  const pathname = usePathname();
+  // Chemin français canonique : /nl/search est actif comme /search
+  const rawPathname = usePathname();
+  const pathname = delocalizeHref(rawPathname ?? '/');
   const router = useRouter();
-  const { locale, isRTL } = useTranslation();
-  const strings = getStrings(locale);
+  const { t, locale, isRTL } = useTranslation();
+  const strings = t.navbar;
 
   // Accessible IDs
   const destinationsMenuId = useId();
@@ -561,11 +241,15 @@ export function Navbar() {
       }
     })();
 
-    const supabase = createClient();
+    // supabase-js chargé à la demande (hors du bundle initial de chaque page).
     // INITIAL_SESSION est émis dès l'abonnement : le profil vient d'être chargé ci-dessus (évite un 2e /api/auth/me)
-    const authSubscription = supabase?.auth.onAuthStateChange((event: string) => {
-      if (event === 'INITIAL_SESSION') return;
-      void refreshAuthProfile();
+    let authSubscription: { data: { subscription: { unsubscribe: () => void } } } | null | undefined = null;
+    void import('@/lib/supabase/client').then(({ createClient }) => {
+      if (!active) return;
+      authSubscription = createClient()?.auth.onAuthStateChange((event: string) => {
+        if (event === 'INITIAL_SESSION') return;
+        void refreshAuthProfile();
+      });
     });
 
     const handleVisibility = () => {
@@ -591,14 +275,15 @@ export function Navbar() {
     setSigningOut(true);
     setAuthError(null);
     try {
+      const { createClient } = await import('@/lib/supabase/client');
       await signOutEverywhere(createClient());
       setAuthProfile(null);
       setAccountMenuOpen(false);
       setMobileMenuOpen(false);
-      router.replace('/');
+      router.replace(localizeHref('/', locale));
       router.refresh();
     } catch (error: unknown) {
-      setAuthError(error instanceof Error ? error.message : 'La déconnexion a échoué.');
+      setAuthError(error instanceof Error ? error.message : strings.signOutError);
     } finally {
       setSigningOut(false);
     }
@@ -848,12 +533,12 @@ export function Navbar() {
             ) : authProfile ? (
               <Link
                 href={accountHref(authProfile)}
-                aria-label={`${accountIdentity(authProfile, locale).badge} : ${accountIdentity(authProfile, locale).name}`}
-                title={accountIdentity(authProfile, locale).name}
+                aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
+                title={accountIdentity(authProfile, strings).name}
                 className="flex min-w-0 max-w-52 items-center gap-1.5 font-medium text-slate-300 transition-colors hover:text-white"
               >
                 <AccountAvatar profile={authProfile} className="h-4.5 w-4.5 text-[9px]" />
-                <span className="truncate">{accountIdentity(authProfile, locale).name}</span>
+                <span className="truncate">{accountIdentity(authProfile, strings).name}</span>
               </Link>
             ) : authError ? (
               <button
@@ -912,7 +597,7 @@ export function Navbar() {
             {/* -------------------------------------------------------- */}
             <Link
               href="/"
-              aria-label="ClickDrive — Accueil"
+              aria-label={strings.homeAria}
               className="group flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-[#E63946]"
             >
               {/* Mobile Compact Emblem (under 640px) */}
@@ -1090,7 +775,7 @@ export function Navbar() {
                           {DESTINATION_ITEMS.filter((item) => item.section === 'arrival').map((item, index) => {
                             const Icon = item.icon;
                             const active = pathname === item.href;
-                            const tag = item.tag ? getLocalized(item.tag, locale) : null;
+                            const tag = strings.destinationItems[item.key].tag || null;
                             return (
                               <Link
                                 key={item.href}
@@ -1119,7 +804,7 @@ export function Navbar() {
                                 <span className="min-w-0 flex-1 pt-0.5">
                                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                     <span className="text-[13px] font-bold leading-snug text-[#0B1220]">
-                                      {getLocalized(item.title, locale)}
+                                      {strings.destinationItems[item.key].title}
                                     </span>
                                     {tag && (
                                       <span className="rounded-full bg-[#E63946]/10 px-2 py-0.5 text-[11px] font-bold text-[#C92F3B]">
@@ -1128,7 +813,7 @@ export function Navbar() {
                                     )}
                                   </span>
                                   <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
-                                    {getLocalized(item.desc, locale)}
+                                    {strings.destinationItems[item.key].desc}
                                   </span>
                                 </span>
                               </Link>
@@ -1174,10 +859,10 @@ export function Navbar() {
                                 </span>
                                 <span className="min-w-0 flex-1">
                                   <span className="block text-[13px] font-bold leading-snug text-[#0B1220]">
-                                    {getLocalized(item.title, locale)}
+                                    {strings.destinationItems[item.key].title}
                                   </span>
                                   <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
-                                    {getLocalized(item.desc, locale)}
+                                    {strings.destinationItems[item.key].desc}
                                   </span>
                                 </span>
                                 <ArrowRight
@@ -1265,17 +950,17 @@ export function Navbar() {
                     aria-expanded={accountMenuOpen}
                     aria-controls={accountMenuId}
                     onClick={() => setAccountMenuOpen((open) => !open)}
-                    aria-label={`${accountIdentity(authProfile, locale).badge} : ${accountIdentity(authProfile, locale).name}`}
+                    aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
                     className="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 py-1.5 text-left shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-2.5"
                   >
                     <AccountAvatar profile={authProfile} className="h-7 w-7 text-xs" />
                     {/* Nom et rôle affichés à partir de 1280 px ; avatar seul en dessous */}
                     <span className="hidden min-w-0 xl:block">
                       <span className="block max-w-28 truncate text-xs font-bold text-slate-900">
-                        {accountIdentity(authProfile, locale).name}
+                        {accountIdentity(authProfile, strings).name}
                       </span>
                       <span className="block text-[11px] font-medium text-slate-500">
-                        {accountIdentity(authProfile, locale).badge}
+                        {accountIdentity(authProfile, strings).badge}
                       </span>
                     </span>
                     <ChevronDown
@@ -1299,7 +984,7 @@ export function Navbar() {
                     >
                       <div className="border-b border-slate-100 px-3 py-2">
                         <p className="truncate text-xs font-bold text-slate-900">
-                          {accountIdentity(authProfile, locale).name}
+                          {accountIdentity(authProfile, strings).name}
                         </p>
                         <p className="truncate text-[11px] text-slate-500">{authProfile.email}</p>
                         {authProfile.canAccessAgency && authProfile.agencyName && (
@@ -1310,7 +995,7 @@ export function Navbar() {
                       </div>
 
                       <div className="py-1">
-                        {accountMenuItems(authProfile, locale).map((item) => (
+                        {accountMenuItems(authProfile, strings).map((item) => (
                           <Link
                             key={item.href}
                             href={item.href}
@@ -1418,13 +1103,13 @@ export function Navbar() {
               ) : authProfile ? (
                 <Link
                   href={accountHref(authProfile)}
-                  aria-label={`${accountIdentity(authProfile, locale).badge} : ${accountIdentity(authProfile, locale).name}`}
-                  title={accountIdentity(authProfile, locale).name}
+                  aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
+                  title={accountIdentity(authProfile, strings).name}
                   className="flex h-9 max-w-36 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
                 >
                   <AccountAvatar profile={authProfile} className="h-6 w-6 text-[10px]" />
                   <span className="truncate text-xs font-bold">
-                    {accountIdentity(authProfile, locale).name}
+                    {accountIdentity(authProfile, strings).name}
                   </span>
                 </Link>
               ) : (
@@ -1470,7 +1155,7 @@ export function Navbar() {
               ) : authProfile ? (
                 <Link
                   href={accountHref(authProfile)}
-                  aria-label={`${accountIdentity(authProfile, locale).badge} : ${accountIdentity(authProfile, locale).name}`}
+                  aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
                   className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs"
                 >
                   <AccountAvatar profile={authProfile} className="h-7 w-7 text-[10px]" />
@@ -1665,8 +1350,8 @@ export function Navbar() {
                         {DESTINATION_ITEMS.map((item) => {
                           const Icon = item.icon;
                           const active = pathname === item.href;
-                          const title = getLocalized(item.title, locale);
-                          const tag = item.tag ? getLocalized(item.tag, locale) : null;
+                          const title = strings.destinationItems[item.key].title;
+                          const tag = strings.destinationItems[item.key].tag || null;
 
                           return (
                             <Link
@@ -1726,17 +1411,17 @@ export function Navbar() {
                       <AccountAvatar profile={authProfile} className="h-10 w-10 text-sm" />
                       <div className="min-w-0">
                         <p className="truncate text-xs font-bold text-slate-900">
-                          {accountIdentity(authProfile, locale).name}
+                          {accountIdentity(authProfile, strings).name}
                         </p>
                         <p className="text-[11px] font-semibold text-[#0B1220]">
-                          {accountIdentity(authProfile, locale).badge}
+                          {accountIdentity(authProfile, strings).badge}
                         </p>
                         <p className="truncate text-[11px] text-slate-500">{authProfile.email}</p>
                       </div>
                     </div>
 
-                    <nav aria-label="Menu du compte mobile" className="space-y-1">
-                      {accountMenuItems(authProfile, locale).map((item) => (
+                    <nav aria-label={strings.accountMenuMobile} className="space-y-1">
+                      {accountMenuItems(authProfile, strings).map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}

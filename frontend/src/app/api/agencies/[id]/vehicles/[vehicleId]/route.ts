@@ -148,6 +148,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (input.doors !== undefined) updateData.doors = input.doors;
   if (input.air_conditioning !== undefined) updateData.air_conditioning = input.air_conditioning;
   if (input.mileage !== undefined) updateData.mileage = input.mileage;
+  if (input.description !== undefined) updateData.description = input.description || null;
+  if (input.insurance_coverage !== undefined) updateData.insurance_coverage = input.insurance_coverage ?? null;
+  if (input.insurance_excess !== undefined) updateData.insurance_excess = input.insurance_excess ?? null;
   if (input.daily_price !== undefined) updateData.daily_price = input.daily_price;
   if (input.weekly_price !== undefined) updateData.weekly_price = input.weekly_price;
   if (input.monthly_price !== undefined) updateData.monthly_price = input.monthly_price;

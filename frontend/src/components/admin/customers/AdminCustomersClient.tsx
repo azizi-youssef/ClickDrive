@@ -3,27 +3,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Users,
-  Search,
   Phone,
   Mail,
-  Calendar,
   DollarSign,
   Repeat,
-  FileText,
   MapPin,
-  ExternalLink,
   MessageCircle,
   X,
   CreditCard,
-  CheckCircle2,
-  Clock,
-  Shield,
   Download,
   RefreshCw,
 } from 'lucide-react';
 import {
   KpiCard,
-  AdminCard,
   TableWrapper,
   Th,
   Td,
@@ -33,7 +25,6 @@ import {
   SearchInput,
   SelectFilter,
   Btn,
-  StatusBadge,
   ErrorBanner,
 } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';

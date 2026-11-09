@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@/tests/setup/dom';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@/tests/setup/render';
 import { describe, expect, it, vi } from 'vitest';
 import { BrandMarquee, FEATURED_MOTORCYCLE_BRANDS } from './BrandMarquee';
 import { BRAND_LOGO_PATHS } from '@/lib/constants/brand-logos';

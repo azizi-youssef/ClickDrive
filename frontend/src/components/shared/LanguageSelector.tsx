@@ -12,7 +12,7 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ variant = 'navbar', className }: LanguageSelectorProps) {
-  const { locale, setLocale, currentLanguage, supportedLanguages } = useLanguage();
+  const { t, locale, setLocale, currentLanguage, supportedLanguages } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +91,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-expanded={isOpen}
-          aria-label="Sélectionner la langue"
+          aria-label={t.common.switchLanguage}
           className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
         >
           <Globe className="h-3.5 w-3.5" aria-hidden="true" />
@@ -107,7 +107,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
             className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-2xl border border-slate-700 bg-[#0F172A] p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
           >
             <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800">
-              Choisir la langue
+              {t.common.switchLanguage}
             </div>
             <div className="mt-1 space-y-0.5">
               {supportedLanguages.map((lang) => {

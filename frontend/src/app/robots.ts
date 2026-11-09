@@ -1,4 +1,13 @@
 import { MetadataRoute } from 'next';
+import { PREFIXED_LOCALES } from '@/lib/i18n/config';
+
+/** Espaces privés et liens signés, aussi sous les préfixes de langue (/nl/account, /ar/suivi/…) */
+const LOCALIZED_PRIVATE = PREFIXED_LOCALES.flatMap((locale) => [
+  `/${locale}/account`,
+  `/${locale}/login`,
+  `/${locale}/suivi/`,
+  `/${locale}/avis/`,
+]);
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -29,11 +38,17 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/_next/',
           '/login',
+          // Liens personnels signés (suivi d'une demande, avis) : jamais indexés
+          '/suivi/',
+          '/avis/',
+          ...LOCALIZED_PRIVATE,
         ],
       },
       {
-        // Block AI training scrapers
-        userAgent: ['GPTBot', 'ChatGPT-User', 'CCBot', 'anthropic-ai', 'Google-Extended'],
+        // Robots d'entraînement de modèles d'IA : bloqués. Les robots de recherche et de consultation
+        // des assistants (OAI-SearchBot, ChatGPT-User, PerplexityBot, Claude-SearchBot…) suivent la règle
+        // générale ci-dessus : ClickDrive peut être cité quand un voyageur cherche où louer à Nador.
+        userAgent: ['GPTBot', 'CCBot', 'anthropic-ai', 'ClaudeBot', 'Google-Extended', 'Bytespider'],
         disallow: ['/'],
       },
     ],

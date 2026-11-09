@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       typeof error === 'object' &&
       error !== null &&
       'code' in error &&
-      (error as any).code === '23505'
+      (error as { code?: unknown }).code === '23505'
     ) {
       return NextResponse.json(
         { success: false, error: 'Un avis a déjà été publié pour cette location.' },

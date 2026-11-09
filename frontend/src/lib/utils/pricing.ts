@@ -54,3 +54,36 @@ export function calculateRentalDays(startDateStr: string, endDateStr: string): n
   const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(1, days);
 }
+
+/** Tarifs d'un véhicule tels que saisis par l'agence (semaine = 7 jours, mois = 30 jours) */
+export interface VehicleRates {
+  daily_price: number;
+  weekly_price?: number | null;
+  monthly_price?: number | null;
+}
+
+export type AppliedRate = 'daily' | 'weekly' | 'monthly';
+
+/**
+ * Prix par jour appliqué à une location : tarif mois dès 30 jours, tarif semaine dès 7 jours,
+ * ramenés à la journée. Un tarif plus cher que le prix par jour est ignoré (jamais au détriment du client).
+ */
+export function effectiveDailyRate(rates: VehicleRates, days: number): { rate: number; applied: AppliedRate } {
+  const daily = Math.max(0, Number(rates.daily_price) || 0);
+  const weekly = Number(rates.weekly_price) > 0 ? Number(rates.weekly_price) / 7 : null;
+  const monthly = Number(rates.monthly_price) > 0 ? Number(rates.monthly_price) / 30 : null;
+  if (days >= 30 && monthly !== null && monthly < daily) return { rate: Math.round(monthly * 100) / 100, applied: 'monthly' };
+  if (days >= 7 && weekly !== null && weekly < daily) return { rate: Math.round(weekly * 100) / 100, applied: 'weekly' };
+  return { rate: daily, applied: 'daily' };
+}
+
+/** Prix d'une location avec les tarifs semaine et mois de l'agence (même calcul côté client et serveur) */
+export function calculateRentalPrice(
+  rates: VehicleRates,
+  number_of_days: number,
+  commission_rate: number = 0.0
+): BookingPriceCalculation & { applied_rate: AppliedRate } {
+  const days = Math.max(1, Math.round(Number(number_of_days) || 1));
+  const { rate, applied } = effectiveDailyRate(rates, days);
+  return { ...calculateBookingPrice(rate, days, commission_rate), applied_rate: applied };
+}

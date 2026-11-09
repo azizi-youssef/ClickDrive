@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeBrand } from '@/lib/vehicles/brands';
 import {
   ALL_VEHICLE_CATEGORIES,
   MOTORCYCLE_LICENSES,
@@ -16,7 +17,8 @@ export const VEHICLE_STATUSES = ['AVAILABLE', 'RENTED', 'MAINTENANCE', 'BLOCKED'
 
 const vehicleBaseSchema = z.object({
   vehicle_type: z.enum(VEHICLE_TYPES).default('CAR'),
-  brand: z.string().trim().min(2, 'La marque doit comporter au moins 2 caractères'),
+  // Orthographe canonique (« SUZUKI » → « Suzuki ») : filtres et barre des marques regroupent bien les véhicules
+  brand: z.string().trim().min(2, 'La marque doit comporter au moins 2 caractères').transform(normalizeBrand),
   model: z.string().trim().min(1, 'Le modèle est requis'),
   year: z.coerce
     .number()
@@ -44,11 +46,17 @@ const vehicleBaseSchema = z.object({
   weekly_price: z.coerce.number().positive().optional().nullable(),
   monthly_price: z.coerce.number().positive().optional().nullable(),
   deposit: z.coerce.number().min(0, 'La caution ne peut pas être négative').default(3000),
+  /** Assurance incluse dans le prix : responsabilité civile seule ou tous risques (null = non renseignée) */
+  insurance_coverage: z.enum(['THIRD_PARTY', 'COMPREHENSIVE']).nullable().optional(),
+  /** Franchise restant à la charge du client en cas de sinistre (MAD) */
+  insurance_excess: z.number().min(0, 'La franchise ne peut pas être négative').max(100000).nullable().optional(),
   min_rental_days: z.coerce.number().int().min(1, 'Durée minimale: 1 jour').default(1),
   status: z.enum(VEHICLE_STATUSES).default('AVAILABLE'),
   published: z.coerce.boolean().default(true),
   license_plate: z.string().trim().optional().default(''),
   unit_number: z.string().trim().optional().default(''),
+  /** Présentation rédigée par l'agence ; un texte vide efface la description */
+  description: z.string().trim().max(1500, 'Description limitée à 1 500 caractères').nullable().optional(),
   images: z.array(z.string().url('URL image invalide')).default([]),
   features: z.array(z.string().trim()).default([]),
 });

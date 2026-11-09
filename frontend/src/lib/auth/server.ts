@@ -1,12 +1,5 @@
-import {
-  isAgencyRole,
-  isPlatformAdminRole,
-  AGENCY_MEMBER_ROLES,
-  USER_ROLES,
-  type AgencyMemberRole,
-  type AccessPermission,
-  type UserRole,
-} from '@clickdrive/shared';
+import { isAgencyRole, isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
+import { AGENCY_MEMBER_ROLES, USER_ROLES, type AgencyMemberRole, type AccessPermission, type UserRole } from '@clickdrive/shared/roles';
 import { createClient } from '@/lib/supabase/server';
 
 export type AgencyMembershipContext = {

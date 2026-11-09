@@ -1,4 +1,4 @@
-import { AGENCY_MEMBER_ROLES, USER_ROLES, type AgencyMemberRole, type UserRole } from '@clickdrive/shared';
+import { AGENCY_MEMBER_ROLES, USER_ROLES, type AgencyMemberRole, type UserRole } from '@clickdrive/shared/roles';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isSafeRedirect, loginUrl } from '@/lib/auth/login-portals';
+import { localizeHref, splitLocalePrefix } from '@/lib/i18n/routing';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -10,9 +11,11 @@ export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // En cas d'échec, retour à la connexion dans la langue de la destination demandée (/nl/account → /nl/login)
+  const nextLocale = splitLocalePrefix(new URL(next, origin).pathname).locale ?? 'fr';
   const fail = () => {
     const response = NextResponse.redirect(
-      new URL(loginUrl('client', { redirect: next, error: 'auth_failed' }), origin)
+      new URL(localizeHref(loginUrl('client', { redirect: next, error: 'auth_failed' }), nextLocale), origin)
     );
     response.headers.set('Cache-Control', 'no-store');
     return response;

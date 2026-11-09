@@ -4,7 +4,30 @@ import {
   AgencySubscription,
   SubscriptionStats,
   SubscriptionStatus,
+  type PlanChangeRequest,
+  type PlanChangeRequestStatus,
 } from '@/types';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const PLAN_CHANGE_SELECT =
+  'id, agency_id, status, amount_due, payment_reference, decision_note, created_at, decided_at, ' +
+  'agency:agencies(name), current_plan:subscription_plans!current_plan_id(name), ' +
+  'requested_plan:subscription_plans!requested_plan_id(id, slug, name, price_monthly, max_vehicles)';
+
+type PlanChangeRow = {
+  id: string;
+  agency_id: string;
+  status: PlanChangeRequestStatus;
+  amount_due: number | string;
+  payment_reference: string | null;
+  decision_note: string | null;
+  created_at: string;
+  decided_at: string | null;
+  agency: { name: string } | null;
+  current_plan: { name: string } | null;
+  requested_plan: { id: string; slug: string; name: string; price_monthly: number | string; max_vehicles: number | null };
+};
 
 /** Grille tarifaire officielle ClickDrive par capacité de flotte */
 export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
@@ -319,15 +342,183 @@ class SubscriptionService {
         );
 
         if (error) {
-          console.warn('[SubscriptionService] Could not upsert agency subscription to DB:', error.message);
+          console.error('[SubscriptionService] Formule non enregistrée :', error.message);
+          return { success: false, error: 'La formule n’a pas pu être enregistrée.' };
         }
+      } else {
+        return { success: false, error: 'Base de données indisponible.' };
       }
-    } catch (err: any) {
-      console.warn('[SubscriptionService] Error updating plan:', err);
+    } catch (err: unknown) {
+      console.error('[SubscriptionService] Changement de formule impossible :', err);
+      return { success: false, error: 'La formule n’a pas pu être enregistrée.' };
     }
 
     const updated = await this.getAgencySubscription(agencyId);
     return { success: true, subscription: updated };
+  }
+
+  /* ── Demandes de changement de formule (validées après paiement) ───────────── */
+
+  private toPlanChangeRequest(row: PlanChangeRow): PlanChangeRequest {
+    return {
+      id: row.id,
+      agency_id: row.agency_id,
+      agency_name: row.agency?.name,
+      status: row.status,
+      amount_due: Number(row.amount_due) || 0,
+      current_plan_name: row.current_plan?.name ?? null,
+      requested_plan: {
+        id: row.requested_plan.id,
+        slug: row.requested_plan.slug,
+        name: row.requested_plan.name,
+        price_monthly: Number(row.requested_plan.price_monthly) || 0,
+        max_vehicles: row.requested_plan.max_vehicles,
+      },
+      payment_reference: row.payment_reference,
+      decision_note: row.decision_note,
+      created_at: row.created_at,
+      decided_at: row.decided_at,
+    };
+  }
+
+  /** Demande en attente de paiement d'une agence (une au plus), ou null */
+  async getPendingPlanChange(agencyId: string): Promise<PlanChangeRequest | null> {
+    const supabase = await createAdminClient();
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from('subscription_change_requests')
+      .select(PLAN_CHANGE_SELECT)
+      .eq('agency_id', agencyId)
+      .eq('status', 'PENDING_PAYMENT')
+      .maybeSingle();
+    if (error) {
+      console.error('[SubscriptionService] Lecture de la demande en attente impossible :', error.message);
+      return null;
+    }
+    return data ? this.toPlanChangeRequest(data as unknown as PlanChangeRow) : null;
+  }
+
+  /**
+   * Une agence demande une autre formule : rien ne change tant que l'administration n'a pas
+   * reçu le paiement et validé la demande. Une seule demande en attente par agence.
+   */
+  async requestPlanChange(
+    agencyId: string,
+    planSlug: string,
+    requestedBy: string
+  ): Promise<{ success: true; request: PlanChangeRequest } | { success: false; error: string; conflict?: boolean }> {
+    const plans = await this.getSubscriptionPlans();
+    const target = plans.find((plan) => plan.slug === planSlug && plan.is_active !== false);
+    if (!target) return { success: false, error: 'Formule introuvable.' };
+
+    const current = await this.getAgencySubscription(agencyId);
+    if (current.plan.slug === target.slug) return { success: false, error: 'Cette formule est déjà la vôtre.' };
+    if (target.max_vehicles !== null && target.max_vehicles < current.current_vehicles_count) {
+      return { success: false, error: 'Votre flotte dépasse la capacité de cette formule.' };
+    }
+
+    const supabase = await createAdminClient();
+    if (!supabase) return { success: false, error: 'Base de données indisponible.' };
+
+    const { data, error } = await supabase
+      .from('subscription_change_requests')
+      .insert({
+        agency_id: agencyId,
+        current_plan_id: UUID_PATTERN.test(current.plan.id ?? '') ? current.plan.id : null,
+        requested_plan_id: target.id,
+        amount_due: target.price_monthly,
+        requested_by: requestedBy,
+      })
+      .select(PLAN_CHANGE_SELECT)
+      .single();
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, conflict: true, error: 'Une demande de changement est déjà en attente de paiement.' };
+      }
+      console.error('[SubscriptionService] Demande de changement non enregistrée :', error.message);
+      return { success: false, error: 'La demande n’a pas pu être enregistrée.' };
+    }
+    return { success: true, request: this.toPlanChangeRequest(data as unknown as PlanChangeRow) };
+  }
+
+  /** L'agence retire sa demande tant qu'elle n'est pas traitée */
+  async cancelPlanChange(agencyId: string, requestId: string): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createAdminClient();
+    if (!supabase) return { success: false, error: 'Base de données indisponible.' };
+    const { data, error } = await supabase
+      .from('subscription_change_requests')
+      .update({ status: 'CANCELLED', decided_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', requestId)
+      .eq('agency_id', agencyId)
+      .eq('status', 'PENDING_PAYMENT')
+      .select('id')
+      .maybeSingle();
+    if (error) return { success: false, error: 'La demande n’a pas pu être annulée.' };
+    if (!data) return { success: false, error: 'Aucune demande en attente.' };
+    return { success: true };
+  }
+
+  /** Demandes pour l'administration (en attente d'abord) */
+  async listPlanChangeRequests(status?: PlanChangeRequestStatus): Promise<PlanChangeRequest[]> {
+    const supabase = await createAdminClient();
+    if (!supabase) throw new Error('Base de données indisponible.');
+    let query = supabase
+      .from('subscription_change_requests')
+      .select(PLAN_CHANGE_SELECT)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as unknown as PlanChangeRow[]).map((row) => this.toPlanChangeRequest(row));
+  }
+
+  /**
+   * Décision de l'administration. Validation = paiement reçu : la formule demandée est appliquée
+   * (nouveau cycle de facturation), puis la demande est close. Refus : la formule actuelle reste.
+   */
+  async decidePlanChange(
+    requestId: string,
+    decision: 'APPROVED' | 'REJECTED',
+    adminId: string,
+    details: { paymentReference?: string | null; note?: string | null } = {}
+  ): Promise<{ success: boolean; error?: string; request?: PlanChangeRequest }> {
+    const supabase = await createAdminClient();
+    if (!supabase) return { success: false, error: 'Base de données indisponible.' };
+    const { data: pending, error: readError } = await supabase
+      .from('subscription_change_requests')
+      .select(PLAN_CHANGE_SELECT)
+      .eq('id', requestId)
+      .maybeSingle();
+    if (readError) return { success: false, error: 'Lecture de la demande impossible.' };
+    if (!pending) return { success: false, error: 'Demande introuvable.' };
+    const request = this.toPlanChangeRequest(pending as unknown as PlanChangeRow);
+    if (request.status !== 'PENDING_PAYMENT') return { success: false, error: 'Cette demande a déjà été traitée.' };
+
+    if (decision === 'APPROVED') {
+      const applied = await this.updateAgencyPlan(request.agency_id, request.requested_plan.slug);
+      if (!applied.success) return { success: false, error: applied.error };
+    }
+
+    const { data, error } = await supabase
+      .from('subscription_change_requests')
+      .update({
+        status: decision,
+        decided_by: adminId,
+        decided_at: new Date().toISOString(),
+        payment_reference: details.paymentReference?.trim() || null,
+        decision_note: details.note?.trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', requestId)
+      .eq('status', 'PENDING_PAYMENT')
+      .select(PLAN_CHANGE_SELECT)
+      .maybeSingle();
+    if (error || !data) {
+      console.error('[SubscriptionService] Décision non enregistrée :', error?.message ?? 'demande déjà traitée');
+      return { success: false, error: 'La décision n’a pas pu être enregistrée.' };
+    }
+    return { success: true, request: this.toPlanChangeRequest(data as unknown as PlanChangeRow) };
   }
 
   /**

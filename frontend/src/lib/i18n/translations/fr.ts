@@ -12,6 +12,7 @@ export const fr = {
     allRightsReserved: 'Tous droits réservés.',
     morocco: 'Maroc',
     nador: 'Nador',
+    skipToContent: 'Aller au contenu principal',
   },
   nav: {
     home: 'Accueil',
@@ -76,6 +77,8 @@ export const fr = {
     station: 'Gare ONCF Nador',
     marchica: 'Marchica Lagoon Resort',
     searchBtn: 'Rechercher',
+    allTypes: "Tous les types",
+    formAria: "Rechercher une voiture de location",
     category: 'Catégorie',
     dateError: 'Choisissez un départ à partir d’aujourd’hui et un retour après le départ.',
     sameLocation: 'Même lieu de restitution',
@@ -133,9 +136,8 @@ export const fr = {
   },
   cookie: {
     title: 'Paramètres des cookies',
-    desc: 'ClickDrive utilise des cookies nécessaires au bon fonctionnement et à la mesure d’audience pour optimiser votre expérience.',
-    accept: 'Tout accepter',
-    decline: 'Refuser',
+    desc: 'ClickDrive utilise uniquement des cookies nécessaires au fonctionnement du site (connexion, langue, préférences). Aucun cookie publicitaire ni de mesure d’audience.',
+    ok: 'Compris',
     privacy: 'Politique de confidentialité',
     mentions: 'Mentions légales',
   },

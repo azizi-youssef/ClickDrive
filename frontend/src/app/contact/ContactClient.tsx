@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { SUPPORT_HOURS } from '@/lib/constants/contact';
+import Link from '@/components/i18n/LocalizedLink';
+import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { track } from '@/lib/analytics/track';
 import {
   ChevronRight,
   Mail,
@@ -36,18 +38,21 @@ type FormData = {
  * Partenariat agence : traité en priorité avec un responsable local.
  * Support technique / facturation : traité par l'équipe ClickDrive sous 24 h ouvrables.
  */
+/** Libellés traduits : t.contact.categories */
 const CATEGORIES = [
-  { value: 'reservation', label: '🗓️ Demande d’information sur un véhicule ou une réservation' },
-  { value: 'agency-partner', label: '🏢 Inscription ou partenariat agence' },
-  { value: 'vehicle', label: '🚗 Question sur un véhicule spécifique' },
-  { value: 'technical', label: '⚙️ Problème technique sur la plateforme' },
-  { value: 'billing', label: '💳 Facturation ou abonnement' },
-  { value: 'other', label: '💬 Autre demande' },
+  { value: 'reservation' },
+  { value: 'agency-partner' },
+  { value: 'vehicle' },
+  { value: 'technical' },
+  { value: 'billing' },
+  { value: 'other' },
 ];
 
 /* ── Main Component ─────────────────────────────────────────────────────── */
 
 export function ContactClient() {
+  const { t, locale, fmt } = useTranslation();
+  const c = t.contact;
   const [form, setForm] = useState<FormData>({
     name: '',
     email: '',
@@ -58,29 +63,55 @@ export function ContactClient() {
   });
   const [state, setState] = useState<FormState>('idle');
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<{ reference: string; acknowledged: boolean } | null>(null);
 
   function validate(): boolean {
     const newErrors: Partial<FormData> = {};
-    if (!form.name.trim()) newErrors.name = 'Le nom est requis';
+    if (!form.name.trim()) newErrors.name = c.errName;
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = 'Adresse email invalide';
+      newErrors.email = c.errEmail;
     }
-    if (!form.category) newErrors.category = 'Veuillez choisir une catégorie';
+    if (!form.category) newErrors.category = c.errCategory;
     if (!form.message.trim() || form.message.trim().length < 20) {
-      newErrors.message = 'Le message doit contenir au moins 20 caractères';
+      newErrors.message = c.errMessage;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!validate()) return;
 
     setState('sending');
-    // Simulate sending — in production wire to /api/contact
-    await new Promise((r) => setTimeout(r, 1500));
-    setState('success');
+    setServerError(null);
+    // Champ piège invisible (robots) : lu dans le formulaire, jamais affiché
+    const website = String(new FormData(e.currentTarget).get('website') ?? '');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Langue du visiteur : accusé de réception dans sa langue
+        body: JSON.stringify({ ...form, website, locale }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { success?: boolean; reference?: string; acknowledged?: boolean; error?: string; fields?: Partial<FormData> }
+        | null;
+      if (!res.ok || !json?.success || !json.reference) {
+        if (json?.fields) setErrors(json.fields);
+        // Messages du serveur rédigés en français : traduits par un message générique dans les autres langues
+        setServerError(locale === 'fr' ? json?.error ?? c.errSend : c.errSend);
+        setState('error');
+        return;
+      }
+      setReceipt({ reference: json.reference, acknowledged: Boolean(json.acknowledged) });
+      track('Contact envoyé', { categorie: form.category });
+      setState('success');
+    } catch {
+      setServerError(c.errNetwork);
+      setState('error');
+    }
   }
 
   function update(field: keyof FormData) {
@@ -95,24 +126,22 @@ export function ContactClient() {
       {/* Header */}
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <nav aria-label="Fil d’Ariane" className="mb-5 flex items-center gap-1.5 text-xs text-ink-secondary">
-            <Link href="/" className="transition-colors hover:text-slate-600">Accueil</Link>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <span className="font-medium text-slate-700">Contact</span>
+          <nav aria-label={c.breadcrumbAria} className="mb-5 flex items-center gap-1.5 text-xs text-ink-secondary">
+            <Link href="/" className="transition-colors hover:text-slate-600">{c.home}</Link>
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
+            <span className="font-medium text-slate-700">{c.crumb}</span>
           </nav>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            Contactez ClickDrive
+            {c.title}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-slate-500">
-            Choisissez la catégorie de votre demande ci-dessous. Les questions sur les
-            véhicules et agences sont traitées en priorité. Le support général répond
-            sous <strong>24 h ouvrables</strong> (lundi–vendredi).
+            {c.introBefore} <strong>{c.introStrong}</strong> {c.introAfter}
           </p>
           {/* Quick orientation */}
           <div className="mt-5 flex flex-wrap gap-2 text-[11px]">
-            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-blue-700">Réservation → transmis à l&apos;agence</span>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700">Partenariat agence → prioritaire</span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-600">Support technique → 24 h ouvrables</span>
+            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-blue-700">{c.chipBooking}</span>
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700">{c.chipPartner}</span>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-600">{c.chipTechnical}</span>
           </div>
         </div>
       </div>
@@ -128,47 +157,54 @@ export function ContactClient() {
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                   <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Message envoyé !</h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Merci pour votre message. Notre équipe vous répondra sous 24h (jours ouvrés).
+                <h2 className="text-xl font-bold text-slate-900" role="status">{c.successTitle}</h2>
+                {receipt && (
+                  <p className="mt-2 text-sm text-slate-600">
+                    {c.reference} <strong className="font-mono text-slate-900">{receipt.reference}</strong>
+                  </p>
+                )}
+                <p className="mt-2 max-w-sm text-sm text-slate-500">
+                  {c.successText}
+                  {receipt?.acknowledged ? c.ackSent : ''}
                 </p>
                 <button
-                  onClick={() => { setState('idle'); setForm({ name: '', email: '', phone: '', subject: '', category: '', message: '' }); }}
+                  type="button"
+                  onClick={() => { setState('idle'); setReceipt(null); setForm({ name: '', email: '', phone: '', subject: '', category: '', message: '' }); }}
                   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
-                  Envoyer un autre message
+                  {c.sendAnother}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-5">
                 <div className="mb-2">
-                  <h2 className="text-lg font-bold text-slate-900">Envoyez-nous un message</h2>
-                  <p className="text-sm text-slate-500">Tous les champs marqués * sont obligatoires.</p>
+                  <h2 className="text-lg font-bold text-slate-900">{c.formTitle}</h2>
+                  <p className="text-sm text-slate-500">{c.formHint}</p>
                 </div>
 
                 {/* Name + Email */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Nom complet *" htmlFor="contact-name" error={errors.name}>
+                  <Field label={c.name} htmlFor="contact-name" error={errors.name}>
                     <input
                       id="contact-name"
                       aria-invalid={errors.name ? true : undefined}
                       aria-describedby={errors.name ? "contact-name-error" : undefined}
                       type="text"
                       required
-                      placeholder="Votre nom et prénom"
+                      placeholder={c.namePlaceholder}
                       value={form.name}
                       onChange={update('name')}
                       className={inputClass(!!errors.name)}
                     />
                   </Field>
-                  <Field label="Email *" htmlFor="contact-email" error={errors.email}>
+                  <Field label={c.email} htmlFor="contact-email" error={errors.email}>
                     <input
                       id="contact-email"
                       aria-invalid={errors.email ? true : undefined}
                       aria-describedby={errors.email ? "contact-email-error" : undefined}
                       type="email"
                       required
-                      placeholder="vous@email.com"
+                      placeholder={c.emailPlaceholder}
                       value={form.email}
                       onChange={update('email')}
                       className={inputClass(!!errors.email)}
@@ -178,7 +214,7 @@ export function ContactClient() {
 
                 {/* Phone + Category */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Téléphone (optionnel)" htmlFor="contact-phone">
+                  <Field label={c.phone} htmlFor="contact-phone">
                     <input
                       id="contact-phone"
                       type="tel"
@@ -188,7 +224,7 @@ export function ContactClient() {
                       className={inputClass(false)}
                     />
                   </Field>
-                  <Field label="Catégorie *" htmlFor="contact-category" error={errors.category}>
+                  <Field label={c.category} htmlFor="contact-category" error={errors.category}>
                     <select
                       id="contact-category"
                       aria-invalid={errors.category ? true : undefined}
@@ -198,20 +234,20 @@ export function ContactClient() {
                       onChange={update('category')}
                       className={inputClass(!!errors.category)}
                     >
-                      <option value="">Choisir une catégorie…</option>
-                      {CATEGORIES.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
+                      <option value="">{c.chooseCategory}</option>
+                      {CATEGORIES.map((category) => (
+                        <option key={category.value} value={category.value}>{c.categories[category.value]}</option>
                       ))}
                     </select>
                   </Field>
                 </div>
 
                 {/* Subject */}
-                <Field label="Objet (optionnel)" htmlFor="contact-subject">
+                <Field label={c.subject} htmlFor="contact-subject">
                   <input
                     id="contact-subject"
                     type="text"
-                    placeholder="Ex: Question sur ma réservation CD-2026-123456"
+                    placeholder={c.subjectPlaceholder}
                     value={form.subject}
                     onChange={update('subject')}
                     className={inputClass(false)}
@@ -219,26 +255,37 @@ export function ContactClient() {
                 </Field>
 
                 {/* Message */}
-                <Field label="Message *" htmlFor="contact-message" error={errors.message}>
+                <Field label={c.message} htmlFor="contact-message" error={errors.message}>
                   <textarea
                     id="contact-message"
                       aria-invalid={errors.message ? true : undefined}
                       aria-describedby={errors.message ? "contact-message-error" : undefined}
                     required
                     rows={6}
-                    placeholder="Décrivez votre demande en détail…"
+                    placeholder={c.messagePlaceholder}
                     value={form.message}
                     onChange={update('message')}
                     className={`${inputClass(!!errors.message)} resize-none`}
                   />
-                  <p className="mt-1 text-right text-xs text-ink-secondary">{form.message.length} caractère(s)</p>
+                  <p className="mt-1 text-end text-xs text-ink-secondary">{fmt(c.characters, { count: form.message.length })}</p>
                 </Field>
+
+                {/* Champ piège pour les robots : hors écran, ignoré au clavier et par les lecteurs d'écran */}
+                <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                  <label htmlFor="contact-website">{c.honeypot}</label>
+                  <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+                </div>
 
                 {/* Error banner */}
                 {state === 'error' && (
-                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    Une erreur est survenue. Veuillez réessayer ou contacter directement par email.
+                  <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <p>
+                      {serverError ?? c.errGeneric}{' '}
+                      <a href={clickdriveWhatsAppUrl(c.whatsappFallback)} target="_blank" rel="noopener noreferrer" className="font-semibold underline">
+                        {c.writeWhatsapp}
+                      </a>
+                    </p>
                   </div>
                 )}
 
@@ -252,12 +299,12 @@ export function ContactClient() {
                     {state === 'sending' ? (
                       <>
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Envoi en cours…
+                        {c.sending}
                       </>
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        Envoyer le message
+                        {c.send}
                       </>
                     )}
                   </button>
@@ -271,30 +318,30 @@ export function ContactClient() {
 
             {/* Contact info */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-base font-bold text-slate-900">Informations de contact</h2>
+              <h2 className="mb-5 text-base font-bold text-slate-900">{c.infoTitle}</h2>
               <ul className="space-y-4">
                 {[
                   {
                     icon: MapPin,
-                    label: 'Adresse',
-                    value: 'Nador, Région de l\'Oriental, Maroc',
+                    label: c.address,
+                    value: c.addressValue,
                   },
                   {
                     icon: Mail,
-                    label: 'Email général',
+                    label: c.generalEmail,
                     value: 'contact@clickdrive.ma',
                     href: 'mailto:contact@clickdrive.ma',
                   },
                   {
                     icon: Mail,
-                    label: 'Protection des données',
+                    label: c.privacyEmail,
                     value: 'privacy@clickdrive.ma',
                     href: 'mailto:privacy@clickdrive.ma',
                   },
                   {
                     icon: MessageCircle,
-                    label: 'WhatsApp',
-                    value: 'Réservé aux agences partenaires (support dédié)',
+                    label: c.whatsapp,
+                    value: c.whatsappValue,
                   },
                 ].map(({ icon: Icon, label, value, href }) => (
                   <li key={label} className="flex items-start gap-3">
@@ -318,35 +365,32 @@ export function ContactClient() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-accent-text" />
-                <h2 className="text-base font-bold text-slate-900">Heures de réponse</h2>
+                <h2 className="text-base font-bold text-slate-900">{c.hoursTitle}</h2>
               </div>
               <ul className="space-y-2 text-sm">
-                {SUPPORT_HOURS.map(({ day, hours }) => (
+                {c.hours.map(({ day, hours }) => (
                   <li key={day} className="flex items-center justify-between">
                     <span className="text-slate-600">{day}</span>
                     <span className="font-semibold text-slate-900">{hours}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-ink-secondary">Délai de réponse habituel : 24h ouvrées</p>
+              <p className="mt-4 text-xs text-ink-secondary">{c.usualDelay}</p>
             </div>
 
             {/* For agencies */}
             <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs">
               <div className="mb-3 flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-[#0B1220]" />
-                <p className="text-sm font-bold text-[#0B1220]">Vous êtes une agence ?</p>
+                <p className="text-sm font-bold text-[#0B1220]">{c.agencyTitle}</p>
               </div>
-              <p className="text-xs text-slate-600 mb-4">
-                Rejoignez la plateforme ClickDrive pour présenter votre flotte et recevoir des
-                demandes de réservation directement.
-              </p>
+              <p className="text-xs text-slate-600 mb-4">{c.agencyText}</p>
               <Link
                 href="/agency/join"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B1220] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 shadow-2xs"
               >
                 <Building2 className="h-3.5 w-3.5 text-[#E63946]" />
-                Devenir partenaire
+                {c.becomePartner}
               </Link>
             </div>
 
@@ -354,16 +398,14 @@ export function ContactClient() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <div className="mb-3 flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-slate-500" />
-                <p className="text-sm font-bold text-slate-800">Consultez la FAQ</p>
+                <p className="text-sm font-bold text-slate-800">{c.faqTitle}</p>
               </div>
-              <p className="text-xs text-slate-500 mb-3">
-                Trouvez rapidement des réponses aux questions les plus fréquentes.
-              </p>
+              <p className="text-xs text-slate-500 mb-3">{c.faqText}</p>
               <Link
                 href="/faq"
                 className="inline-flex items-center gap-1 text-xs font-semibold text-accent-text hover:underline"
               >
-                Voir la FAQ <ChevronRight className="h-3.5 w-3.5" />
+                {c.faqLink} <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
               </Link>
             </div>
 

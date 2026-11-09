@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Building2,
   CheckCircle2,
+  Clock3,
   ExternalLink,
   Eye,
   ImageIcon,
@@ -24,6 +25,7 @@ import { button, input } from '@/lib/design/tokens';
 import { AccountProfileSettings } from '@/components/shared/AccountProfileSettings';
 import { AgencyLogoUploader } from '@/components/agency/settings/AgencyLogoUploader';
 import { CardSkeleton, ErrorBanner } from '@/components/agency/shell/Feedback';
+import { AGENCY_LANGUAGES } from '@/lib/agencies/languages';
 
 /** Champs modifiables (le logo et la bannière sont enregistrés dès leur envoi). */
 type EditableFields = {
@@ -34,10 +36,45 @@ type EditableFields = {
   email: string;
   city: string;
   address: string;
+  opening_hours: string;
+  /** Codes de langue séparés par des virgules (« ar,fr,es ») */
+  languages: string;
+  cancellation_policy: string;
+  /** Montants en MAD saisis en texte ; vide = non proposé */
+  delivery_fee_airport: string;
+  delivery_fee_port: string;
 };
 type FieldErrors = Partial<Record<keyof EditableFields, string>>;
 
-const EMPTY: EditableFields = { name: '', description: '', phone: '', whatsapp: '', email: '', city: '', address: '' };
+const EMPTY: EditableFields = {
+  name: '',
+  description: '',
+  phone: '',
+  whatsapp: '',
+  email: '',
+  city: '',
+  address: '',
+  opening_hours: '',
+  languages: '',
+  cancellation_policy: '',
+  delivery_fee_airport: '',
+  delivery_fee_port: '',
+};
+
+const FEE_KEYS = ['delivery_fee_airport', 'delivery_fee_port'] as const;
+
+function feeError(value: string): string | undefined {
+  if (!value.trim()) return undefined;
+  const amount = Number(value.replace(',', '.'));
+  return Number.isFinite(amount) && amount >= 0 && amount <= 5000 ? undefined : 'Montant entre 0 et 5 000 MAD.';
+}
+
+/** Valeur envoyée à l'API : langues en liste, frais en nombre (null = non proposé), texte nettoyé */
+function payloadValue(key: keyof EditableFields, value: string): unknown {
+  if (key === 'languages') return value ? value.split(',').filter(Boolean) : [];
+  if ((FEE_KEYS as readonly string[]).includes(key)) return value.trim() ? Number(value.replace(',', '.')) : null;
+  return value.trim();
+}
 const DESCRIPTION_MAX = 1000;
 
 /** Mêmes règles que l'API (settingsUpdateSchema) */
@@ -47,6 +84,12 @@ function validate(form: EditableFields): FieldErrors {
   if (form.phone.replace(/\D/g, '').length < 8) errors.phone = 'Saisissez un numéro valide (8 chiffres minimum).';
   if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Adresse e-mail invalide.';
   if (form.description.length > DESCRIPTION_MAX) errors.description = `${DESCRIPTION_MAX} caractères maximum.`;
+  if (form.opening_hours.length > 300) errors.opening_hours = '300 caractères maximum.';
+  if (form.cancellation_policy.length > 600) errors.cancellation_policy = '600 caractères maximum.';
+  for (const key of FEE_KEYS) {
+    const message = feeError(form[key]);
+    if (message) errors[key] = message;
+  }
   return errors;
 }
 
@@ -132,6 +175,11 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
         email: data.email || '',
         city: data.city || '',
         address: data.address || '',
+        opening_hours: data.opening_hours || '',
+        languages: Array.isArray(data.languages) ? data.languages.join(',') : '',
+        cancellation_policy: data.cancellation_policy || '',
+        delivery_fee_airport: data.delivery_fee_airport == null ? '' : String(Number(data.delivery_fee_airport)),
+        delivery_fee_port: data.delivery_fee_port == null ? '' : String(Number(data.delivery_fee_port)),
       };
       setInitial(next);
       setForm(next);
@@ -183,7 +231,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
     setSaveError(null);
     try {
       // Seuls les champs modifiés sont envoyés
-      const payload = Object.fromEntries(changedKeys.map((key) => [key, form[key].trim()]));
+      const payload = Object.fromEntries(changedKeys.map((key) => [key, payloadValue(key, form[key])]));
       const res = await fetch(`/api/agencies/${agencyId}/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -302,6 +350,63 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
                 <input type="text" autoComplete="street-address" maxLength={240} placeholder="Bd Mohammed V, Nador" onChange={(e) => update('address', e.target.value)} {...fieldProps('address')} />
               </Field>
             </div>
+          </Card>
+
+          <Card icon={Clock3} title="Infos pratiques" description="Affichées sur votre page agence et sur vos fiches véhicules : le client sait tout avant de réserver.">
+            <Field id={`${uid}-opening_hours`} label="Horaires d’ouverture" error={errors.opening_hours} hint="Ex. Lun–Sam 8h–20h, dimanche sur rendez-vous">
+              <input type="text" maxLength={300} onChange={(e) => update('opening_hours', e.target.value)} {...fieldProps('opening_hours')} />
+            </Field>
+            <fieldset>
+              <legend className="mb-1.5 text-[13px] font-bold text-[#0B1220]">Langues parlées à l’agence</legend>
+              <div className="flex flex-wrap gap-2">
+                {AGENCY_LANGUAGES.map(({ code, label }) => {
+                  const selected = form.languages.split(',').filter(Boolean);
+                  const checked = selected.includes(code);
+                  return (
+                    <label
+                      key={code}
+                      className={cn(
+                        'inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors',
+                        checked ? 'border-[#0B1220] bg-[#0B1220] text-white' : 'border-slate-200 text-slate-700 hover:border-slate-300',
+                        (!canManage || saving) && 'cursor-not-allowed opacity-60'
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        disabled={!canManage || saving}
+                        onChange={() =>
+                          update(
+                            'languages',
+                            AGENCY_LANGUAGES.map((language) => language.code)
+                              .filter((item) => (item === code ? !checked : selected.includes(item)))
+                              .join(',')
+                          )
+                        }
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field id={`${uid}-delivery_fee_airport`} label="Livraison à l’aéroport (MAD)" error={errors.delivery_fee_airport} hint="Vide = non proposée · 0 = gratuite">
+                <input type="text" inputMode="decimal" maxLength={8} onChange={(e) => update('delivery_fee_airport', e.target.value)} {...fieldProps('delivery_fee_airport')} />
+              </Field>
+              <Field id={`${uid}-delivery_fee_port`} label="Livraison au port de Beni Ansar (MAD)" error={errors.delivery_fee_port} hint="Vide = non proposée · 0 = gratuite">
+                <input type="text" inputMode="decimal" maxLength={8} onChange={(e) => update('delivery_fee_port', e.target.value)} {...fieldProps('delivery_fee_port')} />
+              </Field>
+            </div>
+            <Field
+              id={`${uid}-cancellation_policy`}
+              label="Politique d’annulation"
+              error={errors.cancellation_policy}
+              hint={`${form.cancellation_policy.length}/600 caractères — ex. annulation gratuite jusqu’à 48 h avant la prise en charge`}
+            >
+              <textarea rows={3} maxLength={600} onChange={(e) => update('cancellation_policy', e.target.value)} {...fieldProps('cancellation_policy')} />
+            </Field>
           </Card>
         </form>
 

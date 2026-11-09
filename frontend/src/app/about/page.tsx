@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -23,91 +23,26 @@ import {
   X,
 } from 'lucide-react';
 import { LOCATIONS_NADOR } from '@/lib/constants/catalog';
+import { getTranslations, localizedPageMetadata } from '@/lib/i18n/server';
+import { locationLabel } from '@/lib/i18n/labels';
+import type { AboutMessages } from '@/lib/i18n/messages/about';
 
-export const metadata: Metadata = {
-  title: 'Comment ça marche',
-  alternates: { canonical: '/about' },
-  description:
-    'ClickDrive rassemble les voitures des agences de location de Nador au même endroit : cherchez le modèle dont vous avez besoin, pas une agence.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return localizedPageMetadata('about', '/about');
+}
 
 const focusRing =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] focus-visible:ring-offset-2';
 
-const benefits = [
-  {
-    icon: Search,
-    title: 'Trouvez votre véhicule',
-    description:
-      'Partez d’un modèle, d’un budget ou d’un besoin. Les véhicules des agences partenaires sont réunis au même endroit.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Des agences partenaires identifiées',
-    description:
-      'Chaque agence et chaque véhicule sont présentés avec des informations claires, pour réserver en confiance.',
-  },
-  {
-    icon: Shuffle,
-    title: 'Une alternative si votre modèle est indisponible',
-    description:
-      'Quand la voiture voulue est prise, ClickDrive propose des véhicules équivalents chez d’autres partenaires.',
-  },
-  {
-    icon: Compass,
-    title: 'Pensé pour Nador et sa région',
-    description:
-      'Aéroport Al-Aroui, Beni Ansar, Nador Centre, Marchica : la plateforme suit les trajets réels du territoire.',
-  },
-];
+/* Icônes et liens ; les textes (même ordre) sont dans messages/about.ts */
+const BENEFIT_ICONS = [Search, ShieldCheck, Shuffle, Compass];
+const STEP_ICONS = [SlidersHorizontal, CarFront, MessageCircle];
 
-const steps = [
-  {
-    icon: SlidersHorizontal,
-    title: 'Décrivez votre besoin',
-    description: 'Indiquez vos dates, votre point de prise en charge et le type de véhicule souhaité.',
-  },
-  {
-    icon: CarFront,
-    title: 'Comparez les véhicules',
-    description: 'Parcourez les modèles disponibles chez les différentes agences partenaires, côte à côte.',
-  },
-  {
-    icon: MessageCircle,
-    title: 'Contactez directement l’agence',
-    description: 'Consultez la fiche du véhicule, envoyez votre demande et échangez avec l’agence qui le propose.',
-  },
-];
-
-const destinations = [
-  {
-    name: 'Aéroport Nador-Al Aroui',
-    detail: 'Récupérez votre voiture dès l’atterrissage.',
-    image: '/aeroport%20nador%20al%20aroui.jpeg',
-    icon: Plane,
-    href: '/location-voiture-nador-aeroport',
-  },
-  {
-    name: 'Port de Beni Ansar',
-    detail: 'Idéal pour les arrivées en ferry.',
-    image: '/frontera%20melilla.jpeg',
-    icon: Ship,
-    href: '/location-voiture-beni-ansar',
-  },
-  {
-    name: 'Nador Centre',
-    detail: 'Au cœur de la ville, boulevard Mohammed V.',
-    image: '/centre%20nadar.jpeg',
-    icon: Building2,
-    href: '/location-voiture-nador',
-  },
-  {
-    name: 'Marchica',
-    detail: 'La lagune et la corniche, à quelques minutes.',
-    image: '/atalayoun%20nador.jpg',
-    icon: MapPin,
-    href: `/search?location=${encodeURIComponent('Corniche Marchica (Nador)')}`,
-  },
+const DESTINATIONS = [
+  { image: '/aeroport%20nador%20al%20aroui.jpeg', icon: Plane, href: '/location-voiture-nador-aeroport' },
+  { image: '/frontera%20melilla.jpeg', icon: Ship, href: '/location-voiture-beni-ansar' },
+  { image: '/centre%20nadar.jpeg', icon: Building2, href: '/location-voiture-nador' },
+  { image: '/atalayoun%20nador.jpg', icon: MapPin, href: `/search?location=${encodeURIComponent('Corniche Marchica (Nador)')}` },
 ];
 
 /* Autres points de prise en charge proposés par la recherche (même liste que la barre de recherche) */
@@ -132,11 +67,11 @@ function SectionEyebrow({ children, tone = 'light' }: { children: React.ReactNod
 }
 
 /* ── Illustration du principe : une recherche, plusieurs agences ───────── */
-function MarketplaceIllustration() {
+function MarketplaceIllustration({ c }: { c: AboutMessages['illustration'] }) {
   const rows = [
-    { tone: 'available', label: 'Disponible' },
-    { tone: 'available', label: 'Disponible' },
-    { tone: 'unavailable', label: 'Indisponible' },
+    { tone: 'available', label: c.available },
+    { tone: 'available', label: c.available },
+    { tone: 'unavailable', label: c.unavailable },
   ] as const;
 
   return (
@@ -157,12 +92,12 @@ function MarketplaceIllustration() {
         <div className="relative flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-accent-text" aria-hidden="true" />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Votre recherche</p>
-            <p className="truncate text-sm font-extrabold text-[#0B1220]">SUV · Aéroport Nador</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{c.search}</p>
+            <p className="truncate text-sm font-extrabold text-[#0B1220]">{c.query}</p>
           </div>
           <span className="hidden items-center gap-1 rounded-full bg-[#F5F6F8] px-2.5 py-1 text-[11px] font-bold text-slate-600 sm:inline-flex">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-            Vos dates
+            {c.dates}
           </span>
         </div>
 
@@ -213,19 +148,21 @@ function MarketplaceIllustration() {
         <div className="relative mt-3 flex items-center gap-3 rounded-2xl bg-action px-4 py-3 text-white">
           <Shuffle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <p className="text-[13px] font-semibold leading-snug">
-            Modèle pris ? <span className="font-extrabold">Un équivalent vous est proposé.</span>
+            {c.altQuestion} <span className="font-extrabold">{c.altAnswer}</span>
           </p>
         </div>
       </div>
 
       <figcaption id="hero-illustration-caption" className="mt-3 text-center text-[11px] font-medium text-slate-400">
-        Illustration du principe — une recherche, plusieurs agences partenaires
+        {c.caption}
       </figcaption>
     </figure>
   );
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { t } = await getTranslations();
+  const c = t.about;
   return (
     <div className="min-h-screen bg-[#F5F6F8] text-[#0B1220] antialiased">
       {/* ═══ 1. HERO ═══════════════════════════════════════════════════════ */}
@@ -241,18 +178,17 @@ export default function AboutPage() {
 
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24">
           <div className="max-w-xl">
-            <SectionEyebrow tone="dark">Comment ça marche</SectionEyebrow>
+            <SectionEyebrow tone="dark">{c.heroEyebrow}</SectionEyebrow>
 
             <h1
               id="hero-title"
               className="mt-5 text-balance text-[40px] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-[68px]"
             >
-              Cherchez la voiture, <span className="text-accent-text">pas l’agence.</span>
+              {c.heroTitle} <span className="text-accent-text">{c.heroAccent}</span>
             </h1>
 
             <p className="mt-6 text-pretty text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
-              ClickDrive rassemble les véhicules des agences de location de Nador. Voyageurs et résidents trouvent le
-              modèle dont ils ont besoin, puis contactent directement l’agence qui le propose.
+              {c.heroText}
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -260,7 +196,7 @@ export default function AboutPage() {
                 href="/search"
                 className={`group inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-action px-7 text-[15px] font-bold text-white shadow-[0_14px_30px_-12px_rgba(230,57,70,0.7)] transition-colors hover:bg-action-hover motion-reduce:transition-none ${focusRing} focus-visible:ring-offset-[#0B1220]`}
               >
-                Explorer les véhicules
+                {c.explore}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                   aria-hidden="true"
@@ -271,12 +207,12 @@ export default function AboutPage() {
                 className={`inline-flex h-13 items-center justify-center gap-2 rounded-xl border border-white/20 px-7 text-[15px] font-bold text-white transition-colors hover:border-white/40 hover:bg-white/5 motion-reduce:transition-none ${focusRing} focus-visible:ring-offset-[#0B1220]`}
               >
                 <Building2 className="h-4 w-4" aria-hidden="true" />
-                Voir les agences
+                {c.seeAgencies}
               </Link>
             </div>
 
             <ul className="mt-10 grid grid-cols-1 gap-3 text-sm text-slate-300 sm:grid-cols-3 sm:gap-4">
-              {['Demande gratuite et sans engagement', 'Agences partenaires vérifiées', 'Contact direct avec l’agence'].map((item) => (
+              {c.heroPoints.map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <BadgeCheck className="h-4 w-4 shrink-0 text-accent-text" aria-hidden="true" />
                   {item}
@@ -285,7 +221,7 @@ export default function AboutPage() {
             </ul>
           </div>
 
-          <MarketplaceIllustration />
+          <MarketplaceIllustration c={c.illustration} />
         </div>
       </section>
 
@@ -293,26 +229,18 @@ export default function AboutPage() {
       <section aria-labelledby="story-title" className="mx-auto max-w-[1240px] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
-            <SectionEyebrow>Le constat</SectionEyebrow>
+            <SectionEyebrow>{c.storyEyebrow}</SectionEyebrow>
             <h2
               id="story-title"
               className="mt-4 text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-0.02em] sm:text-[42px]"
             >
-              Trouver une voiture ne devrait pas demander dix appels.
+              {c.storyTitle}
             </h2>
             <div className="mt-6 space-y-5 text-base leading-8 text-slate-600">
+              <p>{c.storyText}</p>
               <p>
-                À Nador, un voyageur peut avoir besoin d’un véhicule dès son arrivée à l’aéroport Al-Aroui ou au port
-                de Beni Ansar. Pour trouver un modèle précis, il faut aujourd’hui contacter plusieurs agences, une par
-                une.
-              </p>
-              <p>
-                ClickDrive inverse la démarche :{' '}
-                <strong className="font-bold text-[#0B1220]">
-                  on commence par la voiture recherchée, pas par le nom de l’agence.
-                </strong>{' '}
-                La plateforme réunit les véhicules, permet de comparer les options disponibles et met en relation avec
-                le bon partenaire.
+                {c.storyLead}{' '}
+                <strong className="font-bold text-[#0B1220]">{c.storyStrong}</strong> {c.storyEnd}
               </p>
             </div>
           </div>
@@ -320,10 +248,10 @@ export default function AboutPage() {
           {/* Explication visuelle : avant / avec ClickDrive */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-3xl border border-slate-200 bg-white p-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Sans ClickDrive</p>
-              <p className="mt-2 text-lg font-extrabold">Une agence après l’autre</p>
-              <ol className="mt-5 space-y-2.5" aria-label="Démarche sans ClickDrive">
-                {['Appeler une première agence', 'Modèle indisponible, rappeler ailleurs', 'Comparer de mémoire', 'Recommencer…'].map(
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{c.without.label}</p>
+              <p className="mt-2 text-lg font-extrabold">{c.without.title}</p>
+              <ol className="mt-5 space-y-2.5" aria-label={c.without.aria}>
+                {c.without.items.map(
                   (item, index) => (
                     <li key={item} className="flex items-center gap-3 text-sm text-slate-500">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 text-slate-400">
@@ -341,10 +269,10 @@ export default function AboutPage() {
                 aria-hidden="true"
                 className="pointer-events-none absolute -end-16 -top-16 h-48 w-48 rounded-full bg-[#E63946]/30 blur-3xl"
               />
-              <p className="relative text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF6B76]">Avec ClickDrive</p>
-              <p className="relative mt-2 text-lg font-extrabold">Une seule recherche</p>
-              <ol className="relative mt-5 space-y-2.5" aria-label="Démarche avec ClickDrive">
-                {['Une recherche pour toutes les agences', 'Les véhicules comparés côte à côte', 'Une alternative si le modèle est pris', 'Le contact direct de l’agence'].map(
+              <p className="relative text-[11px] font-bold uppercase tracking-[0.16em] text-[#FF6B76]">{c.with.label}</p>
+              <p className="relative mt-2 text-lg font-extrabold">{c.with.title}</p>
+              <ol className="relative mt-5 space-y-2.5" aria-label={c.with.aria}>
+                {c.with.items.map(
                   (item) => (
                     <li key={item} className="flex items-center gap-3 text-sm text-slate-200">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-action text-white">
@@ -365,19 +293,19 @@ export default function AboutPage() {
         <div className="mx-auto max-w-[1240px] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-              <SectionEyebrow>Pourquoi ClickDrive</SectionEyebrow>
+              <SectionEyebrow>{c.benefitsEyebrow}</SectionEyebrow>
               <h2
                 id="benefits-title"
                 className="mt-4 text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-0.02em] sm:text-[42px]"
               >
-                Une recherche plus courte, du besoin jusqu’au volant.
+                {c.benefitsTitle}
               </h2>
             </div>
           </div>
 
           <ul className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
+            {c.benefits.map((benefit, index) => {
+              const Icon = BENEFIT_ICONS[index] ?? Search;
               return (
                 <li
                   key={benefit.title}
@@ -403,12 +331,12 @@ export default function AboutPage() {
       {/* ═══ 4. PARCOURS EN 3 ÉTAPES ═══════════════════════════════════════ */}
       <section aria-labelledby="steps-title" className="mx-auto max-w-[1240px] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="max-w-2xl">
-          <SectionEyebrow>Le parcours</SectionEyebrow>
+          <SectionEyebrow>{c.stepsEyebrow}</SectionEyebrow>
           <h2
             id="steps-title"
             className="mt-4 text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-0.02em] sm:text-[42px]"
           >
-            Comment fonctionne ClickDrive ?
+            {c.stepsTitle}
           </h2>
         </div>
 
@@ -422,8 +350,8 @@ export default function AboutPage() {
             aria-hidden="true"
             className="absolute inset-x-[16%] top-[22px] hidden h-px bg-linear-to-r from-[#E63946] via-slate-300 to-slate-200 lg:block rtl:bg-linear-to-l"
           />
-          {steps.map((step, index) => {
-            const Icon = step.icon;
+          {c.steps.map((step, index) => {
+            const Icon = STEP_ICONS[index] ?? CarFront;
             return (
               <li key={step.title} className="relative flex gap-5 pb-10 last:pb-0 lg:flex-col lg:items-center lg:pb-0 lg:text-center">
                 <span
@@ -448,7 +376,7 @@ export default function AboutPage() {
             href="/search"
             className={`group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0B1220] px-7 text-sm font-bold text-white transition-colors hover:bg-action sm:w-auto motion-reduce:transition-none ${focusRing}`}
           >
-            Commencer ma recherche
+            {c.startSearch}
             <ArrowRight
               className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180"
               aria-hidden="true"
@@ -466,26 +394,26 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-[1240px] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="max-w-2xl">
-              <SectionEyebrow tone="dark">Nador &amp; sa région</SectionEyebrow>
+              <SectionEyebrow tone="dark">{c.localEyebrow}</SectionEyebrow>
               <h2
                 id="local-title"
                 className="mt-4 text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-0.02em] sm:text-[42px]"
               >
-                Conçu pour les déplacements autour de Nador.
+                {c.localTitle}
               </h2>
               <p className="mt-5 text-base leading-8 text-slate-300">
-                ClickDrive couvre les principaux points de mobilité de la région, pour récupérer une voiture là où le
-                trajet commence.
+                {c.localText}
               </p>
             </div>
           </div>
 
           {/* Mobile : carrousel horizontal — tablette : 2 colonnes — desktop : 4 colonnes */}
           <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-            {destinations.map((destination) => {
+            {DESTINATIONS.map((config, index) => {
+              const destination = { ...config, ...c.destinations[index] };
               const Icon = destination.icon;
               return (
-                <li key={destination.name} className="w-[78%] shrink-0 snap-start sm:w-auto">
+                <li key={destination.href} className="w-[78%] shrink-0 snap-start sm:w-auto">
                   <Link
                     href={destination.href}
                     className={`group relative block aspect-[4/5] overflow-hidden rounded-3xl bg-slate-800 sm:aspect-[4/3] lg:aspect-[3/4] ${focusRing} focus-visible:ring-offset-[#0B1220]`}
@@ -507,7 +435,7 @@ export default function AboutPage() {
                     <div className="absolute inset-x-0 bottom-0 p-5">
                       <p className="text-lg font-extrabold leading-tight">{destination.name}</p>
                       <p className="mt-1 text-[13px] text-slate-300">{destination.detail}</p>
-                      <p className="mt-3 text-xs font-bold text-[#FF6B76]">Voir les véhicules</p>
+                      <p className="mt-3 text-xs font-bold text-[#FF6B76]">{c.seeVehicles}</p>
                     </div>
                   </Link>
                 </li>
@@ -516,7 +444,7 @@ export default function AboutPage() {
           </ul>
 
           <div className="mt-10 border-t border-white/10 pt-8">
-            <p className="text-sm font-bold text-slate-200">Autres points de prise en charge</p>
+            <p className="text-sm font-bold text-slate-200">{c.otherLocations}</p>
             <ul className="mt-4 flex flex-wrap gap-2.5">
               {otherLocations.map((location) => (
                 <li key={location}>
@@ -525,7 +453,7 @@ export default function AboutPage() {
                     className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 text-sm font-medium text-slate-100 transition-colors hover:border-white/35 hover:bg-white/10 ${focusRing} focus-visible:ring-offset-[#0B1220]`}
                   >
                     <MapPin className="h-3.5 w-3.5 text-accent-text" aria-hidden="true" />
-                    {location}
+                    {locationLabel(t, location)}
                   </Link>
                 </li>
               ))}
@@ -537,7 +465,7 @@ export default function AboutPage() {
       {/* ═══ CTA FINAL : voyageurs et agences ══════════════════════════════ */}
       <section aria-labelledby="cta-title" className="mx-auto max-w-[1240px] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <h2 id="cta-title" className="sr-only">
-          Commencer avec ClickDrive
+          {c.ctaSr}
         </h2>
 
         <div className="grid gap-5 md:grid-cols-[1.3fr_1fr]">
@@ -545,16 +473,16 @@ export default function AboutPage() {
             <div aria-hidden="true" className="absolute -end-20 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
             <div className="relative">
               <p className="text-balance text-2xl font-extrabold leading-tight sm:text-3xl">
-                Votre prochaine voiture est peut-être déjà ici.
+                {c.ctaTitle}
               </p>
               <p className="mt-3 max-w-md text-base leading-7 text-white/85">
-                Parcourez les véhicules disponibles et trouvez celui qui convient à votre séjour à Nador.
+                {c.ctaText}
               </p>
               <Link
                 href="/search"
                 className="group mt-7 inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#0B1220] shadow-lg transition-colors hover:bg-slate-100 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#E63946]"
               >
-                Rechercher une voiture
+                {c.ctaButton}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180"
                   aria-hidden="true"
@@ -568,16 +496,16 @@ export default function AboutPage() {
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
                 <Building2 className="h-5 w-5" aria-hidden="true" />
               </span>
-              <p className="mt-5 text-xl font-extrabold">Vous gérez une agence de location ?</p>
+              <p className="mt-5 text-xl font-extrabold">{c.agencyTitle}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600 sm:text-base">
-                Présentez votre flotte aux voyageurs et aux résidents qui cherchent une voiture à Nador.
+                {c.agencyText}
               </p>
             </div>
             <Link
               href="/contact"
               className={`mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded text-sm font-bold text-accent-text hover:text-[#C92F3B] ${focusRing}`}
             >
-              Devenir partenaire
+              {c.becomePartner}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </Link>
           </div>

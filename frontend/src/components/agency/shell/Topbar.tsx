@@ -5,20 +5,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Bell, ChevronDown, Home, LogOut, RefreshCw, Settings, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BRAND } from '@/lib/design/tokens';
 import { MobileNav } from './MobileNav';
 
 export type TopbarCrumb = { label: string; href?: string };
 
-function initialsOf(label: string): string {
-  const joined = label
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-  return joined || 'CD';
-}
 
 /** Menu contextuel accessible : fermeture au clic extérieur et via Échap. */
 function Popover({

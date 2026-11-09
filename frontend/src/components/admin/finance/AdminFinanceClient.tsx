@@ -8,19 +8,12 @@ import {
   Download,
   Settings,
   Sparkles,
-  TrendingUp,
-  Building2,
-  Car,
-  ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
   Loader2,
 } from 'lucide-react';
-import type { Booking, AgencySubscription, SubscriptionStats, SubscriptionPlan } from '@/types';
+import type { Booking, AgencySubscription, SubscriptionPlan } from '@/types';
 import {
   AdminCard,
-  KpiCard,
   SectionHeader,
   TableWrapper,
   Th,
@@ -37,10 +30,6 @@ import { fetchAdminBookings } from '@/lib/api/admin-dashboard.api';
 import { formatPrice } from '@/lib/utils';
 
 const PAGE_SIZE = 20;
-
-interface Props {
-  commissionRate: number;
-}
 
 function csvExport(rows: Booking[]) {
   const header = ['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Total', 'Commission', 'Net agence', 'Statut'];
@@ -73,11 +62,10 @@ function csvExport(rows: Booking[]) {
   URL.revokeObjectURL(url);
 }
 
-export function AdminFinanceClient({ commissionRate }: Props) {
+export function AdminFinanceClient() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [subscriptions, setSubscriptions] = useState<AgencySubscription[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [stats, setStats] = useState<SubscriptionStats | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -111,7 +99,6 @@ export function AdminFinanceClient({ commissionRate }: Props) {
       const subsJson = await subsRes.json();
       if (!ctrl.signal.aborted && subsJson.success && subsJson.data) {
         setSubscriptions(subsJson.data.subscriptions || []);
-        setStats(subsJson.data.stats || null);
         setPlans(subsJson.data.plans || []);
       }
     } catch (err) {
@@ -151,18 +138,6 @@ export function AdminFinanceClient({ commissionRate }: Props) {
       setUpdatingAgencyId(null);
     }
   };
-
-  // Only COMPLETED or CONFIRMED bookings are financially realized
-  const realized = useMemo(
-    () => bookings.filter((b) => ['COMPLETED', 'CONFIRMED', 'APPROVED', 'ACTIVE'].includes(b.status)),
-    [bookings]
-  );
-  const pending = useMemo(
-    () => bookings.filter((b) => ['PENDING', 'REQUESTED', 'UNDER_REVIEW'].includes(b.status)),
-    [bookings]
-  );
-
-  const totalVolume = useMemo(() => realized.reduce((s, b) => s + (b.total_price ?? 0), 0), [realized]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

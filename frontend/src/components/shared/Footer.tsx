@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
 import { useTranslation } from '@/lib/i18n/LanguageContext';

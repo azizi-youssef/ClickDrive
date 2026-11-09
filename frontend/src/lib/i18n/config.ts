@@ -56,6 +56,25 @@ export const SUPPORTED_LOCALES: LanguageOption[] = [
 export const DEFAULT_LOCALE: Locale = 'fr';
 export const LOCALE_COOKIE_KEY = 'clickdrive_locale';
 export const LOCALE_STORAGE_KEY = 'clickdrive_locale';
+/** En-tête posé par le proxy : langue de la requête, lue par le rendu serveur */
+export const LOCALE_HEADER = 'x-clickdrive-locale';
+/** Toutes les langues sauf le français (servi à la racine) ont un préfixe d'URL : /nl/search */
+export const PREFIXED_LOCALES: Locale[] = ['ar', 'en', 'de', 'es', 'nl'];
+export const ALL_LOCALES: Locale[] = ['fr', ...PREFIXED_LOCALES];
+
+/** Étiquette BCP 47 pour Intl (dates, nombres) et hreflang */
+const INTL_TAGS: Record<Locale, string> = {
+  fr: 'fr-FR',
+  ar: 'ar-MA',
+  en: 'en-GB',
+  de: 'de-DE',
+  es: 'es-ES',
+  nl: 'nl-NL',
+};
+
+export function intlTag(locale: Locale): string {
+  return INTL_TAGS[locale];
+}
 
 const LOCALE_CODES = new Set<string>(SUPPORTED_LOCALES.map((option) => option.code));
 

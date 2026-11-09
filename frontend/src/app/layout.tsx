@@ -1,15 +1,17 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import { getServerLocale } from '@/lib/i18n/server';
+import { getServerLocale, getTranslations } from '@/lib/i18n/server';
+import { CORE_NAMESPACES, pickMessages } from '@/lib/i18n/messages';
 
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
+import { Analytics } from '@/components/analytics/Analytics';
 
 const SITE_URL = 'https://clickdrive.ma';
 const SITE_NAME = 'ClickDrive';
 const SITE_TITLE = 'ClickDrive — Location de voitures à Nador';
 const SITE_DESCRIPTION =
-  "Trouvez et comparez des voitures de location à Nador auprès d'agences locales. Recherchez par dates, catégorie et destination : aéroport Nador-Al Aroui, Beni Ansar, Nador et Marchica.";
+  "Comparez les voitures et motos des agences de location de Nador : aéroport Nador-Al Aroui, port de Beni Ansar et centre-ville. Demande gratuite en ligne.";
 
 // Police hébergée dans le projet (variable 200–800, sous-ensemble latin, licence OFL — voir fonts/).
 // next/font/google la téléchargeait au build et faisait échouer Turbopack en CI.
@@ -38,7 +40,7 @@ export const viewport: Viewport = {
 /* METADATA                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export const metadata: Metadata = {
+const BASE_METADATA: Metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
@@ -90,6 +92,23 @@ export const metadata: Metadata = {
     address: false,
   },
 };
+
+/** Titre, description et Open Graph dans la langue de la requête */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getTranslations();
+  return {
+    ...BASE_METADATA,
+    title: { default: t.meta.siteTitle, template: `%s | ${SITE_NAME} Nador` },
+    description: t.meta.siteDescription,
+    openGraph: {
+      ...BASE_METADATA.openGraph,
+      locale: t.meta.ogLocale,
+      title: t.meta.siteTitle,
+      description: t.meta.shareDescription,
+    },
+    twitter: { ...BASE_METADATA.twitter, title: t.meta.siteTitle, description: t.meta.shareDescription },
+  };
+}
 
 /* -------------------------------------------------------------------------- */
 /* DONNÉES STRUCTURÉES (SEO)                                                  */
@@ -195,7 +214,10 @@ export default async function RootLayout({
         className="flex min-h-full flex-col bg-canvas font-sans text-ink antialiased selection:bg-action selection:text-white"
         suppressHydrationWarning
       >
-        <AppShell initialLocale={locale}>{children}</AppShell>
+        <AppShell locale={locale} messages={pickMessages(locale, CORE_NAMESPACES)}>
+          {children}
+        </AppShell>
+        <Analytics />
 
         <script
           type="application/ld+json"

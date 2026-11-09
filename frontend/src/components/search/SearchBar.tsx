@@ -1,7 +1,9 @@
 'use client';
 
+import { track } from '@/lib/analytics/track';
 import React, { useId, useState, useSyncExternalStore } from 'react';
-import { useRouter } from 'next/navigation';
+import { useLocalizedRouter } from '@/lib/i18n/useLocalizedRouter';
+import { categoryLabel, locationLabel } from '@/lib/i18n/labels';
 import { MapPin, Calendar, Car, Search, type LucideIcon } from 'lucide-react';
 import { LOCATIONS_NADOR, CATEGORIES } from '@/lib/constants/catalog';
 import {
@@ -26,6 +28,7 @@ interface SearchBarProps {
   basePath?: string;
 }
 
+// Valeurs techniques (jamais affichées telles quelles) : « tous types / toutes marques »
 const ALL_CATEGORIES_LABEL = 'Tous les types';
 const ALL_BRANDS_LABEL = 'Toutes les marques';
 
@@ -88,7 +91,7 @@ export function SearchBar({
   categories,
   basePath = '/search',
 }: SearchBarProps) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const uid = useId();
   const { t } = useTranslation();
 
@@ -147,6 +150,7 @@ export function SearchBar({
     if (effectiveEndDate) params.set('endDate', effectiveEndDate);
     if (category && category !== ALL_CATEGORIES_LABEL) params.set('category', category);
     if (brand && brand !== ALL_BRANDS_LABEL && brand !== 'ALL') params.set('brand', brand);
+    track('Recherche', { dates: Boolean(effectiveStartDate && effectiveEndDate), lieu: location || 'non précisé' });
     router.push(`${basePath}?${params.toString()}`);
   };
 
@@ -154,7 +158,7 @@ export function SearchBar({
     <form
       onSubmit={handleSubmit}
       role="search"
-      aria-label="Rechercher une voiture de location"
+      aria-label={t.searchBar.formAria}
       className={`w-full ${isCompact ? '' : 'mx-auto max-w-5xl'}`}
     >
       <div
@@ -176,7 +180,7 @@ export function SearchBar({
             >
               {LOCATIONS_NADOR.map((loc) => (
                 <option key={loc} value={loc}>
-                  {loc}
+                  {locationLabel(t, loc)}
                 </option>
               ))}
             </select>
@@ -232,7 +236,7 @@ export function SearchBar({
                 : CATEGORIES
               ).map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {cat === ALL_CATEGORIES_LABEL ? t.searchBar.allTypes : categoryLabel(t, cat)}
                 </option>
               ))}
             </select>

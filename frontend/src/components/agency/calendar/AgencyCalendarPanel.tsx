@@ -4,19 +4,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 import Image from 'next/image';
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Plus,
   Loader2,
-  Lock,
-  Wrench,
-  User,
   Car,
-  AlertCircle,
-  Clock,
   Trash2,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -163,8 +157,8 @@ export function AgencyCalendarPanel({
 
       setVehicles(json.data?.vehicles ?? []);
       setEvents(json.data?.events ?? []);
-    } catch (err: any) {
-      setError(err.message || 'Impossible de contacter le serveur');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Impossible de contacter le serveur');
     } finally {
       setLoading(false);
     }
@@ -224,8 +218,8 @@ export function AgencyCalendarPanel({
       }
       setBlockingOpen(false);
       void loadCalendar();
-    } catch (err: any) {
-      setBlockError(err.message);
+    } catch (err: unknown) {
+      setBlockError((err instanceof Error ? err.message : '') || 'Échec du blocage');
     } finally {
       setBlockBusy(false);
     }
@@ -394,6 +388,12 @@ export function AgencyCalendarPanel({
         </div>
       </div>
 
+      {error && (
+        <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+          <span>{error}</span>
+        </div>
+      )}
       {/* Calendar Matrix View */}
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
         {loading ? (

@@ -1,4 +1,5 @@
-import { isPlatformAdminRole, type UserRole } from '@clickdrive/shared';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
+import { type UserRole } from '@clickdrive/shared/roles';
 
 /** Accès portail /admin : SUPER_ADMIN uniquement (le rôle historique ADMIN n'a pas de droit global). */
 export function canAccessAdminPortal(role: string): boolean {

@@ -110,9 +110,11 @@ function runTests() {
   const validationSuccess = bookingRequestSchema.safeParse(validData);
   assert(validationSuccess.success === true, 'Données valides avec CIN acceptées');
 
-  // Rejet si CIN manquant
-  const invalidWithoutCin = { ...validData, cin: '' };
-  assert(bookingRequestSchema.safeParse(invalidWithoutCin).success === false, 'Rejet si CIN manquant');
+  // CIN et permis facultatifs à la demande (présentés en original à la remise), vérifiés s'ils sont fournis
+  const withoutDocuments = { ...validData, cin: '', licenseNumber: '', licenseExpiry: '' };
+  assert(bookingRequestSchema.safeParse(withoutDocuments).success === true, 'Demande acceptée sans CIN ni permis');
+  const invalidShortCin = { ...validData, cin: 'S1' };
+  assert(bookingRequestSchema.safeParse(invalidShortCin).success === false, 'Rejet si CIN fourni mais trop court');
 
   // Rejet si dates inversées
   const invalidDates = { ...validData, startDate: '2026-10-15', endDate: '2026-10-10' };

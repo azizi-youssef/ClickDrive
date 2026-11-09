@@ -2,15 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Users,
   Search,
   Phone,
   Mail,
-  Calendar,
-  Car,
   Loader2,
   AlertCircle,
-  FileText,
   RefreshCw,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
@@ -59,8 +55,8 @@ export function AgencyCustomersPanel({ agencyId }: { agencyId: string }) {
       setCustomers(json.data ?? []);
       setTotalPages(json.meta?.totalPages ?? 1);
       setTotalCount(json.meta?.total ?? 0);
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des clients.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Erreur lors du chargement des clients.');
     } finally {
       setLoading(false);
     }

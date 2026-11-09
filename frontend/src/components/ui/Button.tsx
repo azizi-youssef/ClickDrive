@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

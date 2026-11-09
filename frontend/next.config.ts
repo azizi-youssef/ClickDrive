@@ -2,6 +2,17 @@ import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
 
+// Mesure d'audience Plausible (sans cookie) : son origine n'est autorisée que si elle est configurée
+const analyticsOrigin = (() => {
+  if (!process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN?.trim()) return "";
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_PLAUSIBLE_SRC?.trim() || "https://plausible.io/js/script.js");
+    return url.protocol === "https:" ? url.origin : "";
+  } catch {
+    return "";
+  }
+})();
+
 /* Projet Supabase du site : seules ses images et son API sont autorisées (pas tout *.supabase.co). */
 const DEFAULT_SUPABASE_HOST = "wviqbscbnrrpxpojhqql.supabase.co";
 const supabaseHosts = new Set([DEFAULT_SUPABASE_HOST]);
@@ -67,7 +78,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Scripts : 'unsafe-inline' requis par les scripts inline de Next.js ; 'unsafe-eval' seulement en dev (Fast Refresh)
-      `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
+      `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}${analyticsOrigin ? ` ${analyticsOrigin}` : ""}`,
       // Styles: self + inline (Tailwind generates inline styles)
       "style-src 'self' 'unsafe-inline'",
       // Polices auto-hébergées (next/font/local)
@@ -75,7 +86,7 @@ const securityHeaders = [
       // Images: self + stockage Supabase du projet + Unsplash + data URIs
       `img-src 'self' data: blob: ${supabaseHttps} https://images.unsplash.com`,
       // Connections: self + API & Realtime du projet Supabase
-      `connect-src 'self' ${supabaseHttps} ${supabaseWss}`,
+      `connect-src 'self' ${supabaseHttps} ${supabaseWss}${analyticsOrigin ? ` ${analyticsOrigin}` : ""}`,
       // Workers: self
       "worker-src 'self' blob:",
       // Aucun plugin (Flash, applets…)

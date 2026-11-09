@@ -27,6 +27,7 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchClientAuthProfile, type ClientAuthProfile } from '@/lib/auth/client';
@@ -44,6 +45,7 @@ const NAV_GROUPS: { label: string; items: NavItemDef[] }[] = [
       { href: '/admin/fleet', label: 'Voitures', icon: Car, exact: true },
       { href: '/admin/fleet/motos', label: 'Motos', icon: Motorbike },
       { href: '/admin/customers', label: 'Clients', icon: Users },
+      { href: '/admin/messages', label: 'Messages', icon: Inbox },
     ],
   },
   {

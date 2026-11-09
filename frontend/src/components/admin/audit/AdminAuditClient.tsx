@@ -4,16 +4,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ScrollText,
   RefreshCw,
-  Search,
-  Filter,
-  Eye,
   X,
   Code,
-  Calendar,
-  ShieldAlert,
   User,
   Clock,
-  Layers,
 } from 'lucide-react';
 import {
   AdminCard,

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { BRAND_LOGO_PATHS } from '@/lib/constants/brand-logos';
 import { CATALOG_PATHS } from '@/lib/vehicles/kind';

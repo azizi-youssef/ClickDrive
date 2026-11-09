@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useState, useCallback } from 'react';
-import Link from 'next/link';
+import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import {
   Gauge,
@@ -21,7 +21,11 @@ import {
 } from 'lucide-react';
 import type { Vehicle } from '@/types';
 import { formatEngineCc, isMotorcycle } from '@/lib/vehicles/kind';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { formatDecimal, formatNumber } from '@/lib/i18n/format';
+import { categoryLabel, fuelLabel, transmissionLabel } from '@/lib/i18n/labels';
+import type { VehicleMessages } from '@/lib/i18n/messages/vehicle';
 import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { isOptimizableImage } from '@/lib/utils/images';
 
@@ -40,45 +44,36 @@ interface VehicleCardProps {
 const MIN_REVIEWS_FOR_RATING = 5;
 
 const STATUS_STYLES = {
-  available: { label: 'Disponible', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  reserved: { label: 'Réservé', text: 'text-amber-700', dot: 'bg-amber-500' },
-  rented: { label: 'En location', text: 'text-sky-700', dot: 'bg-sky-500' },
-  maintenance: { label: 'Maintenance', text: 'text-slate-600', dot: 'bg-slate-400' },
-  unknown: { label: 'Indisponible', text: 'text-slate-600', dot: 'bg-slate-400' },
+  available: { text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  reserved: { text: 'text-amber-700', dot: 'bg-amber-500' },
+  rented: { text: 'text-sky-700', dot: 'bg-sky-500' },
+  maintenance: { text: 'text-slate-600', dot: 'bg-slate-400' },
+  unknown: { text: 'text-slate-600', dot: 'bg-slate-400' },
 } as const;
 
-function resolveStatus(rawStatus?: string, checked?: boolean) {
+type StatusLabelKey = keyof Pick<
+  VehicleMessages['card'],
+  'freeOnDates' | 'availableToday' | 'reserved' | 'rented' | 'maintenance' | 'unavailable'
+>;
+
+function resolveStatus(
+  rawStatus?: string,
+  checked?: boolean
+): { isBookable: boolean; style: (typeof STATUS_STYLES)[keyof typeof STATUS_STYLES]; labelKey: StatusLabelKey } {
   // Avec des dates, l'API ne renvoie que les véhicules libres sur toute la période
-  if (checked) {
-    return { isBookable: true, style: { ...STATUS_STYLES.available, label: 'Libre à vos dates' } };
-  }
+  if (checked) return { isBookable: true, style: STATUS_STYLES.available, labelKey: 'freeOnDates' };
   switch (rawStatus) {
     case 'AVAILABLE':
-      return { isBookable: true, style: { ...STATUS_STYLES.available, label: 'Disponible aujourd’hui' } };
+      return { isBookable: true, style: STATUS_STYLES.available, labelKey: 'availableToday' };
     case 'RESERVED':
-      return { isBookable: false, style: STATUS_STYLES.reserved };
+      return { isBookable: false, style: STATUS_STYLES.reserved, labelKey: 'reserved' };
     case 'RENTED':
-      return { isBookable: false, style: STATUS_STYLES.rented };
+      return { isBookable: false, style: STATUS_STYLES.rented, labelKey: 'rented' };
     case 'MAINTENANCE':
-      return { isBookable: false, style: STATUS_STYLES.maintenance };
+      return { isBookable: false, style: STATUS_STYLES.maintenance, labelKey: 'maintenance' };
     default:
-      return { isBookable: false, style: STATUS_STYLES.unknown };
+      return { isBookable: false, style: STATUS_STYLES.unknown, labelKey: 'unavailable' };
   }
-}
-
-const FUEL_LABELS: Record<string, string> = {
-  DIESEL: 'Diesel',
-  GASOLINE: 'Essence',
-  HYBRID: 'Hybride',
-  ELECTRIC: 'Électrique',
-};
-
-function getFuelLabel(fuel: Vehicle['fuel']): string {
-  return FUEL_LABELS[fuel] ?? fuel;
-}
-
-function formatMad(value: number): string {
-  return `${formatNumber(value)} MAD`;
 }
 
 export function VehicleCardSkeleton() {
@@ -126,6 +121,8 @@ function VehicleGallery({
   priority: boolean;
   unavailable: boolean;
 }) {
+  const { t, fmt } = useTranslation();
+  const card = t.vehicle.card;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedIndexes, setFailedIndexes] = useState<Set<number>>(() => new Set());
 
@@ -160,8 +157,8 @@ function VehicleGallery({
         {src ? (
         <Image
           src={src}
-          alt={`${brand} ${model}${agencyCity ? ` à ${agencyCity}` : ''}${
-            images.length > 1 ? ` (photo ${currentIndex + 1} sur ${images.length})` : ''
+          alt={`${fmt(agencyCity ? card.photoAltCity : card.photoAlt, { name: `${brand} ${model}`, city: agencyCity ?? '' })}${
+            images.length > 1 ? fmt(card.photoIndex, { index: currentIndex + 1, total: images.length }) : ''
           }`}
           fill
           priority={priority}
@@ -173,7 +170,7 @@ function VehicleGallery({
         ) : (
           <div
             role="img"
-            aria-label={`${brand} ${model} — photo indisponible`}
+            aria-label={fmt(card.photoUnavailable, { name: `${brand} ${model}` })}
             className="flex h-full w-full items-center justify-center text-slate-300"
           >
             <CarFront className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
@@ -189,7 +186,7 @@ function VehicleGallery({
             type="button"
             onClick={(e) => goTo(-1, e)}
             className={cn(ARROW_BASE, 'start-2')}
-            aria-label="Image précédente"
+            aria-label={card.previousImage}
           >
             <ChevronLeft className="h-4 w-4 text-slate-700 rtl:rotate-180" aria-hidden="true" />
           </button>
@@ -197,7 +194,7 @@ function VehicleGallery({
             type="button"
             onClick={(e) => goTo(1, e)}
             className={cn(ARROW_BASE, 'end-2')}
-            aria-label="Image suivante"
+            aria-label={card.nextImage}
           >
             <ChevronRight className="h-4 w-4 text-slate-700 rtl:rotate-180" aria-hidden="true" />
           </button>
@@ -231,11 +228,14 @@ function VehicleCardComponent({
   selectedDays,
   onNotify,
 }: VehicleCardProps) {
+  const { t, locale, fmt, plural, date } = useTranslation();
+  const card = t.vehicle.card;
+  const mad = (value: number) => `${formatNumber(value, locale)} MAD`;
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = externalFavorite ?? internalFavorite;
 
   const images = vehicle.images ?? [];
-  const { isBookable, style: status } = resolveStatus(vehicle.status, availabilityChecked);
+  const { isBookable, style: status, labelKey } = resolveStatus(vehicle.status, availabilityChecked);
   const agency = vehicle.agency;
   const reviewCount = agency?.review_count ?? 0;
   const agencyRating = typeof agency?.rating === 'number' ? agency.rating : null;
@@ -293,14 +293,14 @@ function VehicleCardComponent({
           )}
         >
           <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} aria-hidden="true" />
-          {status.label}
+          {card[labelKey]}
         </span>
 
         <button
           type="button"
           onClick={handleFavorite}
           aria-pressed={isFavorite}
-          aria-label={isFavorite ? `Retirer ${vehicleName} des favoris` : `Ajouter ${vehicleName} aux favoris`}
+          aria-label={fmt(isFavorite ? card.removeFavorite : card.addFavorite, { name: vehicleName })}
           className={cn(
             'absolute end-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-sm backdrop-blur-sm transition-[color,scale] duration-200 active:scale-110 motion-reduce:active:scale-100',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
@@ -312,7 +312,9 @@ function VehicleCardComponent({
 
         <span className="pointer-events-none absolute bottom-3 start-3 z-10 inline-flex items-center gap-1 rounded-md bg-[#0B1220]/75 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm">
           {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
-          {isMoto ? `Moto · ${vehicle.category}` : vehicle.category}
+          {isMoto
+            ? fmt(card.motoCategory, { category: categoryLabel(t, vehicle.category) })
+            : categoryLabel(t, vehicle.category)}
         </span>
       </div>
 
@@ -328,11 +330,11 @@ function VehicleCardComponent({
 
         <ul
           className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[13px] font-medium text-slate-600"
-          aria-label={isMoto ? 'Caractéristiques de la moto' : 'Caractéristiques du véhicule'}
+          aria-label={isMoto ? card.specsMoto : card.specsCar}
         >
           <li className="inline-flex items-center gap-1.5">
             <Gauge className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            {vehicle.transmission === 'AUTOMATIC' ? 'Automatique' : 'Manuelle'}
+            {transmissionLabel(t, vehicle.transmission)}
           </li>
           {isMoto && engineCc ? (
             <li className="inline-flex items-center gap-1.5">
@@ -342,18 +344,18 @@ function VehicleCardComponent({
           ) : (
             <li className="inline-flex items-center gap-1.5">
               <Fuel className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              {getFuelLabel(vehicle.fuel)}
+              {fuelLabel(t, vehicle.fuel)}
             </li>
           )}
           {isMoto && vehicle.license_required ? (
             <li className="inline-flex items-center gap-1.5">
               <IdCard className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              Permis {vehicle.license_required}
+              {fmt(t.vehicle.license, { license: vehicle.license_required })}
             </li>
           ) : (
             <li className="inline-flex items-center gap-1.5">
               <Users className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              {vehicle.seats} place{vehicle.seats > 1 ? 's' : ''}
+              {plural(vehicle.seats, t.vehicle.seats)}
             </li>
           )}
         </ul>
@@ -372,20 +374,20 @@ function VehicleCardComponent({
             {agency.verified && (
               <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-emerald-700">
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                Vérifiée
+                {card.verified}
               </span>
             )}
             <span className="ms-auto shrink-0 text-[11px] font-semibold text-ink-tertiary">
               {showRating ? (
                 <span
                   className="inline-flex items-center gap-1"
-                  aria-label={`Note : ${agencyRating!.toFixed(1)} sur 5, ${reviewCount} avis`}
+                  aria-label={fmt(card.ratingAria, { rating: formatDecimal(agencyRating!, locale), count: reviewCount })}
                 >
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
-                  {agencyRating!.toFixed(1).replace('.', ',')}
+                  {formatDecimal(agencyRating!, locale)}
                 </span>
               ) : (
-                'Nouvelle'
+                card.newAgency
               )}
             </span>
           </div>
@@ -396,18 +398,18 @@ function VehicleCardComponent({
           <div className="flex items-end justify-between gap-3">
             <p className="leading-none">
               <span className="text-[22px] font-extrabold tabular-nums tracking-tight text-[#0B1220]">
-                {formatNumber(vehicle.daily_price)}
+                {formatNumber(vehicle.daily_price, locale)}
               </span>
               <span className="ms-1 text-xs font-bold text-[#0B1220]">MAD</span>
-              <span className="ms-1 text-xs font-medium text-slate-500">/ jour</span>
+              <span className="ms-1 text-xs font-medium text-slate-500">{card.perDay}</span>
             </p>
             {totalPrice !== null ? (
               <p className="text-end text-[11px] font-semibold text-slate-600">
-                {formatMad(totalPrice)} · {selectedDays} j
+                {mad(totalPrice)} · {plural(selectedDays ?? 0, t.vehicle.daysShort)}
               </p>
             ) : (vehicle.deposit ?? 0) > 0 ? (
               <p className="text-end text-[11px] font-medium text-slate-500">
-                Caution {formatMad(vehicle.deposit)}
+                {fmt(card.deposit, { amount: mad(vehicle.deposit) })}
               </p>
             ) : null}
           </div>
@@ -415,8 +417,7 @@ function VehicleCardComponent({
           {!isBookable && vehicle.status === 'RENTED' && vehicle.available_from && (
             <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
               <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Disponible dès le{' '}
-              {new Date(vehicle.available_from).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+              {fmt(card.availableFrom, { date: date(vehicle.available_from, 'dayMonth') })}
             </p>
           )}
 
@@ -432,9 +433,9 @@ function VehicleCardComponent({
                   : 'border border-slate-200 bg-white text-[#0B1220] group-hover:border-slate-300'
               )}
             >
-              Voir les détails
+              {card.viewDetails}
               <span className="sr-only">
-                {' '}: {vehicleName} {vehicle.year}, {formatMad(vehicle.daily_price)} par jour
+                {fmt(card.viewDetailsSr, { name: vehicleName, year: vehicle.year, price: mad(vehicle.daily_price) })}
               </span>
               <ArrowRight
                 className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
@@ -446,7 +447,7 @@ function VehicleCardComponent({
                 type="button"
                 onClick={handleNotify}
                 className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
-                aria-label={`Me prévenir quand ${vehicleName} est disponible`}
+                aria-label={fmt(card.notifyMe, { name: vehicleName })}
               >
                 <BellRing className="h-4 w-4" aria-hidden="true" />
               </button>

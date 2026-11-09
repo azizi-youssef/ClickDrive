@@ -2,24 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  CircleDollarSign,
-  TrendingUp,
-  Percent,
-  Wallet,
-  ArrowDownToLine,
   Loader2,
   AlertCircle,
   FileSpreadsheet,
-  CheckCircle2,
-  Clock,
-  ShieldCheck,
   RefreshCw,
   Sparkles,
   ArrowUpRight,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
-import type { AgencySubscription, SubscriptionPlan } from '@/types';
+import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
+import { PendingPlanChangeBanner } from '../subscription/PendingPlanChangeBanner';
 
 export type TransactionItem = {
   id: string;
@@ -51,6 +44,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
   const [data, setData] = useState<FinanceData | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [pendingChange, setPendingChange] = useState<PlanChangeRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,12 +52,15 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
     setLoading(true);
     setError(null);
     try {
-      const [res, plansRes] = await Promise.all([
+      const [res, plansRes, subRes] = await Promise.all([
         fetch(`/api/agencies/${agencyId}/finances`),
         fetch('/api/subscriptions/plans'),
+        fetch(`/api/agencies/${agencyId}/subscription`),
       ]);
       const json = await res.json();
       const plansJson = await plansRes.json();
+      const subJson = await subRes.json().catch(() => null);
+      setPendingChange(subJson?.pendingChange ?? null);
 
       if (!res.ok || !json.success) {
         throw new Error(json.error || 'Impossible de charger le relevé financier.');
@@ -72,8 +69,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       if (plansJson.success && plansJson.data) {
         setPlans(plansJson.data);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement des données financières.');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : '') || 'Erreur lors du chargement des données financières.');
     } finally {
       setLoading(false);
     }
@@ -189,6 +186,10 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         </div>
       )}
 
+      {pendingChange && (
+        <PendingPlanChangeBanner agencyId={agencyId} request={pendingChange} onCancelled={() => setPendingChange(null)} />
+      )}
+
       {/* Transactions Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
@@ -266,9 +267,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           plans={plans}
           isOpen={upgradeModalOpen}
           onClose={() => setUpgradeModalOpen(false)}
-          onSuccess={(updatedSub) => {
-            setData((prev) => (prev ? { ...prev, subscription: updatedSub } : prev));
-          }}
+          pendingChange={pendingChange}
+          onRequested={setPendingChange}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 import type { Vehicle } from '@/types';
+import { toPublicAgency } from '@/lib/agencies/public';
 
 /**
  * Projection publique d'un véhicule (catalogue, fiche, API publique, HTML préchargé).
@@ -13,6 +14,8 @@ export function toPublicVehicle<T extends Vehicle>(vehicle: T): T {
   // Le type Vehicle exige ces champs (chaînes) : valeurs vides, jamais les vraies données
   copy.license_plate = '';
   copy.unit_number = '';
+  // Agence jointe : même projection publique que la liste des agences (pas d'e-mail)
+  if (vehicle.agency) copy.agency = toPublicAgency(vehicle.agency);
   return copy as unknown as T;
 }
 

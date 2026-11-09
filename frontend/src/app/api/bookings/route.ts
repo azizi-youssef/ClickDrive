@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { serverError } from '@/lib/api/server-error';
-import { isPlatformAdminRole } from '@clickdrive/shared';
+import { notifyBookingCreated } from '@/lib/bookings/notifications';
+import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';
 import { bookingsService } from '@/lib/services/bookings.service';
 import { bookingRequestSchema } from '@/lib/validations/booking';
@@ -13,6 +14,7 @@ import {
 } from '@/lib/rate-limit';
 import { redactBookingCustomerData } from '@/lib/auth/booking-access';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
+import { signedBookingLink } from '@/lib/auth/booking-access-link';
 
 export async function POST(req: NextRequest) {
   try {
@@ -105,8 +107,12 @@ export async function POST(req: NextRequest) {
     const agencyPhone = result.booking.agency?.whatsapp || result.booking.agency?.phone || CLICKDRIVE_WHATSAPP_NUMBER;
     const agencyWhatsAppUrl = notificationService.generateWhatsAppLink(agencyPhone, agencyWhatsAppMessage);
     const pdfUrl = `${appUrl}${signedBookingPdfPath(result.booking.reference || '')}`;
+    const trackingPath = signedBookingLink('track', result.booking.reference || '');
 
     if (!result.idempotentReplay) {
+      // E-mails au client (accusé de réception) et à l'agence, envoyés après la réponse
+      const createdBooking = result.booking;
+      after(() => notifyBookingCreated(createdBooking, appUrl));
       await notificationService.sendDashboardNotification({
         agencyId: result.booking.agency_id,
         title: `Nouvelle demande de réservation ${result.booking.reference}`,
@@ -121,6 +127,7 @@ export async function POST(req: NextRequest) {
       booking: result.booking,
       reference: result.booking.reference,
       pdfUrl,
+      trackingUrl: trackingPath,
       agencyWhatsAppUrl,
       agencyWhatsAppMessage,
     });
