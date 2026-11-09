@@ -8,10 +8,10 @@ import {
   Download,
   Settings,
   Sparkles,
-  CheckCircle2,
   Loader2,
 } from 'lucide-react';
-import type { Booking, AgencySubscription, SubscriptionPlan } from '@/types';
+import type { Booking, AgencySubscription, SubscriptionPlan, SubscriptionStatus } from '@/types';
+import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 import {
   AdminCard,
   SectionHeader,
@@ -20,6 +20,7 @@ import {
   Td,
   TableSkeletonRows,
   BookingStatusBadge,
+  StatusBadge,
   EmptyState,
   Pagination,
   SearchInput,
@@ -28,38 +29,44 @@ import {
 } from '@/components/admin/AdminUI';
 import { fetchAdminBookings } from '@/lib/api/admin-dashboard.api';
 import { formatPrice } from '@/lib/utils';
+import { bookingStatusLabel } from '@/lib/bookings/status';
+import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
 
 const PAGE_SIZE = 20;
 
+/** Statut réel de l'abonnement : un paiement en retard ou un forfait expiré ne s'affiche pas en vert */
+const SUBSCRIPTION_STATUS: Record<SubscriptionStatus, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'neutral' }> = {
+  TRIAL: { label: 'Essai', variant: 'info' },
+  ACTIVE: { label: 'Actif', variant: 'success' },
+  PAST_DUE: { label: 'Paiement en retard', variant: 'warning' },
+  CANCELLED: { label: 'Résilié', variant: 'neutral' },
+  EXPIRED: { label: 'Expiré', variant: 'error' },
+};
+
+const dayFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+/** « 2026-12-01 » → « 1 déc. 2026 » (date sans heure lue en UTC : le même jour partout) */
+function formatDay(value: string | null | undefined): string {
+  if (!value) return '—';
+  const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00Z` : value);
+  return Number.isNaN(date.getTime()) ? value : dayFormat.format(date);
+}
+
 function csvExport(rows: Booking[]) {
-  const header = ['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Total', 'Commission', 'Net agence', 'Statut'];
-  const lines = rows.map((b) =>
-    [
+  downloadCsv(csvFileName('clickdrive-finances'), [
+    ['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Total (DH)', 'Commission (DH)', 'Net agence (DH)', 'Statut'],
+    ...rows.map((b) => [
       b.booking_ref ?? b.reference ?? '',
       b.customer_name,
       b.agency?.name ?? '',
-      b.start_date,
-      b.end_date,
+      csvDate(b.start_date),
+      csvDate(b.end_date),
       b.total_price,
       b.commission_amount ?? 0,
       b.agency_amount ?? b.total_price,
-      b.status,
-    ]
-      .map((v) => {
-        const s = String(v ?? '');
-        return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-      })
-      .join(';')
-  );
-  const blob = new Blob(['\uFEFF' + [header.join(';'), ...lines].join('\r\n')], {
-    type: 'text/csv;charset=utf-8;',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `clickdrive-finances-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+      bookingStatusLabel(b.status, 'fr', 'business'),
+    ]),
+  ]);
 }
 
 export function AdminFinanceClient() {
@@ -75,6 +82,8 @@ export function AdminFinanceClient() {
   const [page, setPage] = useState(0);
   const [updatingAgencyId, setUpdatingAgencyId] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
+  // Changement de forfait : il modifie la facturation de l'agence, donc il est confirmé avant l'envoi
+  const [pendingPlanChange, setPendingPlanChange] = useState<{ subscription: AgencySubscription; plan: SubscriptionPlan } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -117,6 +126,7 @@ export function AdminFinanceClient() {
   }, [load]);
 
   const handleUpdatePlan = async (agencyId: string, newPlanSlug: string) => {
+    setPendingPlanChange(null);
     setUpdatingAgencyId(agencyId);
     setPlanError(null);
     try {
@@ -309,15 +319,14 @@ export function AdminFinanceClient() {
 
                     <Td>
                       <span className="text-xs text-slate-600 whitespace-nowrap">
-                        {sub.billing_cycle_end}
+                        {formatDay(sub.billing_cycle_end)}
                       </span>
                     </Td>
 
                     <Td>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {sub.status}
-                      </span>
+                      <StatusBadge variant={SUBSCRIPTION_STATUS[sub.status]?.variant ?? 'neutral'}>
+                        {SUBSCRIPTION_STATUS[sub.status]?.label ?? sub.status}
+                      </StatusBadge>
                     </Td>
 
                     <Td className="text-right">
@@ -329,7 +338,11 @@ export function AdminFinanceClient() {
                       ) : (
                         <select
                           value={sub.plan.slug}
-                          onChange={(e) => handleUpdatePlan(sub.agency_id, e.target.value)}
+                          aria-label={`Changer le forfait de ${sub.agency_name}`}
+                          onChange={(e) => {
+                            const plan = plans.find((candidate) => candidate.slug === e.target.value);
+                            if (plan && plan.slug !== sub.plan.slug) setPendingPlanChange({ subscription: sub, plan });
+                          }}
                           className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 outline-none hover:border-slate-300 focus:border-[#0B1220]"
                         >
                           {plans.map((p) => (
@@ -364,8 +377,15 @@ export function AdminFinanceClient() {
               placeholder="Dossier, client, agence…"
               className="w-60"
             />
-            <Btn variant="secondary" size="sm" onClick={() => void load('refresh')} disabled={refreshing}>
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <Btn
+              variant="secondary"
+              size="sm"
+              onClick={() => void load('refresh')}
+              disabled={refreshing}
+              aria-label="Actualiser le grand livre"
+              title="Actualiser"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
             </Btn>
             <Btn variant="secondary" size="sm" onClick={() => csvExport(filtered)} disabled={filtered.length === 0}>
               <Download className="h-3.5 w-3.5" />
@@ -448,6 +468,17 @@ export function AdminFinanceClient() {
           />
         </div>
       </AdminCard>
+
+      {pendingPlanChange && (
+        <ConfirmDialog
+          title={`Changer le forfait de ${pendingPlanChange.subscription.agency_name ?? 'cette agence'} ?`}
+          message={`${pendingPlanChange.subscription.plan.name} (${formatPrice(pendingPlanChange.subscription.price_monthly)} / mois) → ${pendingPlanChange.plan.name} (${formatPrice(pendingPlanChange.plan.price_monthly)} / mois). Le changement est enregistré immédiatement et modifie la capacité de la flotte.`}
+          confirmLabel="Changer le forfait"
+          busy={updatingAgencyId === pendingPlanChange.subscription.agency_id}
+          onConfirm={() => void handleUpdatePlan(pendingPlanChange.subscription.agency_id, pendingPlanChange.plan.slug)}
+          onCancel={() => setPendingPlanChange(null)}
+        />
+      )}
     </div>
   );
 }

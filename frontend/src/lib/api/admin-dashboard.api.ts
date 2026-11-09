@@ -1,5 +1,6 @@
 import type { AdminStats } from '@/lib/api/stats.api';
 import type { Agency, Booking } from '@/types';
+import type { AdminOverview } from '@/lib/admin/overview';
 import { getErrorMessage } from '@/lib/errors';
 
 type ApiEnvelope<T> = {
@@ -65,6 +66,12 @@ export type CreatedAgencyResponse = {
     loginUrl: string;
   };
 };
+
+/** Vue d'ensemble : décomptes, tendance et listes courtes calculés côté serveur */
+export async function fetchAdminOverview(): Promise<AdminOverview> {
+  const res = await fetch('/api/admin/overview', { cache: 'no-store' });
+  return parseJson(res, (b) => b.data as AdminOverview | undefined);
+}
 
 export async function fetchAdminBookings(): Promise<Booking[]> {
   const res = await fetch('/api/bookings', { cache: 'no-store' });

@@ -22,6 +22,8 @@ import {
 } from '@/components/admin/AdminUI';
 import { fetchAdminBookings } from '@/lib/api/admin-dashboard.api';
 import { formatNumber, formatPrice } from '@/lib/utils';
+import { bookingStatusLabel } from '@/lib/bookings/status';
+import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
 
 const PAGE_SIZE = 20;
 
@@ -44,34 +46,23 @@ const STATUS_OPTIONS = [
 ];
 
 function csvExport(rows: Booking[]) {
-  const header = ['Dossier', 'Client', 'Email', 'Téléphone', 'Véhicule', 'Agence', 'Début', 'Fin', 'Jours', 'Montant (100% agence)', 'Commission ClickDrive', 'Statut', 'Créé le'];
-  const lines = rows.map((b) =>
-    [
+  downloadCsv(csvFileName('clickdrive-reservations'), [
+    ['Dossier', 'Client', 'E-mail', 'Téléphone', 'Véhicule', 'Agence', 'Début', 'Fin', 'Jours', 'Montant (DH)', 'Statut', 'Créé le'],
+    ...rows.map((b) => [
       b.booking_ref ?? b.reference ?? '',
       b.customer_name,
       b.customer_email,
       b.customer_phone,
       `${b.vehicle?.brand ?? ''} ${b.vehicle?.model ?? ''}`.trim(),
       b.agency?.name ?? '',
-      b.start_date,
-      b.end_date,
+      csvDate(b.start_date),
+      csvDate(b.end_date),
       b.total_days,
       b.total_price,
-      '0 DH (0%)',
-      b.status,
-      b.created_at?.slice(0, 10) ?? '',
-    ].map((v) => {
-      const s = String(v ?? '');
-      return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    }).join(';')
-  );
-  const blob = new Blob(['\uFEFF' + [header.join(';'), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `clickdrive-reservations-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+      bookingStatusLabel(b.status, 'fr', 'business'),
+      csvDate(b.created_at),
+    ]),
+  ]);
 }
 
 export function AdminBookingsClient() {

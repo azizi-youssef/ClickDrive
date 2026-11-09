@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { bookingStatusLabel, bookingStatusTone } from '@/lib/bookings/status';
 import type { BadgeTone } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { formatTrend, trendFigures } from '@/lib/admin/trend';
 import { TrendingUp, TrendingDown, Minus, AlertCircle, RotateCcw, ChevronLeft, ChevronRight, Search, type LucideIcon } from 'lucide-react';
 
 /* ── KPI Card ──────────────────────────────────────────────────────── */
@@ -24,8 +25,11 @@ interface KpiCardProps {
   sub?: React.ReactNode;
   icon?: LucideIcon;
   tone?: KpiTone;
-  /** Évolution en % ; `invert` quand une hausse est une mauvaise nouvelle (annulations…) */
-  trend?: { value: number; label: string; invert?: boolean } | null;
+  /**
+   * Évolution entre la période et la précédente (même indicateur que la tuile) : écart absolu, et %
+   * seulement si la base compte au moins 10 éléments ; `invert` quand une hausse est une mauvaise nouvelle.
+   */
+  trend?: { current: number; previous: number; label: string; invert?: boolean } | null;
   /** Jauge 0–100 sous la valeur */
   progress?: number;
   href?: string;
@@ -95,7 +99,7 @@ export function KpiCard({
       )}
       {(sub || trend) && (
         <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-2.5">
-          {trend && <TrendBadge value={trend.value} label={trend.label} invert={trend.invert} />}
+          {trend && <TrendBadge {...trend} />}
           {sub && <span className="text-xs text-slate-500">{sub}</span>}
         </div>
       )}
@@ -119,20 +123,21 @@ export function KpiCard({
 }
 
 /* ── Trend badge ───────────────────────────────────────────────────── */
-function TrendBadge({ value, label, invert }: { value: number; label: string; invert?: boolean }) {
-  const Icon = value > 0 ? TrendingUp : value < 0 ? TrendingDown : Minus;
-  const good = invert ? value < 0 : value > 0;
-  const bad = invert ? value > 0 : value < 0;
+function TrendBadge({ current, previous, label, invert }: { current: number; previous: number; label: string; invert?: boolean }) {
+  const figures = trendFigures(current, previous);
+  const Icon = figures.direction === 'up' ? TrendingUp : figures.direction === 'down' ? TrendingDown : Minus;
+  const good = invert ? figures.direction === 'down' : figures.direction === 'up';
+  const bad = invert ? figures.direction === 'up' : figures.direction === 'down';
   return (
     <span
+      title={`${current} contre ${previous} ${label}`}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
         good ? 'bg-emerald-50 text-emerald-700' : bad ? 'bg-red-50 text-[#B4232F]' : 'bg-slate-100 text-slate-500'
       )}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
-      {value > 0 ? '+' : ''}
-      {value} % {label}
+      {formatTrend(figures)} {label}
     </span>
   );
 }

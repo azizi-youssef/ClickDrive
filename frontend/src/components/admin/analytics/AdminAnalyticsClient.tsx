@@ -18,6 +18,8 @@ import {
 import { AdminCard, Btn, ErrorBanner, KpiCard } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import { cn, formatPrice } from '@/lib/utils';
+import { csvFileName, downloadCsv } from '@/lib/export/csv';
+import { formatTrend, trendFigures } from '@/lib/admin/trend';
 
 interface AnalyticsPayload {
   kpis: {
@@ -37,9 +39,12 @@ interface AnalyticsPayload {
     fleetCapacityTotal: number;
   };
   monthlyTrends: Array<{
+    key: string;
     month: string;
     bookings: number;
     confirmed: number;
+    /** Mois en cours, pas encore terminé */
+    partial: boolean;
   }>;
   categoryBreakdown: Array<{
     category: string;
@@ -48,9 +53,10 @@ interface AnalyticsPayload {
   }>;
   topAgencies: Array<{
     name: string;
-    city: string;
+    city: string | null;
     count: number;
-    rating: number;
+    /** null : aucun avis publié */
+    rating: number | null;
   }>;
   topLocations: Array<{
     location: string;
@@ -112,7 +118,7 @@ export function AdminAnalyticsClient() {
       ['Durée Moyenne Location', `${data.kpis.averageRentalDays} jours`],
       ['Agences Actives', data.kpis.totalAgencies],
       ['Flotte Véhicules', data.kpis.totalVehicles],
-      ['MRR Forfaits Abonnements', `${data.subscriptions.monthlyRecurringRevenue} MAD/mois`],
+      ['MRR forfaits (DH par mois)', data.subscriptions.monthlyRecurringRevenue],
       ['Agences Souscrites', data.subscriptions.activeSubscribers],
       ['Capacité Flotte Souscrite', data.subscriptions.fleetCapacityTotal],
       [],
@@ -123,22 +129,13 @@ export function AdminAnalyticsClient() {
       ...data.categoryBreakdown.map((c) => ['', c.category, c.count, `${c.percentage}%`]),
       [],
       ['Top Agences', 'Agence', 'Ville', 'Réservations', 'Note'],
-      ...data.topAgencies.map((a) => ['', a.name, a.city, a.count, `${a.rating} / 5`]),
+      ...data.topAgencies.map((a) => ['', a.name, a.city ?? '', a.count, a.rating === null ? 'Aucun avis' : `${a.rating} / 5`]),
       [],
       ['Lieux Prise en Charge', 'Emplacement', 'Demandes', 'Part'],
       ...data.topLocations.map((l) => ['', l.location, l.count, `${l.percentage}%`]),
     ];
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,\uFEFF' +
-      rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(';')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `ClickDrive-analytics-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(csvFileName('clickdrive-statistiques'), rows);
   };
 
   if (loading && !data) {
@@ -185,16 +182,15 @@ export function AdminAnalyticsClient() {
   const adoptionRate =
     kpis.totalAgencies > 0 ? Math.round((subs.activeSubscribers / kpis.totalAgencies) * 100) : 0;
 
-  // Évolution des demandes : dernier mois complet comparé au précédent (le mois en cours est partiel)
+  // Évolution des demandes : dernier mois complet comparé au précédent (le mois en cours est partiel).
+  // Elle accompagne le graphique des demandes, pas le taux de confirmation.
   const trends = data?.monthlyTrends ?? [];
-  const lastFull = trends[trends.length - 2];
-  const beforeLast = trends[trends.length - 3];
-  const bookingsTrend =
-    lastFull && beforeLast && beforeLast.bookings > 0
-      ? {
-        value: Math.round(((lastFull.bookings - beforeLast.bookings) / beforeLast.bookings) * 100),
-        label: `demandes en ${lastFull.month}`,
-      }
+  const fullMonths = trends.filter((month) => !month.partial);
+  const lastFull = fullMonths.at(-1);
+  const beforeLast = fullMonths.at(-2);
+  const volumeTrend =
+    lastFull && beforeLast
+      ? `${lastFull.bookings} demande${lastFull.bookings > 1 ? 's' : ''} en ${lastFull.month} · ${formatTrend(trendFigures(lastFull.bookings, beforeLast.bookings))} vs ${beforeLast.month}`
       : null;
 
   return (
@@ -203,7 +199,7 @@ export function AdminAnalyticsClient() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
             Données en temps réel
           </span>
           {lastRefresh && (
@@ -274,7 +270,6 @@ export function AdminAnalyticsClient() {
           icon={CheckCircle2}
           tone="success"
           progress={kpis.confirmationRate}
-          trend={bookingsTrend}
           sub={`${kpis.confirmedBookings} validées sur ${kpis.totalBookings}`}
         />
         <KpiCard
@@ -310,53 +305,79 @@ export function AdminAnalyticsClient() {
       <AdminCard noPadding>
         <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Activité & Tendances Mensuelles</h2>
-            <p className="text-xs text-slate-500">Volume des réservations enregistrées sur les 6 derniers mois</p>
+            <h2 className="text-base font-bold text-slate-900">Demandes par mois</h2>
+            <p className="text-xs text-slate-500">
+              {volumeTrend ?? 'Demandes de réservation reçues sur les 6 derniers mois'}
+            </p>
           </div>
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-4 text-xs" aria-hidden="true">
             <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="h-3 w-3 rounded-sm bg-ink" />
-              Total réservations
+              <span className="h-3 w-3 rounded-sm bg-emerald-600" />
+              Confirmées
             </span>
             <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-              Confirmées
+              <span className="h-3 w-3 rounded-sm bg-slate-300" />
+              Autres demandes
             </span>
           </div>
         </div>
 
         <div className="p-6">
           {data?.monthlyTrends && data.monthlyTrends.length > 0 ? (
-            <div className="grid grid-cols-6 gap-3 sm:gap-6 items-end h-56 pt-6">
-              {data.monthlyTrends.map((item) => {
-                const totalH = Math.round((item.bookings / maxMonthBookings) * 100);
-                const confH = Math.round((item.confirmed / maxMonthBookings) * 100);
-                return (
-                  <div key={item.month} className="flex flex-col items-center h-full justify-end group">
-                    <div className="text-[11px] font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity mb-1 tabular-nums">
-                      {item.confirmed}/{item.bookings}
+            <>
+              {/* Hauteurs proportionnelles (0 = pas de barre), valeurs écrites, mois en cours en pointillés */}
+              <div
+                className="grid items-end gap-3 sm:gap-6"
+                style={{ gridTemplateColumns: `repeat(${data.monthlyTrends.length}, minmax(0, 1fr))` }}
+                aria-hidden="true"
+              >
+                {data.monthlyTrends.map((item) => {
+                  const totalH = (item.bookings / maxMonthBookings) * 100;
+                  const confirmedShare = item.bookings > 0 ? (item.confirmed / item.bookings) * 100 : 0;
+                  return (
+                    <div key={item.key} className="flex flex-col items-center">
+                      <span className="mb-1 text-xs font-bold tabular-nums text-slate-900">{item.bookings}</span>
+                      <div className="flex h-40 w-full max-w-12 items-end border-b border-slate-300">
+                        {item.bookings > 0 && (
+                          <div
+                            className={cn(
+                              'flex w-full flex-col justify-end overflow-hidden rounded-t-md',
+                              item.partial ? 'border border-dashed border-slate-400 bg-slate-100' : 'bg-slate-300'
+                            )}
+                            style={{ height: `${totalH}%` }}
+                          >
+                            <div className="w-full bg-emerald-600" style={{ height: `${confirmedShare}%` }} />
+                          </div>
+                        )}
+                      </div>
+                      <span className="mt-2 text-xs font-semibold capitalize text-slate-600">{item.month}</span>
+                      <span className="text-[11px] tabular-nums text-slate-500">
+                        {item.partial ? 'en cours' : `${item.confirmed} conf.`}
+                      </span>
                     </div>
-                    <div className="w-full max-w-10 sm:max-w-13 flex items-end justify-center gap-1 h-36 bg-slate-50 rounded-xl p-1 border border-slate-100">
-                      {/* Barre totale */}
-                      <div
-                        className="w-1/2 rounded-md bg-ink transition-all duration-500 group-hover:opacity-90"
-                        style={{ height: `${Math.max(6, totalH)}%` }}
-                        title={`Total: ${item.bookings}`}
-                      />
-                      {/* Barre confirmées */}
-                      <div
-                        className="w-1/2 rounded-md bg-emerald-500 transition-all duration-500 group-hover:opacity-90"
-                        style={{ height: `${Math.max(6, confH)}%` }}
-                        title={`Confirmées: ${item.confirmed}`}
-                      />
-                    </div>
-                    <span className="mt-3 text-xs font-semibold text-slate-600 capitalize">
-                      {item.month}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              <table className="sr-only">
+                <caption>Demandes de réservation par mois</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Mois</th>
+                    <th scope="col">Demandes</th>
+                    <th scope="col">Confirmées</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.monthlyTrends.map((item) => (
+                    <tr key={item.key}>
+                      <th scope="row">{item.partial ? `${item.month} (en cours)` : item.month}</th>
+                      <td>{item.bookings}</td>
+                      <td>{item.confirmed}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           ) : (
             <div className="py-12 text-center text-sm text-slate-500">
               Aucune donnée de tendance enregistrée pour le moment.
@@ -479,16 +500,24 @@ export function AdminAnalyticsClient() {
                       <span className="font-semibold">{agency.name}</span>
                     </td>
                     <td className="px-5 py-3.5 text-slate-600">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                        {agency.city}
-                      </span>
+                      {agency.city ? (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                          {agency.city}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-slate-700">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
-                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                        {agency.rating.toFixed(1)} / 5
-                      </span>
+                      {agency.rating === null ? (
+                        <span className="text-xs text-slate-500">Aucun avis</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+                          {agency.rating.toFixed(1)} / 5
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-right font-extrabold text-slate-900 sm:px-6 tabular-nums">
                       {agency.count} <span className="text-xs font-normal text-slate-500">réservations</span>

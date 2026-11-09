@@ -525,6 +525,20 @@ export function AgencyRentalsPanel({
                   <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 hover:bg-slate-50 cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={handoverForm.checklist.insuranceDoc}
+                      onChange={(e) =>
+                        setHandoverForm({
+                          ...handoverForm,
+                          checklist: { ...handoverForm.checklist, insuranceDoc: e.target.checked },
+                        })
+                      }
+                      className="rounded text-accent-text"
+                    />
+                    <span>Assurance / Attestation</span>
+                  </label>
+                  <label className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
                       checked={handoverForm.checklist.safetyKit}
                       onChange={(e) =>
                         setHandoverForm({
@@ -536,6 +550,43 @@ export function AgencyRentalsPanel({
                     />
                     <span>Gilet & Triangle</span>
                   </label>
+                </div>
+              </div>
+
+              {/* Cleanliness & Damages */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    Propreté du véhicule *
+                  </label>
+                  <select
+                    value={handoverForm.cleanliness}
+                    onChange={(e) =>
+                      setHandoverForm({
+                        ...handoverForm,
+                        cleanliness: e.target.value as 'CLEAN' | 'NORMAL' | 'DIRTY',
+                      })
+                    }
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-sm"
+                  >
+                    <option value="CLEAN">Propre</option>
+                    <option value="NORMAL">Correct</option>
+                    <option value="DIRTY">Sale</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    Dommages constatés
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Rayures, bosses, éléments manquants..."
+                    value={handoverForm.damagesDescription}
+                    onChange={(e) =>
+                      setHandoverForm({ ...handoverForm, damagesDescription: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                  />
                 </div>
               </div>
 

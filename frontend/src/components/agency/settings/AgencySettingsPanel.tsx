@@ -40,7 +40,7 @@ type EditableFields = {
   /** Codes de langue séparés par des virgules (« ar,fr,es ») */
   languages: string;
   cancellation_policy: string;
-  /** Montants en MAD saisis en texte ; vide = non proposé */
+  /** Montants en DH saisis en texte ; vide = non proposé */
   delivery_fee_airport: string;
   delivery_fee_port: string;
 };
@@ -66,7 +66,7 @@ const FEE_KEYS = ['delivery_fee_airport', 'delivery_fee_port'] as const;
 function feeError(value: string): string | undefined {
   if (!value.trim()) return undefined;
   const amount = Number(value.replace(',', '.'));
-  return Number.isFinite(amount) && amount >= 0 && amount <= 5000 ? undefined : 'Montant entre 0 et 5 000 MAD.';
+  return Number.isFinite(amount) && amount >= 0 && amount <= 5000 ? undefined : 'Montant entre 0 et 5 000 DH.';
 }
 
 /** Valeur envoyée à l'API : langues en liste, frais en nombre (null = non proposé), texte nettoyé */
@@ -392,10 +392,10 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
               </div>
             </fieldset>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field id={`${uid}-delivery_fee_airport`} label="Livraison à l’aéroport (MAD)" error={errors.delivery_fee_airport} hint="Vide = non proposée · 0 = gratuite">
+              <Field id={`${uid}-delivery_fee_airport`} label="Livraison à l’aéroport (DH)" error={errors.delivery_fee_airport} hint="Vide = non proposée · 0 = gratuite">
                 <input type="text" inputMode="decimal" maxLength={8} onChange={(e) => update('delivery_fee_airport', e.target.value)} {...fieldProps('delivery_fee_airport')} />
               </Field>
-              <Field id={`${uid}-delivery_fee_port`} label="Livraison au port de Beni Ansar (MAD)" error={errors.delivery_fee_port} hint="Vide = non proposée · 0 = gratuite">
+              <Field id={`${uid}-delivery_fee_port`} label="Livraison au port de Beni Ansar (DH)" error={errors.delivery_fee_port} hint="Vide = non proposée · 0 = gratuite">
                 <input type="text" inputMode="decimal" maxLength={8} onChange={(e) => update('delivery_fee_port', e.target.value)} {...fieldProps('delivery_fee_port')} />
               </Field>
             </div>

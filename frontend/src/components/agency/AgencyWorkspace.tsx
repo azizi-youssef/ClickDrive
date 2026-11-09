@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { signOutEverywhere } from '@/lib/auth/client';
 import { canManageAgencyBookings, canManageAgencyFleet } from '@/lib/auth/portals';
@@ -42,6 +42,7 @@ import { AgencySubscriptionPanel } from '@/components/agency/subscription/Agency
 import type { AgencySubscription } from '@/types';
 import type { UserRole } from '@clickdrive/shared/roles';
 import { AGENCY_SECTIONS } from '@/components/agency/shell/Sidebar';
+import { sectionFromUrl, workspaceUrl } from '@/lib/agency/workspace-url';
 
 export type AgencyIdentity = {
   id: string;
@@ -62,6 +63,12 @@ type Notice = { id: number; kind: 'success' | 'error'; message: string };
 type Alternative = { id: string; brand: string; model: string; daily_price: number };
 
 const PAGE_SIZE = 15;
+
+const SECTION_IDS = new Set<string>(AGENCY_SECTIONS.map((entry) => entry.id));
+
+function bookingRefOf(booking: { booking_ref?: string | null; reference?: string | null; id: string }): string {
+  return booking.booking_ref ?? booking.reference ?? booking.id;
+}
 
 async function readJson(response: Response): Promise<unknown> {
   const body: unknown = await response.json().catch(() => ({}));
@@ -91,7 +98,15 @@ export function AgencyWorkspace({
   profile: AgencyProfile | null;
 }) {
   const router = useRouter();
-  const [section, setSection] = useState('overview');
+  // La section et la réservation ouverte viennent de l'adresse : source unique, Précédent compris
+  const searchParams = useSearchParams();
+  const bookingParam = searchParams.get('booking');
+  const sectionParam = searchParams.get('section');
+  const section = sectionFromUrl(sectionParam, bookingParam, SECTION_IDS);
+  /** Change de section : nouvelle entrée d'historique, sans rechargement serveur */
+  const setSection = useCallback((next: string) => {
+    window.history.pushState(null, '', workspaceUrl(next));
+  }, []);
   const [rangePreset, setRangePreset] = useState<RangePreset>('30d');
   const [rangeInput, setRangeInput] = useState(() => resolveRange('30d'));
 
@@ -302,9 +317,15 @@ export function AgencyWorkspace({
     setBookingsPage(Math.max(1, page));
   }, []);
 
+  /** Référence du dossier déjà ouvert pour l'adresse courante (évite de le relire) */
+  const deepLinkHandled = useRef<string | null>(null);
+
   /** Charge le dossier complet (lieux, horaires, historique) avant affichage. */
   const openDetail = useCallback(async (booking: AgencyBookingRow) => {
-    const reference = booking.booking_ref ?? booking.reference ?? booking.id;
+    const reference = bookingRefOf(booking);
+    // Le dossier ouvert a son adresse (sans nouvelle entrée d'historique)
+    deepLinkHandled.current = reference;
+    window.history.replaceState(null, '', workspaceUrl(section, reference));
     setSelected(booking as BookingDetail);
     setDetail(null);
     setDetailError(null);
@@ -329,7 +350,46 @@ export function AgencyWorkspace({
     } finally {
       setLoadingDetail(false);
     }
-  }, []);
+  }, [section]);
+
+  /** Ferme le dossier et retire sa référence de l'adresse */
+  const closeDetail = useCallback(() => {
+    setSelected(null);
+    setPendingAction(null);
+    window.history.replaceState(null, '', workspaceUrl(section));
+  }, [section]);
+
+  /**
+   * Lien direct vers un dossier (notification e-mail ou WhatsApp, lien partagé) : le dossier est
+   * relu par l'API, qui vérifie qu'il appartient bien à l'agence connectée.
+   */
+  useEffect(() => {
+    if (!bookingParam) {
+      deepLinkHandled.current = null;
+      return;
+    }
+    if (deepLinkHandled.current === bookingParam) return;
+    deepLinkHandled.current = bookingParam;
+    let active = true;
+    fetch(`/api/bookings/${encodeURIComponent(bookingParam)}`, { cache: 'no-store', credentials: 'same-origin' })
+      .then(readJson)
+      .then((json) => {
+        const booking = (json as { booking?: BookingDetail }).booking;
+        if (!active) return;
+        if (!booking) throw new Error('missing');
+        setDetailError(null);
+        setSelected(booking);
+        setDetail(booking);
+      })
+      .catch(() => {
+        if (!active) return;
+        notify('error', `Réservation ${bookingParam} introuvable ou non rattachée à votre agence.`);
+        window.history.replaceState(null, '', workspaceUrl('bookings'));
+      });
+    return () => {
+      active = false;
+    };
+  }, [bookingParam, notify]);
 
   /** Vehicules de remplacement candidats : meme agence, periode demandee. */
   const loadAlternatives = useCallback(
@@ -390,8 +450,7 @@ export function AgencyWorkspace({
             : "L'action n'a pas pu être appliquée."
         );
         if (ok) {
-          setPendingAction(null);
-          setSelected(null);
+          closeDetail();
           await loadBookings(query, bookingsPage);
           await loadOverview(resolveRange(rangePreset));
         }
@@ -401,7 +460,7 @@ export function AgencyWorkspace({
         setBusy(false);
       }
     },
-    [bookingsPage, loadBookings, loadOverview, notify, query, rangePreset]
+    [bookingsPage, closeDetail, loadBookings, loadOverview, notify, query, rangePreset]
   );
 
   const downloadPdf = useCallback(
@@ -689,13 +748,10 @@ export function AgencyWorkspace({
           busy={busy}
           alternatives={alternatives}
           loadingAlternatives={loadingAlternatives}
-          onClose={() => {
-            setSelected(null);
-            setPendingAction(null);
-          }}
+          onClose={closeDetail}
           onReload={() => void openDetail(selected)}
           onAction={(action, payload) => {
-            const reference = selected.booking_ref ?? selected.reference ?? selected.id;
+            const reference = bookingRefOf(selected);
             if (action === 'approve') {
               void runAction(reference, action, payload);
               return;

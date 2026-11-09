@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { AgencyWorkspace } from '@/components/agency/AgencyWorkspace';
 import { canAccessAgencyArea, getServerAuth } from '@/lib/auth/server';
 
@@ -20,7 +21,9 @@ export default async function AgencyPage() {
     redirect('/login?portal=agency&error=no-agency');
   }
 
+  // L'espace lit la section et la réservation ouverte dans l'adresse (useSearchParams)
   return (
+    <Suspense>
     <AgencyWorkspace
       agency={{
         id: agencyId,
@@ -35,6 +38,7 @@ export default async function AgencyPage() {
         avatarUrl: auth.avatarUrl,
       }}
     />
+    </Suspense>
   );
 }
 

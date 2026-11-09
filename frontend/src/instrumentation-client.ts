@@ -6,6 +6,16 @@
  * racine : quand Next reconstruit le document côté client (404 levée par notFound()), React recréait cette
  * balise et signalait « Encountered a script tag ». Ici, aucune balise <script> n'entre dans l'arbre React.
  */
+import { installTranslationGuard } from '@/lib/dom/translation-guard';
+
+// Traduction automatique du navigateur (Edge, Chrome) : React ne doit pas planter quand le
+// traducteur a remplacé un texte qu'il met ensuite à jour. Installée avant l'hydratation.
+try {
+  installTranslationGuard();
+} catch {
+  // Protection de confort : ne jamais bloquer le démarrage de l'application
+}
+
 const EXTENSION_ATTRIBUTES = ['bis_skin_checked'];
 
 try {

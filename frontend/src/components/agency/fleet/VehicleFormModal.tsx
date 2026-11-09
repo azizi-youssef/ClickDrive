@@ -48,7 +48,7 @@ export type EditableVehicle = {
   deposit: number;
   /** Assurance incluse : responsabilité civile seule ou tous risques */
   insurance_coverage?: 'THIRD_PARTY' | 'COMPREHENSIVE' | null;
-  /** Franchise en cas de sinistre (MAD) */
+  /** Franchise en cas de sinistre (DH) */
   insurance_excess?: number | null;
   min_rental_days: number;
   status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'BLOCKED';
@@ -716,7 +716,7 @@ export function VehicleFormModal({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                   <label htmlFor="vehicle-daily-price" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                    Prix par jour (MAD) *
+                    Prix par jour (DH) *
                   </label>
                   <div className="relative mt-1">
                     <input
@@ -739,7 +739,7 @@ export function VehicleFormModal({
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                   <label htmlFor="vehicle-deposit" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                    Caution exigée (MAD) *
+                    Caution exigée (DH) *
                   </label>
                   <div className="relative mt-1">
                     <input
@@ -786,7 +786,7 @@ export function VehicleFormModal({
                     </div>
                     <div>
                       <label htmlFor="vehicle-insurance-excess" className="mb-1 block text-xs font-semibold text-slate-600">
-                        Franchise en cas de sinistre (MAD)
+                        Franchise en cas de sinistre (DH)
                       </label>
                       <input
                         id="vehicle-insurance-excess"

@@ -192,7 +192,7 @@ export function BookingsPanel({
           )}
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <caption className="sr-only">Réservations de votre agence</caption>
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
@@ -201,7 +201,6 @@ export function BookingsPanel({
                   <Th>Vehicule</Th>
                   <Th>Période</Th>
                   <Th align="right" numeric>Montant</Th>
-                  <Th align="right" numeric>Net agence</Th>
                   <Th>Statut</Th>
                   <Th align="right">Détail</Th>
                 </tr>
@@ -232,9 +231,6 @@ export function BookingsPanel({
                     </td>
                     <td className="px-5 py-4 text-right font-semibold tabular-nums text-[#0F172A]">
                       {money(booking.total_price)}
-                    </td>
-                    <td className="px-5 py-4 text-right tabular-nums text-slate-600">
-                      {money(booking.agency_amount)}
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={booking.status} audience="business" size="sm" />

@@ -7,7 +7,6 @@ import {
   Car,
   CalendarDays,
   RefreshCw,
-  Download,
   Sparkles,
   AlertTriangle,
   CheckCircle2,
@@ -22,13 +21,13 @@ import type { AdminStats } from '@/lib/api/stats.api';
 import { AdminCard, BookingStatusBadge, AgencyStatusBadge, Btn, ErrorBanner, EmptyState, KpiCard } from '@/components/admin/AdminUI';
 import {
   fetchAdminStats,
-  fetchAdminBookings,
-  fetchAdminAgencies,
+  fetchAdminOverview,
   fetchHealth,
   patchAgencyVerification,
   type HealthReport,
 } from '@/lib/api/admin-dashboard.api';
-import type { Agency, Booking, SubscriptionStats } from '@/types';
+import type { AdminOverview, AdminOverviewAgency } from '@/lib/admin/overview';
+import type { SubscriptionStats } from '@/types';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 
@@ -37,40 +36,7 @@ interface Props {
   statsError: string | null;
 }
 
-/* ── CSV export (internal) ───────────────────────────────────────────── */
-function csvExport(bookings: Booking[]) {
-  const header = ['Dossier', 'Client', 'Véhicule', 'Agence', 'Début', 'Fin', 'Statut'];
-  const rows = bookings.map((b) =>
-    [
-      b.booking_ref ?? b.reference ?? '',
-      b.customer_name,
-      `${b.vehicle?.brand ?? ''} ${b.vehicle?.model ?? ''}`.trim(),
-      b.agency?.name ?? '',
-      b.start_date,
-      b.end_date,
-      b.status,
-    ]
-      .map((v) => {
-        const s = String(v ?? '');
-        return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-      })
-      .join(';')
-  );
-  const blob = new Blob(['﻿' + [header.join(';'), ...rows].join('\r\n')], {
-    type: 'text/csv;charset=utf-8;',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `clickdrive-reservations-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* ── Statuts regroupés ───────────────────────────────────────────────── */
-const PENDING_STATUSES = ['PENDING', 'REQUESTED', 'UNDER_REVIEW', 'SENT_TO_AGENCY', 'AGENCY_REVIEW', 'ALTERNATIVE_PROPOSED'];
-const CONFIRMED_STATUSES = ['CONFIRMED', 'APPROVED', 'READY_FOR_PICKUP', 'ACTIVE'];
-const CLOSED_STATUSES = ['CANCELLED', 'REJECTED', 'EXPIRED'];
+/* L'export des réservations se fait depuis la page Réservations (filtres, liste complète paginée) */
 
 const HEALTH_LABEL: Record<string, { label: string; tone: 'ok' | 'warn' | 'error' }> = {
   ok: { label: 'Opérationnel', tone: 'ok' },
@@ -133,8 +99,8 @@ function Initial({ name, dark }: { name: string; dark?: boolean }) {
 ═══════════════════════════════════════════════════════════════════════ */
 export function AdminOverviewClient({ initialStats, statsError }: Props) {
   const [stats, setStats] = useState<AdminStats | null>(initialStats);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [agencies, setAgencies] = useState<Agency[]>([]);
+  // Décomptes, tendance et listes courtes calculés en base (aucune liste complète dans le navigateur)
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [health, setHealth] = useState<HealthReport | null>(null);
   const [healthLoaded, setHealthLoaded] = useState(false);
   const [subscriptionStats, setSubscriptionStats] = useState<SubscriptionStats | null>(null);
@@ -142,7 +108,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(statsError);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
-  const [pendingRevoke, setPendingRevoke] = useState<Agency | null>(null);
+  const [pendingRevoke, setPendingRevoke] = useState<AdminOverviewAgency | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -162,10 +128,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
     setError(null);
 
     try {
-      const [newStats, newBookings, newAgencies, healthData, subJson] = await Promise.all([
+      const [newStats, newOverview, healthData, subJson] = await Promise.all([
         fetchAdminStats(),
-        fetchAdminBookings(),
-        fetchAdminAgencies(),
+        fetchAdminOverview(),
         fetchHealth(),
         fetch('/api/admin/subscriptions')
           .then((r) => r.json())
@@ -173,8 +138,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
       ]);
       if (ctrl.signal.aborted) return;
       setStats(newStats);
-      setBookings(newBookings);
-      setAgencies(newAgencies);
+      setOverview(newOverview);
       if (subJson?.success && subJson.data?.stats) {
         setSubscriptionStats(subJson.data.stats);
       }
@@ -197,7 +161,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
     return () => abortRef.current?.abort();
   }, [load]);
 
-  const handleVerify = async (agency: Agency, verified: boolean, confirmed = false) => {
+  const handleVerify = async (agency: AdminOverviewAgency, verified: boolean, confirmed = false) => {
     if (!verified && !confirmed) {
       setPendingRevoke(agency);
       return;
@@ -216,24 +180,23 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
   };
 
   /* ── Dérivés ─────────────────────────────────────────────────────── */
-  const total = bookings.length;
-  const pendingBookings = bookings.filter((b) => PENDING_STATUSES.includes(b.status)).length;
-  const confirmedBookings = bookings.filter((b) => CONFIRMED_STATUSES.includes(b.status)).length;
-  const completedBookings = bookings.filter((b) => b.status === 'COMPLETED').length;
-  const closedBookings = bookings.filter((b) => CLOSED_STATUSES.includes(b.status)).length;
-  const pendingAgencies = agencies.filter((a) => a.status === 'PENDING' || !a.verified);
+  const counts = overview?.bookings;
+  const total = counts?.total ?? 0;
+  const pendingBookings = counts?.pending ?? 0;
+  const confirmedBookings = counts?.confirmed ?? 0;
+  const completedBookings = counts?.completed ?? 0;
+  const closedBookings = counts?.closed ?? 0;
+  const bookings = overview?.recentBookings ?? [];
+  const pendingAgencies = overview?.pendingAgencies.items ?? [];
+  const pendingAgencyCount = overview?.pendingAgencies.count ?? 0;
   const verificationRate =
     stats && stats.totalAgencies > 0 ? Math.round((stats.verifiedAgencies / stats.totalAgencies) * 100) : 0;
   const healthEntries = health ? Object.entries(health.checks) : [];
   const healthIssues = healthEntries.filter(([, value]) => (HEALTH_LABEL[value]?.tone ?? 'warn') !== 'ok');
-  // Demandes reçues sur 30 jours glissants, comparées aux 30 jours précédents
-  const DAY = 86_400_000;
-  const now = lastRefresh?.getTime() ?? 0;
-  const created = bookings.map((b) => new Date(b.created_at).getTime()).filter((t) => !Number.isNaN(t));
-  const last30 = created.filter((t) => t > now - 30 * DAY).length;
-  const prev30 = created.filter((t) => t <= now - 30 * DAY && t > now - 60 * DAY).length;
-  const bookingsTrend =
-    now && prev30 > 0 ? { value: Math.round(((last30 - prev30) / prev30) * 100), label: 'sur 30 jours' } : null;
+  // Demandes reçues sur 30 jours glissants, comparées aux 30 jours précédents (décomptes en base)
+  const bookingsTrend = counts
+    ? { current: counts.createdLast30Days, previous: counts.createdPrevious30Days, label: 'vs 30 j. précédents' }
+    : null;
   const confirmationRate = total > 0 ? Math.round(((confirmedBookings + completedBookings) / total) * 100) : 0;
   const plans = (subscriptionStats?.plansDistribution ?? []).filter((plan) => plan.count > 0);
   const planTotal = plans.reduce((sum, plan) => sum + plan.count, 0);
@@ -246,11 +209,11 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
   ];
 
   const todos = [
-    pendingAgencies.length > 0 && {
+    pendingAgencyCount > 0 && {
       key: 'agencies',
       href: '/admin/agencies?filter=PENDING',
       icon: Building2,
-      title: `${pendingAgencies.length} agence${pendingAgencies.length > 1 ? 's' : ''} à vérifier`,
+      title: `${pendingAgencyCount} agence${pendingAgencyCount > 1 ? 's' : ''} à vérifier`,
       text: 'Validez les nouvelles agences pour les rendre visibles.',
       tone: 'amber',
     },
@@ -320,10 +283,6 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           <Btn variant="secondary" size="sm" onClick={() => void load('refresh')} disabled={refreshing || loading} className="flex-1 sm:flex-none">
             <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin motion-reduce:animate-none')} aria-hidden="true" />
             Actualiser
-          </Btn>
-          <Btn variant="secondary" size="sm" onClick={() => csvExport(bookings)} disabled={bookings.length === 0} className="flex-1 sm:flex-none">
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            Exporter CSV
           </Btn>
         </div>
       </div>
@@ -402,9 +361,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           loading={loading}
           icon={CalendarDays}
           label="Réservations"
-          value={nf.format(stats?.totalBookings ?? 0)}
+          value={nf.format(counts?.total ?? stats?.totalBookings ?? 0)}
           trend={bookingsTrend}
-          sub={`${confirmationRate} % confirmées ou terminées`}
+          sub={`${counts?.createdLast30Days ?? 0} reçues sur 30 jours · ${confirmationRate} % confirmées ou terminées`}
         />
         <KpiCard
           href="/admin/analytics"
@@ -531,9 +490,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
             <EmptyState icon={CalendarDays} title="Aucune réservation" description="Les réservations apparaîtront ici dès qu'elles arrivent." />
           ) : (
             <ul className="divide-y divide-slate-100">
-              {bookings.slice(0, 8).map((b) => (
+              {bookings.map((b) => (
                 <li key={b.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F9FA] sm:px-6">
-                  <Initial name={b.customer_name} />
+                  <Initial name={b.customer_name ?? ''} />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-baseline gap-2">
                       <span className="truncate text-sm font-bold text-[#0B1220]">{b.customer_name}</span>
@@ -568,9 +527,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
               href="/admin/agencies?filter=PENDING"
               linkLabel="Gérer"
               badge={
-                !loading && pendingAgencies.length > 0 ? (
+                !loading && pendingAgencyCount > 0 ? (
                   <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 text-[11px] font-bold text-white">
-                    {pendingAgencies.length}
+                    {pendingAgencyCount}
                   </span>
                 ) : undefined
               }
@@ -585,7 +544,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
               <EmptyState icon={CheckCircle2} title="Tout est à jour" description="Aucune agence en attente de vérification." />
             ) : (
               <ul className="divide-y divide-slate-100">
-                {pendingAgencies.slice(0, 5).map((a) => (
+                {pendingAgencies.map((a) => (
                   <li key={a.id} className="flex items-center gap-3 px-5 py-3 sm:px-6">
                     <Initial name={a.name} dark />
                     <div className="min-w-0 flex-1">

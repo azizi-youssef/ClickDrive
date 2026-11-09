@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { csvFileName, downloadCsv } from '@/lib/export/csv';
 import {
   Users,
   Phone,
@@ -137,28 +138,10 @@ export function AdminCustomersClient() {
   };
 
   const exportCSV = () => {
-    const rows = [
-      ['Répertoire Clients ClickDrive'],
-      ['Nom', 'Email', 'Téléphone', 'CIN/Passeport', 'Pays', 'Réservations', 'Total Dépensé (MAD)', 'Dernière Réservation'],
-      ...customers.map((c) => [
-        c.name,
-        c.email,
-        c.phone,
-        c.cin,
-        c.country,
-        c.bookingCount,
-        c.totalSpent,
-        c.lastBookingRef,
-      ]),
-    ];
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(';')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `clickdrive-clients-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(csvFileName('clickdrive-clients'), [
+      ['Nom', 'E-mail', 'Téléphone', 'CIN/Passeport', 'Pays', 'Réservations', 'Total dépensé (DH)', 'Dernière réservation'],
+      ...customers.map((c) => [c.name, c.email, c.phone, c.cin, c.country, c.bookingCount, c.totalSpent, c.lastBookingRef]),
+    ]);
   };
 
   return (

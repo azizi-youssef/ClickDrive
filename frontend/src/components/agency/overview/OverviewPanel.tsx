@@ -17,7 +17,7 @@ import {
   PlusCircle,
   Sparkles,
 } from 'lucide-react';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { CardSkeleton, EmptyState, ErrorBanner, KpiSkeleton } from '@/components/agency/shell/Feedback';
 
@@ -368,8 +368,8 @@ export function OverviewPanel({
         />
         <KpiCard
           label="Revenus"
-          value={`${formatNumber(d.agencyNet)} MAD`}
-          hint="Montant agence sur la période"
+          value={formatPrice(d.agencyNet)}
+          hint="Montant agence sur la période choisie"
           icon={CircleDollarSign}
         />
       </div>
@@ -538,7 +538,7 @@ export function OverviewPanel({
                         <p className="truncate text-sm font-bold text-[#0B1220]">{entry.customerName}</p>
                         <p className="truncate text-xs text-slate-500">
                           {entry.reference}
-                          {entry.totalPrice > 0 && ` · ${formatNumber(entry.totalPrice)} MAD`}
+                          {entry.totalPrice > 0 && ` · ${formatPrice(entry.totalPrice)}`}
                         </p>
                       </div>
                       <StatusBadge status={entry.status} audience="business" size="sm" className="shrink-0" />

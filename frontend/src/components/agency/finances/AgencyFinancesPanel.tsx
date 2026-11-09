@@ -8,8 +8,15 @@ import {
   RefreshCw,
   Sparkles,
   ArrowUpRight,
+  TrendingUp,
+  Wallet,
+  CheckSquare,
+  Clock,
+  BarChart3,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { bookingStatusLabel } from '@/lib/bookings/status';
+import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
 import { PendingPlanChangeBanner } from '../subscription/PendingPlanChangeBanner';
@@ -82,35 +89,18 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
 
   const exportCSV = () => {
     if (!data || data.transactions.length === 0) return;
-    const headers = [
-      'Référence',
-      'Date',
-      'Client',
-      'Véhicule',
-      'Montant Brut (MAD)',
-      'Net Agence (MAD)',
-      'Statut Réservation',
-    ];
-    const rows = data.transactions.map((t) => [
-      t.reference,
-      new Date(t.date).toLocaleDateString('fr-FR'),
-      `"${t.customerName.replace(/"/g, '""')}"`,
-      `"${t.vehicle.replace(/"/g, '""')}"`,
-      t.totalPrice,
-      t.agencyAmount,
-      t.status,
+    downloadCsv(csvFileName('clickdrive-finances'), [
+      ['Référence', 'Date', 'Client', 'Véhicule', 'Montant (DH)', 'Part agence (DH)', 'Statut'],
+      ...data.transactions.map((t) => [
+        t.reference,
+        csvDate(t.date),
+        t.customerName,
+        t.vehicle,
+        t.totalPrice,
+        t.agencyAmount,
+        bookingStatusLabel(t.status, 'fr', 'business'),
+      ]),
     ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `clickdrive_finances_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -190,6 +180,65 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         <PendingPlanChangeBanner agencyId={agencyId} request={pendingChange} onCancelled={() => setPendingChange(null)} />
       )}
 
+      {/* KPI Cards — montants cumulés depuis l'ouverture du compte (pas de filtre de période ici) */}
+      {data && (
+        <div className={cn('grid grid-cols-2 gap-4 sm:grid-cols-3', data.platformRate > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-3')}>
+          {/* Brut et commission : seulement si une commission s'applique (0 % avec les forfaits) ;
+              sinon ils répéteraient le montant net et contrediraient le « 0 % de commission » ci-dessus */}
+          {data.platformRate > 0 && (
+            <>
+              <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">CA Brut</span>
+                  <TrendingUp className="h-4 w-4 text-slate-400" />
+                </div>
+                <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.grossRevenue)}</p>
+                <p className="text-xs text-slate-500">Total réservations confirmées</p>
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Commission</span>
+                  <BarChart3 className="h-4 w-4 text-slate-400" />
+                </div>
+                <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.platformCommission)}</p>
+                <p className="text-xs text-slate-500">Part plateforme ({(data.platformRate * 100).toFixed(0)}%)</p>
+              </div>
+            </>
+          )}
+
+          {/* Net agence */}
+          <div className="flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Net Agence</span>
+              <Wallet className="h-4 w-4 text-emerald-500" />
+            </div>
+            <p className="text-2xl font-extrabold text-emerald-800">{formatPrice(data.kpis.agencyNet)}</p>
+            <p className="text-xs text-emerald-700">Votre part, toutes périodes</p>
+          </div>
+
+          {/* Réglé */}
+          <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Réglé</span>
+              <CheckSquare className="h-4 w-4 text-blue-500" />
+            </div>
+            <p className="text-2xl font-extrabold text-blue-800">{formatPrice(data.kpis.settledNet)}</p>
+            <p className="text-xs text-blue-700">{data.kpis.completedBookingsCount} dossiers clôturés</p>
+          </div>
+
+          {/* En attente */}
+          <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">En attente</span>
+              <Clock className="h-4 w-4 text-amber-500" />
+            </div>
+            <p className="text-2xl font-extrabold text-amber-800">{formatPrice(data.kpis.pendingNet)}</p>
+            <p className="text-xs text-amber-700">{data.kpis.totalBookingsCount - data.kpis.completedBookingsCount} dossiers actifs</p>
+          </div>
+        </div>
+      )}
+
       {/* Transactions Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
@@ -249,7 +298,19 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                                 : 'bg-amber-100 text-amber-800'
                         )}
                       >
-                        {t.status}
+                        {t.status === 'COMPLETED'
+                          ? 'Clôturé'
+                          : t.status === 'ACTIVE'
+                            ? 'En cours'
+                            : t.status === 'REJECTED'
+                              ? 'Refusé'
+                              : t.status === 'CANCELLED'
+                                ? 'Annulé'
+                                : t.status === 'PENDING'
+                                  ? 'En attente'
+                                  : t.status === 'CONFIRMED' || t.status === 'APPROVED'
+                                    ? 'Confirmé'
+                                    : t.status}
                       </span>
                     </td>
                   </tr>

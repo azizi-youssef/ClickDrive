@@ -112,7 +112,10 @@ export function AgencyCalendarPanel({
       // Week view: 7 days starting from Monday of currentDate
       const dayOfWeek = currentDate.getDay(); // 0 is Sun, 1 is Mon
       const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const monday = new Date(currentDate.setDate(diff));
+      // Fix: clone before mutating to avoid stale state reference
+      const clone = new Date(currentDate);
+      clone.setDate(diff);
+      const monday = new Date(clone);
 
       const days: { dateStr: string; dayNum: number; dayName: string; isToday: boolean }[] = [];
       const todayStr = new Date().toISOString().split('T')[0]!;
@@ -312,10 +315,12 @@ export function AgencyCalendarPanel({
           </div>
 
           <h2 className="text-base font-bold text-slate-900">
-            {currentDate.toLocaleDateString('fr-FR', {
-              month: 'long',
-              year: 'numeric',
-            })}
+            {viewMode === 'week' && daysList.length === 7
+              ? `Semaine du ${new Date(daysList[0]!.dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} au ${new Date(daysList[6]!.dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
+              : currentDate.toLocaleDateString('fr-FR', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
           </h2>
         </div>
 
