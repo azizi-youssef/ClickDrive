@@ -347,7 +347,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
           {/* Galerie + infos clés */}
           <div className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-1">
-            <VehicleGallery images={vehicle.images ?? []} title={title} />
+            <VehicleGallery images={vehicle.images ?? []} title={title} isMoto={isMoto} />
 
             <ul className="grid grid-cols-3 gap-2 sm:gap-3" aria-label={c.keyInfoAria}>
               {[

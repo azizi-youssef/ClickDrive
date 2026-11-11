@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useRef } from 'react';
 import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import {
@@ -102,7 +102,7 @@ export function VehicleCardSkeleton() {
 }
 
 const ARROW_BASE =
-  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-opacity duration-150 hover:bg-white ' +
+  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-[opacity,transform,background-color] duration-150 hover:bg-white hover:scale-105 active:scale-95 ' +
   'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]';
 
@@ -113,6 +113,7 @@ function VehicleGallery({
   agencyCity,
   priority,
   unavailable,
+  isMoto = false,
 }: {
   images: string[];
   brand: string;
@@ -120,62 +121,168 @@ function VehicleGallery({
   agencyCity?: string;
   priority: boolean;
   unavailable: boolean;
+  isMoto?: boolean;
 }) {
-  const { t, fmt } = useTranslation();
+  const { t, fmt, isRTL } = useTranslation();
   const card = t.vehicle.card;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loadedIndexes, setLoadedIndexes] = useState<Set<number>>(() => new Set([0, 1]));
   const [failedIndexes, setFailedIndexes] = useState<Set<number>>(() => new Set());
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
 
   const imagesKey = images.join('|');
   const [prevImagesKey, setPrevImagesKey] = useState(imagesKey);
   if (prevImagesKey !== imagesKey) {
     setPrevImagesKey(imagesKey);
     setCurrentIndex(0);
+    setLoadedIndexes(new Set([0, 1]));
     setFailedIndexes(new Set());
   }
 
   const goTo = useCallback(
-    (dir: 1 | -1, e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setCurrentIndex((prev) => (prev + dir + images.length) % images.length);
+    (dir: 1 | -1, e?: React.MouseEvent | React.SyntheticEvent) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      setCurrentIndex((prev) => {
+        const next = (prev + dir + images.length) % images.length;
+        setLoadedIndexes((current) => {
+          const nextSet = new Set(current);
+          nextSet.add(next);
+          nextSet.add((next + 1) % images.length);
+          nextSet.add((next - 1 + images.length) % images.length);
+          return nextSet;
+        });
+        return next;
+      });
     },
     [images.length]
   );
 
-  // Pas de photo exploitable : emplacement neutre plutôt qu'une image cassée
-  const src = failedIndexes.has(currentIndex) ? undefined : images[currentIndex];
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (images.length <= 1) return;
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || images.length <= 1) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      swipedRef.current = true;
+      const step = deltaX > 0 ? (isRTL ? 1 : -1) : (isRTL ? -1 : 1);
+      goTo(step as 1 | -1);
+    }
+  };
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (swipedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      swipedRef.current = false;
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (images.length > 1) {
+      setLoadedIndexes((current) => {
+        if (current.has(1)) return current;
+        const nextSet = new Set(current);
+        nextSet.add(1);
+        return nextSet;
+      });
+    }
+  };
+
+  if (images.length === 0) {
+    return (
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8]">
+        <div
+          role="img"
+          aria-label={fmt(card.photoUnavailable, { name: `${brand} ${model}` })}
+          className="flex h-full w-full items-center justify-center text-slate-300"
+        >
+          {isMoto ? (
+            <Motorbike className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
+          ) : (
+            <CarFront className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8]">
+    <div
+      className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8]"
+      onMouseEnter={handleMouseEnter}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClickCapture={handleClickCapture}
+    >
       <div
         className={cn(
           'absolute inset-0 transition-transform duration-500 ease-out motion-reduce:transition-none group-hover:scale-[1.03]',
           unavailable && 'opacity-60 saturate-[0.35]'
         )}
       >
-        {src ? (
-        <Image
-          src={src}
-          alt={`${fmt(agencyCity ? card.photoAltCity : card.photoAlt, { name: `${brand} ${model}`, city: agencyCity ?? '' })}${
-            images.length > 1 ? fmt(card.photoIndex, { index: currentIndex + 1, total: images.length }) : ''
-          }`}
-          fill
-          priority={priority}
-          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 400px"
-          className="object-cover"
-          unoptimized={!isOptimizableImage(src)}
-          onError={() => setFailedIndexes((prev) => new Set(prev).add(currentIndex))}
-        />
-        ) : (
-          <div
-            role="img"
-            aria-label={fmt(card.photoUnavailable, { name: `${brand} ${model}` })}
-            className="flex h-full w-full items-center justify-center text-slate-300"
-          >
-            <CarFront className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
-          </div>
-        )}
+        <div
+          dir="ltr"
+          className="flex h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`,
+          }}
+        >
+          {images.map((img, i) => {
+            const isFailed = failedIndexes.has(i);
+            const shouldRender = loadedIndexes.has(i) || i === 0;
+
+            return (
+              <div key={i} className="relative h-full w-full shrink-0 basis-full">
+                {isFailed ? (
+                  <div
+                    role="img"
+                    aria-label={fmt(card.photoUnavailable, { name: `${brand} ${model}` })}
+                    className="flex h-full w-full items-center justify-center text-slate-300"
+                  >
+                    {isMoto ? (
+                      <Motorbike className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
+                    ) : (
+                      <CarFront className="h-14 w-14" strokeWidth={1.25} aria-hidden="true" />
+                    )}
+                  </div>
+                ) : shouldRender ? (
+                  <Image
+                    src={img}
+                    alt={`${fmt(agencyCity ? card.photoAltCity : card.photoAlt, {
+                      name: `${brand} ${model}`,
+                      city: agencyCity ?? '',
+                    })}${
+                      images.length > 1
+                        ? fmt(card.photoIndex, { index: i + 1, total: images.length })
+                        : ''
+                    }`}
+                    fill
+                    priority={priority && i === 0}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 400px"
+                    className="object-cover"
+                    unoptimized={!isOptimizableImage(img)}
+                    onError={() => setFailedIndexes((prev) => new Set(prev).add(i))}
+                  />
+                ) : (
+                  <div className="h-full w-full bg-slate-100" />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-black/35 to-transparent" />
@@ -200,15 +307,32 @@ function VehicleGallery({
           </button>
 
           <div
-            className="pointer-events-none absolute bottom-3 end-3 flex gap-1"
+            className="absolute bottom-3 end-3 z-20 flex items-center gap-1.5"
             aria-hidden="true"
           >
             {images.map((_, i) => (
-              <span
+              <button
                 key={i}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentIndex(i);
+                  setLoadedIndexes((current) => {
+                    const nextSet = new Set(current);
+                    nextSet.add(i);
+                    nextSet.add((i + 1) % images.length);
+                    nextSet.add((i - 1 + images.length) % images.length);
+                    return nextSet;
+                  });
+                }}
+                tabIndex={-1}
+                aria-label={fmt(card.photoIndex, { index: i + 1, total: images.length })}
                 className={cn(
-                  'h-1 rounded-full transition-all duration-300',
-                  i === currentIndex ? 'w-3.5 bg-white' : 'w-1 bg-white/55'
+                  'h-1.5 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white',
+                  i === currentIndex
+                    ? 'w-4 bg-white shadow-xs'
+                    : 'w-1.5 bg-white/60 hover:bg-white/90'
                 )}
               />
             ))}
@@ -283,6 +407,7 @@ function VehicleCardComponent({
           agencyCity={agency?.city}
           priority={priority}
           unavailable={!isBookable}
+          isMoto={isMoto}
         />
 
         {/* Statut — pastille + texte (jamais la couleur seule) */}

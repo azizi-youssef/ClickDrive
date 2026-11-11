@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, type FormEven
 import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import agenciesHeroImage from '../../../public/agences.jpg';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePagination } from '@/lib/hooks/usePagination';
 import {
   Building2,
   Search,
@@ -124,6 +126,31 @@ export function AgenciesClient() {
   }, [allAgencies, searchQuery, cityFilter, sortBy, locale]);
 
   const hasFilters = searchQuery.trim().length > 0 || cityFilter !== 'all';
+
+  // ── Pagination ───────────────────────────────────────────────────────────
+  const PAGE_SIZE_AGENCIES = 9; // 3×3 grid
+
+  const { currentPage: agencyPage, totalPages: agencyTotalPages, startIndex: agencyStart, endIndex: agencyEnd, setPage: setAgencyPage, resetPage: resetAgencyPage } =
+    usePagination({ pageSize: PAGE_SIZE_AGENCIES, totalItems: filteredAgencies.length, paramName: 'page' });
+
+  // Reset to page 1 whenever search or city filter changes
+  const prevSearchRef = React.useRef(searchQuery);
+  const prevCityRef = React.useRef(cityFilter);
+  const prevSortAgencyRef = React.useRef(sortBy);
+  useEffect(() => {
+    if (
+      prevSearchRef.current !== searchQuery ||
+      prevCityRef.current !== cityFilter ||
+      prevSortAgencyRef.current !== sortBy
+    ) {
+      prevSearchRef.current = searchQuery;
+      prevCityRef.current = cityFilter;
+      prevSortAgencyRef.current = sortBy;
+      resetAgencyPage();
+    }
+  }, [searchQuery, cityFilter, sortBy, resetAgencyPage]);
+
+  const pagedAgencies = filteredAgencies.slice(agencyStart, agencyEnd);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -475,11 +502,26 @@ export function AgenciesClient() {
 
           {/* Grille */}
           {!loading && !error && filteredAgencies.length > 0 && (
-            <GsapReveal stagger={0.06} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredAgencies.map((agency) => (
-                <AgencyCard key={agency.id} agency={agency} carCount={agency.vehicle_count ?? 0} />
-              ))}
-            </GsapReveal>
+            <>
+              <GsapReveal stagger={0.06} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {pagedAgencies.map((agency) => (
+                  <AgencyCard key={agency.id} agency={agency} carCount={agency.vehicle_count ?? 0} />
+                ))}
+              </GsapReveal>
+              {agencyTotalPages > 1 && (
+                <Pagination
+                  currentPage={agencyPage}
+                  totalPages={agencyTotalPages}
+                  onPageChange={setAgencyPage}
+                  ariaLabel={t.catalog.pagination.navAria}
+                  firstPageLabel={t.catalog.pagination.firstPage}
+                  previousPageLabel={t.catalog.pagination.previousPage}
+                  nextPageLabel={t.catalog.pagination.nextPage}
+                  lastPageLabel={t.catalog.pagination.lastPage}
+                  className="mt-10"
+                />
+              )}
+            </>
           )}
         </div>
 

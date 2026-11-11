@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@clickdrive/shared": [
+        "../packages/shared/src/index.ts"
+      ],
+      "@clickdrive/shared/*": [
+        "../packages/shared/src/*"
       ]
     }
   },

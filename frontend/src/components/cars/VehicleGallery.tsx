@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { CarFront, ChevronLeft, ChevronRight, Expand, X } from 'lucide-react';
+import { CarFront, ChevronLeft, ChevronRight, Expand, Motorbike, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isOptimizableImage } from '@/lib/utils/images';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
@@ -15,9 +15,11 @@ interface VehicleGalleryProps {
   title: string;
   /** Pastille superposée (statut de disponibilité) */
   overlay?: React.ReactNode;
+  /** Indique s'il s'agit d'une moto (adapte l'icône de remplacement) */
+  isMoto?: boolean;
 }
 
-function Placeholder({ title, className }: { title: string; className?: string }) {
+function Placeholder({ title, className, isMoto }: { title: string; className?: string; isMoto?: boolean }) {
   const { t, fmt } = useTranslation();
   return (
     <div
@@ -25,7 +27,11 @@ function Placeholder({ title, className }: { title: string; className?: string }
       aria-label={fmt(t.car.gallery.unavailable, { title })}
       className={cn('flex h-full w-full items-center justify-center bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8] text-slate-300', className)}
     >
-      <CarFront className="h-16 w-16" strokeWidth={1.2} aria-hidden="true" />
+      {isMoto ? (
+        <Motorbike className="h-16 w-16" strokeWidth={1.2} aria-hidden="true" />
+      ) : (
+        <CarFront className="h-16 w-16" strokeWidth={1.2} aria-hidden="true" />
+      )}
     </div>
   );
 }
@@ -34,7 +40,7 @@ function Placeholder({ title, className }: { title: string; className?: string }
  * Galerie de la fiche véhicule : grande photo, miniatures, compteur, navigation clavier
  * et visionneuse plein écran. Les photos en échec sont remplacées par un emplacement neutre.
  */
-export function VehicleGallery({ images, title, overlay }: VehicleGalleryProps) {
+export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGalleryProps) {
   const { t, fmt } = useTranslation();
   const g = t.car.gallery;
   const reduceMotion = useReducedMotion();
@@ -112,7 +118,7 @@ export function VehicleGallery({ images, title, overlay }: VehicleGalleryProps) 
                 onError={() => markFailed(safeIndex)}
               />
             ) : (
-              <Placeholder title={title} />
+              <Placeholder title={title} isMoto={isMoto} />
             )}
           </motion.div>
         </AnimatePresence>
@@ -168,7 +174,7 @@ export function VehicleGallery({ images, title, overlay }: VehicleGalleryProps) 
                 )}
               >
                 {failed.has(i) ? (
-                  <Placeholder title={title} className="[&_svg]:h-6 [&_svg]:w-6" />
+                  <Placeholder title={title} className="[&_svg]:h-6 [&_svg]:w-6" isMoto={isMoto} />
                 ) : (
                   <Image
                     src={image}

@@ -165,49 +165,7 @@ export function Footer() {
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* ============================================================ */}
-        {/* 1. APPEL AUX AGENCES                                         */}
-        {/* ============================================================ */}
-        <section aria-label={strings.agencyTitle} className="pt-10 sm:pt-12">
-          <div className="rounded-2xl border border-white/10 bg-linear-to-br from-white/6 via-white/2 to-transparent p-5 sm:p-8">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
-              <div className="flex items-start gap-4">
-                <div
-                  className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#E63946]/25 bg-[#E63946]/10 text-[#FF6B76] sm:flex"
-                  aria-hidden="true"
-                >
-                  <Building2 className="h-6 w-6" />
-                </div>
-                <div>
-                  <span className="hidden rounded-full border border-[#E63946]/30 bg-[#E63946]/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#FF6B76] sm:inline-block">
-                    {strings.agencyBadge}
-                  </span>
-                  <h2 className="text-base font-bold text-white sm:mt-2 sm:text-lg">{strings.agencyTitle}</h2>
-                  {/* Description masquée en mobile pour raccourcir le footer */}
-                  <p className="mt-1.5 hidden max-w-2xl text-sm leading-relaxed text-slate-300 sm:block">
-                    {strings.agencyDesc}
-                  </p>
-                </div>
-              </div>
-
-              <Link
-                href="/agency/join"
-                className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-action px-6 text-sm font-bold text-white shadow-lg shadow-red-950/30 transition-colors duration-200 hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-white"
-              >
-                <span>{strings.agencyCta}</span>
-                <ArrowUpRight
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5',
-                    isRTL && '-scale-x-100 group-hover:-translate-x-0.5'
-                  )}
-                  aria-hidden="true"
-                />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* 2. ENGAGEMENTS                                               */}
+        {/* 1. ENGAGEMENTS                                               */}
         {/* ============================================================ */}
         <section aria-label={strings.trustAria} className="my-8 border-y border-white/8 py-6 sm:py-8">
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
@@ -229,7 +187,7 @@ export function Footer() {
         </section>
 
         {/* ============================================================ */}
-        {/* 3. MARQUE + COLONNES DE LIENS                                */}
+        {/* 2. MARQUE + COLONNES DE LIENS                                */}
         {/* ============================================================ */}
         <div className="grid grid-cols-1 gap-x-8 gap-y-2 pb-8 md:grid-cols-2 md:gap-y-10 lg:grid-cols-12">
           <div className="space-y-4 pb-6 md:pb-0 lg:col-span-4">

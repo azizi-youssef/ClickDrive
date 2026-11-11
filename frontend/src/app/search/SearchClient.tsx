@@ -5,6 +5,8 @@ import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import motoHeroImage from '../../../public/moto.jpg';
 import carHeroImage from '../../../public/voiture.jpg';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePagination } from '@/lib/hooks/usePagination';
 
 /** Photo d'en-tête et cadrage (les véhicules sont sur la droite des deux photos) */
 const HERO_IMAGES = {
@@ -224,6 +226,28 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
 
     return result;
   }, [typeScopedVehicles, filters, sortBy, searchPeriod]);
+
+  // ── Pagination ───────────────────────────────────────────────────────────
+  const PAGE_SIZE = 12; // 3 columns × 4 rows
+
+  const { currentPage, totalPages, startIndex, endIndex, setPage, resetPage } = usePagination({
+    pageSize: PAGE_SIZE,
+    totalItems: filteredVehicles.length,
+    paramName: 'page',
+  });
+
+  // Reset to page 1 whenever filters or sort change
+  const prevFiltersRef = React.useRef(filters);
+  const prevSortRef = React.useRef(sortBy);
+  useEffect(() => {
+    if (prevFiltersRef.current !== filters || prevSortRef.current !== sortBy) {
+      prevFiltersRef.current = filters;
+      prevSortRef.current = sortBy;
+      resetPage();
+    }
+  }, [filters, sortBy, resetPage]);
+
+  const pagedVehicles = filteredVehicles.slice(startIndex, endIndex);
 
   // Options de filtres issues des véhicules réellement présents (catégories du type choisi)
   const facets = useMemo(() => catalogFacets(typeScopedVehicles), [typeScopedVehicles]);
@@ -592,16 +616,31 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     ))}
                   </div>
                 ) : filteredVehicles.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                    {filteredVehicles.map((car, index) => (
-                      <VehicleCard
-                        key={car.id}
-                        vehicle={car}
-                        priority={index < 3}
-                        availabilityChecked={Boolean(initialStartDate && initialEndDate)}
+                  <>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                      {pagedVehicles.map((car, index) => (
+                        <VehicleCard
+                          key={car.id}
+                          vehicle={car}
+                          priority={index < 3}
+                          availabilityChecked={Boolean(initialStartDate && initialEndDate)}
+                        />
+                      ))}
+                    </div>
+                    {totalPages > 1 && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        ariaLabel={catalog.pagination.navAria}
+                        firstPageLabel={catalog.pagination.firstPage}
+                        previousPageLabel={catalog.pagination.previousPage}
+                        nextPageLabel={catalog.pagination.nextPage}
+                        lastPageLabel={catalog.pagination.lastPage}
+                        className="mt-10"
                       />
-                    ))}
-                  </div>
+                    )}
+                  </>
                 ) : (
                   <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F6F8] text-[#0B1220]">

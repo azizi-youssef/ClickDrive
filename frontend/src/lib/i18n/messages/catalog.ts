@@ -80,6 +80,15 @@ const fr = {
     agencyTitle: 'Agence de location',
     allAgencies: 'Toutes les agences',
   },
+  pagination: {
+    previousPage: 'Page précédente',
+    nextPage: 'Page suivante',
+    firstPage: 'Première page',
+    lastPage: 'Dernière page',
+    pageLabel: 'Page {page}',
+    navAria: 'Navigation par page',
+    pageOf: 'Page {current} sur {total}',
+  },
 };
 
 export type CatalogMessages = typeof fr;
@@ -164,6 +173,15 @@ export const catalog: Record<Locale, CatalogMessages> = {
       agencyTitle: 'Rental agency',
       allAgencies: 'All agencies',
     },
+    pagination: {
+      previousPage: 'Previous page',
+      nextPage: 'Next page',
+      firstPage: 'First page',
+      lastPage: 'Last page',
+      pageLabel: 'Page {page}',
+      navAria: 'Page navigation',
+      pageOf: 'Page {current} of {total}',
+    },
   },
   es: {
     breadcrumbAria: 'Ruta de navegación',
@@ -242,6 +260,15 @@ export const catalog: Record<Locale, CatalogMessages> = {
       allBrands: 'Todas las marcas',
       agencyTitle: 'Agencia de alquiler',
       allAgencies: 'Todas las agencias',
+    },
+    pagination: {
+      previousPage: 'Página anterior',
+      nextPage: 'Página siguiente',
+      firstPage: 'Primera página',
+      lastPage: 'Última página',
+      pageLabel: 'Página {page}',
+      navAria: 'Navegación por páginas',
+      pageOf: 'Página {current} de {total}',
     },
   },
   de: {
@@ -322,6 +349,15 @@ export const catalog: Record<Locale, CatalogMessages> = {
       agencyTitle: 'Vermieter',
       allAgencies: 'Alle Vermieter',
     },
+    pagination: {
+      previousPage: 'Vorherige Seite',
+      nextPage: 'Nächste Seite',
+      firstPage: 'Erste Seite',
+      lastPage: 'Letzte Seite',
+      pageLabel: 'Seite {page}',
+      navAria: 'Seitennavigation',
+      pageOf: 'Seite {current} von {total}',
+    },
   },
   nl: {
     breadcrumbAria: 'Kruimelpad',
@@ -400,6 +436,15 @@ export const catalog: Record<Locale, CatalogMessages> = {
       allBrands: 'Alle merken',
       agencyTitle: 'Verhuurder',
       allAgencies: 'Alle verhuurders',
+    },
+    pagination: {
+      previousPage: 'Vorige pagina',
+      nextPage: 'Volgende pagina',
+      firstPage: 'Eerste pagina',
+      lastPage: 'Laatste pagina',
+      pageLabel: 'Pagina {page}',
+      navAria: 'Paginanavigatie',
+      pageOf: 'Pagina {current} van {total}',
     },
   },
   ar: {
@@ -492,6 +537,15 @@ export const catalog: Record<Locale, CatalogMessages> = {
       allBrands: 'جميع العلامات',
       agencyTitle: 'وكالة الكراء',
       allAgencies: 'جميع الوكالات',
+    },
+    pagination: {
+      previousPage: 'الصفحة السابقة',
+      nextPage: 'الصفحة التالية',
+      firstPage: 'الصفحة الأولى',
+      lastPage: 'الصفحة الأخيرة',
+      pageLabel: 'الصفحة {page}',
+      navAria: 'التنقل بين الصفحات',
+      pageOf: 'الصفحة {current} من {total}',
     },
   },
 };

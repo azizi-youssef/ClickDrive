@@ -115,6 +115,8 @@ const nextConfig: NextConfig = {
     // Enable size optimization
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 3600,
+    // quality={70} is used on hero images; 75 is the Next.js default → list both
+    qualities: [70, 75],
   },
   // Apply security headers to all routes
   async headers() {
