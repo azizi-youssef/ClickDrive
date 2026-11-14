@@ -76,6 +76,22 @@ describe('Espaces de noms traduits (référence : français)', () => {
     expect(out).toEqual([]);
   });
 
+  // Une seule devise affichée par langue : celle de common.currency (« DH », « درهم » en arabe).
+  // « MAD » mélangé à « DH » sur une même page donnait l'impression de deux monnaies différentes.
+  it.each(['fr', ...PREFIXED_LOCALES] as const)('%s : un seul libellé de devise, celui de la langue', (locale) => {
+    const messages = getMessages(locale);
+    const currency = messages.common.currency;
+    const labels = ['DH', 'MAD', 'درهم'].filter((label) => label !== currency);
+    const strings: string[] = [];
+    const collect = (node: Node) => {
+      if (typeof node === 'string') strings.push(node);
+      else if (node && typeof node === 'object') Object.values(node as object).forEach(collect);
+    };
+    collect(messages);
+    const pattern = new RegExp(`(^|[^\\p{L}])(${labels.join('|')})(?![\\p{L}])`, 'u');
+    expect(strings.filter((text) => pattern.test(text))).toEqual([]);
+  });
+
   it('le navigateur ne reçoit que la langue de la page et les espaces demandés', () => {
     const core = pickMessages('nl', CORE_NAMESPACES);
     expect(Object.keys(core).sort()).toEqual([...CORE_NAMESPACES].sort());

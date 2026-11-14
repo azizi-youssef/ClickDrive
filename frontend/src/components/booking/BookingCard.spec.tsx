@@ -3,8 +3,12 @@ import '@/tests/setup/dom';
 import { render, screen, waitFor, within } from '@/tests/setup/render';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderToString } from 'react-dom/server';
 import { BookingCard } from './BookingCard';
 import { testVehicle } from '@/tests/fixtures/vehicle';
+import { LanguageProvider } from '@/lib/i18n/LanguageContext';
+import { getMessages } from '@/lib/i18n/messages';
+import type { Agency } from '@/types';
 
 type FetchResult = { status: number; body: unknown } | Error;
 
@@ -155,6 +159,80 @@ describe('BookingCard — rafraîchissement en arrière-plan', () => {
     window.dispatchEvent(new Event('focus'));
     expect(await screen.findAllByText('Disponibilité non vérifiée')).not.toHaveLength(0);
     expect(bookButton()).toHaveAttribute('aria-disabled', 'true');
+  });
+});
+
+describe('BookingCard — remises longue durée de l’agence', () => {
+  const tiers = [
+    { min_days: 3, percent: 5 },
+    { min_days: 7, percent: 10 },
+  ];
+  const discounted = () =>
+    testVehicle({ daily_price: 300, agency: { id: '22222222-2222-4222-8222-222222222222', name: 'Agence Test', duration_discounts: tiers } as Agency });
+
+  it('paliers affichés sous le prix ; remise appliquée au total (3 jours par défaut : −5 %)', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={discounted()} />);
+    await screen.findByText('Disponible pour ces dates');
+
+    expect(screen.getByText('Remises longue durée')).toBeInTheDocument();
+    // Palier atteint mis en avant (coche + texte), l'autre palier simplement annoncé
+    expect(screen.getByText('−5 % dès 3 jours').closest('li')).toHaveTextContent('(appliquée)');
+    expect(screen.getByText('−10 % dès 7 jours').closest('li')).not.toHaveTextContent('(appliquée)');
+    expect(screen.getByText('Encore 4 jours pour obtenir −10 %')).toBeInTheDocument();
+    // 300 DH × 3 jours = 900 DH, remise −45 DH, total 855 DH, économie annoncée
+    expect(screen.getByText('Remise longue durée (−5 %)')).toBeInTheDocument();
+    expect(screen.getByText(/−45\sDH/)).toBeInTheDocument();
+    expect(screen.getByText(/Vous économisez 45\sDH/)).toBeInTheDocument();
+    expect(screen.getAllByText(/855\sDH/).length).toBeGreaterThan(0);
+  });
+
+  it('rendu serveur identique : paliers présents dans le HTML (pas d’écart à l’hydratation)', () => {
+    const html = renderToString(
+      <LanguageProvider locale="fr" messages={getMessages('fr')}>
+        <BookingCard vehicle={discounted()} />
+      </LanguageProvider>
+    );
+    expect(html).toContain('Remises longue durée');
+    expect(html).toContain('−5 % dès 3 jours');
+    expect(html).toContain('Remise longue durée (−5 %)');
+  });
+
+  it('agence sans remise : aucune mention', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={testVehicle()} />);
+    await screen.findByText('Disponible pour ces dates');
+    expect(screen.queryByText(/Remise longue durée/)).not.toBeInTheDocument();
+  });
+});
+
+describe('BookingCard — dates reprises de la recherche', () => {
+  const inDays = (days: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+  const dateInputs = () => screen.getAllByDisplayValue(/^\d{4}-\d{2}-\d{2}$/) as HTMLInputElement[];
+
+  it('période à venir : dates affichées et vérifiées telles quelles', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    const period = { startDate: inDays(10), endDate: inDays(15) };
+    render(<BookingCard vehicle={testVehicle()} requestedPeriod={period} />);
+
+    await screen.findByText('Disponible pour ces dates');
+    expect(dateInputs().map((input) => input.value)).toEqual([period.startDate, period.endDate]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/vehicles/11111111-1111-4111-8111-111111111111/availability?startDate=${period.startDate}&endDate=${period.endDate}`,
+      { cache: 'no-store' }
+    );
+  });
+
+  it('période déjà passée : repli sur aujourd’hui + 3 jours', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={testVehicle()} requestedPeriod={{ startDate: inDays(-5), endDate: inDays(-2) }} />);
+
+    await screen.findByText('Disponible pour ces dates');
+    expect(dateInputs().map((input) => input.value)).toEqual([inDays(0), inDays(3)]);
   });
 });
 

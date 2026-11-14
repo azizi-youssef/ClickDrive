@@ -20,6 +20,7 @@ import {
   LogOut,
   Sparkles,
   Motorbike,
+  Satellite,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +31,12 @@ export type AgencySection = {
   count?: number;
   badge?: 'alert';
 };
+
+/**
+ * Suivi GPS : écran dédié (/agency/tracking), hors des sections de l'espace agence. Ajouté à la navigation
+ * seulement pour les comptes disposant de tracking.read (vérifié côté serveur).
+ */
+export const TRACKING_SECTION: AgencySection = { id: 'tracking', label: 'Suivi GPS', icon: Satellite };
 
 export const AGENCY_SECTIONS: readonly {
   id:
@@ -65,7 +72,7 @@ export const AGENCY_SECTIONS: readonly {
 /** Regroupement visuel de la navigation (les sections absentes selon le rôle sont ignorées). */
 const SECTION_GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Pilotage', ids: ['overview', 'bookings', 'rentals', 'calendar'] },
-  { title: 'Flotte', ids: ['fleet', 'fleet_motos', 'add_vehicle', 'subscription'] },
+  { title: 'Flotte', ids: ['fleet', 'fleet_motos', 'tracking', 'add_vehicle', 'subscription'] },
   { title: 'Agence', ids: ['customers', 'finances', 'access', 'settings'] },
 ];
 

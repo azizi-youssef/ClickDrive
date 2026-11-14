@@ -28,7 +28,7 @@ import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { loginUrl } from '@/lib/auth/login-portals';
 import { ReviewModal } from '@/components/shared/ReviewModal';
 import { AccountProfileSettings } from '@/components/shared/AccountProfileSettings';
-import { Magnet, GsapReveal } from '@/components/ui/react-bits';
+import { Magnet } from '@/components/ui/react-bits';
 
 export default function AccountPage() {
   const { t, locale, href, plural, money } = useTranslation();
@@ -265,7 +265,7 @@ export default function AccountPage() {
                     <span className="text-xs">{c.loading}</span>
                   </div>
                 ) : bookings.length > 0 ? (
-                  <GsapReveal stagger={0.06} className="space-y-3">
+                  <div className="space-y-3">
                     {bookings.map((booking) => {
                       const reference = booking.reference || booking.booking_ref || '';
                       return (
@@ -342,7 +342,7 @@ export default function AccountPage() {
                         </div>
                       );
                     })}
-                  </GsapReveal>
+                  </div>
                 ) : (
                   <div className="text-center py-12 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 p-6 space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 text-slate-500 flex items-center justify-center mx-auto shadow-2xs">

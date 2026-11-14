@@ -32,7 +32,7 @@ export function PartnerPlans() {
   return (
     <section aria-labelledby="partner-plans" className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#E63946]">Tarifs</span>
+        <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">Tarifs</span>
         <h2 id="partner-plans" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-3xl">
           Un abonnement mensuel selon la taille de votre flotte, 0 % de commission
         </h2>

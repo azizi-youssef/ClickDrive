@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { AgencyWorkspace } from '@/components/agency/AgencyWorkspace';
-import { canAccessAgencyArea, getServerAuth } from '@/lib/auth/server';
+import { canAccessAgencyArea, getServerAuth, hasAccessPermission } from '@/lib/auth/server';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -21,10 +21,14 @@ export default async function AgencyPage() {
     redirect('/login?portal=agency&error=no-agency');
   }
 
+  // Suivi GPS : l'entrée de navigation n'apparaît que pour tracking.read (la base et l'API revérifient)
+  const canViewTracking = await hasAccessPermission('tracking.read', agencyId);
+
   // L'espace lit la section et la réservation ouverte dans l'adresse (useSearchParams)
   return (
     <Suspense>
     <AgencyWorkspace
+      canViewTracking={canViewTracking}
       agency={{
         id: agencyId,
         name: auth.agencyName ?? 'Mon agence',

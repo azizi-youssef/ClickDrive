@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@/tests/setup/render';
 import { describe, expect, it } from 'vitest';
 import { VehicleCard } from './VehicleCard';
 import { testVehicle } from '@/tests/fixtures/vehicle';
+import type { Agency } from '@/types';
 
 describe('VehicleCard — navigation fluide des images', () => {
   it('rendu d’une voiture sans images : affiche le placeholder voiture', () => {
@@ -94,3 +95,36 @@ describe('VehicleCard — navigation fluide des images', () => {
   });
 });
 
+describe('VehicleCard — remise longue durée de l’agence', () => {
+  const agency = (tiers: unknown) =>
+    ({ id: '22222222-2222-4222-8222-222222222222', name: 'Agence Test', duration_discounts: tiers }) as Agency;
+  const tiers = [
+    { min_days: 3, percent: 5 },
+    { min_days: 7, percent: 10 },
+  ];
+
+  it('sans période : pastille du premier palier annoncé', () => {
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 300, agency: agency(tiers) })} />);
+    expect(screen.getByText('−5 % dès 3 jours')).toBeInTheDocument();
+  });
+
+  it('période choisie : remise appliquée, prix plein barré et total remisé', () => {
+    const { container } = render(<VehicleCard vehicle={testVehicle({ daily_price: 300, agency: agency(tiers) })} selectedDays={7} />);
+    expect(screen.getByText('Remise −10 % appliquée')).toBeInTheDocument();
+    expect(container.querySelector('s')).toHaveTextContent(/2\s100\sDH/);
+    expect(screen.getByText(/1\s890\sDH/)).toBeInTheDocument();
+  });
+
+  it('période sous le premier palier : pas de remise appliquée, prix non barré', () => {
+    const { container } = render(<VehicleCard vehicle={testVehicle({ daily_price: 300, agency: agency(tiers) })} selectedDays={2} />);
+    expect(screen.queryByText(/appliquée/)).not.toBeInTheDocument();
+    expect(container.querySelector('s')).toBeNull();
+    expect(screen.getByText('−5 % dès 3 jours')).toBeInTheDocument();
+  });
+
+  it('agence sans remise : aucune pastille', () => {
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 300, agency: agency([]) })} selectedDays={7} />);
+    expect(screen.queryByText(/dès \d+ jours/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appliquée/)).not.toBeInTheDocument();
+  });
+});

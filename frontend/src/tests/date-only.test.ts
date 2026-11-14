@@ -4,6 +4,8 @@ import {
   formatLocalDate,
   getEffectiveRentalDates,
   isValidDateOnly,
+  parseRentalPeriod,
+  rentalPeriodQuery,
 } from '../lib/utils/date-only';
 
 assert.equal(isValidDateOnly('2026-02-28'), true);
@@ -21,3 +23,14 @@ assert.deepEqual(
   getEffectiveRentalDates('', '', '2026-10-13'),
   { startDate: '2026-10-13', endDate: '2026-10-16' }
 );
+
+// Période transmise de la recherche à la fiche véhicule
+assert.deepEqual(parseRentalPeriod('2026-11-20', '2026-11-25'), { startDate: '2026-11-20', endDate: '2026-11-25' });
+assert.equal(parseRentalPeriod('2026-11-25', '2026-11-20'), undefined);
+assert.equal(parseRentalPeriod('2026-11-20', '2026-11-20'), undefined);
+assert.equal(parseRentalPeriod('2026-02-30', '2026-03-02'), undefined);
+assert.equal(parseRentalPeriod(['2026-11-20'], '2026-11-25'), undefined);
+assert.equal(parseRentalPeriod(undefined, undefined), undefined);
+assert.equal(rentalPeriodQuery({ startDate: '2026-11-20', endDate: '2026-11-25' }), '?startDate=2026-11-20&endDate=2026-11-25');
+assert.equal(rentalPeriodQuery({ startDate: '<script>', endDate: '2026-11-25' }), '');
+assert.equal(rentalPeriodQuery(null), '');

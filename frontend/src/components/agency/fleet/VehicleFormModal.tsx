@@ -64,10 +64,13 @@ export type EditableVehicle = {
 /** Nombre de photos conseillé par annonce (avertissement, non bloquant) */
 const RECOMMENDED_PHOTOS = 4;
 
-/** Valeurs de départ propres à chaque type (l'agence les ajuste) */
+/**
+ * Valeurs de départ propres à chaque type (l'agence les ajuste). Catégorie jamais pré-remplie :
+ * une catégorie par défaut oubliée finissait en ligne (ex. une berline premium classée « Économique »).
+ */
 const TYPE_DEFAULTS: Record<VehicleType, Partial<EditableVehicle>> = {
   CAR: {
-    category: 'Économique',
+    category: '',
     transmission: 'MANUAL',
     fuel: 'DIESEL',
     seats: 5,
@@ -120,14 +123,15 @@ export function VehicleFormModal({
       brand: '',
       model: '',
       year: new Date().getFullYear(),
-      category: 'Économique',
+      category: '',
       transmission: 'MANUAL',
       fuel: 'DIESEL',
       seats: 5,
       doors: 5,
       air_conditioning: true,
-      mileage: 15000,
-      daily_price: 350,
+      // 0 = non renseigné (champ vide) : jamais un prix ou un kilométrage inventé publié par mégarde
+      mileage: 0,
+      daily_price: 0,
       deposit: 3000,
       min_rental_days: 1,
       status: 'AVAILABLE',
@@ -135,7 +139,8 @@ export function VehicleFormModal({
       license_plate: '',
       unit_number: '',
       images: [],
-      features: initialType === 'MOTORCYCLE' ? [] : ['Bluetooth & USB', 'Climatisation'],
+      // Aucun équipement coché d'office : l'agence coche ce que le véhicule possède réellement
+      features: [],
       // Ajout lancé depuis la liste Motos : valeurs de départ d'une moto
       ...(initialType === 'MOTORCYCLE' ? { ...TYPE_DEFAULTS.MOTORCYCLE, vehicle_type: 'MOTORCYCLE' as const } : {}),
     };
@@ -154,6 +159,9 @@ export function VehicleFormModal({
   const typeLabel = VEHICLE_TYPE_LABELS[form.vehicle_type];
   const categories = categoriesForType(form.vehicle_type);
   const commonFeatures = COMMON_FEATURES_BY_TYPE[form.vehicle_type];
+  // Équipements du catalogue + ceux déjà enregistrés hors catalogue (ex. « Climatisation » des anciennes
+  // fiches) : toujours visibles, donc retirables — avant, ils restaient cochés sans pouvoir être décochés.
+  const featureOptions = [...commonFeatures, ...form.features.filter((feature) => !commonFeatures.includes(feature))];
 
   /** Changement voiture / moto : catégorie et caractéristiques remises aux valeurs du type choisi */
   const changeType = (type: VehicleType) => {
@@ -248,8 +256,12 @@ export function VehicleFormModal({
       setStep(1);
       return;
     }
-    if (isMoto && !form.category) {
-      setError('Choisissez la catégorie de la moto (Scooter, Roadster, Trail, Sportive ou Custom).');
+    if (!form.category) {
+      setError(
+        isMoto
+          ? 'Choisissez la catégorie de la moto (Scooter, Roadster, Trail, Sportive ou Custom).'
+          : 'Choisissez la catégorie du véhicule (Économique, SUV, Luxe…).'
+      );
       setStep(1);
       return;
     }
@@ -526,11 +538,9 @@ export function VehicleFormModal({
                     required
                     className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
                   >
-                    {isMoto && (
-                      <option value="" disabled>
-                        Choisir…
-                      </option>
-                    )}
+                    <option value="" disabled>
+                      Choisir…
+                    </option>
                     {categories.map((c) => (
                       <option key={c} value={c}>
                         {c}
@@ -632,7 +642,8 @@ export function VehicleFormModal({
                     id="vehicle-field-9"
                     type="number"
                     min="0"
-                    value={form.mileage}
+                    placeholder="Ex: 42000"
+                    value={form.mileage || ''}
                     onChange={(e) => setForm({ ...form, mileage: Number(e.target.value) })}
                     className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
                   />
@@ -651,6 +662,37 @@ export function VehicleFormModal({
                   />
                 </div>
               </div>
+
+              {/* Voiture : climatisation réglable (affichée sur la fiche « Climatisation : Oui / Non ») */}
+              {!isMoto && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="vehicle-air-conditioning" className={labelClass}>
+                      Climatisation
+                    </label>
+                    <select
+                      id="vehicle-air-conditioning"
+                      value={form.air_conditioning ? 'yes' : 'no'}
+                      onChange={(e) => {
+                        const airConditioning = e.target.value === 'yes';
+                        setForm({
+                          ...form,
+                          air_conditioning: airConditioning,
+                          // Sans climatisation, l'équipement « Climatisation » (anciennes fiches) n'a plus de sens
+                          features: airConditioning ? form.features : form.features.filter((f) => f !== 'Climatisation'),
+                        });
+                      }}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                    >
+                      <option value="yes">Oui</option>
+                      <option value="no">Non</option>
+                    </select>
+                  </div>
+                  <p className="self-end text-xs leading-5 text-slate-500">
+                    Affichée sur la fiche du véhicule : indiquez si la climatisation fonctionne réellement.
+                  </p>
+                </div>
+              )}
 
               {isMoto && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -685,7 +727,7 @@ export function VehicleFormModal({
                   Équipements & Options
                 </p>
                 <div className="flex flex-wrap gap-2" role="group" aria-labelledby="vehicle-features-label">
-                  {commonFeatures.map((feat) => {
+                  {featureOptions.map((feat) => {
                     const active = form.features.includes(feat);
                     return (
                       <button
@@ -724,7 +766,8 @@ export function VehicleFormModal({
                       type="number"
                       required
                       min="50"
-                      value={form.daily_price}
+                      placeholder="Ex: 350"
+                      value={form.daily_price || ''}
                       onChange={(e) => setForm({ ...form, daily_price: Number(e.target.value) })}
                       className="w-full rounded-xl border border-slate-300 py-2.5 pl-3.5 pr-16 text-lg font-bold text-ink focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                     />

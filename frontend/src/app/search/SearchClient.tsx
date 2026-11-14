@@ -26,6 +26,7 @@ import {
 } from '@/components/search/CatalogFilters';
 import { apiFetch } from '@/lib/api/client';
 import { formatLocalDate, getEffectiveRentalDates } from '@/lib/utils/date-only';
+import { calculateRentalDays } from '@/lib/utils/pricing';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -319,6 +320,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
   }
 
   const hasPeriod = Boolean(searchPeriod.startDate && searchPeriod.endDate);
+  const periodDays = hasPeriod ? calculateRentalDays(searchPeriod.startDate, searchPeriod.endDate) : undefined;
   const placeLabel = initialLocation ? locationLabel(t, initialLocation) : catalog.regionDefault;
   const isMotoView = vehicleType === 'MOTORCYCLE';
   // Bascule voitures / motos en conservant le lieu et les dates de la recherche
@@ -624,6 +626,9 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                           vehicle={car}
                           priority={index < 3}
                           availabilityChecked={Boolean(initialStartDate && initialEndDate)}
+                          // Période recherchée : total affiché sur la carte et dates reprises par la fiche
+                          period={hasPeriod ? searchPeriod : undefined}
+                          selectedDays={periodDays}
                         />
                       ))}
                     </div>

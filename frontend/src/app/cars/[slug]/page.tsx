@@ -7,11 +7,16 @@ import type { Vehicle } from '@/types';
 import { I18nScope } from '@/components/i18n/I18nScope';
 import { getTranslations } from '@/lib/i18n/server';
 import { localizeHref } from '@/lib/i18n/routing';
+import { parseRentalPeriod } from '@/lib/utils/date-only';
 
 // Rendu à la requête : prix et statut proviennent de la base au moment de la visite
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  /** Dates de la recherche (?startDate=…&endDate=…) reprises par la carte de réservation */
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 const FUEL_SCHEMA: Record<string, string> = { DIESEL: 'Diesel', GASOLINE: 'Gasoline', HYBRID: 'Hybrid', ELECTRIC: 'Electric' };
 
@@ -52,10 +57,14 @@ function vehicleJsonLd(vehicle: Vehicle, url: string, agencyUrl: string | null) 
  * Fiche véhicule rendue côté serveur : contenu, métadonnées et données structurées présents dans le HTML.
  * L'interactivité (galerie, disponibilité par dates, demande de réservation) reste dans CarDetailsClient.
  */
-export default async function CarDetailsPage({ params }: Props) {
+export default async function CarDetailsPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const vehicle = await getPublicVehicleBySlug(slug);
   if (!vehicle) notFound();
+  // Période choisie dans la recherche : la fiche l'affiche au lieu de repartir d'« aujourd'hui + 3 jours ».
+  // L'adresse canonique reste celle sans paramètres (layout).
+  const query = await searchParams;
+  const requestedPeriod = parseRentalPeriod(query.startDate, query.endDate);
 
   const alternativesPool = await getPublicAlternatives(vehicle);
   const moto = isMotorcycle(vehicle);
@@ -78,7 +87,12 @@ export default async function CarDetailsPage({ params }: Props) {
   return (
     <>
       <I18nScope namespaces={['car', 'booking']}>
-        <CarDetailsClient slug={vehicle.slug} initialVehicle={vehicle} alternativesPool={alternativesPool} />
+        <CarDetailsClient
+          slug={vehicle.slug}
+          initialVehicle={vehicle}
+          alternativesPool={alternativesPool}
+          requestedPeriod={requestedPeriod}
+        />
       </I18nScope>
       {structured.map((data, index) => (
         <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(data) }} />

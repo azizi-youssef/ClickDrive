@@ -64,6 +64,14 @@ défilement bloqué, focus rendu à l’élément d’ouverture. Le fond cliquab
   `lang` et `dir` sont corrects dès le premier HTML, sans bascule après hydratation.
 - Une seule URL par page (pas de préfixe de langue) : pas de `hreflang`.
 
+## Suivi GPS de la flotte
+
+Module `frontend/src/lib/tracking/` (BFF) + `/api/agency/tracking/*` + `/agency/tracking/*` : positions, trajets, alertes, zones et boîtiers GPS,
+rattachés au **véhicule** (jamais à une réservation). Ingestion par `POST /api/webhooks/tracking/[provider]` (signature HMAC, corps borné, débit limité),
+traitement transactionnel en base (`tracking_ingest_event`), lecture avec le client Supabase de l'utilisateur sous RLS, temps réel Supabase limité à la dernière
+position et aux alertes. Aucun accès client ; Super Admin seulement par autorisation de support journalisée. Architecture, contrat d'ingestion, état des
+intégrations fournisseurs (seule la passerelle normalisée est disponible ; Traccar/Flespi `pending`), exploitation et limites : `docs/gps-tracking.md`.
+
 ## Package partagé
 
 `packages/shared` (`@clickdrive/shared`) :

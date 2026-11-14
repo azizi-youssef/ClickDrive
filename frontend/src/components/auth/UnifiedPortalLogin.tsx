@@ -296,7 +296,6 @@ const loginStyles = `
     max-width: 460px;
     margin: auto;
     padding: 36px 0 28px;
-    animation: cd-enter .45s ease both;
   }
   .cd-card {
     padding: clamp(24px, 3vw, 36px);
@@ -516,7 +515,6 @@ const loginStyles = `
   .cd-skeleton { height: 52px; border: 1px solid var(--cd-line); border-radius: 12px; background: var(--cd-surface); }
   .cd-skeleton-label { height: 12px; width: 94px; margin-bottom: 12px; border-radius: 4px; background: var(--cd-line); }
   .cd-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-  @keyframes cd-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes cd-spin { to { transform: rotate(360deg); } }
 
   /* RTL : icônes et bouton d'affichage du mot de passe côté début/fin logique */
@@ -554,7 +552,6 @@ const loginStyles = `
     .cd-back { padding: 0 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .cd-form-content { animation: none; }
     .cd-spinner { animation-duration: 1.8s; }
     .cd-back svg, .cd-submit svg, .cd-help summary svg { transition: none; }
     .cd-back:hover svg, .cd-submit:hover:not(:disabled) svg:last-child { transform: none; }

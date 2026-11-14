@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useState, type FormEvent, type 
 import Link from 'next/link';
 import {
   AlertCircle,
+  BadgePercent,
   Building2,
   CheckCircle2,
   Clock3,
@@ -16,8 +17,10 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Plus,
   RotateCcw,
   Save,
+  Trash2,
   UserRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,6 +29,14 @@ import { AccountProfileSettings } from '@/components/shared/AccountProfileSettin
 import { AgencyLogoUploader } from '@/components/agency/settings/AgencyLogoUploader';
 import { CardSkeleton, ErrorBanner } from '@/components/agency/shell/Feedback';
 import { AGENCY_LANGUAGES } from '@/lib/agencies/languages';
+import { formatNumber } from '@/lib/i18n/format';
+import {
+  DURATION_DISCOUNT_RULES,
+  calculateRentalPrice,
+  durationDiscountsIssue,
+  normalizeDurationDiscounts,
+  type DurationDiscount,
+} from '@/lib/utils/pricing';
 
 /** Champs modifiables (le logo et la bannière sont enregistrés dès leur envoi). */
 type EditableFields = {
@@ -43,6 +54,8 @@ type EditableFields = {
   /** Montants en DH saisis en texte ; vide = non proposé */
   delivery_fee_airport: string;
   delivery_fee_port: string;
+  /** Paliers de remise longue durée, en JSON de lignes saisies (TierRow[]) */
+  duration_discounts: string;
 };
 type FieldErrors = Partial<Record<keyof EditableFields, string>>;
 
@@ -59,6 +72,7 @@ const EMPTY: EditableFields = {
   cancellation_policy: '',
   delivery_fee_airport: '',
   delivery_fee_port: '',
+  duration_discounts: '[]',
 };
 
 const FEE_KEYS = ['delivery_fee_airport', 'delivery_fee_port'] as const;
@@ -69,9 +83,43 @@ function feeError(value: string): string | undefined {
   return Number.isFinite(amount) && amount >= 0 && amount <= 5000 ? undefined : 'Montant entre 0 et 5 000 DH.';
 }
 
+/* ── Remises longue durée : lignes saisies (texte) ↔ paliers (nombres) ── */
+type TierRow = { days: string; percent: string };
+
+function parseTierRows(value: string): TierRow[] {
+  try {
+    const rows: unknown = JSON.parse(value || '[]');
+    return Array.isArray(rows) ? (rows as TierRow[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function tierRowsToDiscounts(rows: TierRow[]): DurationDiscount[] {
+  return rows
+    .map((row) => ({ min_days: Number(row.days.trim()), percent: Number(row.percent.trim().replace(',', '.')) }))
+    .sort((a, b) => a.min_days - b.min_days);
+}
+
+function discountsToTierRows(value: unknown): string {
+  return JSON.stringify(normalizeDurationDiscounts(value).map((tier) => ({ days: String(tier.min_days), percent: String(tier.percent) })));
+}
+
+function tiersError(value: string): string | undefined {
+  const rows = parseTierRows(value);
+  if (rows.some((row) => !row.days.trim() || !row.percent.trim())) return 'Complétez ou retirez chaque palier.';
+  return durationDiscountsIssue(tierRowsToDiscounts(rows)) ?? undefined;
+}
+
+/** Durées proposées à l'ajout d'un palier (la remise reste à saisir par l'agence) */
+const SUGGESTED_TIER_DAYS = ['3', '7', '15', '30'];
+/** Prix d'exemple de l'aperçu (aucun véhicule réel) */
+const EXAMPLE_DAILY_PRICE = 300;
+
 /** Valeur envoyée à l'API : langues en liste, frais en nombre (null = non proposé), texte nettoyé */
 function payloadValue(key: keyof EditableFields, value: string): unknown {
   if (key === 'languages') return value ? value.split(',').filter(Boolean) : [];
+  if (key === 'duration_discounts') return tierRowsToDiscounts(parseTierRows(value));
   if ((FEE_KEYS as readonly string[]).includes(key)) return value.trim() ? Number(value.replace(',', '.')) : null;
   return value.trim();
 }
@@ -90,6 +138,8 @@ function validate(form: EditableFields): FieldErrors {
     const message = feeError(form[key]);
     if (message) errors[key] = message;
   }
+  const tiersMessage = tiersError(form.duration_discounts);
+  if (tiersMessage) errors.duration_discounts = tiersMessage;
   return errors;
 }
 
@@ -180,6 +230,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
         cancellation_policy: data.cancellation_policy || '',
         delivery_fee_airport: data.delivery_fee_airport == null ? '' : String(Number(data.delivery_fee_airport)),
         delivery_fee_port: data.delivery_fee_port == null ? '' : String(Number(data.delivery_fee_port)),
+        duration_discounts: discountsToTierRows(data.duration_discounts),
       };
       setInitial(next);
       setForm(next);
@@ -277,6 +328,16 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
   }
 
   const whatsappDigits = form.whatsapp.replace(/\D/g, '');
+
+  // Remises longue durée : lignes en cours de saisie et aperçu sur un véhicule d'exemple
+  const tierRows = parseTierRows(form.duration_discounts);
+  const setTierRows = (rows: TierRow[]) => update('duration_discounts', JSON.stringify(rows));
+  const addTierRow = () => {
+    const used = new Set(tierRows.map((row) => row.days.trim()));
+    setTierRows([...tierRows, { days: SUGGESTED_TIER_DAYS.find((days) => !used.has(days)) ?? '', percent: '' }]);
+  };
+  const previewTiers = tiersError(form.duration_discounts) ? [] : tierRowsToDiscounts(tierRows);
+  const tiersLocked = !canManage || saving;
 
   return (
     <div className="space-y-8">
@@ -408,6 +469,120 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
               <textarea rows={3} maxLength={600} onChange={(e) => update('cancellation_policy', e.target.value)} {...fieldProps('cancellation_policy')} />
             </Field>
           </Card>
+
+          <Card
+            icon={BadgePercent}
+            title="Remises longue durée"
+            description="Appliquées automatiquement à tous vos véhicules selon la durée de location. Le client voit la remise sur la fiche et paie le meilleur prix : tarif semaine ou mois du véhicule, ou cette remise (sans cumul)."
+          >
+            <div
+              id={`${uid}-duration_discounts`}
+              tabIndex={-1}
+              role="group"
+              aria-label="Paliers de remise longue durée"
+              aria-describedby={errors.duration_discounts ? `${uid}-duration_discounts-error` : undefined}
+              className="space-y-2 outline-none"
+            >
+              {tierRows.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600">
+                  Aucune remise pour l’instant : vos clients paient le prix par jour, ou le tarif semaine / mois prévu sur le véhicule.
+                </p>
+              ) : (
+                tierRows.map((row, index) => {
+                  const invalid = Boolean(errors.duration_discounts);
+                  const updateRow = (patch: Partial<TierRow>) =>
+                    setTierRows(tierRows.map((current, i) => (i === index ? { ...current, ...patch } : current)));
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-[#F5F6F8]/70 px-3 py-2.5 text-sm text-[#0B1220]"
+                    >
+                      <span className="font-semibold">À partir de</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={row.days}
+                        disabled={tiersLocked}
+                        aria-label={`Palier ${index + 1} : durée minimale en jours`}
+                        aria-invalid={invalid || undefined}
+                        onChange={(e) => updateRow({ days: e.target.value.replace(/\D/g, '') })}
+                        className={cn(input, 'w-16 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                      />
+                      <span>jours</span>
+                      <span aria-hidden="true" className="text-slate-400">→</span>
+                      <span className="relative">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={row.percent}
+                          placeholder="10"
+                          disabled={tiersLocked}
+                          aria-label={`Palier ${index + 1} : remise en pourcentage`}
+                          aria-invalid={invalid || undefined}
+                          onChange={(e) => updateRow({ percent: e.target.value.replace(/\D/g, '') })}
+                          className={cn(input, 'w-20 pe-7 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                        />
+                        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-3 flex items-center font-semibold text-slate-500">
+                          %
+                        </span>
+                      </span>
+                      <span>de remise</span>
+                      {!tiersLocked && (
+                        <button
+                          type="button"
+                          onClick={() => setTierRows(tierRows.filter((_, i) => i !== index))}
+                          aria-label={`Retirer le palier ${index + 1}`}
+                          className="ms-auto flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-[#B4232F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {errors.duration_discounts && (
+              <p id={`${uid}-duration_discounts-error`} className="flex items-start gap-1 text-xs font-semibold text-[#B4232F]">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                {errors.duration_discounts}
+              </p>
+            )}
+
+            {!tiersLocked && tierRows.length < DURATION_DISCOUNT_RULES.maxTiers && (
+              <button type="button" onClick={addTierRow} className={button.secondary}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Ajouter un palier
+              </button>
+            )}
+
+            {previewTiers.length > 0 && (
+              <div className="rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
+                <p className="font-bold">Exemple pour un véhicule à {EXAMPLE_DAILY_PRICE} DH par jour</p>
+                <ul className="mt-1.5 space-y-1">
+                  {previewTiers.map((tier) => {
+                    const price = calculateRentalPrice(
+                      { daily_price: EXAMPLE_DAILY_PRICE, agency: { duration_discounts: previewTiers } },
+                      tier.min_days
+                    );
+                    return (
+                      <li key={tier.min_days} className="tabular-nums">
+                        {tier.min_days} jours : <s>{formatNumber(price.full_price, 'fr')} DH</s>{' '}
+                        <strong>{formatNumber(price.total, 'fr')} DH</strong> (−{tier.percent} %)
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-1.5">
+                  Remise de {DURATION_DISCOUNT_RULES.minPercent} à {DURATION_DISCOUNT_RULES.maxPercent} %, dès{' '}
+                  {DURATION_DISCOUNT_RULES.minDays} jours · {DURATION_DISCOUNT_RULES.maxTiers} paliers au maximum.
+                </p>
+              </div>
+            )}
+          </Card>
         </form>
 
         {/* ── Colonne latérale : image de marque + aperçu public ── */}
@@ -510,7 +685,8 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
       {/* ── Barre d'enregistrement (visible dès qu'il y a des modifications) ── */}
       {canManage && (dirty || saving || saveError || savedAt) && (
         <div
-          className="sticky bottom-24 z-30 lg:bottom-6"
+          // Au-dessus de la navigation mobile (6rem) et du bandeau cookies tant qu'il est affiché
+          className="sticky bottom-[calc(6rem+var(--cd-cookie-banner,0px))] z-30 lg:bottom-[calc(1.5rem+var(--cd-cookie-banner,0px))]"
           role={saveError ? 'alert' : 'status'}
           aria-live="polite"
         >

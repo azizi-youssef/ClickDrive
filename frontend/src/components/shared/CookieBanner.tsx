@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from '@/components/i18n/LocalizedLink';
 import { Cookie } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -18,6 +18,8 @@ export function CookieBanner() {
   const { t, isRTL } = useTranslation();
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const bannerRef = useRef<HTMLElement>(null);
+  const visible = mounted && !dismissed;
 
   useEffect(() => {
     setMounted(true);
@@ -28,6 +30,25 @@ export function CookieBanner() {
     }
   }, []);
 
+  // Hauteur publiée dans --cd-cookie-banner (retirée une fois le bandeau fermé) : les barres d'action
+  // fixées en bas de l'écran (enregistrement des paramètres…) et la fin de page se placent au-dessus.
+  useEffect(() => {
+    const root = document.documentElement;
+    const banner = bannerRef.current;
+    if (!visible || !banner) {
+      root.style.removeProperty('--cd-cookie-banner');
+      return;
+    }
+    const publish = () => root.style.setProperty('--cd-cookie-banner', `${Math.round(banner.getBoundingClientRect().height)}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--cd-cookie-banner');
+    };
+  }, [visible]);
+
   function dismiss() {
     try {
       localStorage.setItem(STORAGE_KEY, 'acknowledged');
@@ -37,16 +58,18 @@ export function CookieBanner() {
     setDismissed(true);
   }
 
-  if (!mounted || dismissed) return null;
+  if (!visible) return null;
 
   return (
     <section
+      ref={bannerRef}
       aria-label={t.cookie.title}
       dir={isRTL ? 'rtl' : 'ltr'}
       // z-45 : au-dessus des barres fixes (z-40), sous les dialogues modaux (z-50 et plus),
       // qui rendent la page inerte — la bannière ne doit pas rester visible mais inutilisable par-dessus.
-      // Posée au-dessus d'une éventuelle barre d'action fixe (--cd-bottom-bar, fiche véhicule mobile)
-      className="fixed inset-x-0 bottom-[var(--cd-bottom-bar,0px)] z-45 border-t border-slate-200 bg-white/95 shadow-[0_-12px_32px_-16px_rgba(11,18,32,0.25)] backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+      // Posée au-dessus des barres fixes du bas : barre de réservation (--cd-bottom-bar, fiche véhicule)
+      // et navigation mobile de l'espace agence (--cd-fixed-nav), qu'elle masquait jusqu'à sa fermeture.
+      className="fixed inset-x-0 bottom-[calc(var(--cd-bottom-bar,0px)+var(--cd-fixed-nav,0px))] z-45 border-t border-slate-200 bg-white/95 shadow-[0_-12px_32px_-16px_rgba(11,18,32,0.25)] backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 sm:flex-row sm:py-3 sm:items-center sm:gap-5 sm:px-6 lg:px-8">
         <p className="flex min-w-0 flex-1 items-start gap-2.5 text-xs leading-snug text-slate-600 sm:text-[13px] sm:items-center">

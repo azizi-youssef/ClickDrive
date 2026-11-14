@@ -400,7 +400,7 @@ export function AdminFinanceClient() {
               <Th>Dossier</Th>
               <Th className="hidden md:table-cell">Agence</Th>
               <Th className="hidden lg:table-cell">Dates</Th>
-              <Th>Total (MAD)</Th>
+              <Th>Total (DH)</Th>
               <Th>Commission ClickDrive</Th>
               <Th className="hidden sm:table-cell">Net Agence</Th>
               <Th>Statut</Th>
@@ -440,7 +440,7 @@ export function AdminFinanceClient() {
                   </Td>
                   <Td>
                     <span className="text-xs font-semibold tabular-nums text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      0 MAD (Inclus)
+                      0 DH (Inclus)
                     </span>
                   </Td>
                   <Td className="hidden sm:table-cell">

@@ -239,7 +239,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Nom commercial de l'agence <span className="text-red-500">*</span>
+                  Nom commercial de l'agence <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -266,7 +266,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Numéro de téléphone <span className="text-red-500">*</span>
+                  Numéro de téléphone <span className="text-danger">*</span>
                 </label>
                 <input
                   type="tel"
@@ -305,7 +305,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Adresse complète <span className="text-red-500">*</span>
+                  Adresse complète <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -417,7 +417,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-slate-800">
-                    Email de connexion officiel <span className="text-red-500">*</span>
+                    Email de connexion officiel <span className="text-danger">*</span>
                   </label>
                   <span className="text-[11px] text-slate-500">
                     Format : <span className="font-mono text-amber-900">nom.agence@Clickdrive.ma</span>
@@ -441,7 +441,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-slate-800">
-                    Mot de passe temporaire initial <span className="text-red-500">*</span>
+                    Mot de passe temporaire initial <span className="text-danger">*</span>
                   </label>
                   <button
                     type="button"

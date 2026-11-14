@@ -91,7 +91,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-expanded={isOpen}
-          aria-label={t.common.switchLanguage}
+          aria-label={`${currentLanguage.nativeName} — ${t.common.switchLanguage}`}
           className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
         >
           <Globe className="h-3.5 w-3.5" aria-hidden="true" />
@@ -148,7 +148,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        aria-label={`Langue actuelle : ${currentLanguage.nativeName}. Cliquer pour changer.`}
+        aria-label={`${currentLanguage.code.toUpperCase()} (${currentLanguage.nativeName}) — ${t.common.switchLanguage}`}
         className={cn(
           'tap-44 inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all duration-200',
           isOpen

@@ -22,6 +22,17 @@ describe('Bandeau cookies — information exacte', () => {
     expect(localStorage.getItem('clickdrive_cookie_consent')).toBe('acknowledged');
   });
 
+  it('publie sa hauteur (--cd-cookie-banner) tant qu’il est affiché, la retire une fois fermé', async () => {
+    const user = userEvent.setup();
+    render(<CookieBanner />);
+    await screen.findByRole('region');
+    // Les barres fixées en bas (enregistrement des paramètres…) se placent au-dessus grâce à cette variable
+    expect(document.documentElement.style.getPropertyValue('--cd-cookie-banner')).toMatch(/^\d+px$/);
+
+    await user.click(screen.getByRole('button', { name: 'Compris' }));
+    expect(document.documentElement.style.getPropertyValue('--cd-cookie-banner')).toBe('');
+  });
+
   it('un choix enregistré par l’ancien bandeau masque aussi celui-ci', () => {
     localStorage.setItem('clickdrive_cookie_consent', 'declined');
     render(<CookieBanner />);

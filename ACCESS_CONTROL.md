@@ -53,6 +53,12 @@ Les rôles d’agence sont conservés sur `agency_members.role`; le rôle du pro
 | `bookings.manage` | ✓ | ✓ | ✓ | ✓ | — |
 | `customers.read` | ✓ | ✓ | ✓ | ✓ | — |
 | `reports.read` | ✓ | ✓ | ✓ | — | — |
+| `tracking.read` | autorisation de support uniquement | ✓ | ✓ | — | — |
+| `tracking.manage` | — | ✓ | ✓ | — | — |
+| `tracking.alerts.manage` | — | ✓ | ✓ | — | — |
+| `tracking.settings.manage` | — | ✓ | — | — | — |
+
+Suivi GPS (migration `20261119000100`) : le `super_admin` n'a **aucun** accès implicite aux positions des agences (`has_agency_permission` ne lui accorde pas les permissions `tracking.*`). Il ne peut lire qu'avec une autorisation de support explicite, motivée, de 5 à 120 minutes, en lecture seule, visible et révocable par l'agence, et chaque lecture est journalisée (`tracking_audit_log`). Voir `docs/gps-tracking.md`.
 
 Un `agency_manager` ne peut ni octroyer un rôle égal/supérieur, ni modifier ou révoquer un gestionnaire. Le dernier administrateur actif d’une agence ne peut pas être révoqué. Un administrateur ne peut pas modifier son propre rôle ni se révoquer.
 

@@ -403,7 +403,7 @@ export function AgencyRentalsPanel({
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-xs font-bold text-[#E63946] uppercase">
+                <span className="text-xs font-bold text-accent-text uppercase">
                   {activeHandover.type === 'PICKUP' ? 'Fiche Départ' : 'Fiche Retour'}
                 </span>
                 <h3 className="text-lg font-bold text-slate-900">

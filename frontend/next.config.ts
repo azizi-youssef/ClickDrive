@@ -42,6 +42,28 @@ const remotePatterns: NonNullable<
   })),
 ];
 
+/* Fond de carte MapLibre (suivi GPS) : seules les origines configurées sont autorisées, aucune par défaut en production.
+   Développement sans configuration : tuiles OpenStreetMap (voir lib/tracking/map-config.ts). */
+function originOf(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    // Les gabarits de tuiles contiennent {z}/{x}/{y} : on ne garde que l'origine
+    const url = new URL(value.trim().replace(/\{[a-z]\}/gi, "0"));
+    return url.protocol === "https:" ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+const mapOrigins = new Set<string>(
+  [
+    originOf(process.env.NEXT_PUBLIC_MAP_STYLE_URL),
+    originOf(process.env.NEXT_PUBLIC_MAP_TILES_URL),
+    ...(process.env.NEXT_PUBLIC_MAP_EXTRA_ORIGINS ?? "").split(",").map((entry) => originOf(entry)),
+    !isProduction ? "https://tile.openstreetmap.org" : null,
+  ].filter((origin): origin is string => Boolean(origin))
+);
+const mapSources = mapOrigins.size > 0 ? ` ${[...mapOrigins].join(" ")}` : "";
+
 const supabaseHttps = [...supabaseHosts].map((host) => `https://${host}`).join(" ");
 const supabaseWss = [...supabaseHosts].map((host) => `wss://${host}`).join(" ");
 
@@ -84,9 +106,9 @@ const securityHeaders = [
       // Polices auto-hébergées (next/font/local)
       "font-src 'self'",
       // Images: self + stockage Supabase du projet + Unsplash + data URIs
-      `img-src 'self' data: blob: ${supabaseHttps} https://images.unsplash.com`,
+      `img-src 'self' data: blob: ${supabaseHttps} https://images.unsplash.com${mapSources}`,
       // Connections: self + API & Realtime du projet Supabase
-      `connect-src 'self' ${supabaseHttps} ${supabaseWss}${analyticsOrigin ? ` ${analyticsOrigin}` : ""}`,
+      `connect-src 'self' ${supabaseHttps} ${supabaseWss}${analyticsOrigin ? ` ${analyticsOrigin}` : ""}${mapSources}`,
       // Workers: self
       "worker-src 'self' blob:",
       // Aucun plugin (Flash, applets…)

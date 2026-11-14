@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { signOutEverywhere } from '@/lib/auth/client';
 import { canManageAgencyBookings, canManageAgencyFleet } from '@/lib/auth/portals';
-import { Sidebar, type AgencySection } from '@/components/agency/shell/Sidebar';
+import { Sidebar, TRACKING_SECTION, type AgencySection } from '@/components/agency/shell/Sidebar';
 import { Topbar } from '@/components/agency/shell/Topbar';
 import { Toast } from '@/components/agency/shell/Feedback';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
@@ -93,9 +93,12 @@ function canEditFleet(role: string | undefined): boolean {
 export function AgencyWorkspace({
   agency,
   profile,
+  canViewTracking = false,
 }: {
   agency: AgencyIdentity;
   profile: AgencyProfile | null;
+  /** tracking.read, vérifié côté serveur : affiche l'entrée « Suivi GPS » (l'API et la base revérifient) */
+  canViewTracking?: boolean;
 }) {
   const router = useRouter();
   // La section et la réservation ouverte viennent de l'adresse : source unique, Précédent compris
@@ -105,8 +108,13 @@ export function AgencyWorkspace({
   const section = sectionFromUrl(sectionParam, bookingParam, SECTION_IDS);
   /** Change de section : nouvelle entrée d'historique, sans rechargement serveur */
   const setSection = useCallback((next: string) => {
+    // Le suivi GPS est un écran à part entière (carte plein écran, sous-pages) : navigation classique
+    if (next === 'tracking') {
+      router.push('/agency/tracking');
+      return;
+    }
     window.history.pushState(null, '', workspaceUrl(next));
-  }, []);
+  }, [router]);
   const [rangePreset, setRangePreset] = useState<RangePreset>('30d');
   const [rangeInput, setRangeInput] = useState(() => resolveRange('30d'));
 
@@ -523,6 +531,8 @@ export function AgencyWorkspace({
     }
     return { ...sec };
   });
+
+  if (canViewTracking) sections.push({ ...TRACKING_SECTION });
 
   const currentLabel = sections.find((entry) => entry.id === section)?.label ?? 'Agence';
   const canBookings = canActOnBookings(profile?.role);

@@ -11,7 +11,6 @@ import { Vehicle } from '@/types';
 import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { formatNumber } from '@/lib/i18n/format';
 import { categoryLabel, fuelLabel, licenseLabel, meetingPointText, transmissionLabel } from '@/lib/i18n/labels';
 import { MEETING_POINTS, getMeetingPoint, type MeetingPoint } from '@/lib/constants/meetingPoints';
 import { MeetingPointBadge } from './MeetingPointBadge';
@@ -186,9 +185,9 @@ export function BookingRequestModal({
 }: BookingRequestModalProps) {
   const uid = useId();
   const reduceMotion = useReducedMotion();
-  const { t, locale, fmt, plural, date } = useTranslation();
+  const { t, locale, fmt, plural, date, money } = useTranslation();
   const m = t.booking.modal;
-  const formatMad = (value: number) => `${formatNumber(value, locale)} MAD`;
+  const formatMad = money;
   // « sam. 12 juil. » dans la langue de la page
   const formatLongDate = (value: string) =>
     isValidDateOnly(value)
@@ -989,21 +988,41 @@ export function BookingRequestModal({
 
                   <div className="rounded-2xl bg-ink p-4 text-sm text-white sm:p-5">
                     <dl className="space-y-2">
-                      <div className="flex justify-between gap-3 text-slate-300">
-                        <dt>
-                          {formatMad(pricing.daily_price)} × {plural(pricing.number_of_days, m.days)}
-                          {pricing.applied_rate !== 'daily' && (
-                            <span className="block text-xs font-semibold text-emerald-300">
-                              {pricing.applied_rate === 'monthly' ? t.booking.card.monthlyApplied : t.booking.card.weeklyApplied}
-                            </span>
-                          )}
-                        </dt>
-                        <dd className="font-semibold text-white tabular-nums">{formatMad(pricing.subtotal)}</dd>
-                      </div>
+                      {pricing.applied_rate === 'duration' ? (
+                        <>
+                          <div className="flex justify-between gap-3 text-slate-300">
+                            <dt>
+                              {formatMad(Number(vehicle.daily_price))} × {plural(pricing.number_of_days, m.days)}
+                            </dt>
+                            <dd className="font-semibold text-white tabular-nums">{formatMad(pricing.full_price)}</dd>
+                          </div>
+                          <div className="flex justify-between gap-3 font-semibold text-emerald-300">
+                            <dt>{fmt(t.booking.card.durationLine, { percent: String(pricing.duration_discount?.percent ?? 0) })}</dt>
+                            <dd className="tabular-nums">−{formatMad(Math.max(0, pricing.full_price - pricing.subtotal))}</dd>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex justify-between gap-3 text-slate-300">
+                          <dt>
+                            {formatMad(pricing.daily_price)} × {plural(pricing.number_of_days, m.days)}
+                            {(pricing.applied_rate === 'weekly' || pricing.applied_rate === 'monthly') && (
+                              <span className="block text-xs font-semibold text-emerald-300">
+                                {pricing.applied_rate === 'monthly' ? t.booking.card.monthlyApplied : t.booking.card.weeklyApplied}
+                              </span>
+                            )}
+                          </dt>
+                          <dd className="font-semibold text-white tabular-nums">{formatMad(pricing.subtotal)}</dd>
+                        </div>
+                      )}
                       <div className="flex justify-between gap-3 border-t border-white/10 pt-3 text-base font-extrabold">
                         <dt>{t.booking.card.estimatedTotal}</dt>
                         <dd className="tabular-nums">{formatMad(pricing.total)}</dd>
                       </div>
+                      {pricing.applied_rate === 'duration' && pricing.full_price > pricing.subtotal && (
+                        <div className="rounded-lg bg-emerald-400/15 px-2.5 py-1.5 text-xs font-bold text-emerald-300">
+                          {fmt(t.booking.card.durationSaved, { amount: formatMad(pricing.full_price - pricing.subtotal) })}
+                        </div>
+                      )}
                       {(vehicle.deposit ?? 0) > 0 && (
                         <div className="flex justify-between gap-3 text-[13px] text-slate-300">
                           <dt>{m.depositAtAgency}</dt>

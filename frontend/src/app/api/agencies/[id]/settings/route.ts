@@ -3,6 +3,7 @@ import { requireAgencyPermissionApi } from '@/lib/auth/access-api';
 import { createAdminClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { AGENCY_LANGUAGE_CODES } from '@/lib/agencies/languages';
+import { DURATION_DISCOUNT_RULES, durationDiscountsIssue } from '@/lib/utils/pricing';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,6 +26,16 @@ const settingsUpdateSchema = z.object({
   cancellation_policy: z.string().trim().max(600, 'Politique d’annulation limitée à 600 caractères').transform((v) => v || null).optional(),
   delivery_fee_airport: z.number().min(0).max(5000).nullable().optional(),
   delivery_fee_port: z.number().min(0).max(5000).nullable().optional(),
+  // Remises longue durée (toute la flotte) : mêmes règles que le formulaire, triées avant enregistrement
+  duration_discounts: z
+    .array(z.object({ min_days: z.number().int(), percent: z.number().int() }).strict())
+    .max(DURATION_DISCOUNT_RULES.maxTiers, `${DURATION_DISCOUNT_RULES.maxTiers} paliers au maximum.`)
+    .superRefine((tiers, ctx) => {
+      const issue = durationDiscountsIssue(tiers);
+      if (issue) ctx.addIssue({ code: 'custom', message: issue });
+    })
+    .transform((tiers) => [...tiers].sort((a, b) => a.min_days - b.min_days))
+    .optional(),
 });
 
 export async function GET(request: NextRequest, context: RouteContext) {

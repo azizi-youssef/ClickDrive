@@ -36,6 +36,25 @@ export function MobileNav({
   const [sheetOpen, setSheetOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Hauteur publiée dans --cd-fixed-nav (0 sur grand écran, où la barre est masquée) : le bandeau cookies
+  // se pose au-dessus au lieu de la recouvrir. La marge de fin de page reste celle de l'espace agence (pb-28).
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--cd-fixed-nav', `${Math.round(nav.getBoundingClientRect().height)}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(nav);
+    window.addEventListener('resize', publish);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', publish);
+      root.style.removeProperty('--cd-fixed-nav');
+    };
+  }, []);
 
   const primary = PRIMARY_IDS.map((id) => sections.find((s) => s.id === id)).filter((s): s is Section => Boolean(s));
   const activeInMore = !primary.some((s) => s.id === activeSection);
@@ -72,6 +91,7 @@ export function MobileNav({
   return (
     <>
       <nav
+        ref={navRef}
         aria-label="Sections du tableau de bord"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(11,18,32,0.08)] backdrop-blur lg:hidden"
       >

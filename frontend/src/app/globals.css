@@ -723,7 +723,8 @@ nav[aria-label="Breadcrumb"] a {
 
 /* ── Barre d'action fixe en bas d'écran (fiche véhicule, mobile) ──────────
    --cd-bottom-bar est publiée par la barre elle-même (0 quand elle est masquée) :
-   la fin de la page reste lisible au-dessus d'elle. */
+   la fin de la page reste lisible au-dessus d'elle. Même chose pour le bandeau cookies
+   (--cd-cookie-banner, 0 une fois fermé) : rien en fin de page ne reste caché dessous. */
 body {
-  padding-bottom: var(--cd-bottom-bar, 0px);
+  padding-bottom: calc(var(--cd-bottom-bar, 0px) + var(--cd-cookie-banner, 0px));
 }

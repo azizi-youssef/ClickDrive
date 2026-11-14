@@ -158,7 +158,7 @@ export function CatalogFilters({
   facets,
 }: CatalogFiltersProps) {
   const uid = useId();
-  const { t, locale, fmt } = useTranslation();
+  const { t, locale, fmt, money } = useTranslation();
   const copy = t.catalog;
   const f = copy.filter;
   const activeCount = countActiveFilters(filters);
@@ -190,7 +190,7 @@ export function CatalogFilters({
 
       <FilterSection
         title={f.budgetTitle}
-        summary={filters.maxPrice < PRICE_CEILING ? `≤ ${formatNumber(filters.maxPrice, locale)} MAD` : undefined}
+        summary={filters.maxPrice < PRICE_CEILING ? `≤ ${money(filters.maxPrice)}` : undefined}
       >
         <label htmlFor={`${uid}-price`} className="sr-only">
           {f.budgetLabel}
@@ -209,9 +209,9 @@ export function CatalogFilters({
           className="w-full cursor-pointer accent-[#E63946]"
         />
         <div className="mt-2 flex items-center justify-between text-xs font-medium text-slate-500">
-          <span>{formatNumber(PRICE_FLOOR, locale)} MAD</span>
+          <span>{money(PRICE_FLOOR)}</span>
           <span className="font-bold text-[#0B1220]">
-            {filters.maxPrice >= PRICE_CEILING ? f.allPrices : `${formatNumber(filters.maxPrice, locale)} MAD`}
+            {filters.maxPrice >= PRICE_CEILING ? f.allPrices : money(filters.maxPrice)}
           </span>
         </div>
       </FilterSection>

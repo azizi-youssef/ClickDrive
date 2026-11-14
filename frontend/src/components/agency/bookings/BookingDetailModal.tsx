@@ -500,7 +500,7 @@ export function BookingDetailModal({
         {canAct && actions.includes('reject') && (
           <section className="rounded-2xl border border-red-200 bg-red-50/40 p-5">
             <label htmlFor="reject-reason" className="mb-1.5 block text-sm font-bold text-slate-900">
-              Motif du refus <span className="font-semibold text-[#E63946]">(obligatoire en cas de refus)</span>
+              Motif du refus <span className="font-semibold text-accent-text">(obligatoire en cas de refus)</span>
             </label>
             <p className="mb-2 text-xs text-slate-500">
               Ce message sera immédiatement communiqué au client pour expliquer pourquoi sa demande ne peut aboutir.
@@ -569,7 +569,7 @@ export function BookingDetailModal({
                         {vehicle.brand} {vehicle.model}
                       </span>
                     </div>
-                    <span className="text-sm font-bold tabular-nums text-[#E63946]">
+                    <span className="text-sm font-bold tabular-nums text-accent-text">
                       {money(vehicle.daily_price)} <span className="text-xs font-normal text-slate-500">/ jour</span>
                     </span>
                   </label>

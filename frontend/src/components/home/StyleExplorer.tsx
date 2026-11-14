@@ -7,7 +7,6 @@ import { ArrowRight, ArrowUpRight, Car, Motorbike } from 'lucide-react';
 import type { Vehicle } from '@/types';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { formatNumber } from '@/lib/i18n/format';
 import { categoryLabel } from '@/lib/i18n/labels';
 import { isOptimizableImage } from '@/lib/utils/images';
 import {
@@ -71,20 +70,19 @@ export function summarizeCategories(vehicles: readonly Vehicle[], kind: VehicleT
 }
 
 function CategoryCard({ category, kind, priority }: { category: CategorySummary; kind: VehicleType; priority: boolean }) {
-  const { t, locale, fmt, plural } = useTranslation();
+  const { t, plural, money } = useTranslation();
   const copy = t.home.styles;
   const href = `${CATALOG_PATHS[kind]}?category=${encodeURIComponent(category.name)}`;
   const Icon = kind === 'MOTORCYCLE' ? Motorbike : Car;
   const countLabel = plural(category.count, kind === 'MOTORCYCLE' ? copy.motoCount : copy.carCount);
-  const price = `${formatNumber(category.minPrice, locale)} DH`;
+  const price = money(category.minPrice);
   const name = categoryLabel(t, category.name);
   const pitch = copy.pitches[category.name] ?? '';
 
   return (
     <Link
       href={href}
-      // Nom lu par les lecteurs d'écran : catégorie d'abord, puis faits réels (reprend le texte visible)
-      aria-label={fmt(copy.cardAria, { category: name, count: countLabel, price })}
+      // Nom lu = texte visible de la carte (WCAG 2.5.3 : la commande vocale « Économique » doit la trouver)
       className="group relative flex h-full min-h-72 flex-col justify-end overflow-hidden rounded-3xl bg-[#0B1220] text-white outline-none ring-offset-2 transition-shadow duration-300 hover:shadow-[0_24px_48px_-24px_rgba(11,18,32,0.55)] focus-visible:ring-2 focus-visible:ring-[#E63946] sm:min-h-80"
     >
       {category.image ? (
@@ -110,12 +108,13 @@ function CategoryCard({ category, kind, priority }: { category: CategorySummary;
       <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#0B1220] shadow-sm">
         <Icon className="h-3.5 w-3.5 text-[#C92F3B]" aria-hidden="true" />
         {countLabel}
-      </span>
+      </span>{' '}
 
+      {/* Espaces explicites entre les blocs : nom lu « 2 voitures Économique … », pas « 2 voituresÉconomique » */}
       <span className="relative flex items-end justify-between gap-3 p-5">
         <span className="min-w-0">
-          <span className="block text-xl font-black leading-tight tracking-tight sm:text-2xl">{name}</span>
-          {pitch && <span className="mt-1 block text-sm font-medium text-white/80">{pitch}</span>}
+          <span className="block text-xl font-black leading-tight tracking-tight sm:text-2xl">{name}</span>{' '}
+          {pitch && <span className="mt-1 block text-sm font-medium text-white/80">{pitch}</span>}{' '}
           <span className="mt-3 block text-sm text-white/75">
             {copy.from} <span className="text-base font-extrabold text-white tabular-nums">{price}</span> {copy.perDay}
           </span>

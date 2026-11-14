@@ -5,40 +5,41 @@ import { Vehicle } from '@/types';
 import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { formatNumber } from '@/lib/i18n/format';
-import { locationLabel } from '@/lib/i18n/labels';
-import { LOCATIONS_NADOR } from '@/lib/constants/catalog';
-import { addDateDays, formatLocalDate, isValidDateOnly } from '@/lib/utils/date-only';
-import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
+import { addDateDays, formatLocalDate, getEffectiveRentalDates, isValidDateOnly, type RentalPeriod } from '@/lib/utils/date-only';
+import { calculateRentalDays, calculateRentalPrice, normalizeDurationDiscounts } from '@/lib/utils/pricing';
+import { cn } from '@/lib/utils';
 import {
   AlertCircle,
+  BadgePercent,
   CalendarDays,
   CheckCircle2,
   Clock,
   Loader2,
-  MapPin,
   MessageSquare,
   ShieldCheck,
   Wallet,
   XCircle,
 } from 'lucide-react';
 import { BookingRequestModal } from './BookingRequestModal';
+import { DurationDiscountTiers } from './DurationDiscountTiers';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 
 export type BookingAvailability = 'checking' | 'available' | 'unavailable' | 'error';
 
 interface BookingCardProps {
   vehicle: Vehicle;
+  /** Dates choisies dans la recherche : reprises si elles sont encore possibles (sinon aujourd'hui + 3 jours) */
+  requestedPeriod?: RentalPeriod;
   /** Remonte la disponibilité réelle pour les dates choisies (badges de la fiche). */
   onAvailabilityChange?: (availability: BookingAvailability) => void;
 }
 
-const DEFAULT_LOCATION = LOCATIONS_NADOR[0] ?? 'Aeroport Nador Al-Aroui (NDR)';
-const SAME_LOCATION = '';
-
-function getInitialDates() {
+function getInitialDates(requested?: RentalPeriod) {
   // Dates locales (et non UTC) pour éviter un décalage d'un jour autour de minuit
   const today = formatLocalDate(new Date());
-  return { today, inThreeDays: addDateDays(today, 3) };
+  // Même règle que la barre de recherche : départ passé → aujourd'hui, retour invalide → départ + 3 jours
+  const period = getEffectiveRentalDates(requested?.startDate ?? '', requested?.endDate ?? '', today);
+  return { today, ...period };
 }
 
 const fieldClass =
@@ -46,20 +47,35 @@ const fieldClass =
 
 const labelClass = 'mb-1.5 block text-xs font-bold text-slate-600';
 
-export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps) {
+export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: BookingCardProps) {
   const uid = useId();
   const mobileBarRef = useRef<HTMLDivElement>(null);
-  const { t, locale, fmt, plural } = useTranslation();
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const { t, locale, fmt, plural, money } = useTranslation();
   const c = t.booking.card;
-  const formatMad = (value: number) => `${formatNumber(value, locale)} MAD`;
+  // Devise de la langue (« DH », « درهم ») : même libellé que le reste du site
+  const formatMad = money;
+  const currency = t.common.currency;
+
+  // Bouton « Réserver » de la carte visible à l'écran : la barre fixe mobile, qui ferait doublon, s'efface.
+  const [submitInView, setSubmitInView] = useState(false);
+  useEffect(() => {
+    const submit = submitRef.current;
+    if (!submit) return;
+    const observer = new IntersectionObserver(([entry]) => setSubmitInView(Boolean(entry?.isIntersecting)));
+    observer.observe(submit);
+    return () => observer.disconnect();
+  }, []);
 
   // Barre de réservation fixe (mobile / tablette) : sa hauteur est publiée dans --cd-bottom-bar
   // pour que la page lui laisse la place et que la bannière cookies se pose au-dessus, sans la masquer.
+  // Barre effacée : 0, la bannière cookies redescend en bas de l'écran.
   useEffect(() => {
     const bar = mobileBarRef.current;
     if (!bar) return;
     const root = document.documentElement;
-    const publish = () => root.style.setProperty('--cd-bottom-bar', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    const publish = () =>
+      root.style.setProperty('--cd-bottom-bar', submitInView ? '0px' : `${Math.round(bar.getBoundingClientRect().height)}px`);
     publish();
     const observer = new ResizeObserver(publish);
     observer.observe(bar);
@@ -67,16 +83,14 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
       observer.disconnect();
       root.style.removeProperty('--cd-bottom-bar');
     };
-  }, []);
-  const [initialDates] = useState(getInitialDates);
+  }, [submitInView]);
+  const [initialDates] = useState(() => getInitialDates(requestedPeriod));
   const today = initialDates.today;
 
-  const [startDate, setStartDate] = useState(initialDates.today);
-  const [endDate, setEndDate] = useState(initialDates.inThreeDays);
-  const [pickupTime, setPickupTime] = useState('10:00');
-  const [dropoffTime, setDropoffTime] = useState('10:00');
-  const [location, setLocation] = useState(DEFAULT_LOCATION);
-  const [dropoffLocation, setDropoffLocation] = useState(SAME_LOCATION);
+  // Seules les dates (prix et disponibilité) sont demandées ici : heures, point de rencontre
+  // et restitution sont choisis à l'étape « Location » de la demande, qui les détaille.
+  const [startDate, setStartDate] = useState(initialDates.startDate);
+  const [endDate, setEndDate] = useState(initialDates.endDate);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] = useState<BookingAvailability>('checking');
@@ -140,12 +154,16 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
   // Même moteur de calcul que le serveur (durée et montant)
   const totalDays = calculateRentalDays(startDate, endDate);
   // Tarif semaine ou mois de l'agence appliqué dès 7 ou 30 jours (même calcul que le serveur)
+  // Tarifs semaine / mois du véhicule et remises longue durée de l'agence : même calcul que le serveur
   const pricing = calculateRentalPrice(vehicle, totalDays);
+  const durationTiers = normalizeDurationDiscounts(vehicle.agency?.duration_discounts);
+  // Remise longue durée réellement appliquée (meilleur prix) et économie réalisée sur le prix plein
+  const durationShown = pricing.applied_rate === 'duration' && pricing.duration_discount !== null && !datesError;
+  const durationSaving = Math.max(0, pricing.full_price - pricing.subtotal);
 
   // Une demande n'est possible que sur une disponibilité vérifiée
   const canBook = !datesError && availability === 'available';
   const retryCheck = () => setCheckNonce((value) => value + 1);
-  const resolvedDropoff = dropoffLocation || location;
 
   const openBooking = () => {
     if (availability === 'error' && !datesError) {
@@ -185,14 +203,14 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_24px_60px_-34px_rgba(11,18,32,0.35)]">
       {/* ── Prix ─────────────────────────────────────────────────── */}
-      <div className="border-b border-slate-100 p-5 sm:p-6">
+      <div className="border-b border-slate-100 p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="leading-none">
             <span className="text-[32px] font-extrabold tracking-tight text-[#0B1220] tabular-nums">
               {formatNumber(vehicle.daily_price, locale)}
             </span>
-            <span className="ms-1.5 text-sm font-bold text-[#0B1220]">MAD</span>
-            <span className="ms-1 text-sm font-medium text-slate-500">{c.perDay}</span>
+            <span className="ms-1.5 text-sm font-bold text-[#0B1220]">{currency}</span>
+            <span className="ms-1 text-sm font-medium text-ink-secondary">{c.perDay}</span>
           </p>
           <div aria-live="polite">{statusPill}</div>
         </div>
@@ -207,8 +225,15 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
               .join(' · ')}
           </p>
         )}
+        {/* Remises longue durée de l'agence (toute sa flotte), appliquées automatiquement au total */}
+        <DurationDiscountTiers
+          tiers={durationTiers}
+          applied={durationShown ? pricing.duration_discount : null}
+          days={totalDays}
+          showNext={!datesError}
+        />
         {(vehicle.deposit ?? 0) > 0 && (
-          <p className="mt-2 text-[13px] text-slate-500">
+          <p className="mt-2 text-[13px] text-ink-secondary">
             {c.deposit} <strong className="font-bold text-slate-700">{formatMad(vehicle.deposit)}</strong>
           </p>
         )}
@@ -221,14 +246,11 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
           e.preventDefault();
           openBooking();
         }}
-        className="space-y-4 p-5 sm:p-6"
+        className="space-y-4 p-5"
       >
         <fieldset>
-          <legend className="mb-2 flex items-center gap-2 text-sm font-extrabold text-[#0B1220]">
-            <CalendarDays className="h-4 w-4 text-accent-text" aria-hidden="true" />
-            {c.period}
-          </legend>
-          <div className="grid grid-cols-[minmax(0,1fr)_112px] gap-2">
+          <legend className="sr-only">{c.period}</legend>
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label htmlFor="booking-start-date" className={labelClass}>
                 {c.departure}
@@ -251,19 +273,6 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
               />
             </div>
             <div>
-              <label htmlFor={`${uid}-pickup-time`} className={labelClass}>
-                {c.time}
-              </label>
-              <input
-                id={`${uid}-pickup-time`}
-                type="time"
-                step={1800}
-                value={pickupTime}
-                onChange={(e) => setPickupTime(e.target.value || '10:00')}
-                className={fieldClass}
-              />
-            </div>
-            <div>
               <label htmlFor={`${uid}-end-date`} className={labelClass}>
                 {c.return}
               </label>
@@ -276,19 +285,6 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
                 aria-invalid={datesErrorKind === 'end'}
                 aria-describedby={datesError ? `${uid}-dates-error` : undefined}
                 onChange={(e) => setEndDate(e.target.value)}
-                className={fieldClass}
-              />
-            </div>
-            <div>
-              <label htmlFor={`${uid}-dropoff-time`} className={labelClass}>
-                {c.time}
-              </label>
-              <input
-                id={`${uid}-dropoff-time`}
-                type="time"
-                step={1800}
-                value={dropoffTime}
-                onChange={(e) => setDropoffTime(e.target.value || '10:00')}
                 className={fieldClass}
               />
             </div>
@@ -316,76 +312,16 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
           ) : null}
         </fieldset>
 
-        <fieldset className="space-y-3">
-          <legend className="mb-2 flex items-center gap-2 text-sm font-extrabold text-[#0B1220]">
-            <MapPin className="h-4 w-4 text-accent-text" aria-hidden="true" />
-            {c.places}
-          </legend>
-          <div>
-            <label htmlFor={`${uid}-pickup`} className={labelClass}>
-              {c.pickup}
-            </label>
-            <select id={`${uid}-pickup`} value={location} onChange={(e) => setLocation(e.target.value)} className={fieldClass}>
-              {LOCATIONS_NADOR.map((l) => (
-                <option key={l} value={l}>
-                  {locationLabel(t, l)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor={`${uid}-dropoff`} className={labelClass}>
-              {c.dropoff}
-            </label>
-            <select
-              id={`${uid}-dropoff`}
-              value={dropoffLocation}
-              onChange={(e) => setDropoffLocation(e.target.value)}
-              className={fieldClass}
-            >
-              <option value={SAME_LOCATION}>{c.sameLocation}</option>
-              {LOCATIONS_NADOR.map((l) => (
-                <option key={l} value={l}>
-                  {locationLabel(t, l)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </fieldset>
-
-        {/* ── Récapitulatif tarifaire ─────────────────────────────── */}
-        <div className="rounded-xl bg-[#F5F6F8] p-4 text-sm" aria-live="polite">
-          <dl className="space-y-2">
-            <div className="flex justify-between gap-3 text-slate-600">
-              <dt>
-                {formatMad(pricing.daily_price)} × {plural(pricing.number_of_days, c.days)}
-                {pricing.applied_rate !== 'daily' && (
-                  <span className="block text-xs font-semibold text-emerald-700">
-                    {pricing.applied_rate === 'monthly' ? c.monthlyApplied : c.weeklyApplied}
-                  </span>
-                )}
-              </dt>
-              <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.subtotal)}</dd>
-            </div>
-            <div className="flex justify-between gap-3 text-slate-600">
-              <dt>{c.serviceFee}</dt>
-              <dd className="font-semibold text-emerald-700">{c.free}</dd>
-            </div>
-            <div className="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-extrabold text-[#0B1220]">
-              <dt>{c.estimatedTotal}</dt>
-              <dd className="tabular-nums">{datesError ? '—' : formatMad(pricing.total)}</dd>
-            </div>
-          </dl>
-          <p className="mt-2 text-xs leading-relaxed text-slate-500">
-            {isMotorcycle(vehicle) ? c.optionsMoto : c.optionsCar}
-          </p>
-        </div>
-
+        {/* Bouton juste après les dates : visible dès le chargement, même sur un écran de portable peu haut.
+            Le détail du prix suit (le total figure aussi dans la barre mobile). */}
         <button
+          ref={submitRef}
           type="submit"
           disabled={availability === 'checking' && !datesError}
-          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-action px-5 text-[15px] font-bold text-white shadow-[0_14px_28px_-14px_rgba(230,57,70,0.8)] transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none aria-disabled:bg-slate-300 aria-disabled:shadow-none"
-          aria-disabled={!canBook || undefined}
+          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-action px-5 text-[15px] font-bold text-white shadow-[0_14px_28px_-14px_rgba(230,57,70,0.8)] transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none aria-disabled:bg-ink aria-disabled:shadow-none aria-disabled:hover:bg-slate-800"
+          // Pendant la vérification, le bouton est réellement désactivé (gris lisible) : pas d'aria-disabled,
+          // dont le style sombre s'ajoutait au gris et rendait « Vérification… » illisible (2,5:1)
+          aria-disabled={(!canBook && !(availability === 'checking' && !datesError)) || undefined}
         >
           {availability === 'checking' && !datesError ? (
             <>
@@ -399,6 +335,56 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
             </>
           )}
         </button>
+
+        {/* ── Récapitulatif tarifaire ─────────────────────────────── */}
+        <div className="rounded-xl bg-[#F5F6F8] p-4 text-sm" aria-live="polite">
+          <dl className="space-y-2">
+            {durationShown ? (
+              <>
+                {/* Prix plein, remise en clair, puis total : le client voit d'où vient le montant */}
+                <div className="flex justify-between gap-3 text-slate-600">
+                  <dt>
+                    {formatMad(Number(vehicle.daily_price))} × {plural(pricing.number_of_days, c.days)}
+                  </dt>
+                  <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.full_price)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 font-semibold text-emerald-800">
+                  <dt>{fmt(c.durationLine, { percent: formatNumber(pricing.duration_discount?.percent ?? 0, locale) })}</dt>
+                  <dd className="tabular-nums">−{formatMad(durationSaving)}</dd>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between gap-3 text-slate-600">
+                <dt>
+                  {formatMad(pricing.daily_price)} × {plural(pricing.number_of_days, c.days)}
+                  {(pricing.applied_rate === 'weekly' || pricing.applied_rate === 'monthly') && (
+                    <span className="block text-xs font-semibold text-emerald-700">
+                      {pricing.applied_rate === 'monthly' ? c.monthlyApplied : c.weeklyApplied}
+                    </span>
+                  )}
+                </dt>
+                <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.subtotal)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-3 text-slate-600">
+              <dt>{c.serviceFee}</dt>
+              <dd className="font-semibold text-emerald-700">{c.free}</dd>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-extrabold text-[#0B1220]">
+              <dt>{c.estimatedTotal}</dt>
+              <dd className="tabular-nums">{datesError ? '—' : formatMad(pricing.total)}</dd>
+            </div>
+          </dl>
+          {durationShown && durationSaving > 0 && (
+            <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-900">
+              <BadgePercent className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {fmt(c.durationSaved, { amount: formatMad(durationSaving) })}
+            </p>
+          )}
+          <p className="mt-2 text-xs leading-relaxed text-ink-secondary">
+            {isMotorcycle(vehicle) ? c.optionsMoto : c.optionsCar}
+          </p>
+        </div>
 
         <ul className="space-y-2 text-[13px] text-slate-600">
           <li className="flex items-center gap-2">
@@ -426,7 +412,7 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
         </a>
       </form>
 
-      {/* Monté à l'ouverture pour reprendre les dates, heures et lieux saisis ci-dessus */}
+      {/* Monté à l'ouverture pour reprendre les dates saisies ci-dessus */}
       {isModalOpen && (
         <BookingRequestModal
           vehicle={vehicle}
@@ -434,22 +420,26 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
           onClose={() => setIsModalOpen(false)}
           defaultStartDate={startDate}
           defaultEndDate={endDate}
-          defaultLocation={location}
-          defaultPickupTime={pickupTime}
-          defaultDropoffTime={dropoffTime}
-          defaultDropoffLocation={resolvedDropoff}
         />
       )}
 
-      {/* ── Barre de réservation mobile / tablette (< 1024 px) ────── */}
-      <div ref={mobileBarRef} className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl lg:hidden">
+      {/* ── Barre de réservation mobile / tablette (< 1024 px) ──────
+          Effacée (et retirée du clavier) quand le bouton de la carte est à l'écran. */}
+      <div
+        ref={mobileBarRef}
+        inert={submitInView}
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl transition-transform duration-200 motion-reduce:transition-none lg:hidden',
+          submitInView && 'translate-y-full shadow-none'
+        )}
+      >
         <div className="min-w-0">
           <p className="leading-none">
             <span className="text-lg font-extrabold text-[#0B1220] tabular-nums">{formatNumber(vehicle.daily_price, locale)}</span>
-            <span className="ms-1 text-xs font-bold text-[#0B1220]">MAD</span>
-            <span className="ms-1 text-xs text-slate-500">{c.perDay}</span>
+            <span className="ms-1 text-xs font-bold text-[#0B1220]">{currency}</span>
+            <span className="ms-1 text-xs text-ink-secondary">{c.perDay}</span>
           </p>
-          <p className="mt-1 truncate text-xs text-slate-500">
+          <p className="mt-1 truncate text-xs text-ink-secondary">
             {datesError
               ? c.fixDates
               : availability === 'unavailable'
@@ -463,9 +453,10 @@ export function BookingCard({ vehicle, onAvailabilityChange }: BookingCardProps)
           type="button"
           onClick={openBooking}
           disabled={availability === 'checking' && !datesError}
-          className={`flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white transition-colors active:scale-[0.99] disabled:bg-slate-300 sm:max-w-xs ${
-            canBook ? 'bg-[#E63946] hover:bg-[#C92F3B]' : 'bg-[#0B1220] hover:bg-slate-800'
-          }`}
+          className={cn(
+            'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white transition-colors active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-600 sm:max-w-xs',
+            canBook ? 'bg-action hover:bg-action-hover' : 'bg-ink hover:bg-slate-800'
+          )}
         >
           <CalendarDays className="h-4 w-4" aria-hidden="true" />
           {availability === 'checking' && !datesError

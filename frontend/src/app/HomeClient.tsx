@@ -13,6 +13,8 @@ import { formatNumber } from '@/lib/i18n/format';
 import { categoryLabel } from '@/lib/i18n/labels';
 import { GsapReveal } from '@/components/ui/react-bits';
 import { StyleExplorer } from '@/components/home/StyleExplorer';
+import type { RentalPeriod } from '@/lib/utils/date-only';
+import { calculateRentalDays } from '@/lib/utils/pricing';
 
 import {
   AlertCircle,
@@ -49,8 +51,10 @@ export function HomeClient({
   const [vehicleFilter, setVehicleFilter] = useState<string>('Tous');
   // Budget max filtre (0 = pas de limite)
   const [budgetMax, setBudgetMax] = useState<number>(0);
-  // Jours sélectionnés pour prix total estimé
-  const [selectedDays, setSelectedDays] = useState<number>(0);
+  // Dates du moteur de recherche (seule source de dates de la page) : total estimé sur les cartes
+  // et période transmise à la fiche véhicule
+  const [period, setPeriod] = useState<RentalPeriod | null>(null);
+  const selectedDays = period ? calculateRentalDays(period.startDate, period.endDate) : 0;
 
   const load = useCallback(async () => {
     setHasError(false);
@@ -208,7 +212,7 @@ export function HomeClient({
 
           {/* Formulaire de recherche — visible et utilisable dès l'ouverture */}
           <div className="mt-5 max-w-5xl sm:mt-7">
-            <SearchBar categories={heroCategories} />
+            <SearchBar categories={heroCategories} onPeriodChange={setPeriod} />
           </div>
 
           {/* Réassurance factuelle + liens secondaires */}
@@ -301,63 +305,6 @@ export function HomeClient({
             </Link>
           </div>
 
-          {/* ── Barre de dates ──────────────────────────────────────────────── */}
-          <div className="mb-5 rounded-2xl border border-slate-200 bg-white shadow-xs p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <label htmlFor="date-depart" className="text-xs font-semibold text-slate-600 shrink-0 w-16">
-                  {home.featured.departure}
-                </label>
-                <input
-                  id="date-depart"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => {
-                    const start = e.target.value;
-                    const endInput = document.getElementById('date-retour') as HTMLInputElement | null;
-                    const end = endInput?.value ?? '';
-                    if (start && end && end > start) {
-                      const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
-                      setSelectedDays(diff > 0 ? diff : 0);
-                    } else {
-                      setSelectedDays(0);
-                    }
-                  }}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B1220] focus:border-transparent transition min-h-11"
-                  aria-label={home.featured.departureAria}
-                />
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <label htmlFor="date-retour" className="text-xs font-semibold text-slate-600 shrink-0 w-16">
-                  {home.featured.return}
-                </label>
-                <input
-                  id="date-retour"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => {
-                    const end = e.target.value;
-                    const startInput = document.getElementById('date-depart') as HTMLInputElement | null;
-                    const start = startInput?.value ?? '';
-                    if (start && end && end > start) {
-                      const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
-                      setSelectedDays(diff > 0 ? diff : 0);
-                    } else {
-                      setSelectedDays(0);
-                    }
-                  }}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B1220] focus:border-transparent transition min-h-11"
-                  aria-label={home.featured.returnAria}
-                />
-              </div>
-              {selectedDays > 0 && (
-                <div className="shrink-0 rounded-xl bg-[#0B1220] px-4 py-2.5 text-sm font-bold text-white flex items-center">
-                  {plural(selectedDays, home.featured.days)}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* ── Chips filtres rapides ───────────────────────────────────────── */}
           <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label={home.featured.filterAria}>
             {categoryChips.map((filter) => (
@@ -374,7 +321,7 @@ export function HomeClient({
               >
                 {filter === 'Tous' ? home.featured.all : categoryLabel(t, filter)}
                 {filter !== 'Tous' && (
-                  <span className="ml-1.5 opacity-60">
+                  <span className="ml-1.5 opacity-80">
                     ({carVehicles.filter((v) => v.category === filter).length})
                   </span>
                 )}
@@ -470,6 +417,7 @@ export function HomeClient({
                   vehicle={vehicle}
                   priority={index < 3}
                   selectedDays={selectedDays > 0 ? selectedDays : undefined}
+                  period={period ?? undefined}
                 />
               ))}
             </div>
@@ -498,7 +446,7 @@ export function HomeClient({
                 <h2 id="home-motos-title" className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                   {home.motos.title}
                 </h2>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-ink-secondary">
                   {plural(motoVehicles.length, home.motos.subtitle)}
                 </p>
               </div>
@@ -515,6 +463,7 @@ export function HomeClient({
                   key={vehicle.id}
                   vehicle={vehicle}
                   selectedDays={selectedDays > 0 ? selectedDays : undefined}
+                  period={period ?? undefined}
                 />
               ))}
             </div>
@@ -565,7 +514,7 @@ export function HomeClient({
 
                 {destination.tag && (
                   <div className="absolute right-3 top-3">
-                    <span className="badge badge-accent text-[11px]">{destination.tag}</span>
+                    <span className="badge badge-accent text-xs">{destination.tag}</span>
                   </div>
                 )}
 
@@ -574,7 +523,7 @@ export function HomeClient({
                     <Icon className="h-4 w-4 text-white" />
                   </div>
                   <p className="text-sm font-bold text-white sm:text-base">{destination.name}</p>
-                  <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-white/70 transition group-hover:text-white">
+                  <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-white/85 transition group-hover:text-white">
                     {home.destinations.explore}
                     <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
                   </div>

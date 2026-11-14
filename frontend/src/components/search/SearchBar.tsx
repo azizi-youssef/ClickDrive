@@ -1,7 +1,7 @@
 'use client';
 
 import { track } from '@/lib/analytics/track';
-import React, { useId, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { useLocalizedRouter } from '@/lib/i18n/useLocalizedRouter';
 import { categoryLabel, locationLabel } from '@/lib/i18n/labels';
 import { MapPin, Calendar, Car, Search, type LucideIcon } from 'lucide-react';
@@ -11,6 +11,8 @@ import {
   formatLocalDate,
   getEffectiveRentalDates,
   isValidDateOnly,
+  parseRentalPeriod,
+  type RentalPeriod,
 } from '@/lib/utils/date-only';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -26,6 +28,8 @@ interface SearchBarProps {
   categories?: string[];
   /** Catalogue visé par la recherche : /search (voitures) ou /motos */
   basePath?: string;
+  /** Dates affichées par la barre (valeurs effectives) : la page s'en sert comme unique source de dates */
+  onPeriodChange?: (period: RentalPeriod) => void;
 }
 
 // Valeurs techniques (jamais affichées telles quelles) : « tous types / toutes marques »
@@ -90,6 +94,7 @@ export function SearchBar({
   isCompact = false,
   categories,
   basePath = '/search',
+  onPeriodChange,
 }: SearchBarProps) {
   const router = useLocalizedRouter();
   const uid = useId();
@@ -114,6 +119,12 @@ export function SearchBar({
 
   const { startDate: effectiveStartDate, endDate: effectiveEndDate } =
     getEffectiveRentalDates(startDate, endDate, today);
+
+  // Accueil : les cartes véhicules reprennent les dates affichées ici (total estimé, lien vers la fiche)
+  useEffect(() => {
+    const period = parseRentalPeriod(effectiveStartDate, effectiveEndDate);
+    if (period) onPeriodChange?.(period);
+  }, [effectiveStartDate, effectiveEndDate, onPeriodChange]);
 
   const handleStartChange = (value: string) => {
     setStartDate(value);

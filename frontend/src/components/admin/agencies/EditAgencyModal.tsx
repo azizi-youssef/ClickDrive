@@ -176,7 +176,7 @@ export function EditAgencyModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Nom commercial <span className="text-red-500">*</span>
+                Nom commercial <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -189,7 +189,7 @@ export function EditAgencyModal({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Téléphone <span className="text-red-500">*</span>
+                Téléphone <span className="text-danger">*</span>
               </label>
               <input
                 type="tel"
@@ -212,7 +212,7 @@ export function EditAgencyModal({
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Adresse physique <span className="text-red-500">*</span>
+                Adresse physique <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -253,7 +253,7 @@ export function EditAgencyModal({
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Adresse e-mail officielle <span className="text-red-500">*</span>
+                Adresse e-mail officielle <span className="text-danger">*</span>
               </label>
               <input
                 type="email"

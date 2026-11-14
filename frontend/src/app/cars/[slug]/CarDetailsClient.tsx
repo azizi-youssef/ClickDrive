@@ -46,6 +46,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { formatEngineCc, isMotorcycle } from '@/lib/vehicles/kind';
+import type { RentalPeriod } from '@/lib/utils/date-only';
 
 interface CarDetailsClientProps {
   slug: string;
@@ -53,11 +54,13 @@ interface CarDetailsClientProps {
   initialVehicle: Vehicle;
   /** Véhicules du même modèle chez d'autres agences (alternatives), chargés côté serveur */
   alternativesPool: Vehicle[];
+  /** Dates choisies dans la recherche (adresse), reprises par la carte de réservation */
+  requestedPeriod?: RentalPeriod;
 }
 
-export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: CarDetailsClientProps) {
+export function CarDetailsClient({ slug, initialVehicle, alternativesPool, requestedPeriod }: CarDetailsClientProps) {
   const reduceMotion = useReducedMotion();
-  const { t, locale, fmt, plural, date } = useTranslation();
+  const { t, locale, fmt, plural, date, money } = useTranslation();
   const c = t.car;
   const num = (value: number) => formatNumber(value, locale);
 
@@ -174,7 +177,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
     );
   }
   if ((vehicle.deposit ?? 0) > 0) {
-    conditions.push({ icon: ShieldCheck, label: c.cond.deposit, value: `${num(vehicle.deposit)} MAD`, note: c.cond.depositNote });
+    conditions.push({ icon: ShieldCheck, label: c.cond.deposit, value: money(vehicle.deposit), note: c.cond.depositNote });
   }
   if (vehicle.min_rental_days > 0) {
     conditions.push({ icon: CalendarClock, label: c.cond.minDuration, value: plural(vehicle.min_rental_days, c.cond.days) });
@@ -208,7 +211,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
     });
   }
   const deliveryFee = (amount: number | null | undefined) =>
-    amount == null ? null : Number(amount) === 0 ? c.cond.free : `${num(Number(amount))} MAD`;
+    amount == null ? null : Number(amount) === 0 ? c.cond.free : money(Number(amount));
   const airportFee = deliveryFee(agency?.delivery_fee_airport);
   const portFee = deliveryFee(agency?.delivery_fee_port);
   if (airportFee) {
@@ -222,17 +225,13 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
   }
   conditions.push({ icon: Wallet, label: c.cond.payment, value: c.cond.atAgency });
 
-  const fadeUp = reduceMotion
-    ? {}
-    : { initial: { opacity: 0, y: 12 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-40px' }, transition: { duration: 0.35 } };
-
   return (
     <div className="min-h-screen bg-[#F5F6F8] pb-28 lg:pb-16">
       {/* ── Fil d'Ariane ─────────────────────────────────────────── */}
       <div className="border-b border-slate-200/80 bg-white">
         <nav
           aria-label={c.breadcrumbAria}
-          className="mx-auto flex h-11 max-w-[1360px] items-center gap-1.5 overflow-hidden px-4 text-xs font-medium text-slate-500 sm:px-6 lg:px-8"
+          className="mx-auto flex h-11 max-w-[1360px] items-center gap-1.5 overflow-hidden px-4 text-xs font-medium text-ink-secondary sm:px-6 lg:px-8"
         >
           <Link href="/" className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]">{c.home}</Link>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
@@ -249,130 +248,134 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
         </nav>
       </div>
 
-      <div className="mx-auto max-w-[1360px] px-4 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-        {/* ── En-tête véhicule ───────────────────────────────────── */}
-        <header className="mb-5 flex flex-col gap-4 sm:mb-6 md:flex-row md:items-end md:justify-between">
-          <div className="min-w-0">
-            <div className="mb-2.5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#0B1220] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
-                {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
-                {category}
-              </span>
-              <span
+      <div className="mx-auto max-w-[1360px] px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-8">
+        {/* ── Grille unique. Mobile / tablette : photo d'abord, puis titre, infos clés, réservation et détails
+            (l'ordre du DOM reste titre → photo pour les lecteurs d'écran). Desktop : titre sur toute la largeur,
+            puis galerie + détails | réservation collante. ── */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-8 xl:grid-cols-[minmax(0,1fr)_420px]">
+          {/* ── En-tête véhicule ───────────────────────────────────── */}
+          <header className="order-2 flex min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between lg:order-none lg:col-span-2 lg:row-start-1 lg:mb-2">
+            <div className="min-w-0">
+              <div className="mb-2.5 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-[#0B1220] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+                  {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
+                  {category}
+                </span>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold',
+                    isAvailableForDates ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-[#F8C9CD] bg-[#FFF4F5] text-[#B4232F]'
+                  )}
+                >
+                  <span className={cn('h-1.5 w-1.5 rounded-full', isAvailableForDates ? 'bg-emerald-500' : 'bg-[#E63946]')} aria-hidden="true" />
+                  {vehicleStatusLabel}
+                </span>
+              </div>
+  
+              <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-[#0B1220] sm:text-4xl lg:text-[42px]">
+                {vehicle.brand} {vehicle.model}{' '}
+                <span className="font-semibold text-ink-secondary">{vehicle.year}</span>
+              </h1>
+  
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                {agency && (
+                  <Link
+                    href={`/agencies/${agency.slug}`}
+                    className="group inline-flex min-h-11 items-center gap-2 font-bold text-[#0B1220] transition-colors hover:text-accent-text"
+                  >
+                    <span className="h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                      <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" />
+                    </span>
+                    {agency.name}
+                  </Link>
+                )}
+                {agency?.verified && (
+                  <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-emerald-700">
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    {c.verifiedAgency}
+                  </span>
+                )}
+                <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
+                {averageRating !== null ? (
+                  <a href="#avis" className="inline-flex min-h-9 items-center gap-1.5 font-bold text-[#0B1220] hover:underline">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+                    {formatDecimal(averageRating, locale)}
+                    <span className="font-medium text-ink-secondary">{plural(reviewCount, c.reviewsCount)}</span>
+                  </a>
+                ) : (
+                  <span className="text-[13px] font-medium text-ink-secondary">{c.noReviewsYet}</span>
+                )}
+              </div>
+            </div>
+  
+            <div className="flex items-center gap-2">
+              <motion.button
+                type="button"
+                whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                onClick={() => setFavorite((current) => !current)}
+                aria-pressed={favorite}
+                aria-label={favorite ? c.removeFavorite : c.addFavorite}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold',
-                  isAvailableForDates ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-[#F8C9CD] bg-[#FFF4F5] text-[#B4232F]'
+                  'flex h-11 w-11 items-center justify-center rounded-xl border bg-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
+                  favorite ? 'border-[#F8C9CD] text-accent-text' : 'border-slate-200 text-ink-secondary hover:border-slate-300 hover:text-[#0B1220]'
                 )}
               >
-                <span className={cn('h-1.5 w-1.5 rounded-full', isAvailableForDates ? 'bg-emerald-500' : 'bg-[#E63946]')} aria-hidden="true" />
-                {vehicleStatusLabel}
-              </span>
+                <Heart className={cn('h-5 w-5', favorite && 'fill-current')} aria-hidden="true" />
+              </motion.button>
+              <button
+                type="button"
+                onClick={() => void handleShare()}
+                aria-label={
+                  shareState === 'copied'
+                    ? isMoto
+                      ? c.linkCopiedMoto
+                      : c.linkCopiedCar
+                    : isMoto
+                      ? c.shareMoto
+                      : c.shareCar
+                }
+                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-[#0B1220] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+              >
+                {shareState === 'copied' ? (
+                  <Link2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                ) : (
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                )}
+                <span aria-live="polite">{shareState === 'copied' ? c.copied : c.share}</span>
+              </button>
             </div>
+          </header>
 
-            <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-[#0B1220] sm:text-4xl lg:text-[42px]">
-              {vehicle.brand} {vehicle.model}
-              <span className="ms-2.5 font-semibold text-slate-400">{vehicle.year}</span>
-            </h1>
-
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-              {agency && (
-                <Link
-                  href={`/agencies/${agency.slug}`}
-                  className="group inline-flex min-h-11 items-center gap-2 font-bold text-[#0B1220] transition-colors hover:text-accent-text"
-                >
-                  <span className="h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                    <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" />
-                  </span>
-                  {agency.name}
-                </Link>
-              )}
-              {agency?.verified && (
-                <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-emerald-700">
-                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  {c.verifiedAgency}
-                </span>
-              )}
-              <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-              {averageRating !== null ? (
-                <a href="#avis" className="inline-flex min-h-9 items-center gap-1.5 font-bold text-[#0B1220] hover:underline">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-                  {formatDecimal(averageRating, locale)}
-                  <span className="font-medium text-slate-500">{plural(reviewCount, c.reviewsCount)}</span>
-                </a>
-              ) : (
-                <span className="text-[13px] font-medium text-slate-500">{c.noReviewsYet}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <motion.button
-              type="button"
-              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-              onClick={() => setFavorite((current) => !current)}
-              aria-pressed={favorite}
-              aria-label={favorite ? c.removeFavorite : c.addFavorite}
-              className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-xl border bg-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
-                favorite ? 'border-[#F8C9CD] text-accent-text' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-[#0B1220]'
-              )}
-            >
-              <Heart className={cn('h-5 w-5', favorite && 'fill-current')} aria-hidden="true" />
-            </motion.button>
-            <button
-              type="button"
-              onClick={() => void handleShare()}
-              aria-label={
-                shareState === 'copied'
-                  ? isMoto
-                    ? c.linkCopiedMoto
-                    : c.linkCopiedCar
-                  : isMoto
-                    ? c.shareMoto
-                    : c.shareCar
-              }
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-[#0B1220] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
-            >
-              {shareState === 'copied' ? (
-                <Link2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-              ) : (
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-              )}
-              <span aria-live="polite">{shareState === 'copied' ? c.copied : c.share}</span>
-            </button>
-          </div>
-        </header>
-
-        {/* ── Grille : galerie + détails | réservation ───────────── */}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
-          {/* Galerie + infos clés */}
-          <div className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-1">
+          {/* Galerie */}
+          <div className="order-1 min-w-0 lg:order-none lg:col-start-1 lg:row-start-2">
             <VehicleGallery images={vehicle.images ?? []} title={title} isMoto={isMoto} />
-
-            <ul className="grid grid-cols-3 gap-2 sm:gap-3" aria-label={c.keyInfoAria}>
-              {[
-                { icon: Gauge, value: transmissionLabel(t, vehicle.transmission) },
-                isMoto && engineCc
-                  ? { icon: Motorbike, value: engineCc }
-                  : { icon: Fuel, value: fuelLabel(t, vehicle.fuel) },
-                isMoto && vehicle.license_required
-                  ? { icon: IdCard, value: fmt(t.vehicle.license, { license: vehicle.license_required }) }
-                  : { icon: Users, value: plural(vehicle.seats, t.vehicle.seats) },
-              ].map(({ icon: Icon, value }) => (
-                <li key={value} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-2.5">
-                  <Icon className="h-5 w-5 text-accent-text" aria-hidden="true" />
-                  <span className="text-[13px] font-bold text-[#0B1220] sm:text-sm">{value}</span>
-                </li>
-              ))}
-            </ul>
           </div>
 
-          {/* Réservation : après la galerie en mobile, colonne collante sur desktop.
-              Hauteur limitée à l'écran : sur un écran peu haut (ex. 1024×768), la colonne défile
-              elle-même pour que « Réserver » reste atteignable et visible au focus (WCAG 2.4.11). */}
-          <aside className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label={c.bookingAria}>
+          {/* Infos clés */}
+          <ul className="order-3 grid min-w-0 grid-cols-3 gap-2 sm:gap-3 lg:order-none lg:col-start-1 lg:row-start-3" aria-label={c.keyInfoAria}>
+            {[
+              { icon: Gauge, value: transmissionLabel(t, vehicle.transmission) },
+              isMoto && engineCc
+                ? { icon: Motorbike, value: engineCc }
+                : { icon: Fuel, value: fuelLabel(t, vehicle.fuel) },
+              isMoto && vehicle.license_required
+                ? { icon: IdCard, value: fmt(t.vehicle.license, { license: vehicle.license_required }) }
+                : { icon: Users, value: plural(vehicle.seats, t.vehicle.seats) },
+            ].map(({ icon: Icon, value }) => (
+              <li key={value} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-2.5">
+                <Icon className="h-5 w-5 text-accent-text" aria-hidden="true" />
+                <span className="text-[13px] font-bold text-[#0B1220] sm:text-sm">{value}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Réservation : après les infos clés en mobile, colonne collante sur desktop.
+              La carte ne demande que les dates : elle tient dans un écran de 860 px de haut sans défiler.
+              Filet de sécurité pour les écrans très bas : la colonne défile alors elle-même, et
+              « Réserver » (placé haut dans la carte) reste visible et atteignable au focus (WCAG 2.4.11). */}
+          <aside className="order-4 mt-2 min-w-0 lg:order-none lg:col-start-2 lg:row-span-3 lg:row-start-2 lg:mt-0" aria-label={c.bookingAria}>
             <div className="space-y-3 lg:sticky lg:top-28 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-2xl lg:[scrollbar-width:thin]">
-              <BookingCard vehicle={vehicle} onAvailabilityChange={setDateAvailability} />
+              <BookingCard vehicle={vehicle} requestedPeriod={requestedPeriod} onAvailabilityChange={setDateAvailability} />
 
               <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -380,7 +383,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-[#0B1220]">{isMoto ? c.questionMoto : c.questionCar}</p>
-                  <p className="truncate text-xs text-slate-500">{fmt(c.writeTo, { agency: agency?.name ?? c.theAgency })}</p>
+                  <p className="truncate text-xs text-ink-secondary">{fmt(c.writeTo, { agency: agency?.name ?? c.theAgency })}</p>
                 </div>
                 <a
                   href={whatsappLink}
@@ -395,31 +398,35 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
           </aside>
 
           {/* Détails */}
-          <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-2">
+          <div className="order-5 mt-2 min-w-0 space-y-6 lg:order-none lg:col-start-1 lg:row-start-4 lg:mt-4">
             {/* Caractéristiques */}
-            <motion.section {...fadeUp} aria-labelledby="specs-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <section aria-labelledby="specs-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
               <SectionTitle id="specs-title" eyebrow={c.specsEyebrow} title={c.specsTitle} />
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {specs.map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-start gap-3 rounded-xl bg-[#F5F6F8] p-3.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-accent-text shadow-[0_1px_2px_rgba(11,18,32,0.06)]">
-                      <Icon className="h-4.5 w-4.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-xs font-medium text-slate-500">{label}</dt>
-                      <dd className="mt-0.5 text-sm font-bold text-[#0B1220] break-words">{value}</dd>
-                    </div>
+                  // dl > div > dt + dd : seule structure valide (l'icône, décorative, est placée dans le dt)
+                  <div key={label} className="relative min-w-0 rounded-xl bg-[#F5F6F8] p-3.5 ps-[3.875rem]">
+                    <dt className="text-xs font-medium text-ink-secondary">
+                      <span
+                        className="absolute start-3.5 top-3.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-accent-text shadow-[0_1px_2px_rgba(11,18,32,0.06)]"
+                        aria-hidden="true"
+                      >
+                        <Icon className="h-4.5 w-4.5" />
+                      </span>
+                      {label}
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-bold text-[#0B1220] break-words">{value}</dd>
                   </div>
                 ))}
               </dl>
-            </motion.section>
+            </section>
 
             {/* Équipements & options */}
-            <motion.section {...fadeUp} aria-labelledby="features-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <section aria-labelledby="features-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
               <SectionTitle id="features-title" eyebrow={c.featuresEyebrow} title={c.featuresTitle} />
               {vehicle.features.length > 0 ? (
                 <>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{c.included}</h3>
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-ink-secondary">{c.included}</h3>
                   <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {vehicle.features.map((feature, index) => (
                       <li key={`${feature}-${index}`} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3.5 py-3 text-sm text-slate-700">
@@ -432,10 +439,10 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   </ul>
                 </>
               ) : (
-                <p className="text-sm text-slate-500">{c.noFeatures}</p>
+                <p className="text-sm text-ink-secondary">{c.noFeatures}</p>
               )}
 
-              <h3 className="mb-3 mt-6 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{c.onRequest}</h3>
+              <h3 className="mb-3 mt-6 text-xs font-bold uppercase tracking-[0.12em] text-ink-secondary">{c.onRequest}</h3>
               <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {[
                   { icon: Baby, label: c.childSeat },
@@ -448,20 +455,20 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   </li>
                 ))}
               </ul>
-            </motion.section>
+            </section>
 
             {/* Conditions de location */}
             {vehicle.description?.trim() && (
-              <motion.section {...fadeUp} aria-labelledby="vehicle-description-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+              <section aria-labelledby="vehicle-description-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
                 <h2 id="vehicle-description-title" className="text-lg font-extrabold text-ink">
                   {c.agencyWord}
                 </h2>
                 <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-slate-700">{vehicle.description.trim()}</p>
-                {locale !== 'fr' && <p className="mt-2 text-xs text-slate-500">{c.agencyTextNote}</p>}
-              </motion.section>
+                {locale !== 'fr' && <p className="mt-2 text-xs text-ink-secondary">{c.agencyTextNote}</p>}
+              </section>
             )}
 
-            <motion.section {...fadeUp} aria-labelledby="conditions-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <section aria-labelledby="conditions-title" className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
               <SectionTitle
                 id="conditions-title"
                 eyebrow={c.conditionsEyebrow}
@@ -470,13 +477,13 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
               />
               <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {conditions.map(({ icon: Icon, label, value, note }) => (
-                  <div key={label} className="flex items-start gap-3 rounded-xl border border-slate-100 p-4">
-                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-accent-text" aria-hidden="true" />
-                    <div>
-                      <dt className="text-xs font-medium text-slate-500">{label}</dt>
-                      <dd className="mt-0.5 text-[15px] font-bold text-[#0B1220]">{value}</dd>
-                      {note && <dd className="mt-1 text-[13px] leading-relaxed text-slate-500">{note}</dd>}
-                    </div>
+                  <div key={label} className="relative rounded-xl border border-slate-100 p-4 ps-12">
+                    <dt className="text-xs font-medium text-ink-secondary">
+                      <Icon className="absolute start-4 top-[1.125rem] h-5 w-5 text-accent-text" aria-hidden="true" />
+                      {label}
+                    </dt>
+                    <dd className="mt-0.5 text-[15px] font-bold text-[#0B1220]">{value}</dd>
+                    {note && <dd className="mt-1 text-[13px] leading-relaxed text-ink-secondary">{note}</dd>}
                   </div>
                 ))}
               </dl>
@@ -493,10 +500,10 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                   <p>{c.insuranceText}</p>
                 </Disclosure>
               </div>
-            </motion.section>
+            </section>
 
             {/* Avis clients */}
-            <motion.section {...fadeUp} id="avis" aria-labelledby="reviews-title" className="scroll-mt-28 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <section id="avis" aria-labelledby="reviews-title" className="scroll-mt-28 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6">
               <SectionTitle id="reviews-title" eyebrow={c.reviewsEyebrow} title={c.reviewsTitle} />
               {reviewCount > 0 && averageRating !== null ? (
                 <>
@@ -504,7 +511,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                     <div className="text-center sm:w-36 sm:shrink-0">
                       <p className="text-4xl font-extrabold text-[#0B1220] tabular-nums">{formatDecimal(averageRating, locale)}</p>
                       <Stars rating={averageRating} className="mt-1 justify-center" />
-                      <p className="mt-1 text-xs text-slate-500">{plural(reviewCount, c.reviewsShort)}</p>
+                      <p className="mt-1 text-xs text-ink-secondary">{plural(reviewCount, c.reviewsShort)}</p>
                     </div>
                     <ul className="flex-1 space-y-1.5" aria-label={c.distributionAria}>
                       {[5, 4, 3, 2, 1].map((star) => {
@@ -533,7 +540,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                             <p className="truncate text-sm font-bold text-[#0B1220]">{review.author_name}</p>
                             <div className="mt-0.5 flex items-center gap-2">
                               <Stars rating={review.rating} />
-                              <time dateTime={review.created_at} className="text-xs text-slate-500">
+                              <time dateTime={review.created_at} className="text-xs text-ink-secondary">
                                 {date(review.created_at, 'medium')}
                               </time>
                             </div>
@@ -550,12 +557,12 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                     <Star className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <p className="mt-3 text-sm font-bold text-[#0B1220]">{c.noReviews}</p>
-                  <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-slate-500">
+                  <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-ink-secondary">
                     {c.noReviewsText}
                   </p>
                 </div>
               )}
-            </motion.section>
+            </section>
           </div>
         </div>
 
@@ -571,7 +578,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
                 <h2 id="similar-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220]">
                   {c.similarTitle}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">{c.similarText}</p>
+                <p className="mt-1 text-sm text-ink-secondary">{c.similarText}</p>
               </div>
               <Link href="/search" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#0B1220] hover:text-accent-text">
                 {c.fullCatalog}
@@ -600,11 +607,11 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool }: Car
 function SectionTitle({ id, eyebrow, title, subtitle }: { id: string; eyebrow: string; title: string; subtitle?: string }) {
   return (
     <div className="mb-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">{eyebrow}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-secondary">{eyebrow}</p>
       <h2 id={id} className="mt-1 text-lg font-extrabold text-[#0B1220] sm:text-xl">
         {title}
       </h2>
-      {subtitle && <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">{subtitle}</p>}
     </div>
   );
 }

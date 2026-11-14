@@ -18,6 +18,7 @@ import {
   CarFront,
   Motorbike,
   IdCard,
+  BadgePercent,
 } from 'lucide-react';
 import type { Vehicle } from '@/types';
 import { formatEngineCc, isMotorcycle } from '@/lib/vehicles/kind';
@@ -28,6 +29,8 @@ import { categoryLabel, fuelLabel, transmissionLabel } from '@/lib/i18n/labels';
 import type { VehicleMessages } from '@/lib/i18n/messages/vehicle';
 import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { isOptimizableImage } from '@/lib/utils/images';
+import { rentalPeriodQuery, type RentalPeriod } from '@/lib/utils/date-only';
+import { calculateRentalPrice, normalizeDurationDiscounts } from '@/lib/utils/pricing';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -37,6 +40,8 @@ interface VehicleCardProps {
   isFavorite?: boolean;
   /** Nombre de jours sélectionnés dans la barre de dates (pour afficher le prix total) */
   selectedDays?: number;
+  /** Dates de la recherche : transmises à la fiche, qui les reprend au lieu de repartir d'aujourd'hui */
+  period?: RentalPeriod;
   /** Abonnement « me prévenir » pour un véhicule indisponible (bouton masqué si absent) */
   onNotify?: (vehicleId: string) => void;
 }
@@ -306,33 +311,18 @@ function VehicleGallery({
             <ChevronRight className="h-4 w-4 text-slate-700 rtl:rotate-180" aria-hidden="true" />
           </button>
 
+          {/* Indicateur de position, non cliquable : à 6 px, les points étaient des cibles trop petites
+              (WCAG 2.5.8). La navigation passe par les flèches (36 px) et le glissement au doigt. */}
           <div
-            className="absolute bottom-3 end-3 z-20 flex items-center gap-1.5"
+            className="pointer-events-none absolute bottom-3 end-3 z-20 flex items-center gap-1.5"
             aria-hidden="true"
           >
             {images.map((_, i) => (
-              <button
+              <span
                 key={i}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setCurrentIndex(i);
-                  setLoadedIndexes((current) => {
-                    const nextSet = new Set(current);
-                    nextSet.add(i);
-                    nextSet.add((i + 1) % images.length);
-                    nextSet.add((i - 1 + images.length) % images.length);
-                    return nextSet;
-                  });
-                }}
-                tabIndex={-1}
-                aria-label={fmt(card.photoIndex, { index: i + 1, total: images.length })}
                 className={cn(
-                  'h-1.5 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white',
-                  i === currentIndex
-                    ? 'w-4 bg-white shadow-xs'
-                    : 'w-1.5 bg-white/60 hover:bg-white/90'
+                  'h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none',
+                  i === currentIndex ? 'w-4 bg-white shadow-xs' : 'w-1.5 bg-white/60'
                 )}
               />
             ))}
@@ -350,11 +340,13 @@ function VehicleCardComponent({
   onFavorite,
   isFavorite: externalFavorite,
   selectedDays,
+  period,
   onNotify,
 }: VehicleCardProps) {
-  const { t, locale, fmt, plural, date } = useTranslation();
+  const { t, locale, fmt, plural, date, money } = useTranslation();
   const card = t.vehicle.card;
-  const mad = (value: number) => `${formatNumber(value, locale)} MAD`;
+  // Devise de la langue (« DH », « درهم ») : même libellé que le reste du site
+  const mad = money;
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = externalFavorite ?? internalFavorite;
 
@@ -365,8 +357,14 @@ function VehicleCardComponent({
   const agencyRating = typeof agency?.rating === 'number' ? agency.rating : null;
   const showRating = agencyRating !== null && reviewCount >= MIN_REVIEWS_FOR_RATING;
   const vehicleName = `${vehicle.brand} ${vehicle.model}`;
-  const detailsHref = `/cars/${encodeURIComponent(vehicle.slug)}`;
-  const totalPrice = selectedDays && selectedDays > 0 ? vehicle.daily_price * selectedDays : null;
+  const detailsHref = `/cars/${encodeURIComponent(vehicle.slug)}${rentalPeriodQuery(period)}`;
+  // Total de la période : tarifs semaine / mois et remises longue durée inclus (même calcul que la réservation)
+  const rental = selectedDays && selectedDays > 0 ? calculateRentalPrice(vehicle, selectedDays) : null;
+  const totalPrice = rental ? rental.total : null;
+  // Remise longue durée de l'agence : appliquée à la période choisie, sinon palier d'entrée annoncé
+  const entryDiscount = normalizeDurationDiscounts(vehicle.agency?.duration_discounts)[0] ?? null;
+  const durationDiscount = rental?.applied_rate === 'duration' ? rental.duration_discount : null;
+  const discountShown = durationDiscount ?? entryDiscount;
   const isMoto = isMotorcycle(vehicle);
   const engineCc = formatEngineCc(vehicle.engine_cc);
 
@@ -413,7 +411,7 @@ function VehicleCardComponent({
         {/* Statut — pastille + texte (jamais la couleur seule) */}
         <span
           className={cn(
-            'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur-sm',
+            'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm backdrop-blur-sm',
             status.text
           )}
         >
@@ -449,8 +447,8 @@ function VehicleCardComponent({
           {vehicle.brand}
         </p>
         <h3 className="mt-0.5 truncate text-[17px] font-extrabold leading-snug text-[#0B1220]">
-          {vehicle.model}
-          <span className="ms-1.5 font-semibold text-slate-500">{vehicle.year}</span>
+          {vehicle.model}{' '}
+          <span className="font-semibold text-slate-500">{vehicle.year}</span>
         </h3>
 
         <ul
@@ -497,12 +495,12 @@ function VehicleCardComponent({
             </div>
             <span className="min-w-0 truncate text-xs font-bold text-slate-700">{agency.name}</span>
             {agency.verified && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-emerald-700">
+              <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-emerald-700">
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                 {card.verified}
               </span>
             )}
-            <span className="ms-auto shrink-0 text-[11px] font-semibold text-ink-tertiary">
+            <span className="ms-auto shrink-0 text-xs font-semibold text-ink-tertiary">
               {showRating ? (
                 <span
                   className="inline-flex items-center gap-1"
@@ -520,27 +518,47 @@ function VehicleCardComponent({
 
         {/* Prix + action */}
         <div className="mt-auto pt-4">
-          <div className="flex items-end justify-between gap-3">
-            <p className="leading-none">
+          {/* flex-wrap : sur une carte étroite, le total passe sous le prix au lieu de se couper (« 7 / j ») */}
+          <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1.5">
+            <p className="whitespace-nowrap leading-none">
               <span className="text-[22px] font-extrabold tabular-nums tracking-tight text-[#0B1220]">
                 {formatNumber(vehicle.daily_price, locale)}
               </span>
-              <span className="ms-1 text-xs font-bold text-[#0B1220]">MAD</span>
+              <span className="ms-1 text-xs font-bold text-[#0B1220]">{t.common.currency}</span>
               <span className="ms-1 text-xs font-medium text-slate-500">{card.perDay}</span>
             </p>
             {totalPrice !== null ? (
-              <p className="text-end text-[11px] font-semibold text-slate-600">
-                {mad(totalPrice)} · {plural(selectedDays ?? 0, t.vehicle.daysShort)}
+              <p className="whitespace-nowrap text-end text-xs font-semibold text-slate-600">
+                {rental && durationDiscount && <s className="me-1.5 font-medium text-ink-secondary">{mad(rental.full_price)}</s>}
+                <span className={durationDiscount ? 'text-emerald-800' : undefined}>{mad(totalPrice)}</span> ·{' '}
+                {plural(selectedDays ?? 0, t.vehicle.daysShort)}
               </p>
             ) : (vehicle.deposit ?? 0) > 0 ? (
-              <p className="text-end text-[11px] font-medium text-slate-500">
+              <p className="whitespace-nowrap text-end text-xs font-medium text-slate-500">
                 {fmt(card.deposit, { amount: mad(vehicle.deposit) })}
               </p>
             ) : null}
           </div>
 
+          {discountShown && (
+            <p
+              className={cn(
+                'mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold tabular-nums',
+                durationDiscount ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-emerald-200 bg-emerald-50 text-emerald-900'
+              )}
+            >
+              <BadgePercent className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {durationDiscount
+                ? fmt(card.discountApplied, { percent: formatNumber(durationDiscount.percent, locale) })
+                : fmt(card.discountFrom, {
+                    percent: formatNumber(discountShown.percent, locale),
+                    days: formatNumber(discountShown.min_days, locale),
+                  })}
+            </p>
+          )}
+
           {!isBookable && vehicle.status === 'RENTED' && vehicle.available_from && (
-            <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
+            <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-700">
               <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {fmt(card.availableFrom, { date: date(vehicle.available_from, 'dayMonth') })}
             </p>

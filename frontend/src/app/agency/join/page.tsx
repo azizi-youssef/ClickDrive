@@ -257,7 +257,7 @@ export default function AgencyJoinPage() {
             {/* LEFT: BENEFITS */}
             <div className="lg:col-span-5">
               <div className="mb-8">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#E63946]">
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
                   Pourquoi ClickDrive ?
                 </span>
 
@@ -361,7 +361,7 @@ export default function AgencyJoinPage() {
                       className="mb-2 block text-xs font-bold text-slate-700"
                     >
                       Nom commercial de l’agence
-                      <span className="ml-1 text-[#E63946]">*</span>
+                      <span className="ml-1 text-accent-text">*</span>
                     </label>
 
                     <div className="relative">
@@ -390,7 +390,7 @@ export default function AgencyJoinPage() {
                         className="mb-2 block text-xs font-bold text-slate-700"
                       >
                         Nom du responsable
-                        <span className="ml-1 text-[#E63946]">*</span>
+                        <span className="ml-1 text-accent-text">*</span>
                       </label>
 
                       <div className="relative">
@@ -417,7 +417,7 @@ export default function AgencyJoinPage() {
                         className="mb-2 block text-xs font-bold text-slate-700"
                       >
                         Téléphone / WhatsApp
-                        <span className="ml-1 text-[#E63946]">*</span>
+                        <span className="ml-1 text-accent-text">*</span>
                       </label>
 
                       <div className="relative">
@@ -445,7 +445,7 @@ export default function AgencyJoinPage() {
                   <div>
                     <label htmlFor="join-email" className="mb-2 block text-xs font-bold text-slate-700">
                       E-mail
-                      <span className="ml-1 text-[#E63946]">*</span>
+                      <span className="ml-1 text-accent-text">*</span>
                     </label>
                     <input
                       id="join-email"
@@ -476,7 +476,7 @@ export default function AgencyJoinPage() {
                       className="mb-2 block text-xs font-bold text-slate-700"
                     >
                       Adresse de l’agence
-                      <span className="ml-1 text-[#E63946]">*</span>
+                      <span className="ml-1 text-accent-text">*</span>
                     </label>
 
                     <div className="relative">
@@ -589,7 +589,7 @@ export default function AgencyJoinPage() {
 
             <a
               href="#agency-form"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[#E63946] transition-colors hover:text-[#C92F3B]"
+              className="inline-flex items-center gap-2 text-sm font-bold text-accent-text transition-colors hover:text-action-hover"
             >
               Commencer l’inscription
               <ArrowRight className="h-4 w-4" />

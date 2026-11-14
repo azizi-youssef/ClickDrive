@@ -61,3 +61,23 @@ export function getEffectiveRentalDates(
 
   return { startDate: effectiveStartDate, endDate: effectiveEndDate };
 }
+
+/** Période de location (dates AAAA-MM-JJ, retour exclu du décompte des jours) */
+export type RentalPeriod = { startDate: string; endDate: string };
+
+/**
+ * Période lue dans une adresse (?startDate=…&endDate=…) : retenue seulement si les deux dates sont
+ * valides et le retour postérieur au départ. La comparaison avec « aujourd'hui » reste à l'appelant
+ * (getEffectiveRentalDates), qui connaît la date locale du visiteur.
+ */
+export function parseRentalPeriod(startDate: unknown, endDate: unknown): RentalPeriod | undefined {
+  if (typeof startDate !== 'string' || typeof endDate !== 'string') return undefined;
+  if (!isValidDateOnly(startDate) || !isValidDateOnly(endDate) || endDate <= startDate) return undefined;
+  return { startDate, endDate };
+}
+
+/** Paramètres d'adresse d'une période (« ?startDate=…&endDate=… »), ou chaîne vide si elle est invalide */
+export function rentalPeriodQuery(period: RentalPeriod | null | undefined): string {
+  const valid = period ? parseRentalPeriod(period.startDate, period.endDate) : undefined;
+  return valid ? `?${new URLSearchParams(valid).toString()}` : '';
+}
