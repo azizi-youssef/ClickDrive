@@ -3,6 +3,10 @@ import { Booking } from '@/types';
 import { createAdminClient } from '@/lib/supabase/server';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
 import { maskPhone, withRetry } from '@/lib/notifications/retry';
+import { bookingStatusLabel } from '@/lib/bookings/status';
+import { CLICKDRIVE_WHATSAPP_NUMBER, SUPPORT_HOURS_SUMMARY } from '@/lib/constants/contact';
+import { isValidBookingReference } from '@/lib/utils/reference';
+import { isUuid } from '@/lib/availability/status';
 
 /**
  * ========================================================================
@@ -15,7 +19,8 @@ import { maskPhone, withRetry } from '@/lib/notifications/retry';
 export interface WhatsAppMessageResult {
   success: boolean;
   messageId?: string;
-  status: 'SENT' | 'DELIVERED' | 'FAILED' | 'SIMULATED';
+  /** SKIPPED : non envoyé (hors de la fenêtre de 24 h sans modèle approuvé) — jamais présenté comme envoyé */
+  status: 'SENT' | 'DELIVERED' | 'FAILED' | 'SIMULATED' | 'SKIPPED';
   recipient: string;
   templateName?: string;
   error?: string;
@@ -79,23 +84,210 @@ export interface InboundStatusEvent {
   errors?: any[];
 }
 
+/**
+ * Intention exprimée par un client. Aucune n'exécute de transition de réservation :
+ * HELP, STATUS et CANCEL_REQUEST donnent une information ou orientent vers le bon canal.
+ */
+export type InboundIntent = 'HELP' | 'STATUS' | 'CANCEL_REQUEST' | 'DEFAULT';
+
 export interface InboundActionResult {
-  intent: 'CONFIRM' | 'CANCEL' | 'HELP' | 'DEFAULT';
+  intent: InboundIntent;
   bookingRef?: string;
   customerPhone: string;
   actionTaken: string;
   replySent?: string;
 }
 
+/** Colonnes lues pour répondre à un client (aucune pièce d'identité, aucune donnée financière interne) */
+const INBOUND_BOOKING_COLUMNS =
+  'id, reference, booking_ref, customer_name, customer_phone, status, start_date, end_date, pickup_time, ' +
+  'pickup_location, agency_id, vehicle:vehicles(brand, model), agency:agencies(name, phone, whatsapp)';
+
+type InboundBooking = {
+  id: string;
+  reference: string | null;
+  booking_ref: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  pickup_time: string | null;
+  pickup_location: string | null;
+  agency_id: string | null;
+  vehicle: { brand: string; model: string } | null;
+  agency: { name: string; phone: string | null; whatsapp: string | null } | null;
+};
+
+/**
+ * Commandes reconnues : le message entier (référence de dossier retirée) doit être exactement l'une d'elles.
+ * « oui », « ok », « non », « non merci », « stop »… ne sont pas des commandes.
+ */
+const INBOUND_COMMANDS: Record<string, Exclude<InboundIntent, 'DEFAULT'>> = {
+  aide: 'HELP',
+  help: 'HELP',
+  assistance: 'HELP',
+  statut: 'STATUS',
+  status: 'STATUS',
+  suivi: 'STATUS',
+  annuler: 'CANCEL_REQUEST',
+  annulation: 'CANCEL_REQUEST',
+  cancel: 'CANCEL_REQUEST',
+};
+
+const INBOUND_ACTION_LABELS: Record<InboundIntent, string> = {
+  HELP: "Guide d'assistance envoyé (aucune modification)",
+  STATUS: 'Statut communiqué (aucune modification)',
+  CANCEL_REQUEST: "Orientation vers l'espace client / l'agence (aucune modification)",
+  DEFAULT: "Menu d'accueil envoyé (aucune modification)",
+};
+
+const BOOKING_REFERENCE_IN_TEXT = /(?:CD-\d{4}-\d{6}|#?NRD-\d{4,6})/gi;
+
+/** Référence de dossier citée dans le message (format strict), sinon null */
+export function extractBookingReference(text: string): string | null {
+  const match = text.match(BOOKING_REFERENCE_IN_TEXT)?.[0];
+  if (!match) return null;
+  const ref = match.replace(/^#/, '').toUpperCase();
+  return isValidBookingReference(ref) ? ref : null;
+}
+
+function normalizeCommand(value: string): string {
+  return value
+    .replace(BOOKING_REFERENCE_IN_TEXT, ' ')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Intention explicite : commande exacte (texte ou identifiant de bouton), sinon DEFAULT */
+export function detectInboundIntent(text: string, buttonPayload?: string): InboundIntent {
+  for (const candidate of [buttonPayload, text]) {
+    if (!candidate) continue;
+    const intent = INBOUND_COMMANDS[normalizeCommand(candidate)];
+    if (intent) return intent;
+  }
+  return 'DEFAULT';
+}
+
+/** Variantes de saisie du numéro de l'expéditeur (le résultat est revérifié après normalisation) */
+function phoneVariants(normalized: string): string[] {
+  const variants = new Set([normalized, `+${normalized}`, `00${normalized}`]);
+  if (normalized.startsWith('212') && normalized.length === 12) variants.add(`0${normalized.slice(3)}`);
+  return [...variants];
+}
+
+/** Variables d'environnement des modèles de notification opérationnelle (docs/whatsapp-templates.md) */
+const DELIVERY_MEETING_TEMPLATE_ENV = 'WHATSAPP_TEMPLATE_DELIVERY_MEETING';
+const HANDOVER_SUMMARY_TEMPLATE_ENV = 'WHATSAPP_TEMPLATE_HANDOVER_SUMMARY';
+
+function templateNameFromEnv(variable: string): string | null {
+  const value = process.env[variable]?.trim();
+  return value ? value : null;
+}
+
+/** Paramètre de modèle : pas de saut de ligne ni de tabulation (refusés par Meta), longueur bornée */
+function toTemplateParameter(value: unknown): string {
+  const text = String(value ?? '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/ {4,}/g, '   ')
+    .trim();
+  return (text || '—').slice(0, 300);
+}
+
+/** Message journalisé (sans texte), tel que lu par la page d'administration */
+export type WhatsAppMessageRecord = {
+  id: string;
+  wamid: string | null;
+  direction: 'OUTBOUND' | 'INBOUND';
+  status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED' | 'SIMULATED' | 'RECEIVED';
+  phone: string;
+  message_type: 'TEXT' | 'TEMPLATE' | 'INBOUND';
+  template_name: string | null;
+  booking_ref: string | null;
+  error: string | null;
+  status_at: string | null;
+  created_at: string;
+};
+
+function appBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma').replace(/\/+$/, '');
+}
+
+const INBOUND_MENU =
+  `• *AIDE* : rendez-vous et contacts\n` +
+  `• *STATUT* : où en est votre demande\n` +
+  `• *ANNULER* : comment annuler une réservation`;
+
+/** Réponse automatique : information seulement, jamais l'annonce d'une modification */
+function buildInboundReply(intent: InboundIntent, booking: InboundBooking | null, customerName: string): string {
+  const ref = booking ? booking.reference || booking.booking_ref || '' : '';
+  const supportLine = `Assistance ClickDrive (${SUPPORT_HOURS_SUMMARY}) : *+${CLICKDRIVE_WHATSAPP_NUMBER}*`;
+  const agencyPhone = booking?.agency?.whatsapp || booking?.agency?.phone || null;
+  const agencyLine = booking?.agency?.name && agencyPhone ? `• Agence ${booking.agency.name} : *${agencyPhone}*\n` : '';
+  const trackingUrl = ref ? `${appBaseUrl()}/account/bookings/${encodeURIComponent(ref)}` : `${appBaseUrl()}/account`;
+
+  if (intent === 'HELP') {
+    const vehicle = booking?.vehicle ? ` (${booking.vehicle.brand} ${booking.vehicle.model})` : '';
+    return (
+      `📍 *Assistance ClickDrive*\n\n` +
+      `Bonjour *${customerName}*,\n` +
+      (booking
+        ? `Votre dossier *${ref}*${vehicle} :\n` +
+          `• Prise en charge : *${booking.pickup_location || "à confirmer avec l'agence"}*\n` +
+          (booking.start_date ? `• Date : *${booking.start_date}${booking.pickup_time ? ` à ${booking.pickup_time.slice(0, 5)}` : ''}*\n` : '') +
+          agencyLine
+        : '') +
+      `• ${supportLine}\n\n` +
+      INBOUND_MENU
+    );
+  }
+
+  if (intent === 'STATUS') {
+    if (!booking) {
+      return (
+        `Bonjour *${customerName}*,\n` +
+        `Aucune réservation n'est associée à ce numéro. Écrivez *STATUT* depuis le numéro indiqué lors de la demande, ` +
+        `ou consultez votre espace client : ${trackingUrl}`
+      );
+    }
+    return (
+      `Bonjour *${customerName}*,\n` +
+      `Dossier *${ref}* : *${bookingStatusLabel(booking.status, 'fr', 'customer')}*.\n` +
+      `Détails : ${trackingUrl}`
+    );
+  }
+
+  if (intent === 'CANCEL_REQUEST') {
+    return (
+      `Bonjour *${customerName}*,\n` +
+      `Votre réservation n'a pas été modifiée : une annulation ne se fait pas par message WhatsApp.\n` +
+      `• Votre espace client : ${trackingUrl}\n` +
+      (agencyLine || '') +
+      `• ${supportLine}`
+    );
+  }
+
+  return (
+    `Bonjour *${customerName}* !\n\n` +
+    `Bienvenue sur le service WhatsApp de *ClickDrive*. Ce canal ne modifie pas vos réservations.\n` +
+    `${INBOUND_MENU}\n\n` +
+    `Un conseiller vous répondra dans les plus brefs délais si nécessaire.`
+  );
+}
+
 export interface WebhookProcessResult {
   processedMessages: number;
   processedStatuses: number;
+  /** Messages entrants déjà traités (renvoi du webhook par Meta) : ignorés */
+  duplicateMessages?: number;
   results: InboundActionResult[];
 }
 
 export class WhatsAppService {
-  private inMemoryLogs: WhatsAppMessageLog[] = [];
-  private readonly maxInMemoryLogs = 100;
 
   /**
    * Vérifie si les identifiants officiels WhatsApp Business Cloud API sont configurés
@@ -306,7 +498,7 @@ export class WhatsAppService {
     templateName: string | undefined,
     content: string,
     options: WhatsAppSendOptions
-  ): WhatsAppMessageResult {
+  ): Promise<WhatsAppMessageResult> {
     if (process.env.NODE_ENV === 'production') {
       return this.recordFailure(
         recipient,
@@ -393,7 +585,72 @@ export class WhatsAppService {
   }
 
   /**
+   * Message à l'initiative de ClickDrive vers un client. WhatsApp refuse un texte libre hors de la fenêtre
+   * de 24 h ouverte par le dernier message du client : on envoie alors le modèle approuvé s'il est configuré,
+   * sinon rien (statut SKIPPED, jamais présenté comme envoyé).
+   */
+  public async sendCustomerMessage(
+    phone: string,
+    text: string,
+    options: WhatsAppSendOptions,
+    template: { name: string | null; parameters: unknown[] } | null
+  ): Promise<WhatsAppMessageResult> {
+    // Non configuré : simulation en développement, échec explicite en production (voir handleNotConfigured)
+    if (!this.isConfigured()) return this.sendTextMessage(phone, text, options);
+
+    if (await this.isConversationWindowOpen(phone)) return this.sendTextMessage(phone, text, options);
+    if (template?.name) {
+      return this.sendTemplateMessage(
+        phone,
+        template.name,
+        template.parameters.map((value) => ({ type: 'text', text: toTemplateParameter(value) })),
+        options
+      );
+    }
+
+    console.warn(
+      `[WhatsAppService] Message non envoyé à ${maskPhone(this.normalizePhoneNumber(phone))} : hors de la fenêtre de 24 h et aucun modèle configuré.`
+    );
+    return {
+      success: false,
+      status: 'SKIPPED',
+      recipient: this.normalizePhoneNumber(phone),
+      error: 'Hors de la fenêtre de 24 h : un modèle WhatsApp approuvé est nécessaire.',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Fenêtre de 24 h ouverte : le client a écrit il y a moins de 23 h (marge d'une heure).
+   * Toute erreur de lecture vaut « fermée » : on n'envoie alors que des modèles.
+   */
+  public async isConversationWindowOpen(phone: string): Promise<boolean> {
+    const normalized = this.normalizePhoneNumber(phone);
+    if (!normalized) return false;
+    try {
+      const supabase = await createAdminClient();
+      if (!supabase) return false;
+      const since = new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .select('id')
+        .eq('direction', 'INBOUND')
+        .eq('phone', normalized)
+        .gte('created_at', since)
+        .limit(1);
+      if (error) {
+        console.warn('[WhatsAppService] Fenêtre de 24 h invérifiable :', error.message);
+        return false;
+      }
+      return Array.isArray(data) && data.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Notification 3 : Organisation du rendez-vous de livraison (Aéroport, Port, etc.)
+   * Modèle (WHATSAPP_TEMPLATE_DELIVERY_MEETING) : {{1}} nom · {{2}} référence · {{3}} lieu · {{4}} date et heure · {{5}} consignes
    */
   public async sendDeliveryMeetingInvite(
     booking: Booking,
@@ -412,15 +669,25 @@ export class WhatsAppService {
       (params.instructions ? `\nℹ️ *Consignes :* ${params.instructions}\n` : '') +
       `\nMerci d'avoir préparé votre permis de conduire original et pièce d'identité.`;
 
-    return this.sendTextMessage(booking.customer_phone, text, {
-      bookingRef: ref,
-      bookingId: booking.id,
-      agencyId: booking.agency_id,
-    });
+    const instructions = [params.agentName ? `Agent : ${params.agentName} ${params.agentPhone || ''}`.trim() : '', params.instructions || '']
+      .filter(Boolean)
+      .join(' — ');
+
+    return this.sendCustomerMessage(
+      booking.customer_phone,
+      text,
+      { bookingRef: ref, bookingId: booking.id, agencyId: booking.agency_id },
+      {
+        name: templateNameFromEnv(DELIVERY_MEETING_TEMPLATE_ENV),
+        parameters: [booking.customer_name, ref, params.meetingPoint, params.scheduledAt, instructions || '—'],
+      }
+    );
   }
 
   /**
    * Notification 4 : Confirmation digitale de l'état des lieux (Départ / Restitution)
+   * Modèle (WHATSAPP_TEMPLATE_HANDOVER_SUMMARY) : {{1}} nom · {{2}} référence · {{3}} « remise » ou « restitution »
+   * · {{4}} kilométrage · {{5}} carburant · {{6}} caution
    */
   public async sendHandoverSummary(
     booking: Booking,
@@ -444,51 +711,78 @@ export class WhatsAppService {
       (params.agentName ? `• *Agent certifié :* ${params.agentName}\n` : '') +
       `\nMerci pour votre confiance avec ClickDrive !`;
 
-    return this.sendTextMessage(booking.customer_phone, text, {
-      bookingRef: ref,
-      bookingId: booking.id,
-      agencyId: booking.agency_id,
-    });
+    return this.sendCustomerMessage(
+      booking.customer_phone,
+      text,
+      { bookingRef: ref, bookingId: booking.id, agencyId: booking.agency_id },
+      {
+        name: templateNameFromEnv(HANDOVER_SUMMARY_TEMPLATE_ENV),
+        parameters: [
+          booking.customer_name,
+          ref,
+          isPickup ? 'remise' : 'restitution',
+          `${params.mileage.toLocaleString('fr-FR')} km`,
+          params.fuelLevel,
+          params.depositStatus || '—',
+        ],
+      }
+    );
   }
 
   // ========================================================================
-  // AUDIT, LOGGING ET HISTORIQUE
+  // JOURNAL DES MESSAGES (whatsapp_messages + audit_logs)
   // ========================================================================
 
-  public getRecentLogs(limit: number = 20): WhatsAppMessageLog[] {
-    return this.inMemoryLogs.slice(0, limit);
+  /**
+   * Derniers messages, lus en base (partagés par toutes les instances serveur).
+   * Sans table (migration 20261117000100 non appliquée) ou sans clé service-role : liste vide, journalisée.
+   */
+  public async listRecentMessages(limit = 50): Promise<WhatsAppMessageRecord[]> {
+    try {
+      const supabase = await createAdminClient();
+      if (!supabase) return [];
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .select('id, wamid, direction, status, phone, message_type, template_name, booking_ref, error, status_at, created_at')
+        .order('created_at', { ascending: false })
+        .limit(Math.min(Math.max(1, limit), 200));
+      if (error) {
+        console.warn('[WhatsAppService] Journal des messages illisible :', error.message);
+        return [];
+      }
+      return (data ?? []) as WhatsAppMessageRecord[];
+    } catch (error) {
+      console.warn('[WhatsAppService] Journal des messages illisible :', error instanceof Error ? error.message : error);
+      return [];
+    }
   }
 
-  public getLogsByBooking(bookingRef: string): WhatsAppMessageLog[] {
-    return this.inMemoryLogs.filter((l) => l.bookingRef === bookingRef);
-  }
-
-  private simulateSend(
+  private async simulateSend(
     recipient: string,
     type: 'TEMPLATE' | 'TEXT',
     templateName: string | undefined,
     content: string,
     options: WhatsAppSendOptions
-  ): WhatsAppMessageResult {
+  ): Promise<WhatsAppMessageResult> {
     const simulatedId = `wamid.sim_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const timestamp = new Date().toISOString();
 
     console.log(`[WhatsAppService] [SIMULATED] Outbound to ${maskPhone(recipient)} (${content.length} caractères)`);
 
-    const logEntry: WhatsAppMessageLog = {
-      id: crypto.randomUUID(),
-      messageId: simulatedId,
-      recipientPhone: recipient,
-      bookingRef: options.bookingRef,
-      type,
-      templateName,
-      status: 'SIMULATED',
-      sentAt: timestamp,
-      payloadSummary: { simulated: true, length: content.length },
-    };
-
-    this.pushLog(logEntry);
-    this.persistAuditEvent(logEntry, options);
+    await this.persistMessage(
+      {
+        id: crypto.randomUUID(),
+        messageId: simulatedId,
+        recipientPhone: recipient,
+        bookingRef: options.bookingRef,
+        type,
+        templateName,
+        status: 'SIMULATED',
+        sentAt: timestamp,
+        payloadSummary: { simulated: true, length: content.length },
+      },
+      options
+    );
 
     return {
       success: true,
@@ -500,29 +794,29 @@ export class WhatsAppService {
     };
   }
 
-  private recordSuccess(
+  private async recordSuccess(
     recipient: string,
     messageId: string,
     type: 'TEMPLATE' | 'TEXT',
     templateName: string | undefined,
     options: WhatsAppSendOptions,
     payloadSummary: Record<string, unknown>
-  ): WhatsAppMessageResult {
+  ): Promise<WhatsAppMessageResult> {
     const timestamp = new Date().toISOString();
-    const logEntry: WhatsAppMessageLog = {
-      id: crypto.randomUUID(),
-      messageId,
-      recipientPhone: recipient,
-      bookingRef: options.bookingRef,
-      type,
-      templateName,
-      status: 'SENT',
-      sentAt: timestamp,
-      payloadSummary,
-    };
-
-    this.pushLog(logEntry);
-    this.persistAuditEvent(logEntry, options);
+    await this.persistMessage(
+      {
+        id: crypto.randomUUID(),
+        messageId,
+        recipientPhone: recipient,
+        bookingRef: options.bookingRef,
+        type,
+        templateName,
+        status: 'SENT',
+        sentAt: timestamp,
+        payloadSummary,
+      },
+      options
+    );
 
     return {
       success: true,
@@ -534,37 +828,36 @@ export class WhatsAppService {
     };
   }
 
-  private recordFailure(
+  private async recordFailure(
     recipient: string,
     errorMessage: string,
     type: 'TEMPLATE' | 'TEXT',
     templateName: string | undefined,
     options: WhatsAppSendOptions,
     rawErrorPayload?: unknown
-  ): WhatsAppMessageResult {
+  ): Promise<WhatsAppMessageResult> {
     const timestamp = new Date().toISOString();
-    const fakeId = `err_${Date.now()}`;
     console.error(`[WhatsAppService] Failed to send to ${maskPhone(recipient)}: ${errorMessage}`);
+    if (rawErrorPayload !== undefined) console.error('[WhatsAppService] Meta error detail:', rawErrorPayload);
 
-    const logEntry: WhatsAppMessageLog = {
-      id: crypto.randomUUID(),
-      messageId: fakeId,
-      recipientPhone: recipient,
-      bookingRef: options.bookingRef,
-      type,
-      templateName,
-      status: 'FAILED',
-      error: errorMessage,
-      sentAt: timestamp,
-      payloadSummary: { error: errorMessage, raw: rawErrorPayload },
-    };
-
-    this.pushLog(logEntry);
-    this.persistAuditEvent(logEntry, options);
+    await this.persistMessage(
+      {
+        id: crypto.randomUUID(),
+        messageId: '',
+        recipientPhone: recipient,
+        bookingRef: options.bookingRef,
+        type,
+        templateName,
+        status: 'FAILED',
+        error: errorMessage,
+        sentAt: timestamp,
+        payloadSummary: { error: errorMessage },
+      },
+      options
+    );
 
     return {
       success: false,
-      messageId: fakeId,
       status: 'FAILED',
       recipient,
       templateName,
@@ -573,50 +866,103 @@ export class WhatsAppService {
     };
   }
 
-  private pushLog(log: WhatsAppMessageLog) {
-    this.inMemoryLogs.unshift(log);
-    if (this.inMemoryLogs.length > this.maxInMemoryLogs) {
-      this.inMemoryLogs.pop();
-    }
-  }
-
-  private async persistAuditEvent(log: WhatsAppMessageLog, options: WhatsAppSendOptions) {
+  /**
+   * Journal d'un envoi : whatsapp_messages (statut de livraison, sans texte) et audit_logs (trace de sécurité).
+   * Attendu par l'appelant (aucune écriture perdue en fin de requête) ; un échec est journalisé, jamais masqué.
+   */
+  private async persistMessage(log: WhatsAppMessageLog, options: WhatsAppSendOptions): Promise<void> {
     try {
       const supabase = await createAdminClient();
       if (!supabase) return;
+      const bookingId = options.bookingId && isUuid(options.bookingId) ? options.bookingId : null;
+      const agencyId = options.agencyId && isUuid(options.agencyId) ? options.agencyId : null;
 
-      // 1. Audit log général
-      await supabase.from('audit_logs').insert({
-        action: log.status === 'FAILED' ? 'WHATSAPP_MESSAGE_FAILED' : 'WHATSAPP_MESSAGE_SENT',
-        entity_type: 'whatsapp_notification',
-        entity_id: log.messageId,
-        agency_id: options.agencyId || null,
-        metadata: {
-          recipient: log.recipientPhone,
-          bookingRef: log.bookingRef,
-          status: log.status,
-          type: log.type,
-          error: log.error || null,
-        },
-      });
+      const [messageRes, auditRes] = await Promise.all([
+        supabase.rpc('record_whatsapp_outbound', {
+          p_wamid: log.messageId || null,
+          p_status: log.status,
+          p_phone: log.recipientPhone,
+          p_message_type: log.type,
+          p_template_name: log.templateName ?? null,
+          p_booking_id: bookingId,
+          p_booking_ref: log.bookingRef ?? null,
+          p_agency_id: agencyId,
+          p_error: log.error ?? null,
+        }),
+        supabase.from('audit_logs').insert({
+          action: log.status === 'FAILED' ? 'WHATSAPP_MESSAGE_FAILED' : 'WHATSAPP_MESSAGE_SENT',
+          entity_type: 'whatsapp_notification',
+          // Colonne NOT NULL : un envoi refusé avant Meta n'a pas de wamid (identifiant explicite, jamais un faux wamid)
+          entity_id: log.messageId || `unsent:${log.id}`,
+          agency_id: agencyId,
+          metadata: {
+            recipient: maskPhone(log.recipientPhone),
+            bookingRef: log.bookingRef,
+            status: log.status,
+            type: log.type,
+            template: log.templateName ?? null,
+            error: log.error || null,
+          },
+        }),
+      ]);
+      if (messageRes.error) console.warn('[WhatsAppService] Message non journalisé :', messageRes.error.message);
+      if (auditRes.error) console.warn('[WhatsAppService] Audit non enregistré :', auditRes.error.message);
 
-      // 2. Timeline de la réservation si bookingId présent
-      if (options.bookingId) {
-        await supabase.from('booking_events').insert({
-          booking_id: options.bookingId,
+      if (bookingId) {
+        const { error } = await supabase.from('booking_events').insert({
+          booking_id: bookingId,
           actor_role: 'SYSTEM',
           event_type: log.status === 'FAILED' ? 'WHATSAPP_NOTIFICATION_FAILED' : 'WHATSAPP_NOTIFICATION_SENT',
           metadata: {
-            messageId: log.messageId,
-            recipient: log.recipientPhone,
+            messageId: log.messageId || null,
             status: log.status,
-            template: log.templateName,
+            template: log.templateName ?? null,
           },
         });
+        if (error) console.warn('[WhatsAppService] Historique de réservation non enregistré :', error.message);
       }
     } catch (err) {
-      // Éviter de bloquer l'application si l'écriture de l'audit échoue
-      console.warn('[WhatsAppService] Could not persist audit event:', err);
+      // Ne jamais bloquer l'envoi si la journalisation échoue
+      console.warn('[WhatsAppService] Could not persist message log:', err instanceof Error ? err.message : err);
+    }
+  }
+
+  /**
+   * Message entrant : enregistré une seule fois par wamid. Renvoie « duplicate » si Meta renvoie un message
+   * déjà traité (aucune nouvelle réponse), « new » sinon. Sans journal disponible : « unrecorded » (traité,
+   * le dédoublonnage étant impossible).
+   */
+  private async claimInboundMessage(
+    messageId: string,
+    from: string,
+    timestamp: string | undefined
+  ): Promise<'new' | 'duplicate' | 'unrecorded'> {
+    if (!messageId) return 'unrecorded';
+    try {
+      const supabase = await createAdminClient();
+      if (!supabase) return 'unrecorded';
+      const seconds = Number(timestamp);
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .upsert(
+          {
+            wamid: messageId,
+            direction: 'INBOUND',
+            status: 'RECEIVED',
+            phone: this.normalizePhoneNumber(from),
+            message_type: 'INBOUND',
+            status_at: Number.isFinite(seconds) && seconds > 0 ? new Date(seconds * 1000).toISOString() : new Date().toISOString(),
+          },
+          { onConflict: 'wamid', ignoreDuplicates: true }
+        )
+        .select('id');
+      if (error) {
+        console.warn('[WhatsAppService] Message entrant non journalisé (dédoublonnage impossible) :', error.message);
+        return 'unrecorded';
+      }
+      return Array.isArray(data) && data.length > 0 ? 'new' : 'duplicate';
+    } catch {
+      return 'unrecorded';
     }
   }
 
@@ -699,6 +1045,7 @@ export class WhatsAppService {
     const results: InboundActionResult[] = [];
     let processedMessages = 0;
     let processedStatuses = 0;
+    let duplicateMessages = 0;
 
     const entries = Array.isArray(payload?.entry) ? payload.entry : [];
 
@@ -728,6 +1075,11 @@ export class WhatsAppService {
           const contactName = contact?.profile?.name;
 
           for (const msg of val.messages) {
+            // Renvoi par Meta d'un message déjà traité : aucune nouvelle réponse
+            if ((await this.claimInboundMessage(String(msg?.id ?? ''), String(msg?.from ?? ''), msg?.timestamp)) === 'duplicate') {
+              duplicateMessages++;
+              continue;
+            }
             processedMessages++;
             let body = '';
             let buttonPayload: string | undefined;
@@ -762,234 +1114,56 @@ export class WhatsAppService {
     return {
       processedMessages,
       processedStatuses,
+      duplicateMessages,
       results,
     };
   }
 
   /**
-   * Analyse et traite un message entrant d'un client
+   * Message entrant d'un client. WhatsApp est un canal de communication, jamais un canal d'administration :
+   * - aucun message ne confirme, n'annule ni ne modifie une réservation (l'agence décide par l'API
+   *   authentifiée, le client passe par son espace ou par l'agence) ;
+   * - seules des commandes exactes sont reconnues (AIDE, STATUT, ANNULER) ; tout autre message, y compris
+   *   « oui », « ok », « non merci » ou « stop », reçoit le menu, sans aucune écriture métier ;
+   * - un dossier n'est associé qu'à son titulaire : numéro de l'expéditeur identique à celui de la réservation.
    */
   public async handleInboundMessage(inbound: InboundMessageEvent): Promise<InboundActionResult> {
     const fromNormalized = this.normalizePhoneNumber(inbound.from);
-    const bodyRaw = inbound.body || inbound.buttonPayload || '';
-    const bodyClean = bodyRaw.trim().toLowerCase();
+    const explicitRef = extractBookingReference(`${inbound.body || ''} ${inbound.buttonPayload || ''}`);
+    const intent = detectInboundIntent(inbound.body || '', inbound.buttonPayload);
 
-    // 1. Détection de l'intention du client (word-boundary matching, priorité CONFIRM > CANCEL > HELP)
-    let intent: 'CONFIRM' | 'CANCEL' | 'HELP' | 'DEFAULT' = 'DEFAULT';
-
-    const wordBoundary = (kw: string) => new RegExp(`(?:^|\\s|[^\\w])${kw}(?:$|\\s|[^\\w])`, 'i');
-
-    const confirmKeywords = ['oui', 'confirmer', 'confirme', 'confirm', 'valider', 'valide', 'accepter', 'ok', 'daccord'];
-    const cancelKeywords = ['annuler', 'annule', 'cancel', 'annulation', 'refuser', 'refuse', 'stop', '\\bnon\\b'];
-    // AIDE keywords: eviter faux positifs sur sous-chaines courantes comme "ou"
-    const helpKeywords = ['\\baide\\b', '\\bhelp\\b', '\\blieu\\b', '\\badresse\\b', 'localisation', '\\bcontact\\b', '\\bagence\\b', '\\bnumero\\b', 'numéro', '\\bretard\\b', '\\bou\\b', '\\boù\\b'];
-
-    if (confirmKeywords.some((kw) => wordBoundary(kw).test(bodyClean))) {
-      intent = 'CONFIRM';
-    } else if (cancelKeywords.some((kw) => new RegExp(kw, 'i').test(bodyClean))) {
-      intent = 'CANCEL';
-    } else if (helpKeywords.some((kw) => new RegExp(kw, 'i').test(bodyClean))) {
-      intent = 'HELP';
-    }
-
-    // 2. Recherche du dossier de réservation associé
-    let booking: any = null;
-    const refMatch = bodyRaw.match(/(?:#?NRD-\d+|CD-[A-Z0-9-]+)/i);
-    const explicitRef = refMatch ? refMatch[0].replace(/^#/, '') : null;
-
-    try {
-      const supabase = await createAdminClient();
-      if (supabase) {
-        if (explicitRef) {
-          const { data } = await supabase
-            .from('bookings')
-            .select('*, vehicle:vehicles(brand, model, year), agency:agencies(name, phone, whatsapp)')
-            .eq('booking_ref', explicitRef.toUpperCase())
-            .limit(1)
-            .maybeSingle();
-          // Une référence citée ne suffit pas : seul le titulaire du dossier peut agir dessus.
-          booking =
-            data && fromNormalized && this.normalizePhoneNumber(data.customer_phone || '') === fromNormalized
-              ? data
-              : null;
-        }
-
-        if (!booking && fromNormalized) {
-          const phoneVariants = [
-            fromNormalized,
-            `+${fromNormalized}`,
-            `0${fromNormalized.slice(3)}`,
-            fromNormalized.slice(3),
-          ];
-
-          const { data } = await supabase
-            .from('bookings')
-            .select('*, vehicle:vehicles(brand, model, year), agency:agencies(name, phone, whatsapp)')
-            .in('customer_phone', phoneVariants)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          booking = data;
-        }
-      }
-    } catch (dbErr) {
-      console.warn('[WhatsAppService] Error fetching booking for inbound message:', dbErr);
-    }
-
-    const bookingRef = booking?.booking_ref || explicitRef || undefined;
+    const booking = fromNormalized ? await this.findCustomerBooking(fromNormalized, explicitRef) : null;
+    const bookingRef = booking ? booking.reference || booking.booking_ref || undefined : undefined;
     const customerName = booking?.customer_name || inbound.name || 'Cher client';
-    const vehicleName = booking?.vehicle
-      ? `${booking.vehicle.brand} ${booking.vehicle.model}`
-      : 'votre véhicule';
-    const pickupLocation = booking?.pickup_location || 'Aéroport Nador Al-Aroui';
+    const replyText = buildInboundReply(intent, booking, customerName);
+    const actionTaken = INBOUND_ACTION_LABELS[intent];
 
-    let actionTaken = 'Message reçu et consigné';
-    let replyText = '';
-
-    if (intent === 'CONFIRM') {
-      if (booking && booking.status === 'PENDING') {
-        try {
-          const supabase = await createAdminClient();
-          if (supabase) {
-            await supabase
-              .from('bookings')
-              .update({
-                status: 'CONFIRMED',
-                updated_at: new Date().toISOString(),
-                notes: `${booking.notes || ''}\n[WhatsApp ${new Date().toISOString()}] Confirmé par le client via WhatsApp.`.trim(),
-              })
-              .eq('id', booking.id);
-
-            await supabase.from('audit_logs').insert({
-              action: 'WHATSAPP_INBOUND_CONFIRMED',
-              entity_type: 'booking',
-              entity_id: booking.id,
-              agency_id: booking.agency_id,
-              metadata: {
-                messageId: inbound.messageId,
-                from: inbound.from,
-                body: inbound.body,
-                bookingRef,
-              },
-            });
-          }
-        } catch (updateErr) {
-          console.warn('[WhatsAppService] Error confirming booking from WhatsApp:', updateErr);
-        }
-
-        replyText =
-          `✅ *Réservation confirmée avec succès !*\n\n` +
-          `Bonjour *${customerName}*,\n` +
-          `Votre confirmation pour le dossier *${bookingRef}* a bien été prise en compte.\n\n` +
-          `🚗 *Véhicule :* ${vehicleName}\n` +
-          `📍 *Lieu de prise en charge :* ${pickupLocation}\n` +
-          `📅 *Période :* du ${booking.start_date} au ${booking.end_date}\n\n` +
-          `L'agence partenaire prépare votre véhicule et vous accueillera à votre arrivée.\n` +
-          `📄 Détails : https://clickdrive.ma/account/bookings/${encodeURIComponent(bookingRef || '')}`;
-        actionTaken = `Dossier ${bookingRef} passé au statut CONFIRMED`;
-      } else if (booking && booking.status === 'CONFIRMED') {
-        replyText =
-          `ℹ️ *Réservation déjà confirmée*\n\n` +
-          `Bonjour *${customerName}*, votre réservation *${bookingRef}* est déjà activement confirmée.\n` +
-          `Notre agent d'accueil vous attendra au lieu prévu (*${pickupLocation}*).`;
-        actionTaken = `Dossier ${bookingRef} déjà confirmé`;
-      } else {
-        replyText =
-          `✅ *Confirmation reçue*\n\n` +
-          `Merci pour votre message ! Notre équipe a bien pris note de votre confirmation.`;
-        actionTaken = `Confirmation générale enregistrée`;
-      }
-    } else if (intent === 'CANCEL') {
-      if (booking && (booking.status === 'PENDING' || booking.status === 'CONFIRMED')) {
-        try {
-          const supabase = await createAdminClient();
-          if (supabase) {
-            await supabase
-              .from('bookings')
-              .update({
-                status: 'CANCELLED',
-                updated_at: new Date().toISOString(),
-                notes: `${booking.notes || ''}\n[WhatsApp ${new Date().toISOString()}] Annulé par le client via WhatsApp.`.trim(),
-              })
-              .eq('id', booking.id);
-
-            await supabase.from('audit_logs').insert({
-              action: 'WHATSAPP_INBOUND_CANCELLED',
-              entity_type: 'booking',
-              entity_id: booking.id,
-              agency_id: booking.agency_id,
-              metadata: {
-                messageId: inbound.messageId,
-                from: inbound.from,
-                body: inbound.body,
-                bookingRef,
-              },
-            });
-          }
-        } catch (updateErr) {
-          console.warn('[WhatsAppService] Error cancelling booking from WhatsApp:', updateErr);
-        }
-
-        replyText =
-          `❌ *Annulation prise en compte*\n\n` +
-          `Bonjour *${customerName}*,\n` +
-          `Votre demande d'annulation pour le dossier *${bookingRef}* a bien été enregistrée. Aucun montant ne vous sera débité.\n\n` +
-          `Au plaisir de vous accueillir prochainement sur ClickDrive.ma.`;
-        actionTaken = `Dossier ${bookingRef} passé au statut CANCELLED`;
-      } else {
-        replyText =
-          `❌ *Annulation*\n\n` +
-          `Votre demande d'annulation a bien été enregistrée par le service client ClickDrive.`;
-        actionTaken = `Demande d'annulation enregistrée`;
-      }
-    } else if (intent === 'HELP') {
-      replyText =
-        `📍 *Assistance ClickDrive — Conciergerie*\n\n` +
-        `Bonjour *${customerName}*,\n` +
-        (bookingRef ? `Pour votre dossier *${bookingRef}* :\n` : '') +
-        `• Prise en charge : *${pickupLocation}*\n` +
-        (booking?.start_date ? `• Date : *${booking.start_date} à ${booking.pickup_time || '10:00'}*\n` : '') +
-        `• Assistance ClickDrive (lun–ven 9h–18h, sam. 9h–13h) : *+212 661-987654*\n\n` +
-        `Répondez *CONFIRMER* pour valider ou *ANNULER* pour vous désister.`;
-      actionTaken = `Guide d'assistance envoyé`;
-    } else {
-      replyText =
-        `Bonjour *${customerName}* !\n\n` +
-        `Bienvenue sur le service WhatsApp de *ClickDrive.ma*.\n` +
-        `• Répondez *OUI* ou *CONFIRMER* pour valider votre réservation.\n` +
-        `• Répondez *ANNULER* si vous souhaitez annuler.\n` +
-        `• Répondez *AIDE* pour contacter notre conciergerie.\n\n` +
-        `Un conseiller vous répondra dans les plus brefs délais si nécessaire.`;
-      actionTaken = `Réponse automatique d'accueil transmise`;
-    }
-
-    if (replyText) {
-      await this.sendTextMessage(inbound.from, replyText, {
-        bookingRef,
-        bookingId: booking?.id,
-        agencyId: booking?.agency_id,
-      });
-    }
+    await this.sendTextMessage(inbound.from, replyText, {
+      bookingRef,
+      bookingId: booking?.id,
+      agencyId: booking?.agency_id ?? undefined,
+    });
 
     try {
       const supabase = await createAdminClient();
       if (supabase) {
-        await supabase.from('audit_logs').insert({
+        const { error } = await supabase.from('audit_logs').insert({
           action: 'WHATSAPP_INBOUND_MESSAGE',
           entity_type: 'whatsapp_webhook',
           entity_id: inbound.messageId,
           agency_id: booking?.agency_id || null,
           metadata: {
             from: inbound.from,
-            body: inbound.body,
+            body: (inbound.body || '').slice(0, 500),
             intent,
             actionTaken,
-            bookingRef,
+            bookingRef: bookingRef ?? null,
           },
         });
+        if (error) console.warn('[WhatsAppService] Inbound audit log not recorded:', error.message);
       }
-    } catch {
-      // Ignorer si échec audit log
+    } catch (auditError) {
+      console.warn('[WhatsAppService] Inbound audit log not recorded:', auditError instanceof Error ? auditError.message : auditError);
     }
 
     return {
@@ -1002,43 +1176,97 @@ export class WhatsAppService {
   }
 
   /**
-   * Met à jour le statut d'un message lors d'un accusé de réception Meta
+   * Réservation du titulaire du numéro (lecture seule, colonnes explicites).
+   * Client service-role justifié : le webhook n'a pas de session utilisateur ; l'expéditeur est authentifié
+   * par la signature Meta et le dossier n'est retenu que si son téléphone correspond à l'expéditeur.
+   * Toute erreur donne « aucun dossier » : la réponse reste générique.
    */
-  public async handleStatusUpdate(event: InboundStatusEvent): Promise<void> {
-    const statusMap: Record<string, WhatsAppMessageLog['status']> = {
-      delivered: 'DELIVERED',
-      read: 'DELIVERED',
+  private async findCustomerBooking(fromNormalized: string, explicitRef: string | null): Promise<InboundBooking | null> {
+    let supabase: Awaited<ReturnType<typeof createAdminClient>>;
+    try {
+      supabase = await createAdminClient();
+    } catch {
+      return null;
+    }
+    if (!supabase) return null;
+
+    const ownedBySender = (row: InboundBooking | null): row is InboundBooking =>
+      Boolean(row && this.normalizePhoneNumber(row.customer_phone || '') === fromNormalized);
+
+    try {
+      if (explicitRef) {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select(INBOUND_BOOKING_COLUMNS)
+          .or(`reference.eq.${explicitRef},booking_ref.eq.${explicitRef}`)
+          .limit(1)
+          .maybeSingle();
+        if (error) {
+          console.warn('[WhatsAppService] Inbound booking lookup failed:', error.message);
+          return null;
+        }
+        // Une référence citée ne suffit pas : seul le titulaire du dossier obtient ses informations.
+        const row = data as unknown as InboundBooking | null;
+        if (ownedBySender(row)) return row;
+      }
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(INBOUND_BOOKING_COLUMNS)
+        .in('customer_phone', phoneVariants(fromNormalized))
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn('[WhatsAppService] Inbound booking lookup failed:', error.message);
+        return null;
+      }
+      const row = data as unknown as InboundBooking | null;
+      return ownedBySender(row) ? row : null;
+    } catch (lookupError) {
+      console.warn('[WhatsAppService] Inbound booking lookup threw:', lookupError instanceof Error ? lookupError.message : lookupError);
+      return null;
+    }
+  }
+
+  /**
+   * Accusé de réception Meta (sent, delivered, read, failed) : enregistré dans whatsapp_messages sans jamais
+   * faire reculer un statut (un « delivered » arrivé après « read » est ignoré). L'entrée audit_logs de l'envoi
+   * n'est plus modifiée. Renvoie le statut retenu, ou null s'il n'a pas pu être enregistré.
+   */
+  public async handleStatusUpdate(event: InboundStatusEvent): Promise<string | null> {
+    const statusMap: Record<string, string> = {
       sent: 'SENT',
+      delivered: 'DELIVERED',
+      read: 'READ',
       failed: 'FAILED',
     };
+    const mapped = statusMap[String(event.status ?? '').toLowerCase()];
+    if (!mapped || !event.messageId) return null;
 
-    const mapped = statusMap[event.status.toLowerCase()] || 'SENT';
-
-    const target = this.inMemoryLogs.find((l) => l.messageId === event.messageId);
-    if (target) {
-      target.status = mapped;
-      if (event.errors && event.errors.length > 0) {
-        target.error = JSON.stringify(event.errors);
-      }
-    }
+    const seconds = Number(event.timestamp);
+    const errorText =
+      Array.isArray(event.errors) && event.errors.length > 0
+        ? event.errors.map((e) => `${e?.code ?? ''} ${e?.title ?? e?.message ?? ''}`.trim()).join(' ; ').slice(0, 500)
+        : null;
 
     try {
       const supabase = await createAdminClient();
-      if (supabase) {
-        await supabase
-          .from('audit_logs')
-          .update({
-            metadata: {
-              status: mapped,
-              deliveryTimestamp: event.timestamp,
-              recipient: event.recipientId,
-              errors: event.errors || null,
-            },
-          })
-          .eq('entity_id', event.messageId);
+      if (!supabase) return null;
+      const { data, error } = await supabase.rpc('record_whatsapp_status', {
+        p_wamid: event.messageId,
+        p_status: mapped,
+        p_phone: this.normalizePhoneNumber(event.recipientId || ''),
+        p_error: errorText,
+        p_status_at: Number.isFinite(seconds) && seconds > 0 ? new Date(seconds * 1000).toISOString() : null,
+      });
+      if (error) {
+        console.warn('[WhatsAppService] Statut de livraison non enregistré :', error.message);
+        return null;
       }
+      return typeof data === 'string' ? data : null;
     } catch {
-      // Pas bloquant
+      return null;
     }
   }
 }

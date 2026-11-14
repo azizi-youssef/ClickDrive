@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import Link from 'next/link';
 import { CalendarDays, Download, RefreshCw, FileText, Wallet, Receipt, Motorbike } from 'lucide-react';
 import { isMotorcycle } from '@/lib/vehicles/kind';
+import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 import type { Booking } from '@/types';
 import {
   AdminCard,
@@ -35,10 +36,10 @@ const TYPE_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'Tous les statuts' },
-  { value: 'PENDING', label: 'En attente' },
-  { value: 'REQUESTED', label: 'Demandée' },
-  { value: 'CONFIRMED', label: 'Confirmée' },
-  { value: 'APPROVED', label: 'Approuvée' },
+  // PENDING et CONFIRMED (historiques) sont rattachés à REQUESTED et APPROVED
+  { value: 'REQUESTED', label: 'En attente' },
+  { value: 'APPROVED', label: 'Confirmée' },
+  { value: 'ALTERNATIVE_PROPOSED', label: 'Alternative proposée' },
   { value: 'ACTIVE', label: 'En cours' },
   { value: 'COMPLETED', label: 'Terminée' },
   { value: 'REJECTED', label: 'Refusée' },
@@ -98,7 +99,7 @@ export function AdminBookingsClient() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return bookings.filter((b) => {
-      if (statusFilter !== 'ALL' && b.status !== statusFilter) return false;
+      if (statusFilter !== 'ALL' && normalizeBookingStatus(b.status) !== statusFilter) return false;
       if (typeFilter !== 'ALL' && (isMotorcycle(b.vehicle) ? 'MOTORCYCLE' : 'CAR') !== typeFilter) return false;
       if (!q) return true;
       return (

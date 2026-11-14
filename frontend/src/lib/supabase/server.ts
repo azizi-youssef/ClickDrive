@@ -56,6 +56,34 @@ export async function createClient() {
 }
 
 /**
+ * Client public : clé anon, sans cookies ni session. Pour les lectures publiques soumises à la RLS
+ * du rôle `anon` (catalogue publié, avis, formules). Ne donne jamais de droits élevés et reste
+ * utilisable dans `unstable_cache`, où `cookies()` est interdit.
+ * Lance une erreur en production si Supabase n'est pas configuré.
+ */
+export function createPublicClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key || !url.startsWith('http')) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        '[Supabase] Variables d\'environnement manquantes en production : NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY sont requis.'
+      );
+    }
+    return null;
+  }
+
+  return createSupabaseClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+/**
  * Client avec droits élevés pour les opérations d'administration serveur sécurisées.
  * Nécessite SUPABASE_SERVICE_ROLE_KEY — ne jamais exposer côté client.
  * Lance une erreur en production si la clé est absente.

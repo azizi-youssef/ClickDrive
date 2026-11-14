@@ -37,7 +37,7 @@ interface NotificationFeedItem {
   messageId: string;
   recipient: string;
   bookingRef: string;
-  status: 'SENT' | 'DELIVERED' | 'FAILED' | 'SIMULATED' | 'CONFIRMED' | 'CANCELLED' | 'RECEIVED';
+  status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED' | 'SIMULATED' | 'CONFIRMED' | 'CANCELLED' | 'RECEIVED';
   type: string;
   snippet: string;
   timestamp: string;
@@ -96,7 +96,7 @@ export function AdminNotificationsClient() {
   // Simulateur Webhook Inbound
   const [simPhone, setSimPhone] = useState('0661234567');
   const [simBookingRef, setSimBookingRef] = useState('');
-  const [simText, setSimText] = useState('OUI');
+  const [simText, setSimText] = useState('STATUT');
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<{
     intent: string;
@@ -358,6 +358,8 @@ export function AdminNotificationsClient() {
               >
                 <option value="ALL">Tous les statuts</option>
                 <option value="SENT">Envoyé</option>
+                <option value="DELIVERED">Délivré</option>
+                <option value="READ">Lu</option>
                 <option value="CONFIRMED">Confirmé (OUI)</option>
                 <option value="CANCELLED">Annulé (NON)</option>
                 <option value="RECEIVED">Reçu (Client)</option>
@@ -451,7 +453,7 @@ export function AdminNotificationsClient() {
                             variant={
                               item.status === 'CONFIRMED'
                                 ? 'success'
-                                : item.status === 'SENT' || item.status === 'DELIVERED'
+                                : item.status === 'SENT' || item.status === 'DELIVERED' || item.status === 'READ'
                                 ? 'success'
                                 : item.status === 'RECEIVED'
                                 ? 'info'
@@ -470,6 +472,8 @@ export function AdminNotificationsClient() {
                               ? 'Envoyé'
                               : item.status === 'DELIVERED'
                               ? 'Délivré'
+                              : item.status === 'READ'
+                              ? 'Lu'
                               : item.status === 'SIMULATED'
                               ? 'Simulé'
                               : 'Échoué'}
@@ -616,7 +620,7 @@ export function AdminNotificationsClient() {
             <div className="lg:col-span-2 space-y-6">
               <AdminCard title="Paramètres du Webhook WhatsApp Business (Meta Graph API)">
                 <p className="text-xs text-slate-600 mt-1 mb-4">
-                  Ce point de terminaison reçoit en temps réel les réponses envoyées par les clients sur WhatsApp (ex: confirmation par <code>OUI</code>, annulation par <code>ANNULER</code>, demande d&apos;assistance) et synchronise directement PostgreSQL.
+                  Ce point de terminaison reçoit en temps réel les messages des clients sur WhatsApp et répond aux commandes <code>AIDE</code>, <code>STATUT</code> et <code>ANNULER</code>. Aucun message ne modifie une réservation : les décisions passent par l&apos;espace agence et l&apos;espace client.
                 </p>
 
                 <div className="space-y-4">
@@ -759,7 +763,7 @@ export function AdminNotificationsClient() {
                       type="text"
                       value={simText}
                       onChange={(e) => setSimText(e.target.value)}
-                      placeholder="OUI"
+                      placeholder="STATUT"
                       className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs focus:border-blue-500 focus:outline-none"
                     />
                   </div>
@@ -769,12 +773,12 @@ export function AdminNotificationsClient() {
                     <button
                       type="button"
                       onClick={() => {
-                        setSimText('OUI');
-                        void handleSimulateInbound('OUI');
+                        setSimText('STATUT');
+                        void handleSimulateInbound('STATUT');
                       }}
                       className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
                     >
-                      Tester « OUI » (Confirmer)
+                      Tester « STATUT »
                     </button>
                     <button
                       type="button"

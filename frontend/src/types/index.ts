@@ -167,6 +167,24 @@ export interface Vehicle {
   description?: string | null;
 }
 
+/**
+ * Véhicule alternatif proposé au client : liste blanche de champs publics.
+ * Ni plaque, ni numéro d'unité interne, ni documents, ni données de l'agence.
+ */
+export interface AlternativeVehicleSummary {
+  id: string;
+  slug: string;
+  brand: string;
+  model: string;
+  year: number;
+  category: string;
+  transmission: string;
+  fuel: string;
+  seats: number | null;
+  daily_price: number;
+  image: string | null;
+}
+
 export interface Booking {
   id: string;
   reference?: string; // e.g. CD-2026-001842
@@ -223,7 +241,8 @@ export interface Booking {
   commission_status?: CommissionStatus;
   rejection_reason?: string;
   alternative_vehicle_id?: string;
-  alternative_vehicle?: Vehicle;
+  /** Véhicule alternatif proposé par l'agence : projection publique uniquement */
+  alternative_vehicle?: AlternativeVehicleSummary;
 
   // Documents
   pdf_url?: string;
@@ -305,6 +324,10 @@ export interface AgencySubscription {
   auto_renew: boolean;
   payment_method?: string;
   created_at: string;
+  /** Formule déduite de la flotte : aucun abonnement valide (jamais compté comme revenu) */
+  is_deduced?: boolean;
+  /** Agence active et non archivée */
+  agency_active?: boolean;
 }
 
 export type PlanChangeRequestStatus = 'PENDING_PAYMENT' | 'APPROVED' | 'REJECTED' | 'CANCELLED';

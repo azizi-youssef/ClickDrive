@@ -13,6 +13,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@clickdrive/shared/booking-schema': fileURLToPath(new URL('../packages/shared/src/booking-schema.ts', import.meta.url)),
+      '@clickdrive/shared/booking-status': fileURLToPath(new URL('../packages/shared/src/booking-status.ts', import.meta.url)),
+      '@clickdrive/shared/booking-state-machine': fileURLToPath(new URL('../packages/shared/src/booking-state-machine.ts', import.meta.url)),
+      '@clickdrive/shared/roles': fileURLToPath(new URL('../packages/shared/src/roles.ts', import.meta.url)),
+      '@clickdrive/shared': fileURLToPath(new URL('../packages/shared/src/index.ts', import.meta.url)),
     },
   },
   test: {

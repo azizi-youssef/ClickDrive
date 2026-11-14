@@ -5,6 +5,11 @@ import { normalizeVehicleKindFields, vehicleCreateSchema } from '@/lib/validatio
 import { CAR_CATEGORIES, MOTORCYCLE_CATEGORIES, parseVehicleTypeParam } from '@/lib/vehicles/kind';
 import { isMotorcycleSchemaMissing, MOTORCYCLE_SCHEMA_MISSING_MESSAGE } from '@/lib/vehicles/schema-support';
 import { subscriptionService } from '@/lib/services/subscription.service';
+import { protectedFieldChanges, violationResponseInit } from '@/lib/vehicles/protected-fields';
+
+/** Message levé par le trigger SQL enforce_vehicle_capacity() (migration 20261114000100) */
+const CAPACITY_TRIGGER_MARKER = 'VEHICLE_CAPACITY_REACHED';
+const CAPACITY_UNVERIFIABLE_MARKER = 'VEHICLE_CAPACITY_UNVERIFIABLE';
 const slugify = (str: string) =>
   str
     .toLowerCase()
@@ -53,7 +58,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       '*, images:vehicle_images(url, is_primary, display_order), features:vehicle_features(name)',
       { count: 'exact' }
     )
-    .eq('agency_id', agencyId);
+    .eq('agency_id', agencyId)
+    // Véhicules archivés (retirés de la flotte) exclus de la liste et des compteurs
+    .is('archived_at', null);
 
   // Filtre voitures / motos par catégorie (chaque catégorie appartient à un seul type)
   if (vehicleType) {
@@ -97,7 +104,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const start = (page - 1) * pageSize;
   const countByType = (categories: readonly string[]) =>
-    supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).in('category', [...categories]);
+    supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).is('archived_at', null).in('category', [...categories]);
   const [{ data, error, count }, carsCount, motosCount] = await Promise.all([
     query.range(start, start + pageSize - 1),
     countByType(CAR_CATEGORIES),
@@ -153,6 +160,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return failure('Corps de requête JSON invalide.', 400);
   }
 
+  // L'agence vient de l'URL (permission vérifiée) : un agency_id différent, une mise en avant ou un
+  // identifiant fournis par le navigateur sont refusés.
+  const violations = protectedFieldChanges(body, { agency_id: agencyId, featured: false });
+  if (violations.length > 0) {
+    const { status, message } = violationResponseInit(violations);
+    return failure(message, status);
+  }
+
   const parsed = vehicleCreateSchema.safeParse(body);
   if (!parsed.success) {
     return failure(
@@ -161,8 +176,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  // Vérification stricte de la capacité maximale du forfait d'abonnement
+  // Capacité de la formule, sur les données de la base. Fail-closed : vérification impossible = 503.
+  // Le trigger SQL enforce_vehicle_capacity() rejoue le contrôle de façon atomique (ajouts simultanés).
   const capacityCheck = await subscriptionService.canAgencyAddVehicle(agencyId);
+  if (capacityCheck.unavailable) {
+    return NextResponse.json(
+      { success: false, error: capacityCheck.reason, code: 'CAPACITY_UNVERIFIABLE' },
+      { status: 503 }
+    );
+  }
   if (!capacityCheck.allowed) {
     return NextResponse.json(
       {
@@ -173,7 +195,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         max_vehicles: capacityCheck.maxVehicles,
         plan_name: capacityCheck.planName,
       },
-      { status: 403 }
+      { status: 409 }
     );
   }
 
@@ -230,11 +252,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
     .single();
 
   if (insertError) {
-    console.error('[AgencyVehicles] Insert error:', insertError.message);
+    console.error('[AgencyVehicles] Insert error:', insertError.code, insertError.message);
     if (isMotorcycle && isMotorcycleSchemaMissing(insertError)) {
       return failure(MOTORCYCLE_SCHEMA_MISSING_MESSAGE, 503);
     }
-    return failure(`Erreur lors de la création du véhicule: ${insertError.message}`, 500);
+    if (insertError.message?.includes(CAPACITY_TRIGGER_MARKER)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Capacité maximale de votre formule atteinte. Veuillez passer à la formule supérieure pour ajouter ce véhicule.',
+          code: 'CAPACITY_LIMIT_REACHED',
+        },
+        { status: 409 }
+      );
+    }
+    if (insertError.message?.includes(CAPACITY_UNVERIFIABLE_MARKER)) {
+      return NextResponse.json(
+        { success: false, error: capacityCheck.reason ?? 'Capacité invérifiable.', code: 'CAPACITY_UNVERIFIABLE' },
+        { status: 503 }
+      );
+    }
+    return failure('Le véhicule n’a pas pu être créé. Réessayez dans un instant.', 500);
   }
 
   // Insérer les images

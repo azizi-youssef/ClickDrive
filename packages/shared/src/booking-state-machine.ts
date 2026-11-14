@@ -38,6 +38,34 @@ export function targetStatusForAgencyAction(action: AgencyBookingAction): Bookin
   return AGENCY_ACTION_TO[action];
 }
 
+/** Remise (départ) et restitution (retour) du véhicule, avec état des lieux */
+export type HandoverAction = 'pickup' | 'return';
+
+const HANDOVER_FROM: Record<HandoverAction, BookingStatus[]> = {
+  // Remise : seulement une réservation validée par l'agence et pas encore commencée
+  pickup: ['APPROVED', 'READY_FOR_PICKUP'],
+  // Restitution : seulement une location en cours
+  return: ['ACTIVE'],
+};
+
+const HANDOVER_TO: Record<HandoverAction, BookingStatus> = {
+  pickup: 'ACTIVE',
+  return: 'COMPLETED',
+};
+
+/**
+ * Une remise ou une restitution n'est possible que depuis les statuts prévus (statuts historiques normalisés :
+ * CONFIRMED vaut APPROVED). Jamais depuis une demande non validée, refusée, annulée, expirée ou terminée.
+ */
+export function canPerformHandover(currentStatus: string, action: HandoverAction): boolean {
+  const normalized = normalizeBookingStatus(currentStatus);
+  return HANDOVER_FROM[action].includes(normalized as BookingStatus);
+}
+
+export function targetStatusForHandover(action: HandoverAction): BookingStatus {
+  return HANDOVER_TO[action];
+}
+
 /**
  * Droits globaux plateforme : uniquement SUPER_ADMIN (ACCESS_CONTROL.md).
  * Le rôle historique ADMIN n'obtient aucun droit global : il doit être promu SUPER_ADMIN

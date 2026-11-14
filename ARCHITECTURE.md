@@ -97,6 +97,19 @@ REQUESTED → UNDER_REVIEW → SENT_TO_AGENCY → AGENCY_REVIEW
 
 Chaque transition métier doit journaliser un enregistrement dans `booking_events`.
 
+Statuts écrits (phase 3, 16 novembre 2026) : création `REQUESTED`, approbation `APPROVED`, refus `REJECTED`,
+alternative `ALTERNATIVE_PROPOSED` (la demande ne peut alors plus qu’être refusée), remise `ACTIVE`, restitution
+`COMPLETED`. Les décisions agence passent par la fonction SQL transactionnelle `agency_decide_booking()` (verrou
+de la réservation, garde sur le statut lu, statut et `booking_events` écrits ensemble) ; la remise et la restitution
+sont contrôlées par `canPerformHandover` (`@clickdrive/shared/booking-state-machine`). Le véhicule passe en `RENTED`
+à la remise des clés seulement, et revient `AVAILABLE` (ou `MAINTENANCE`) à la restitution.
+Les décisions de changement de formule passent par `admin_decide_plan_change()` (une seule décision par demande).
+
+**Capacité de flotte** (application et trigger `enforce_vehicle_capacity()`, même règle) : véhicules non archivés ;
+abonnement `ACTIVE` / `TRIAL` / `PAST_DUE` → limite de la formule ou `custom_vehicle_limit` ; sans abonnement ou
+abonnement `CANCELLED` / `EXPIRED` → palier déduit de la flotte (≤ 15 starter, ≤ 25 pro, ≤ 35 business, sinon unlimited).
+Supprimer un véhicule ayant un historique l’archive (il sort de la flotte et libère sa place).
+
 ## Flux booking (client → notification)
 
 ```mermaid

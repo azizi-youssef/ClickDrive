@@ -1,5 +1,9 @@
 import { Review } from '@/types';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createClient, createPublicClient } from '@/lib/supabase/server';
+import { isUuid } from '@/lib/availability/status';
+
+/** Colonnes publiques d'un avis : ni customer_id ni booking_id */
+const PUBLIC_REVIEW_COLUMNS = 'id, vehicle_id, agency_id, author_name, rating, comment, created_at';
 
 function requireSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,14 +16,19 @@ function requireSupabase() {
 }
 
 export class ReviewsService {
+  /**
+   * Avis publics d'un véhicule : client anon (RLS + SELECT accordé à anon), colonnes explicites.
+   * Aucun droit élevé : ce que tout visiteur peut lire.
+   */
   async getReviewsForVehicle(vehicleId: string): Promise<Review[]> {
+    if (!isUuid(vehicleId)) return [];
     requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
+    const supabase = createPublicClient();
     if (!supabase) throw new Error('Client Supabase indisponible.');
 
     const { data, error } = await supabase
       .from('reviews')
-      .select('*')
+      .select(PUBLIC_REVIEW_COLUMNS)
       .eq('vehicle_id', vehicleId)
       .order('created_at', { ascending: false });
 

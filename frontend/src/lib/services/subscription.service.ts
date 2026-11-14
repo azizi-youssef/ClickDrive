@@ -1,4 +1,6 @@
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createPublicClient } from '@/lib/supabase/server';
+import { requireServiceRoleClient } from '@/lib/supabase/privileged';
+import { selectAll } from '@/lib/supabase/select-all';
 import {
   SubscriptionPlan,
   AgencySubscription,
@@ -9,6 +11,97 @@ import {
 } from '@/types';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Palier de capacité déduit du nombre de véhicules (même règle que la migration 20261101000100 et le trigger SQL) */
+export function capacitySlugForCount(count: number): 'starter' | 'pro' | 'business' | 'unlimited' {
+  if (count <= 15) return 'starter';
+  if (count <= 25) return 'pro';
+  if (count <= 35) return 'business';
+  return 'unlimited';
+}
+
+type CapacityPlan = { id: string; slug: string; name: string; max_vehicles: number | null };
+
+export type VehicleCapacityCheck = {
+  allowed: boolean;
+  currentCount: number;
+  maxVehicles: number | null;
+  planName: string;
+  reason?: string;
+  /** Vérification impossible (base, configuration) : l'ajout est refusé (fail-closed) */
+  unavailable?: boolean;
+};
+
+/** Statuts d'abonnement dont la formule fixe la capacité (PAST_DUE : délai de grâce) */
+export const CAPACITY_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'TRIAL', 'PAST_DUE']);
+
+/** Statuts d'abonnement comptés dans le revenu mensuel récurrent */
+const BILLED_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'TRIAL']);
+
+export type CapacitySubscription = {
+  status: string | null;
+  custom_vehicle_limit: number | null;
+  plan: CapacityPlan | null;
+};
+
+export type EffectiveCapacity = { plan: CapacityPlan; maxVehicles: number | null; deduced: boolean };
+
+function asLimit(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const limit = Number(value);
+  return Number.isFinite(limit) ? limit : null;
+}
+
+/**
+ * Capacité effective d'une agence — même règle que le trigger SQL enforce_vehicle_capacity() :
+ * - abonnement ACTIVE / TRIAL / PAST_DUE : limite de sa formule, ou custom_vehicle_limit s'il est défini ;
+ * - sans abonnement, ou abonnement CANCELLED / EXPIRED : palier déduit de la flotte parmi les formules en base ;
+ * - aucune formule trouvée : null (l'appelant refuse, fail-closed). max null = illimité.
+ */
+export function resolveEffectiveCapacity(
+  subscription: CapacitySubscription | null,
+  vehicleCount: number,
+  activePlans: CapacityPlan[]
+): EffectiveCapacity | null {
+  if (subscription?.plan && CAPACITY_SUBSCRIPTION_STATUSES.has(String(subscription.status))) {
+    const custom = asLimit(subscription.custom_vehicle_limit);
+    return { plan: subscription.plan, maxVehicles: custom ?? asLimit(subscription.plan.max_vehicles), deduced: false };
+  }
+  const slug = capacitySlugForCount(vehicleCount);
+  const plan = activePlans.find((candidate) => candidate.slug === slug);
+  return plan ? { plan, maxVehicles: asLimit(plan.max_vehicles), deduced: true } : null;
+}
+
+type SubscriptionRow = {
+  id: string;
+  agency_id: string;
+  status: SubscriptionStatus | null;
+  custom_vehicle_limit: number | null;
+  billing_cycle_start: string | null;
+  billing_cycle_end: string | null;
+  price_paid: number | string | null;
+  auto_renew: boolean | null;
+  payment_method: string | null;
+  created_at: string | null;
+  plan: Record<string, unknown> | null;
+};
+
+function toSubscriptionPlan(raw: Record<string, unknown>): SubscriptionPlan {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    slug: String(raw.slug),
+    min_vehicles: Number(raw.min_vehicles || 1),
+    max_vehicles: asLimit(raw.max_vehicles),
+    price_monthly: Number(raw.price_monthly || 0),
+    currency: String(raw.currency || 'MAD'),
+    features: Array.isArray(raw.features) ? (raw.features as string[]) : [],
+    badge: (raw.badge as string | undefined) || undefined,
+    is_popular: Boolean(raw.is_popular),
+    is_active: Boolean(raw.is_active),
+    sort_order: Number(raw.sort_order || 0),
+  };
+}
 
 const PLAN_CHANGE_SELECT =
   'id, agency_id, status, amount_due, payment_reference, decision_note, created_at, decided_at, ' +
@@ -122,7 +215,8 @@ class SubscriptionService {
    */
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     try {
-      const supabase = (await createAdminClient()) ?? (await createClient());
+      // Grille publique : client anon soumis à la RLS (formules actives), aucun droit élevé
+      const supabase = createPublicClient();
       if (supabase) {
         const { data, error } = await supabase
           .from('subscription_plans')
@@ -147,10 +241,12 @@ class SubscriptionService {
           }));
         }
       }
-    } catch {
-      // Fallback gracieux sur la configuration par défaut
+    } catch (error) {
+      console.error('[SubscriptionService] Formules illisibles en base :', error instanceof Error ? error.message : error);
     }
 
+    // Affichage seulement : identifiants non-UUID, refusés par toute écriture (updateAgencyPlan, requestPlanChange)
+    console.warn('[SubscriptionService] Grille par défaut affichée : formules indisponibles en base.');
     return DEFAULT_SUBSCRIPTION_PLANS;
   }
 
@@ -165,146 +261,170 @@ class SubscriptionService {
   }
 
   /**
-   * Récupère l'abonnement et la capacité actuelle d'une concession.
+   * Abonnement affiché d'une agence, à partir de données déjà lues (aucune requête) :
+   * même règle de capacité que le contrôle d'ajout et le trigger SQL.
    */
-  async getAgencySubscription(agencyId: string): Promise<AgencySubscription> {
-    const plans = await this.getSubscriptionPlans();
-    const supabase = (await createAdminClient()) ?? (await createClient());
+  private buildAgencySubscription(input: {
+    agencyId: string;
+    agencyName: string;
+    agencyActive: boolean;
+    row: SubscriptionRow | null;
+    vehicleCount: number;
+    plans: SubscriptionPlan[];
+  }): AgencySubscription {
+    const { agencyId, agencyName, agencyActive, row, vehicleCount, plans } = input;
+    const subscribedPlan = row?.plan ? toSubscriptionPlan(row.plan) : null;
+    const validSubscription = Boolean(subscribedPlan && CAPACITY_SUBSCRIPTION_STATUSES.has(String(row?.status)));
 
-    let vehicleCount = 0;
-    let agencyName = 'Mon agence';
+    const plan = validSubscription && subscribedPlan ? subscribedPlan : subscribedPlan ?? this.findPlanForCount(vehicleCount, plans);
+    const capacity = validSubscription
+      ? asLimit(row?.custom_vehicle_limit) ?? plan.max_vehicles
+      : this.findPlanForCount(vehicleCount, plans).max_vehicles;
 
-    if (supabase) {
-      try {
-        const [agencyRes, countRes] = await Promise.all([
-          supabase.from('agencies').select('name').eq('id', agencyId).maybeSingle(),
-          supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId),
-        ]);
-
-        if (agencyRes?.data?.name) {
-          agencyName = agencyRes.data.name;
-        }
-        vehicleCount = countRes?.count ?? 0;
-      } catch (err) {
-        console.warn('[SubscriptionService] Could not fetch agency or vehicle count:', err);
-      }
-    }
-
-    // Chercher l'abonnement en base de données
-    let row: any = null;
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('agency_subscriptions')
-          .select('*, plan:subscription_plans(*)')
-          .eq('agency_id', agencyId)
-          .maybeSingle();
-
-        if (!error && data) {
-          row = data;
-        }
-      } catch {
-        // Table pas encore créée ou RPC manquant
-      }
-    }
-
-    let plan: SubscriptionPlan;
-    let status: SubscriptionStatus = 'ACTIVE';
-    let billingStart = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
     const end = new Date();
     end.setMonth(end.getMonth() + 1);
-    let billingEnd = end.toISOString().slice(0, 10);
-    let pricePaid = 0;
-    let autoRenew = true;
-    let paymentMethod = 'VIREMENT';
-
-    if (row && row.plan) {
-      plan = {
-        id: row.plan.id,
-        name: row.plan.name,
-        slug: row.plan.slug,
-        min_vehicles: Number(row.plan.min_vehicles || 1),
-        max_vehicles: row.plan.max_vehicles !== null ? Number(row.plan.max_vehicles) : null,
-        price_monthly: Number(row.plan.price_monthly || 0),
-        currency: row.plan.currency || 'MAD',
-        features: Array.isArray(row.plan.features) ? row.plan.features : [],
-        badge: row.plan.badge || undefined,
-        is_popular: Boolean(row.plan.is_popular),
-        is_active: Boolean(row.plan.is_active),
-        sort_order: Number(row.plan.sort_order || 0),
-      };
-      status = row.status || 'ACTIVE';
-      billingStart = row.billing_cycle_start || billingStart;
-      billingEnd = row.billing_cycle_end || billingEnd;
-      pricePaid = Number(row.price_paid || plan.price_monthly);
-      autoRenew = Boolean(row.auto_renew ?? true);
-      paymentMethod = row.payment_method || 'VIREMENT';
-    } else {
-      // Calcul déduit basé sur la flotte actuelle
-      plan = this.findPlanForCount(vehicleCount, plans);
-      pricePaid = plan.price_monthly;
-    }
-
-    const capacity = plan.max_vehicles;
-    const isAtCapacity = capacity !== null && vehicleCount >= capacity;
-    const canAddVehicle = capacity === null || vehicleCount < capacity;
-    const capacityUsagePct = capacity === null ? 0 : Math.min(100, Math.round((vehicleCount / capacity) * 100));
-
-    // Jours restants dans la période
-    const now = new Date();
-    const expiry = new Date(billingEnd);
-    const diffTime = expiry.getTime() - now.getTime();
-    const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const billingEnd = row?.billing_cycle_end || end.toISOString().slice(0, 10);
+    const daysRemaining = Math.max(0, Math.ceil((new Date(billingEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
     return {
       id: row?.id || `sub-${agencyId}`,
       agency_id: agencyId,
       agency_name: agencyName,
       plan,
-      status,
+      status: (row?.status as SubscriptionStatus) || 'ACTIVE',
       current_vehicles_count: vehicleCount,
       vehicle_capacity: capacity,
-      capacity_usage_pct: capacityUsagePct,
-      is_at_capacity: isAtCapacity,
-      can_add_vehicle: canAddVehicle,
-      price_monthly: pricePaid,
-      billing_cycle_start: billingStart,
+      capacity_usage_pct: capacity === null ? 0 : Math.min(100, Math.round((vehicleCount / Math.max(1, capacity)) * 100)),
+      is_at_capacity: capacity !== null && vehicleCount >= capacity,
+      can_add_vehicle: capacity === null || vehicleCount < capacity,
+      price_monthly: row ? Number(row.price_paid || plan.price_monthly) : plan.price_monthly,
+      billing_cycle_start: row?.billing_cycle_start || today,
       billing_cycle_end: billingEnd,
       days_remaining: daysRemaining,
-      auto_renew: autoRenew,
-      payment_method: paymentMethod,
+      auto_renew: Boolean(row?.auto_renew ?? true),
+      payment_method: row?.payment_method || 'VIREMENT',
       created_at: row?.created_at || new Date().toISOString(),
+      // Formule déduite de la flotte (aucun abonnement valide) : jamais comptée comme revenu
+      is_deduced: !validSubscription,
+      agency_active: agencyActive,
     };
   }
 
   /**
-   * Vérifie si une agence est autorisée à ajouter un véhicule selon sa capacité souscrite.
+   * Récupère l'abonnement et la capacité actuelle d'une concession.
+   * Les véhicules archivés ne comptent pas. Toute erreur de lecture est levée (jamais un compte à 0 silencieux).
    */
-  async canAgencyAddVehicle(agencyId: string): Promise<{
-    allowed: boolean;
-    currentCount: number;
-    maxVehicles: number | null;
-    planName: string;
-    reason?: string;
-  }> {
-    const sub = await this.getAgencySubscription(agencyId);
+  async getAgencySubscription(agencyId: string): Promise<AgencySubscription> {
+    const plans = await this.getSubscriptionPlans();
+    // Service-role explicite : les routes appelantes ont vérifié la permission sur l'agence (ou la plateforme)
+    const supabase = await requireServiceRoleClient('subscription.read');
 
-    if (sub.is_at_capacity) {
-      return {
-        allowed: false,
-        currentCount: sub.current_vehicles_count,
-        maxVehicles: sub.vehicle_capacity,
-        planName: sub.plan.name,
-        reason: `Capacité maximale atteinte (${sub.current_vehicles_count}/${sub.vehicle_capacity} véhicules). Veuillez passer à la formule supérieure pour ajouter ce véhicule.`,
-      };
+    const [agencyRes, countRes, subscriptionRes] = await Promise.all([
+      supabase.from('agencies').select('name, status, archived_at').eq('id', agencyId).maybeSingle(),
+      supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).is('archived_at', null),
+      supabase.from('agency_subscriptions').select('*, plan:subscription_plans(*)').eq('agency_id', agencyId).maybeSingle(),
+    ]);
+    const failure = agencyRes.error ?? countRes.error ?? subscriptionRes.error;
+    if (failure) throw new Error(`Abonnement illisible : ${failure.message}`);
+
+    const agency = agencyRes.data as { name: string; status: string; archived_at: string | null } | null;
+    return this.buildAgencySubscription({
+      agencyId,
+      agencyName: agency?.name ?? 'Mon agence',
+      agencyActive: agency?.status === 'ACTIVE' && !agency.archived_at,
+      row: (subscriptionRes.data as unknown as SubscriptionRow | null) ?? null,
+      vehicleCount: countRes.count ?? 0,
+      plans,
+    });
+  }
+
+  /**
+   * Contrôle de capacité avant l'ajout d'un véhicule. Fail-closed : toute erreur de lecture, configuration
+   * absente ou formule introuvable refuse l'ajout (`unavailable`). Lecture service-role justifiée : le quota
+   * se calcule sur toute la flotte de l'agence, quel que soit le droit de lecture de l'appelant (la route a
+   * vérifié vehicles.manage). Le trigger SQL enforce_vehicle_capacity() applique la même règle de façon atomique.
+   */
+  async canAgencyAddVehicle(agencyId: string): Promise<VehicleCapacityCheck> {
+    const UNVERIFIABLE =
+      'La capacité de votre formule ne peut pas être vérifiée pour le moment. Réessayez dans quelques instants.';
+    const unavailable = (): VehicleCapacityCheck => ({
+      allowed: false,
+      unavailable: true,
+      currentCount: 0,
+      maxVehicles: null,
+      planName: '',
+      reason: UNVERIFIABLE,
+    });
+
+    if (!UUID_PATTERN.test(agencyId)) return unavailable();
+
+    let supabase: Awaited<ReturnType<typeof requireServiceRoleClient>>;
+    try {
+      supabase = await requireServiceRoleClient('subscription.capacity');
+    } catch {
+      return unavailable();
     }
 
-    return {
-      allowed: true,
-      currentCount: sub.current_vehicles_count,
-      maxVehicles: sub.vehicle_capacity,
-      planName: sub.plan.name,
-    };
+    try {
+      const [subscriptionRes, countRes, plansRes] = await Promise.all([
+        supabase
+          .from('agency_subscriptions')
+          .select('status, custom_vehicle_limit, plan:subscription_plans(id, slug, name, max_vehicles)')
+          .eq('agency_id', agencyId)
+          .maybeSingle(),
+        supabase
+          .from('vehicles')
+          .select('id', { count: 'exact', head: true })
+          .eq('agency_id', agencyId)
+          .is('archived_at', null),
+        supabase.from('subscription_plans').select('id, slug, name, max_vehicles').eq('is_active', true),
+      ]);
+
+      if (subscriptionRes.error || countRes.error || plansRes.error || typeof countRes.count !== 'number') {
+        console.error(
+          '[SubscriptionService] Capacity check failed:',
+          subscriptionRes.error?.message ?? countRes.error?.message ?? plansRes.error?.message ?? 'nombre de véhicules absent'
+        );
+        return unavailable();
+      }
+
+      const subscription = subscriptionRes.data as
+        | { status: string | null; custom_vehicle_limit: number | null; plan?: CapacityPlan | CapacityPlan[] | null }
+        | null;
+      const rawPlan = subscription?.plan ?? null;
+      const currentCount = countRes.count;
+      const effective = resolveEffectiveCapacity(
+        subscription
+          ? {
+              status: subscription.status,
+              custom_vehicle_limit: subscription.custom_vehicle_limit,
+              plan: Array.isArray(rawPlan) ? rawPlan[0] ?? null : rawPlan,
+            }
+          : null,
+        currentCount,
+        (plansRes.data ?? []) as CapacityPlan[]
+      );
+      if (!effective) {
+        console.error('[SubscriptionService] Capacity check failed: no matching plan in database for agency', agencyId);
+        return unavailable();
+      }
+
+      const { plan, maxVehicles } = effective;
+      if (maxVehicles !== null && currentCount >= maxVehicles) {
+        return {
+          allowed: false,
+          currentCount,
+          maxVehicles,
+          planName: plan.name,
+          reason: `Capacité maximale atteinte (${currentCount}/${maxVehicles} véhicules). Veuillez passer à la formule supérieure pour ajouter ce véhicule.`,
+        };
+      }
+      return { allowed: true, currentCount, maxVehicles, planName: plan.name };
+    } catch (error) {
+      console.error('[SubscriptionService] Capacity check threw:', error instanceof Error ? error.message : error);
+      return unavailable();
+    }
   }
 
   /**
@@ -319,9 +439,14 @@ class SubscriptionService {
     if (!targetPlan) {
       return { success: false, error: 'Forfait introuvable' };
     }
+    // Jamais d'écriture à partir de la grille par défaut (identifiants fictifs)
+    if (!UUID_PATTERN.test(targetPlan.id)) {
+      return { success: false, error: 'Les formules sont momentanément indisponibles.' };
+    }
 
     try {
-      const supabase = (await createAdminClient()) ?? (await createClient());
+      // Service-role explicite : appelé par l'administration (permission plateforme vérifiée par la route)
+      const supabase = await requireServiceRoleClient('subscription.update_plan');
       if (supabase) {
         const start = new Date().toISOString().slice(0, 10);
         const end = new Date();
@@ -410,6 +535,7 @@ class SubscriptionService {
     const plans = await this.getSubscriptionPlans();
     const target = plans.find((plan) => plan.slug === planSlug && plan.is_active !== false);
     if (!target) return { success: false, error: 'Formule introuvable.' };
+    if (!UUID_PATTERN.test(target.id)) return { success: false, error: 'Les formules sont momentanément indisponibles.' };
 
     const current = await this.getAgencySubscription(agencyId);
     if (current.plan.slug === target.slug) return { success: false, error: 'Cette formule est déjà la vôtre.' };
@@ -483,71 +609,80 @@ class SubscriptionService {
     adminId: string,
     details: { paymentReference?: string | null; note?: string | null } = {}
   ): Promise<{ success: boolean; error?: string; request?: PlanChangeRequest }> {
-    const supabase = await createAdminClient();
-    if (!supabase) return { success: false, error: 'Base de données indisponible.' };
-    const { data: pending, error: readError } = await supabase
-      .from('subscription_change_requests')
-      .select(PLAN_CHANGE_SELECT)
-      .eq('id', requestId)
-      .maybeSingle();
-    if (readError) return { success: false, error: 'Lecture de la demande impossible.' };
-    if (!pending) return { success: false, error: 'Demande introuvable.' };
-    const request = this.toPlanChangeRequest(pending as unknown as PlanChangeRow);
-    if (request.status !== 'PENDING_PAYMENT') return { success: false, error: 'Cette demande a déjà été traitée.' };
+    if (!UUID_PATTERN.test(requestId)) return { success: false, error: 'Demande introuvable.' };
+    // Service-role explicite : la route a vérifié la permission d'administration plateforme
+    const supabase = await requireServiceRoleClient('subscription.decide_plan_change');
 
-    if (decision === 'APPROVED') {
-      const applied = await this.updateAgencyPlan(request.agency_id, request.requested_plan.slug);
-      if (!applied.success) return { success: false, error: applied.error };
-    }
-
-    const { data, error } = await supabase
-      .from('subscription_change_requests')
-      .update({
-        status: decision,
-        decided_by: adminId,
-        decided_at: new Date().toISOString(),
-        payment_reference: details.paymentReference?.trim() || null,
-        decision_note: details.note?.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', requestId)
-      .eq('status', 'PENDING_PAYMENT')
-      .select(PLAN_CHANGE_SELECT)
-      .maybeSingle();
-    if (error || !data) {
-      console.error('[SubscriptionService] Décision non enregistrée :', error?.message ?? 'demande déjà traitée');
+    // Une seule transaction (admin_decide_plan_change) : verrou de la demande, formule appliquée et demande
+    // close ensemble. Deux décisions simultanées ne peuvent plus diverger.
+    const { data: outcome, error } = await supabase.rpc('admin_decide_plan_change', {
+      p_request_id: requestId,
+      p_decision: decision,
+      p_admin_id: adminId,
+      p_payment_reference: details.paymentReference ?? null,
+      p_note: details.note ?? null,
+    });
+    if (error) {
+      console.error('[SubscriptionService] Décision non enregistrée :', error.code, error.message);
       return { success: false, error: 'La décision n’a pas pu être enregistrée.' };
     }
-    return { success: true, request: this.toPlanChangeRequest(data as unknown as PlanChangeRow) };
+
+    const result = (outcome ?? {}) as { ok?: boolean; code?: string; vehicles?: number; max_vehicles?: number };
+    if (!result.ok) {
+      const messages: Record<string, string> = {
+        not_found: 'Demande introuvable.',
+        already_decided: 'Cette demande a déjà été traitée.',
+        plan_unavailable: 'La formule demandée n’est plus disponible.',
+        fleet_exceeds_plan: `La flotte actuelle (${result.vehicles ?? '?'} véhicules) dépasse la capacité de la formule demandée (${result.max_vehicles ?? '?'}).`,
+      };
+      return { success: false, error: messages[result.code ?? ''] ?? 'La décision n’a pas pu être enregistrée.' };
+    }
+
+    const { data } = await supabase.from('subscription_change_requests').select(PLAN_CHANGE_SELECT).eq('id', requestId).maybeSingle();
+    return { success: true, request: data ? this.toPlanChangeRequest(data as unknown as PlanChangeRow) : undefined };
   }
 
   /**
-   * Vue globale pour l'administration ClickDrive.
+   * Vue globale pour l'administration ClickDrive : 4 requêtes au total (et non ~4 par agence).
+   * Agences archivées exclues ; véhicules archivés non comptés. Une erreur de lecture est levée.
    */
   async getAllAgencySubscriptions(): Promise<AgencySubscription[]> {
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) return [];
+    // Vue plateforme : service-role explicite (la route vérifie la permission d'administration)
+    const supabase = await requireServiceRoleClient('subscription.list_all');
 
-    try {
-      const { data: agencies, error } = await supabase
-        .from('agencies')
-        .select('id, name')
-        .order('name', { ascending: true });
+    const [plans, agenciesRes, subscriptionsRes, vehicles] = await Promise.all([
+      this.getSubscriptionPlans(),
+      supabase.from('agencies').select('id, name, status, archived_at').is('archived_at', null).order('name', { ascending: true }),
+      supabase.from('agency_subscriptions').select('*, plan:subscription_plans(*)'),
+      selectAll<{ id: string; agency_id: string }>((from, to) =>
+        supabase.from('vehicles').select('id, agency_id').is('archived_at', null).order('id').range(from, to)
+      ),
+    ]);
+    const failure = agenciesRes.error ?? subscriptionsRes.error;
+    if (failure) throw new Error(`Abonnements illisibles : ${failure.message}`);
 
-      if (error || !agencies) return [];
+    const vehicleCounts = new Map<string, number>();
+    for (const vehicle of vehicles) vehicleCounts.set(vehicle.agency_id, (vehicleCounts.get(vehicle.agency_id) ?? 0) + 1);
+    const rows = new Map(
+      ((subscriptionsRes.data ?? []) as unknown as SubscriptionRow[]).map((row) => [row.agency_id, row] as const)
+    );
 
-      const list = await Promise.all(
-        agencies.map((a: any) => this.getAgencySubscription(a.id))
-      );
-      return list;
-    } catch (err) {
-      console.warn('[SubscriptionService] Failed to load all subscriptions:', err);
-      return [];
-    }
+    return ((agenciesRes.data ?? []) as { id: string; name: string; status: string; archived_at: string | null }[]).map(
+      (agency) =>
+        this.buildAgencySubscription({
+          agencyId: agency.id,
+          agencyName: agency.name,
+          agencyActive: agency.status === 'ACTIVE' && !agency.archived_at,
+          row: rows.get(agency.id) ?? null,
+          vehicleCount: vehicleCounts.get(agency.id) ?? 0,
+          plans,
+        })
+    );
   }
 
   /**
-   * Statistiques financières d'abonnement (MRR, taux d'occupation de flotte, etc.).
+   * Statistiques financières d'abonnement. Revenu mensuel récurrent : seuls les abonnements réels
+   * ACTIVE ou TRIAL d'agences actives (une formule déduite de la flotte n'est pas un revenu).
    */
   async getSubscriptionStats(): Promise<SubscriptionStats> {
     const subs = await this.getAllAgencySubscriptions();
@@ -563,12 +698,12 @@ class SubscriptionService {
     }
 
     for (const s of subs) {
-      if (s.status === 'ACTIVE' || s.status === 'TRIAL') {
-        activeSubscribers++;
-        mrr += s.price_monthly;
-      }
       fleetCapacityTotal += s.current_vehicles_count;
+      const billed = !s.is_deduced && s.agency_active !== false && BILLED_SUBSCRIPTION_STATUSES.has(s.status);
+      if (!billed) continue;
 
+      activeSubscribers++;
+      mrr += s.price_monthly;
       const slug = s.plan.slug;
       if (!distributionMap[slug]) {
         distributionMap[slug] = { count: 0, revenue: 0, name: s.plan.name };

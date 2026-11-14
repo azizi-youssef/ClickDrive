@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { bookingStatusLabel } from '@/lib/bookings/status';
+import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
@@ -306,9 +307,9 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                               ? 'Refusé'
                               : t.status === 'CANCELLED'
                                 ? 'Annulé'
-                                : t.status === 'PENDING'
+                                : normalizeBookingStatus(t.status) === 'REQUESTED'
                                   ? 'En attente'
-                                  : t.status === 'CONFIRMED' || t.status === 'APPROVED'
+                                  : ['APPROVED', 'READY_FOR_PICKUP'].includes(normalizeBookingStatus(t.status))
                                     ? 'Confirmé'
                                     : t.status}
                       </span>

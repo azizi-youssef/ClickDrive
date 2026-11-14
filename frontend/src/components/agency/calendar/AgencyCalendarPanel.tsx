@@ -13,6 +13,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
+
+/** Statuts d'une réservation acceptée par l'agence, pas encore commencée */
+const ACCEPTED_STATUSES = new Set(['APPROVED', 'READY_FOR_PICKUP']);
+/** Statuts d'une demande en attente de réponse de l'agence */
+const AWAITING_STATUSES = new Set(['REQUESTED', 'UNDER_REVIEW', 'SENT_TO_AGENCY', 'AGENCY_REVIEW']);
 
 export type CalendarEvent = {
   id: string;
@@ -493,11 +499,10 @@ export function AgencyCalendarPanel({
                                   matchingEvent.status === 'ACTIVE' &&
                                   'bg-blue-600',
                                 matchingEvent.type === 'BOOKING' &&
-                                  (matchingEvent.status === 'CONFIRMED' ||
-                                    matchingEvent.status === 'APPROVED') &&
+                                  ACCEPTED_STATUSES.has(normalizeBookingStatus(String(matchingEvent.status))) &&
                                   'bg-emerald-600',
                                 matchingEvent.type === 'BOOKING' &&
-                                  matchingEvent.status === 'PENDING' &&
+                                  AWAITING_STATUSES.has(normalizeBookingStatus(String(matchingEvent.status))) &&
                                   'bg-amber-500'
                               )}
                             >

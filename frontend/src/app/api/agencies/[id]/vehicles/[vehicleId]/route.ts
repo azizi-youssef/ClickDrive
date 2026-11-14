@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { normalizeVehicleKindFields, onlyProvidedFields, vehicleKindIssues, vehicleUpdateSchema, type VehicleUpdateInput } from '@/lib/validations/vehicle';
 import { vehicleTypeOf } from '@/lib/vehicles/kind';
 import { isMotorcycleSchemaMissing, MOTORCYCLE_SCHEMA_MISSING_MESSAGE } from '@/lib/vehicles/schema-support';
+import { protectedFieldChanges, violationResponseInit } from '@/lib/vehicles/protected-fields';
 
 type RouteContext = { params: Promise<{ id: string; vehicleId: string }> };
 
@@ -88,15 +89,28 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (!supabase) return failure('Service de base de données indisponible.', 503);
 
   // Vérifier l'appartenance (toutes les colonnes : nécessaires au contrôle type / catégorie)
+  // Un véhicule archivé (retiré de la flotte) n'est plus modifiable
   const { data: existing, error: existError } = await supabase
     .from('vehicles')
     .select('*')
     .eq('id', vehicleId)
     .eq('agency_id', agencyId)
+    .is('archived_at', null)
     .maybeSingle();
 
-  if (existError || !existing) {
+  if (existError) {
+    console.error('[AgencyVehicle] Ownership lookup error:', existError.message);
+    return failure('Impossible de vérifier ce véhicule.', 500);
+  }
+  if (!existing) {
     return failure('Véhicule introuvable pour cette agence.', 404);
+  }
+
+  // Le formulaire renvoie la ligne complète : id, agency_id, featured… sont tolérés inchangés, jamais modifiés
+  const violations = protectedFieldChanges(body, existing as Record<string, unknown>);
+  if (violations.length > 0) {
+    const { status, message } = violationResponseInit(violations);
+    return failure(message, status);
   }
 
   // Mise à jour partielle : seuls les champs réellement envoyés sont pris en compte
@@ -170,34 +184,42 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     .single();
 
   if (updateError) {
-    console.error('[AgencyVehicle] Update error:', updateError.message);
+    console.error('[AgencyVehicle] Update error:', updateError.code, updateError.message);
     if (isMotorcycleSchemaMissing(updateError)) return failure(MOTORCYCLE_SCHEMA_MISSING_MESSAGE, 503);
-    return failure(`Erreur de mise à jour: ${updateError.message}`, 500);
+    if (updateError.code === 'PGRST116') return failure('Véhicule introuvable pour cette agence.', 404);
+    return failure('Le véhicule n’a pas pu être mis à jour. Réessayez dans un instant.', 500);
   }
 
   // Si des images sont fournies dans l'update, remplacer la table vehicle_images
   if (input.images !== undefined) {
-    await supabase.from('vehicle_images').delete().eq('vehicle_id', vehicleId);
-    if (input.images.length > 0) {
-      const imagesToInsert = input.images.map((url, idx) => ({
-        vehicle_id: vehicleId,
-        url,
-        is_primary: idx === 0,
-        display_order: idx,
-      }));
-      await supabase.from('vehicle_images').insert(imagesToInsert);
+    const { error: imagesDeleteError } = await supabase.from('vehicle_images').delete().eq('vehicle_id', vehicleId);
+    const { error: imagesInsertError } =
+      !imagesDeleteError && input.images.length > 0
+        ? await supabase.from('vehicle_images').insert(
+            input.images.map((url, idx) => ({
+              vehicle_id: vehicleId,
+              url,
+              is_primary: idx === 0,
+              display_order: idx,
+            }))
+          )
+        : { error: null };
+    if (imagesDeleteError || imagesInsertError) {
+      console.error('[AgencyVehicle] Images not saved:', (imagesDeleteError ?? imagesInsertError)?.message);
+      return failure('Le véhicule a été mis à jour, mais ses photos n’ont pas pu être enregistrées. Réessayez.', 500);
     }
   }
 
   // Si des équipements sont fournis dans l'update, remplacer vehicle_features
   if (input.features !== undefined) {
-    await supabase.from('vehicle_features').delete().eq('vehicle_id', vehicleId);
-    if (input.features.length > 0) {
-      const featsToInsert = input.features.map((name) => ({
-        vehicle_id: vehicleId,
-        name,
-      }));
-      await supabase.from('vehicle_features').insert(featsToInsert);
+    const { error: featuresDeleteError } = await supabase.from('vehicle_features').delete().eq('vehicle_id', vehicleId);
+    const { error: featuresInsertError } =
+      !featuresDeleteError && input.features.length > 0
+        ? await supabase.from('vehicle_features').insert(input.features.map((name) => ({ vehicle_id: vehicleId, name })))
+        : { error: null };
+    if (featuresDeleteError || featuresInsertError) {
+      console.error('[AgencyVehicle] Features not saved:', (featuresDeleteError ?? featuresInsertError)?.message);
+      return failure('Le véhicule a été mis à jour, mais ses équipements n’ont pas pu être enregistrés. Réessayez.', 500);
     }
   }
 
@@ -221,6 +243,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     .select('id, brand, model')
     .eq('id', vehicleId)
     .eq('agency_id', agencyId)
+    .is('archived_at', null)
     .maybeSingle();
 
   if (fetchErr || !vehicle) {
@@ -240,15 +263,22 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (count && count > 0) {
     // Ne pas supprimer un véhicule ayant un historique de réservation (préserver l'historique financier et client)
     // On le dépublie et bascule son statut à BLOCKED
-    await supabase
+    // Archivé : il sort de la flotte et ne compte plus dans la capacité de la formule
+    const nowIso = new Date().toISOString();
+    const { error: archiveError } = await supabase
       .from('vehicles')
       .update({
         published: false,
         status: 'BLOCKED',
-        updated_at: new Date().toISOString(),
+        archived_at: nowIso,
+        updated_at: nowIso,
       })
       .eq('id', vehicleId)
       .eq('agency_id', agencyId);
+    if (archiveError) {
+      console.error('[AgencyVehicle] Unpublish error:', archiveError.message);
+      return failure('Le véhicule n’a pas pu être retiré du catalogue. Réessayez dans un instant.', 500);
+    }
 
     return NextResponse.json({
       success: true,
@@ -265,7 +295,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     .eq('agency_id', agencyId);
 
   if (delErr) {
-    return failure(`Erreur de suppression: ${delErr.message}`, 500);
+    console.error('[AgencyVehicle] Delete error:', delErr.message);
+    return failure('Le véhicule n’a pas pu être supprimé. Réessayez dans un instant.', 500);
   }
 
   return NextResponse.json({

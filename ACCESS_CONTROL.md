@@ -127,3 +127,59 @@ Cette migration, comme la migration RBAC, reste à appliquer et tester sur Supab
 2. Vérifier qu’un membre agence ne lit ni ne modifie aucun identifiant d’une autre agence et qu’une révocation est immédiate.
 3. Vérifier les permissions par rôle, l’impossibilité de s’attribuer un rôle, la protection du dernier administrateur et le blocage des colonnes PII dans PostgREST.
 4. Vérifier l’acceptation d’une invitation Auth, les refus `401/403`, les pages/compteurs et l’archivage avec réservations historiques conservées.
+
+## Remédiation de sécurité — phase 1 (14 novembre 2026)
+
+**WhatsApp entrant.** Un message client ne modifie plus jamais une réservation. Seules les commandes exactes
+`AIDE`, `STATUT` et `ANNULER` sont reconnues ; elles informent ou orientent vers l’espace client et l’agence.
+« oui », « ok », « non merci », « stop »… reçoivent le menu, sans écriture métier. Un dossier n’est associé
+qu’à son titulaire (téléphone de l’expéditeur identique à celui de la réservation), avec des colonnes explicites.
+
+**Décisions agence (`/api/bookings/[reference]/status`).** Le service revérifie `bookings.manage` sur l’agence de
+la réservation (défense en profondeur), écrit avec le client service-role explicite et garde chaque transition
+(`agency_id` et statut lu). Une proposition d’alternative exige un véhicule de la même agence, publié, louable et
+disponible sur les dates ; un véhicule d’une autre agence reçoit la même réponse qu’un identifiant inexistant et
+seule une projection publique (`AlternativeVehicleSummary`) est renvoyée. Codes : `401`, `403`, `404`, `409`
+(conflit de transition ou de disponibilité), `503` (service sécurisé indisponible).
+
+**Flotte.** `POST /api/vehicles` et `PATCH|DELETE /api/vehicles/[ref]` sont conservés pour compatibilité
+(en-tête `Deprecation`) et délèguent à `/api/agencies/[id]/vehicles` : schéma Zod partagé, `vehicles.manage`,
+liste blanche stricte (`agency_id`, `featured`, `slug`, champs inconnus refusés). L’agence propriétaire est lue
+en base avec la session de l’appelant, jamais prise du navigateur. La route canonique refuse toute modification
+d’un champ protégé (`lib/vehicles/protected-fields.ts`) : `400` immuable, `403` réservé à la plateforme.
+Capacité de la formule : vérification fail-closed (`503` si invérifiable, `409 CAPACITY_LIMIT_REACHED` si
+atteinte — auparavant `403`), rejouée de façon atomique par le trigger `enforce_vehicle_capacity()`
+(migration `20261114000100_vehicle_capacity_enforcement.sql`, verrou consultatif par agence), qui s’applique
+aussi aux insertions directes PostgREST et à la clé service-role.
+
+**Accès service-role.** Plus aucun repli `createAdminClient() ?? createClient()`. Les opérations privilégiées
+passent par `requireServiceRoleClient()` (`lib/supabase/privileged.ts`) : clé absente = erreur explicite (`503`),
+jamais de bascule vers un client aux résultats différents. Les lectures publiques qui le permettent utilisent
+un client anon sans session (`createPublicClient()`) : agences du cache public, avis (colonnes explicites, sans
+`customer_id`), formules, `vehicle_availability()`. Le catalogue véhicules garde le service-role, car
+`vehicle_images` et `vehicle_features` n’ont aucune politique de lecture RLS (voir `src/tests/db/public-read-anon.spec.ts`).
+
+## Remédiation de sécurité — phase 2 (15 novembre 2026)
+
+Migration `20261115000100_vehicle_privileges_and_platform_policies.sql` et code associé.
+
+- **Remise / restitution du véhicule.** `deliveryService.validateHandover` applique la machine à états partagée
+  (`canPerformHandover` dans `@clickdrive/shared/booking-state-machine`) : remise depuis `APPROVED` /
+  `READY_FOR_PICKUP` (`CONFIRMED` historique inclus), restitution depuis `ACTIVE` seulement. Écriture gardée
+  par l’agence et le statut lu (`409` si modifiée entre-temps), kilométrage de retour ≥ départ, retenue ≤ caution,
+  écritures secondaires vérifiées (`warnings`), messages neutres. Codes : `404`, `409`, `422`, `503`.
+- **Colonnes privées des véhicules.** `license_plate`, `unit_number` et `documents` ne sont plus accordées aux
+  rôles `anon` et `authenticated` (droits par colonne) : la clé anon publique ne permet plus de les lire par
+  PostgREST. Les lectures de session de l’application listent leurs colonnes ; les réservations renvoyées au
+  navigateur ne portent jamais ces champs, même lues avec la clé service-role. Toute nouvelle colonne publique
+  de `vehicles` doit être accordée explicitement.
+- **Écritures directes sur la flotte.** `INSERT` / `UPDATE` / `DELETE` retirés à `anon` et `authenticated` : la
+  flotte ne s’écrit que par `/api/agencies/[id]/vehicles` (Zod, `vehicles.manage`, champs protégés, capacité).
+- **Photos et équipements.** Lisibles exactement quand le véhicule l’est (RLS de `vehicles`). Le catalogue
+  applicatif reste pour l’instant en service-role : il pourra passer au client anon une fois la migration
+  appliquée en production et la vue flotte de l’administration servie par une route dédiée.
+- **Rôle historique `ADMIN`.** Plus aucune politique ne le cite (formules, abonnements, états des lieux) ; un
+  membre révoqué ne lit plus l’abonnement de son agence. Contrôlé par `src/tests/db/phase2-privileges.spec.ts`.
+
+**Ordre de déploiement :** déployer le code de la phase 2, puis appliquer la migration (appliquée avant, l’ancien
+code échouerait sur les pages réservation, qui lisaient `vehicles(*)` avec la session).

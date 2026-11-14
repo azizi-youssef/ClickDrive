@@ -36,23 +36,26 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    // 2. Récupérer les logs récents en mémoire du service WhatsApp
-    const memoryLogs = whatsappService.getRecentLogs(50);
+    // 2. Envois journalisés en base (partagés par toutes les instances), avec leur statut de livraison
+    const messages = (await whatsappService.listRecentMessages(50)).filter((m) => m.direction === 'OUTBOUND');
+    const journaled = new Set(messages.map((m) => m.wamid).filter(Boolean));
 
-    // 3. Fusionner et dédupliquer
+    // 3. Fusionner : un envoi présent dans le journal n'est pas répété depuis audit_logs
     const recentFeed = [
-      ...memoryLogs.map((m) => ({
+      ...messages.map((m) => ({
         id: m.id,
         channel: 'WHATSAPP' as const,
-        messageId: m.messageId,
-        recipient: m.recipientPhone,
-        bookingRef: m.bookingRef || '—',
+        messageId: m.wamid || '—',
+        recipient: m.phone || '—',
+        bookingRef: m.booking_ref || '—',
         status: m.status,
-        type: m.type,
-        snippet: String(m.payloadSummary?.snippet || m.payloadSummary?.body || 'Notification WhatsApp'),
-        timestamp: m.sentAt,
+        type: m.message_type,
+        snippet: m.error || (m.template_name ? `Modèle ${m.template_name}` : 'Notification WhatsApp'),
+        timestamp: m.status_at || m.created_at,
       })),
-      ...(dbLogs || []).map((db) => {
+      ...(dbLogs || [])
+        .filter((db) => !(db.action.startsWith('WHATSAPP_MESSAGE') && journaled.has(db.entity_id)))
+        .map((db) => {
         const meta = (db.metadata as any) || {};
         const isInbound = db.action.startsWith('WHATSAPP_INBOUND');
         let mappedStatus = meta.status || (db.action.includes('FAILED') ? 'FAILED' : 'SENT');

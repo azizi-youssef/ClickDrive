@@ -1,5 +1,5 @@
 import { Agency, AgencyStatus } from '@/types';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createClient, createPublicClient } from '@/lib/supabase/server';
 
 function requireSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,11 +31,13 @@ export class AgenciesService {
 
   /**
    * Agences actives lues sans cookies, pour un cache partagé entre visiteurs (catalogue public) :
-   * Next interdit cookies() dans unstable_cache. Le résultat doit passer par toPublicAgencies.
+   * Next interdit cookies() dans unstable_cache. Client anon soumis à la RLS (agences actives seulement) :
+   * aucun droit élevé n'est nécessaire. Le résultat doit passer par toPublicAgencies.
    */
   async getActiveAgenciesWithoutSession(): Promise<Agency[]> {
-    const supabase = await createAdminClient();
-    if (!supabase) throw new Error('Client Supabase serveur indisponible.');
+    requireSupabase();
+    const supabase = createPublicClient();
+    if (!supabase) throw new Error('Client Supabase indisponible.');
     const { data, error } = await supabase
       .from('agencies')
       .select('*')
@@ -107,25 +109,7 @@ export class AgenciesService {
     return data as Agency;
   }
 
-  async createAgency(
-    payload: Omit<Agency, 'id' | 'created_at' | 'rating' | 'review_count'>
-  ): Promise<Agency> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
-
-    const { data, error } = await supabase
-      .from('agencies')
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[AgenciesService] createAgency error:', error.message);
-      throw new Error('Impossible de créer l\'agence.');
-    }
-    return data as Agency;
-  }
+  // Création d'agence : uniquement par POST /api/admin/agencies (permission agencies.create, fonction SQL transactionnelle).
 
   async getAgencyStats(agencyId: string) {
     const { statsService } = await import('./stats.service');

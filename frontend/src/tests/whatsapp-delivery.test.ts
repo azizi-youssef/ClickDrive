@@ -48,11 +48,7 @@ test('3. Envoi de notification WhatsApp en mode simulation & wamid', async () =>
   assert.equal(res.recipient, '212612345678');
   assert.equal(typeof res.messageId, 'string');
   assert.equal(res.messageId!.startsWith('wamid.sim_'), true);
-
-  // Vérification de l'enregistrement dans l'historique récent
-  const logs = whatsappService.getLogsByBooking('CD-2026-TEST01');
-  assert.equal(logs.length >= 1, true);
-  assert.equal(logs[0].messageId, res.messageId);
+  // Le journal des envois est en base (whatsapp_messages) : vérifié par les tests du service et de la base
 });
 
 test('4. Résolution des points de rendez-vous pour la livraison', () => {

@@ -3,8 +3,9 @@ import type { PGlite } from '@electric-sql/pglite';
 import { asRole, createTestDatabase } from './harness';
 
 /**
- * Transitions agence (refus, approbation) exécutées avec les mêmes requêtes que
- * `bookings.service` (client service_role), sur toutes les migrations réelles.
+ * Contraintes de la table bookings pour un refus (statut, motif, journal) écrit par le service_role,
+ * sur toutes les migrations réelles. Depuis la phase 3, le service passe par agency_decide_booking()
+ * (voir phase3-decisions.spec.ts) ; ce test garde la vérification des contraintes de la table.
  */
 
 const ID = {
@@ -29,7 +30,7 @@ async function createBooking(db: PGlite, status: string): Promise<string> {
   return id;
 }
 
-/** Requête de `bookingsService.rejectBooking` */
+/** Refus écrit directement par le service_role (contraintes de la table) */
 async function reject(db: PGlite, bookingId: string, reason = 'Véhicule en maintenance') {
   return asRole(db, 'service_role', null, async (tx) => {
     const now = new Date().toISOString();

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serverError } from '@/lib/api/server-error';
 import { vehiclesService } from '@/lib/services/vehicles.service';
-import { requireAgencyPermissionApi } from '@/lib/auth/access-api';
 import type { SearchFilters } from '@/types';
 import { isValidDateOnly } from '@/lib/utils/date-only';
 import { getServerAuth } from '@/lib/auth/server';
 import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { toPublicVehicles } from '@/lib/vehicles/public';
+import { forwardJsonRequest, markDeprecated } from '@/lib/api/forward-request';
+import { isUuid } from '@/lib/availability/status';
+import { unexpectedVehicleFields, violationResponseInit } from '@/lib/vehicles/protected-fields';
+import { POST as createAgencyVehicle } from '@/app/api/agencies/[id]/vehicles/route';
 
 /** Taille maximale d'une page de résultats (aucune requête non bornée) */
 const MAX_LIMIT = 500;
@@ -69,21 +72,60 @@ export async function GET(req: NextRequest) {
   }
 }
 
+function failure(message: string, status: number) {
+  return NextResponse.json({ success: false, error: message }, { status });
+}
+
+/**
+ * Route historique. Délègue à POST /api/agencies/[id]/vehicles (validation Zod partagée, permission
+ * vehicles.manage, contrôle de capacité de la formule) : une seule implémentation de la création.
+ *
+ * `agency_id` n'est jamais une autorité : il désigne seulement l'agence visée, qui doit faire partie des
+ * agences actives de la session (ou SUPER_ADMIN), puis la route canonique revérifie vehicles.manage.
+ * Sans `agency_id`, l'agence est déduite de la session si elle est unique.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const agencyId = body.agency_id as string | undefined;
-    if (!agencyId) {
-      return NextResponse.json({ success: false, error: 'agency_id requis' }, { status: 400 });
+    const auth = await getServerAuth();
+    if (!auth) return failure('Authentification requise', 401);
+
+    const body: unknown = await req.json().catch(() => undefined);
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+      return failure('Corps de requête JSON invalide.', 400);
+    }
+    const payload = body as Record<string, unknown>;
+
+    const violations = unexpectedVehicleFields(payload, ['agency_id']);
+    if (violations.length > 0) {
+      const { status, message } = violationResponseInit(violations);
+      return failure(message, status);
     }
 
-    const gate = await requireAgencyPermissionApi(agencyId, 'vehicles.manage');
-    if (gate.denied) return gate.denied;
+    const requested = payload.agency_id;
+    let agencyId: string;
+    if (requested !== undefined && requested !== null && requested !== '') {
+      if (!isUuid(requested)) return failure('agency_id invalide', 400);
+      agencyId = requested;
+    } else if (auth.agencyIds.length === 1) {
+      agencyId = auth.agencyIds[0];
+    } else {
+      return failure('agency_id requis', 400);
+    }
+    if (!isPlatformAdminRole(auth.role) && !auth.agencyIds.includes(agencyId)) {
+      return failure('Accès refusé', 403);
+    }
 
-    const created = await vehiclesService.addVehicle(body);
-    return NextResponse.json({ success: true, data: created }, { status: 201 });
+    const vehicle = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== 'agency_id'));
+    const response = await createAgencyVehicle(forwardJsonRequest(req, vehicle), {
+      params: Promise.resolve({ id: agencyId }),
+    });
+
+    // Contrat historique : 201 à la création
+    if (response.status === 200) {
+      return markDeprecated(NextResponse.json(await response.json(), { status: 201 }), `/api/agencies/${agencyId}/vehicles`);
+    }
+    return markDeprecated(response, `/api/agencies/${agencyId}/vehicles`);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Données invalides';
-    return NextResponse.json({ success: false, error: message }, { status: 400 });
+    return serverError(error, '/api/vehicles');
   }
 }

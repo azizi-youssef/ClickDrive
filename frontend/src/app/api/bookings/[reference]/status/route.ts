@@ -4,7 +4,17 @@ import { after, NextRequest, NextResponse } from 'next/server';
 import { notifyBookingStatusByReference } from '@/lib/bookings/notifications';
 import { trackServerEvent } from '@/lib/analytics/server';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';
-import { bookingsService } from '@/lib/services/bookings.service';
+import { bookingsService, type AgencyDecisionResult } from '@/lib/services/bookings.service';
+
+/** Code HTTP d'une décision agence (la réponse ne contient jamais de détail technique) */
+function decisionStatus(result: AgencyDecisionResult): number {
+  if (result.success) return 200;
+  if (result.forbidden) return 403;
+  if (result.notFound) return 404;
+  if (result.availabilityConflict || result.transitionConflict) return 409;
+  if (result.serviceUnavailable) return 503;
+  return 400;
+}
 
 export async function POST(
   req: NextRequest,
@@ -43,18 +53,16 @@ export async function POST(
     if (action === 'approve') {
       const result = await bookingsService.approveBooking(reference, notes, auth.userId);
       if (result.success) {
-        after(() => notifyBookingStatusByReference(reference, 'CONFIRMED', appUrl));
+        after(() => notifyBookingStatusByReference(reference, 'APPROVED', appUrl));
         after(() => trackServerEvent('Demande acceptée', `${appUrl}/agency`).then(() => undefined));
       }
-      return NextResponse.json(result, {
-        status: result.success ? 200 : result.availabilityConflict || result.transitionConflict ? 409 : 400,
-      });
+      return NextResponse.json(result, { status: decisionStatus(result) });
     }
 
     if (action === 'reject') {
       const result = await bookingsService.rejectBooking(reference, reason, auth.userId);
       if (result.success) after(() => notifyBookingStatusByReference(reference, 'REJECTED', appUrl, reason));
-      return NextResponse.json(result, { status: result.success ? 200 : 400 });
+      return NextResponse.json(result, { status: decisionStatus(result) });
     }
 
     if (action === 'propose_alternative') {
@@ -71,7 +79,7 @@ export async function POST(
         auth.userId
       );
       if (result.success) after(() => notifyBookingStatusByReference(reference, 'ALTERNATIVE_PROPOSED', appUrl, notes));
-      return NextResponse.json(result, { status: result.success ? 200 : 400 });
+      return NextResponse.json(result, { status: decisionStatus(result) });
     }
 
     return NextResponse.json({ success: false, error: `Action ${action} non reconnue` }, { status: 400 });

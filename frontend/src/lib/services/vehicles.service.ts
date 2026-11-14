@@ -1,5 +1,6 @@
 import { Vehicle, SearchFilters } from '@/types';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createPublicClient } from '@/lib/supabase/server';
+import { requireServiceRoleClient } from '@/lib/supabase/privileged';
 import { findSameModelAlternatives } from '@/lib/availability/engine';
 import {
   AvailabilityValidationError,
@@ -31,6 +32,29 @@ function requireSupabase() {
   }
 }
 
+/**
+ * Lectures du catalogue public : service-role explicite, sans repli vers un client utilisateur.
+ * Justification : vehicle_images et vehicle_features ont la RLS activée sans aucune politique de lecture
+ * (vérifié par src/tests/db/public-read-anon.spec.ts) ; un client anon renverrait un catalogue sans photos
+ * ni équipements. Frontière : chaque requête filtre published = true (et l'agence active pour la liste) ;
+ * toute sortie vers le navigateur passe par toPublicVehicle() (ni plaque, ni n° d'unité, ni documents).
+ * Le client reste sans cookies, donc utilisable dans unstable_cache.
+ */
+async function requireCatalogClient() {
+  requireSupabase();
+  return requireServiceRoleClient('vehicles.public_catalog');
+}
+
+/** Client service-role facultatif, sans repli : null si la clé n'est pas configurée (développement) */
+async function optionalServiceRoleClient() {
+  try {
+    return await createAdminClient();
+  } catch (error) {
+    console.error('[VehiclesService] Client service-role indisponible :', error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
 /** Normalise les résultats Supabase vers le type Vehicle attendu */
 function normalizeVehicle(row: any): Vehicle {
   const rawImages = Array.isArray(row.images) ? row.images : [];
@@ -54,14 +78,13 @@ function normalizeVehicle(row: any): Vehicle {
 
 export class VehiclesService {
   async getVehicles(filters?: SearchFilters): Promise<Vehicle[]> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
+    const supabase = await requireCatalogClient();
 
     let query = supabase
       .from('vehicles')
       .select('*, agency:agencies!inner(*), images:vehicle_images(url, is_primary), vehicle_features(name)')
       .eq('published', true)
+      .is('archived_at', null)
       .eq('agency.status', 'ACTIVE')
       .is('agency.archived_at', null);
 
@@ -108,6 +131,7 @@ export class VehiclesService {
       // Nettoyage des locations terminées (statuts véhicules) : une écriture en base, donc au plus
       // une fois toutes les 10 minutes par instance ; la tâche planifiée le fait aussi toutes les 15 min.
       // Facultatif pour cette lecture : la disponibilité ignore déjà les réservations passées.
+      // Écriture de maintenance sans donnée utilisateur (EXECUTE retiré à anon et authenticated)
       if (shouldExpireCompletedBookings()) {
         const { error: expireError } = await supabase.rpc('expire_completed_bookings');
         if (expireError) {
@@ -140,15 +164,15 @@ export class VehiclesService {
     return mapped;
   }
 
+  /** Véhicule publié, ou null (l'appelant vérifie aussi l'agence : voir isPubliclyVisible) */
   async getVehicleBySlug(slug: string): Promise<Vehicle | null> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
+    const supabase = await requireCatalogClient();
 
     const { data, error } = await supabase
       .from('vehicles')
       .select('*, agency:agencies(*), images:vehicle_images(url, is_primary), vehicle_features(name)')
       .eq('slug', slug)
+      .eq('published', true)
       .maybeSingle();
 
     if (error) {
@@ -161,14 +185,14 @@ export class VehiclesService {
   async getVehicleById(id: string): Promise<Vehicle | null> {
     // Un identifiant non UUID ne peut correspondre à aucun véhicule (évite une erreur SQL de conversion)
     if (!isUuid(id)) return null;
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
+    // Véhicule publié, ou null (l'appelant vérifie aussi l'agence)
+    const supabase = await requireCatalogClient();
 
     const { data, error } = await supabase
       .from('vehicles')
       .select('*, agency:agencies(*), images:vehicle_images(url, is_primary), vehicle_features(name)')
       .eq('id', id)
+      .eq('published', true)
       .maybeSingle();
 
     if (error) {
@@ -205,12 +229,12 @@ export class VehiclesService {
   async getAvailabilityStatus(vehicleId: string, startDate: string, endDate: string): Promise<AvailabilityStatus> {
     if (!isUuid(vehicleId)) throw new AvailabilityValidationError();
     requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) return 'UNKNOWN';
 
-    // 1. Fonction SQL canonique (même règle que la recherche et la contrainte d'exclusion)
+    // 1. Fonction SQL canonique (SECURITY DEFINER, accordée à anon : ne renvoie qu'un booléen par véhicule)
     try {
-      const { data, error } = await supabase.rpc('vehicle_availability', {
+      const publicClient = createPublicClient();
+      if (!publicClient) return 'UNKNOWN';
+      const { data, error } = await publicClient.rpc('vehicle_availability', {
         p_vehicle_ids: [vehicleId],
         p_start_date: startDate,
         p_end_date: endDate,
@@ -227,7 +251,10 @@ export class VehiclesService {
       console.warn('[VehiclesService] vehicle_availability RPC threw, using equivalent table checks:', rpcError);
     }
 
-    // 2. Vérification équivalente sur les tables : toute erreur rend l'état inconnu (fail-closed)
+    // 2. Vérification équivalente sur les tables : lit des réservations et blocages privés, donc service-role
+    //    uniquement (aucun repli vers un client utilisateur). Sans clé ou en cas d'erreur : UNKNOWN (fail-closed).
+    const supabase = await optionalServiceRoleClient();
+    if (!supabase) return 'UNKNOWN';
     try {
       const [vehicleRes, bookingsRes, blocksRes] = await Promise.all([
         supabase
@@ -273,78 +300,8 @@ export class VehiclesService {
     }
   }
 
-  async addVehicle(newCar: Omit<Vehicle, 'id' | 'created_at'>): Promise<Vehicle> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
-
-    const { data, error } = await supabase
-      .from('vehicles')
-      .insert({
-        agency_id: newCar.agency_id,
-        unit_number: newCar.unit_number,
-        license_plate: newCar.license_plate,
-        brand: newCar.brand,
-        model: newCar.model,
-        slug: newCar.slug,
-        year: newCar.year,
-        category: newCar.category,
-        transmission: newCar.transmission,
-        fuel: newCar.fuel,
-        seats: newCar.seats,
-        doors: newCar.doors,
-        air_conditioning: newCar.air_conditioning,
-        mileage: newCar.mileage,
-        daily_price: newCar.daily_price,
-        weekly_price: newCar.weekly_price,
-        monthly_price: newCar.monthly_price,
-        deposit: newCar.deposit,
-        min_rental_days: newCar.min_rental_days,
-        status: newCar.status,
-        published: newCar.published,
-        featured: newCar.featured,
-      })
-      .select('*, agency:agencies(*)')
-      .single();
-
-    if (error) {
-      console.error('[VehiclesService] addVehicle error:', error.message);
-      throw new Error('Impossible d\'ajouter le véhicule.');
-    }
-    return { ...data, images: newCar.images, features: newCar.features } as Vehicle;
-  }
-
-  async updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle | null> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
-
-    const { data, error } = await supabase
-      .from('vehicles')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[VehiclesService] updateVehicle error:', error.message);
-      throw new Error('Impossible de mettre à jour le véhicule.');
-    }
-    return data as Vehicle;
-  }
-
-  async deleteVehicle(id: string): Promise<boolean> {
-    requireSupabase();
-    const supabase = (await createAdminClient()) ?? (await createClient());
-    if (!supabase) throw new Error('Client Supabase indisponible.');
-
-    const { error } = await supabase.from('vehicles').delete().eq('id', id);
-    if (error) {
-      console.error('[VehiclesService] deleteVehicle error:', error.message);
-      throw new Error('Impossible de supprimer le véhicule.');
-    }
-    return true;
-  }
+  // Les écritures de flotte passent exclusivement par /api/agencies/[id]/vehicles (validation Zod,
+  // permission vehicles.manage, contrôle de capacité) : aucune méthode d'écriture générique ici.
 }
 
 export const vehiclesService = new VehiclesService();

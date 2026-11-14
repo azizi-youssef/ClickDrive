@@ -262,15 +262,20 @@ describe('RLS — isolation des réservations et des données personnelles', () 
       expect(insert).toMatch(/permission denied/i);
     });
 
-    it('un agent (sans vehicles.manage) ne modifie pas la flotte ; une agence ne touche pas la flotte d’une autre', async () => {
-      const agentUpdated = await asRole(db, 'authenticated', ID.agentA, async (tx) =>
-        (await tx.query(`UPDATE public.vehicles SET daily_price = 1 WHERE id = $1 RETURNING id`, [ID.vehicleA])).rows
-      );
-      expect(agentUpdated).toEqual([]);
-      const crossAgency = await asRole(db, 'authenticated', ID.adminA, async (tx) =>
-        (await tx.query(`UPDATE public.vehicles SET daily_price = 1 WHERE id = $1 RETURNING id`, [ID.vehicleB])).rows
-      );
-      expect(crossAgency).toEqual([]);
+    it('aucune écriture directe sur la flotte (agent, autre agence, ni même l’administrateur de l’agence)', async () => {
+      // Migration 20261115000100 : les écritures de flotte passent exclusivement par l'API serveur
+      for (const [userId, vehicleId] of [
+        [ID.agentA, ID.vehicleA],
+        [ID.adminA, ID.vehicleB],
+        [ID.adminA, ID.vehicleA],
+      ]) {
+        const error = await errorOf(
+          asRole(db, 'authenticated', userId, (tx) =>
+            tx.query(`UPDATE public.vehicles SET daily_price = 1 WHERE id = $1 RETURNING id`, [vehicleId])
+          )
+        );
+        expect(error).toMatch(/permission denied/i);
+      }
     });
   });
 

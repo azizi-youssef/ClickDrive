@@ -72,15 +72,31 @@ export async function POST(request: NextRequest, context: RouteContext) {
   });
 
   if (!result.success) {
-    return failure(result.error || 'Erreur lors de la validation de la remise', 500);
+    const status = result.notFound
+      ? 404
+      : result.transitionConflict
+        ? 409
+        : result.invalidInput
+          ? 422
+          : result.serviceUnavailable
+            ? 503
+            : 500;
+    return failure(result.error || 'Erreur lors de la validation de la remise', status);
   }
+
+  const warnings = result.warnings ?? [];
+  const baseMessage =
+    input.type === 'PICKUP'
+      ? 'Véhicule remis au client. Location en cours.'
+      : 'Véhicule restitué et inspecté. Réservation finalisée.';
 
   return NextResponse.json({
     success: true,
-    message:
-      input.type === 'PICKUP'
-        ? 'Véhicule remis au client. Location en cours.'
-        : 'Véhicule restitué et inspecté. Réservation finalisée.',
+    // Transition enregistrée ; une écriture secondaire en échec est signalée, jamais masquée
+    message: warnings.includes('vehicle_not_updated')
+      ? `${baseMessage} Le statut du véhicule n’a pas pu être mis à jour : vérifiez-le dans la flotte.`
+      : baseMessage,
+    warnings,
     status: result.bookingStatus,
     vehicleStatus: result.vehicleStatus,
     distanceDrivenKm: result.distanceDrivenKm,

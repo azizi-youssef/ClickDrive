@@ -1,4 +1,7 @@
+import { canPerformHandover, targetStatusForHandover, type HandoverAction } from '@clickdrive/shared/booking-state-machine';
+import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 import { Booking, BookingStatus, VehicleStatus } from '@/types';
+import { isUuid } from '@/lib/availability/status';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getMeetingPoint } from '@/lib/constants/meetingPoints';
 import { whatsappService } from './whatsapp.service';
@@ -63,8 +66,41 @@ export interface HandoverInspectionInput {
   sendWhatsAppNotification?: boolean;
 }
 
+/** Réservation lue pour un état des lieux (colonnes explicites) */
+type HandoverBookingRow = {
+  id: string;
+  reference: string | null;
+  booking_ref: string | null;
+  vehicle_id: string | null;
+  agency_id: string;
+  status: string;
+  customer_name: string | null;
+  customer_phone: string | null;
+  total_price: number | string | null;
+  deposit_amount: number | string | null;
+  start_date: string;
+  end_date: string;
+  vehicle:
+    | { id: string; brand: string; model: string; year: number; status: string; mileage: number | null }
+    | { id: string; brand: string; model: string; year: number; status: string; mileage: number | null }[]
+    | null;
+};
+
+/** Statuts pour lesquels un rendez-vous de remise peut être organisé */
+const SCHEDULABLE_STATUSES = new Set(['APPROVED', 'READY_FOR_PICKUP']);
+
 export interface HandoverValidationResult {
   success: boolean;
+  /** Réservation introuvable pour cette agence (404) */
+  notFound?: boolean;
+  /** Transition refusée par la machine à états ou modifiée entre-temps (409) */
+  transitionConflict?: boolean;
+  /** Données d'état des lieux incohérentes (422) */
+  invalidInput?: boolean;
+  /** Base indisponible (503) */
+  serviceUnavailable?: boolean;
+  /** Écritures secondaires en échec après une transition enregistrée */
+  warnings?: string[];
   bookingId?: string;
   type?: 'PICKUP' | 'RETURN';
   bookingStatus?: BookingStatus;
@@ -96,8 +132,15 @@ export class DeliveryService {
         .eq('agency_id', input.agencyId)
         .maybeSingle();
 
-      if (bErr || !booking) {
+      if (bErr) {
+        console.error('[DeliveryService] Booking lookup failed:', bErr.message);
+        return { success: false, error: 'La réservation ne peut pas être vérifiée pour le moment.' };
+      }
+      if (!booking) {
         return { success: false, error: 'Réservation introuvable pour cette agence.' };
+      }
+      if (!SCHEDULABLE_STATUSES.has(normalizeBookingStatus(String(booking.status)))) {
+        return { success: false, error: 'Un rendez-vous ne peut être organisé que pour une réservation validée par l’agence.' };
       }
 
       // Identifier le point de rendez-vous
@@ -120,14 +163,16 @@ export class DeliveryService {
             : input.instructions || null,
           updated_at: nowIso,
         })
-        .eq('id', input.bookingId);
+        .eq('id', input.bookingId)
+        .eq('agency_id', input.agencyId);
 
       if (updErr) {
-        return { success: false, error: `Erreur enregistrement rendez-vous: ${updErr.message}` };
+        console.error('[DeliveryService] Meeting not saved:', updErr.message);
+        return { success: false, error: 'Le rendez-vous n’a pas pu être enregistré. Réessayez dans un instant.' };
       }
 
       // Enregistrer l'événement d'audit dans la timeline
-      await supabase.from('booking_events').insert({
+      const { error: meetingEventError } = await supabase.from('booking_events').insert({
         booking_id: input.bookingId,
         actor_role: 'AGENCY_MANAGER',
         event_type: 'DELIVERY_SCHEDULED',
@@ -141,6 +186,7 @@ export class DeliveryService {
           agentPhone: input.agentPhone,
         },
       });
+      if (meetingEventError) console.error('[DeliveryService] Meeting event not recorded:', meetingEventError.message);
 
       // Notification WhatsApp automatique
       let whatsappMessageId: string | undefined;
@@ -166,28 +212,46 @@ export class DeliveryService {
         whatsappMessageId,
       };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur inattendue lors de la planification du rendez-vous';
-      return { success: false, error: msg };
+      console.error('[DeliveryService] Meeting scheduling failed:', err instanceof Error ? err.message : err);
+      return { success: false, error: 'Le rendez-vous n’a pas pu être enregistré. Réessayez dans un instant.' };
     }
   }
 
   /**
    * 2. Enregistrer l'état des lieux et valider la remise du véhicule (Handover Execution)
    * Gère à la fois le DÉPART (PICKUP) et le RETOUR (RETURN).
+   *
+   * Règles :
+   * - transition validée par la machine à états partagée : remise depuis APPROVED / READY_FOR_PICKUP
+   *   (CONFIRMED historique inclus), restitution depuis ACTIVE seulement ;
+   * - écriture gardée par l'agence et par le statut lu : une remise concurrente ou une décision prise
+   *   entre-temps donne un conflit, jamais une double transition ;
+   * - chaque écriture est vérifiée ; une écriture secondaire en échec (véhicule, journal) est signalée
+   *   dans `warnings`, jamais masquée ; aucun détail technique n'est renvoyé.
+   * La permission (bookings.manage sur l'agence) est vérifiée par la route appelante.
    */
   public async validateHandover(input: HandoverInspectionInput): Promise<HandoverValidationResult> {
-    if (input.mileage < 0) {
-      return { success: false, error: 'Le kilométrage doit être positif.' };
+    if (!Number.isFinite(input.mileage) || input.mileage < 0) {
+      return { success: false, error: 'Le kilométrage doit être positif.', invalidInput: true };
+    }
+    if (input.depositDeduction !== undefined && (!Number.isFinite(input.depositDeduction) || input.depositDeduction < 0)) {
+      return { success: false, error: 'La retenue sur caution doit être positive.', invalidInput: true };
+    }
+    if (!isUuid(input.bookingId) || !isUuid(input.agencyId)) {
+      return { success: false, error: 'Réservation introuvable pour cette agence.', notFound: true };
     }
 
     const supabase = await createAdminClient();
     if (!supabase) {
-      return { success: false, error: 'Service de base de données indisponible.' };
+      return { success: false, error: 'Service de base de données indisponible.', serviceUnavailable: true };
     }
 
+    const action: HandoverAction = input.type === 'PICKUP' ? 'pickup' : 'return';
+    const isPickup = action === 'pickup';
+
     try {
-      // 1. Récupérer la réservation et le véhicule associé
-      const { data: booking, error: bErr } = await supabase
+      // 1. Réservation de l'agence et véhicule associé (colonnes explicites)
+      const { data: bookingRow, error: bErr } = await supabase
         .from('bookings')
         .select(`
           id, reference, booking_ref, vehicle_id, agency_id, status,
@@ -201,157 +265,153 @@ export class DeliveryService {
         .eq('agency_id', input.agencyId)
         .maybeSingle();
 
-      if (bErr || !booking) {
-        return { success: false, error: 'Réservation introuvable pour cette agence.' };
+      if (bErr) {
+        console.error('[DeliveryService] Booking lookup failed:', bErr.message);
+        return { success: false, error: 'La réservation ne peut pas être vérifiée pour le moment.', serviceUnavailable: true };
+      }
+      if (!bookingRow) {
+        return { success: false, error: 'Réservation introuvable pour cette agence.', notFound: true };
       }
 
-      const vehicle = Array.isArray(booking.vehicle) ? booking.vehicle[0] : booking.vehicle;
-      const nowIso = new Date().toISOString();
-      const isPickup = input.type === 'PICKUP';
+      const booking = bookingRow as unknown as HandoverBookingRow;
+      const vehicle = Array.isArray(booking.vehicle) ? booking.vehicle[0] ?? null : booking.vehicle;
 
-      let nextBookingStatus: BookingStatus;
-      let nextVehicleStatus: VehicleStatus;
+      // 2. Machine à états : aucune remise d'une demande non validée, refusée, annulée ou terminée
+      if (!canPerformHandover(booking.status, action)) {
+        return {
+          success: false,
+          error: isPickup
+            ? 'La remise du véhicule n’est possible que pour une réservation validée par l’agence et pas encore commencée.'
+            : 'La restitution n’est possible que pour une location en cours.',
+          transitionConflict: true,
+        };
+      }
+
       let distanceDrivenKm: number | undefined;
-
-      // ----------------------------------------------------------------------
-      // SCÉNARIO A : REMISE INITIALE DU VÉHICULE (DÉPART / PICKUP)
-      // ----------------------------------------------------------------------
-      if (isPickup) {
-        nextBookingStatus = 'ACTIVE';
-        nextVehicleStatus = 'RENTED';
-
-        // Mise à jour de la réservation
-        const { error: bkUpdErr } = await supabase
-          .from('bookings')
-          .update({
-            status: nextBookingStatus,
-            reviewed_at: nowIso,
-            updated_at: nowIso,
-          })
-          .eq('id', input.bookingId);
-
-        if (bkUpdErr) {
-          return { success: false, error: `Erreur mise à jour statut réservation: ${bkUpdErr.message}` };
+      if (!isPickup) {
+        const startMileage = typeof vehicle?.mileage === 'number' ? vehicle.mileage : null;
+        if (startMileage !== null && input.mileage < startMileage) {
+          return {
+            success: false,
+            error: `Le kilométrage de retour (${input.mileage} km) ne peut pas être inférieur au kilométrage de départ (${startMileage} km).`,
+            invalidInput: true,
+          };
         }
+        if (startMileage !== null) distanceDrivenKm = input.mileage - startMileage;
 
-        // Mise à jour du statut et du compteur du véhicule
-        if (booking.vehicle_id) {
-          await supabase
-            .from('vehicles')
-            .update({
-              status: nextVehicleStatus,
-              mileage: input.mileage,
-              updated_at: nowIso,
-            })
-            .eq('id', booking.vehicle_id);
+        const deposit = Number(booking.deposit_amount ?? 0);
+        if ((input.depositDeduction ?? 0) > deposit) {
+          return { success: false, error: 'La retenue ne peut pas dépasser le montant de la caution.', invalidInput: true };
         }
-
-        // Enregistrement de l'état des lieux dans la timeline
-        await supabase.from('booking_events').insert({
-          booking_id: input.bookingId,
-          actor_id: input.actorId || null,
-          actor_role: input.actorRole || 'AGENCY_MANAGER',
-          event_type: 'HANDOVER_PICKUP_COMPLETED',
-          metadata: {
-            mileage: input.mileage,
-            fuelLevel: input.fuelLevel,
-            cleanliness: input.cleanliness,
-            checklist: input.checklist,
-            damagesDescription: input.damagesDescription || null,
-            photosCount: input.photos?.length || 0,
-            notes: input.notes || null,
-            recordedAt: nowIso,
-          },
-        });
-
-        // Audit log officiel
-        await supabase.from('audit_logs').insert({
-          action: 'VEHICLE_HANDOVER_PICKUP',
-          entity_type: 'booking',
-          entity_id: input.bookingId,
-          agency_id: input.agencyId,
-          metadata: {
-            vehicleId: booking.vehicle_id,
-            mileage: input.mileage,
-            fuelLevel: input.fuelLevel,
-          },
-        });
-      }
-      // ----------------------------------------------------------------------
-      // SCÉNARIO B : RESTITUTION DU VÉHICULE (RETOUR / RETURN)
-      // ----------------------------------------------------------------------
-      else {
-        nextBookingStatus = 'COMPLETED';
-        // Si dégâts déclarés lors du retour, le véhicule est envoyé en maintenance pour inspection
-        nextVehicleStatus = input.damagesDescription ? 'MAINTENANCE' : 'AVAILABLE';
-
-        // Calculer la distance parcourue si le kilométrage de départ était enregistré
-        if (vehicle?.mileage && input.mileage >= vehicle.mileage) {
-          distanceDrivenKm = input.mileage - vehicle.mileage;
-        }
-
-        // Mise à jour de la réservation en statut terminé
-        const { error: bkUpdErr } = await supabase
-          .from('bookings')
-          .update({
-            status: nextBookingStatus,
-            completed_at: nowIso,
-            updated_at: nowIso,
-          })
-          .eq('id', input.bookingId);
-
-        if (bkUpdErr) {
-          return { success: false, error: `Erreur finalisation restitution: ${bkUpdErr.message}` };
-        }
-
-        // Libération du véhicule et mise à jour de son compteur
-        if (booking.vehicle_id) {
-          await supabase
-            .from('vehicles')
-            .update({
-              status: nextVehicleStatus,
-              mileage: input.mileage,
-              updated_at: nowIso,
-            })
-            .eq('id', booking.vehicle_id);
-        }
-
-        // Enregistrement de l'état des lieux de retour
-        await supabase.from('booking_events').insert({
-          booking_id: input.bookingId,
-          actor_id: input.actorId || null,
-          actor_role: input.actorRole || 'AGENCY_MANAGER',
-          event_type: 'HANDOVER_RETURN_COMPLETED',
-          metadata: {
-            mileage: input.mileage,
-            distanceDrivenKm: distanceDrivenKm || null,
-            fuelLevel: input.fuelLevel,
-            cleanliness: input.cleanliness,
-            checklist: input.checklist,
-            damagesDescription: input.damagesDescription || null,
-            depositReturned: input.depositReturned !== false,
-            depositDeduction: input.depositDeduction || 0,
-            deductionReason: input.deductionReason || null,
-            recordedAt: nowIso,
-          },
-        });
-
-        // Audit log officiel
-        await supabase.from('audit_logs').insert({
-          action: 'VEHICLE_HANDOVER_RETURN',
-          entity_type: 'booking',
-          entity_id: input.bookingId,
-          agency_id: input.agencyId,
-          metadata: {
-            vehicleId: booking.vehicle_id,
-            mileage: input.mileage,
-            depositReturned: input.depositReturned !== false,
-            depositDeduction: input.depositDeduction || 0,
-          },
-        });
       }
 
-      // Notification WhatsApp de synthèse au client
+      const nextBookingStatus = targetStatusForHandover(action) as BookingStatus;
+      // Si dégâts déclarés au retour, le véhicule passe en maintenance pour inspection
+      const nextVehicleStatus: VehicleStatus = isPickup ? 'RENTED' : input.damagesDescription ? 'MAINTENANCE' : 'AVAILABLE';
+      const nowIso = new Date().toISOString();
+      const warnings: string[] = [];
+
+      // 3. Transition gardée (agence + statut lu) : une seule remise / restitution possible
+      const { data: transitioned, error: bkUpdErr } = await supabase
+        .from('bookings')
+        .update(
+          isPickup
+            ? { status: nextBookingStatus, reviewed_at: nowIso, updated_at: nowIso }
+            : { status: nextBookingStatus, completed_at: nowIso, updated_at: nowIso }
+        )
+        .eq('id', booking.id)
+        .eq('agency_id', input.agencyId)
+        .eq('status', booking.status)
+        .select('id')
+        .maybeSingle();
+
+      if (bkUpdErr) {
+        console.error('[DeliveryService] Booking transition failed:', bkUpdErr.code, bkUpdErr.message);
+        if (bkUpdErr.code === '23P01') {
+          return {
+            success: false,
+            error: 'Une autre location confirmée occupe déjà ce véhicule sur ces dates.',
+            transitionConflict: true,
+          };
+        }
+        return { success: false, error: 'L’état des lieux n’a pas pu être enregistré. Réessayez dans un instant.' };
+      }
+      if (!transitioned) {
+        return {
+          success: false,
+          error: 'Cette réservation a été modifiée entre-temps. Actualisez la page avant de recommencer.',
+          transitionConflict: true,
+        };
+      }
+
+      // 4. Statut et compteur du véhicule (bornés à l'agence)
+      if (booking.vehicle_id) {
+        const { error: vehicleError } = await supabase
+          .from('vehicles')
+          .update({ status: nextVehicleStatus, mileage: input.mileage, updated_at: nowIso })
+          .eq('id', booking.vehicle_id)
+          .eq('agency_id', input.agencyId);
+        if (vehicleError) {
+          console.error('[DeliveryService] Vehicle not updated after handover:', vehicleError.message);
+          warnings.push('vehicle_not_updated');
+        }
+      }
+
+      // 5. État des lieux dans la timeline et journal d'audit
+      const { error: eventError } = await supabase.from('booking_events').insert({
+        booking_id: booking.id,
+        actor_id: input.actorId || null,
+        actor_role: input.actorRole || 'AGENCY_MANAGER',
+        event_type: isPickup ? 'HANDOVER_PICKUP_COMPLETED' : 'HANDOVER_RETURN_COMPLETED',
+        metadata: isPickup
+          ? {
+              mileage: input.mileage,
+              fuelLevel: input.fuelLevel,
+              cleanliness: input.cleanliness,
+              checklist: input.checklist,
+              damagesDescription: input.damagesDescription || null,
+              photosCount: input.photos?.length || 0,
+              notes: input.notes || null,
+              recordedAt: nowIso,
+            }
+          : {
+              mileage: input.mileage,
+              distanceDrivenKm: distanceDrivenKm ?? null,
+              fuelLevel: input.fuelLevel,
+              cleanliness: input.cleanliness,
+              checklist: input.checklist,
+              damagesDescription: input.damagesDescription || null,
+              depositReturned: input.depositReturned !== false,
+              depositDeduction: input.depositDeduction || 0,
+              deductionReason: input.deductionReason || null,
+              recordedAt: nowIso,
+            },
+      });
+      if (eventError) {
+        console.error('[DeliveryService] Handover event not recorded:', eventError.message);
+        warnings.push('event_not_recorded');
+      }
+
+      const { error: auditError } = await supabase.from('audit_logs').insert({
+        action: isPickup ? 'VEHICLE_HANDOVER_PICKUP' : 'VEHICLE_HANDOVER_RETURN',
+        entity_type: 'booking',
+        entity_id: booking.id,
+        agency_id: input.agencyId,
+        metadata: isPickup
+          ? { vehicleId: booking.vehicle_id, mileage: input.mileage, fuelLevel: input.fuelLevel }
+          : {
+              vehicleId: booking.vehicle_id,
+              mileage: input.mileage,
+              depositReturned: input.depositReturned !== false,
+              depositDeduction: input.depositDeduction || 0,
+            },
+      });
+      if (auditError) {
+        console.error('[DeliveryService] Handover audit log not recorded:', auditError.message);
+        warnings.push('audit_not_recorded');
+      }
+
+      // 6. Notification WhatsApp de synthèse au client (seulement après une transition enregistrée)
       let whatsappSent = false;
       let whatsappMessageId: string | undefined;
 
@@ -377,7 +437,7 @@ export class DeliveryService {
 
       return {
         success: true,
-        bookingId: input.bookingId,
+        bookingId: booking.id,
         type: input.type,
         bookingStatus: nextBookingStatus,
         vehicleStatus: nextVehicleStatus,
@@ -385,10 +445,11 @@ export class DeliveryService {
         distanceDrivenKm,
         whatsappSent,
         whatsappMessageId,
+        warnings,
       };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors de la validation de la remise';
-      return { success: false, error: msg };
+      console.error('[DeliveryService] Handover failed:', err instanceof Error ? err.message : err);
+      return { success: false, error: 'L’état des lieux n’a pas pu être enregistré. Réessayez dans un instant.' };
     }
   }
 
@@ -424,7 +485,7 @@ export class DeliveryService {
         .select('*, vehicle:vehicles(brand, model, license_plate)')
         .eq('agency_id', agencyId)
         .eq('start_date', date)
-        .in('status', ['CONFIRMED', 'PENDING']),
+        .in('status', ['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP']),
       supabase
         .from('bookings')
         .select('*, vehicle:vehicles(brand, model, license_plate)')

@@ -2,8 +2,53 @@ import { z } from 'zod';
 import { BOOKING_STATUSES, type BookingStatus } from './booking-status';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const TIME_FORMAT_REGEX = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 export const deliveryTypeEnum = z.enum(['AGENCY_PICKUP', 'AIRPORT', 'HOTEL', 'ADDRESS']);
+
+export const bookingDatesSchema = z
+  .object({
+    startDate: z.string().regex(DATE_FORMAT_REGEX, 'Date de début requise (AAAA-MM-JJ)'),
+    endDate: z.string().regex(DATE_FORMAT_REGEX, 'Date de fin requise (AAAA-MM-JJ)'),
+    pickupTime: z.string().regex(TIME_FORMAT_REGEX, 'Heure de prise en charge invalide (HH:mm)').default('10:00'),
+    dropoffTime: z.string().regex(TIME_FORMAT_REGEX, 'Heure de restitution invalide (HH:mm)').default('10:00'),
+  })
+  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
+    message: 'La date de retour doit être égale ou postérieure à la date de début',
+    path: ['endDate'],
+  })
+  .refine(
+    (data) => {
+      const diffMs = new Date(data.endDate).getTime() - new Date(data.startDate).getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays <= 90;
+    },
+    {
+      message: 'La durée de location maximale est de 90 jours',
+      path: ['endDate'],
+    }
+  );
+
+export const bookingAvailabilityCheckSchema = z
+  .object({
+    vehicleId: z.string().regex(UUID_PATTERN, 'Identifiant véhicule invalide'),
+    startDate: z.string().regex(DATE_FORMAT_REGEX, 'Date de début requise (AAAA-MM-JJ)'),
+    endDate: z.string().regex(DATE_FORMAT_REGEX, 'Date de fin requise (AAAA-MM-JJ)'),
+  })
+  .refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
+    message: 'La date de fin doit être postérieure ou égale à la date de début',
+    path: ['endDate'],
+  });
+
+export const bookingCancellationSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(5, 'Le motif d’annulation doit contenir au moins 5 caractères')
+    .max(500, 'Le motif d’annulation ne doit pas dépasser 500 caractères'),
+  notifyCustomer: z.boolean().default(true),
+});
 
 export const bookingRequestSchema = z
   .object({
@@ -51,6 +96,9 @@ export const bookingRequestSchema = z
   });
 
 export type BookingRequestInput = z.infer<typeof bookingRequestSchema>;
+export type BookingDatesInput = z.infer<typeof bookingDatesSchema>;
+export type BookingAvailabilityCheckInput = z.infer<typeof bookingAvailabilityCheckSchema>;
+export type BookingCancellationInput = z.infer<typeof bookingCancellationSchema>;
 
 const bookingStatusEnum = z.enum(
   BOOKING_STATUSES as unknown as [BookingStatus, ...BookingStatus[]]
