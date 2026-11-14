@@ -54,3 +54,6 @@ Thumbs.db
 
 # Vercel & Deployment
 .vercel/
+
+# Worker MapLibre copié depuis node_modules avant dev/build (frontend/scripts/copy-maplibre-worker.mjs)
+frontend/public/maplibre/
