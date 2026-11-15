@@ -114,6 +114,7 @@ export function Topbar({
   const alertCount = notifications.filter((n) => n.tone === 'alert').length;
 
   return (
+    <>
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
         <nav aria-label="Fil d'Ariane" className="min-w-0 flex-1">
@@ -149,7 +150,7 @@ export function Topbar({
           disabled={refreshing}
           aria-label="Actualiser les données"
           aria-busy={refreshing}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-50"
         >
           <RefreshCw aria-hidden="true" className={cn('h-4 w-4', refreshing && 'animate-spin')} />
         </button>
@@ -165,7 +166,7 @@ export function Topbar({
               type="button"
               {...props}
               aria-label={`Notifications${alertCount ? ` (${alertCount})` : ''}`}
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946]"
             >
               <Bell aria-hidden="true" className="h-4 w-4" />
               {alertCount > 0 && (
@@ -220,7 +221,7 @@ export function Topbar({
             <button
               type="button"
               {...props}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-2.5 outline-none transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+              className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-2.5 outline-none sm:min-h-0 transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#E63946]"
             >
               <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-white border border-slate-200 shrink-0 flex items-center justify-center">
                 {avatarUrl ? (
@@ -312,7 +313,11 @@ export function Topbar({
         </Popover>
       </div>
 
-      <MobileNav sections={sections} activeSection={activeSection} onNavigate={onNavigate} pendingCount={pendingCount} />
     </header>
+
+    {/* Hors du <header> : son backdrop-blur ferait de l'en-tête le repère des éléments « fixed », et la
+        barre du bas (fixed bottom-0) se placerait en haut de l'écran, par-dessus l'en-tête */}
+    <MobileNav sections={sections} activeSection={activeSection} onNavigate={onNavigate} pendingCount={pendingCount} />
+    </>
   );
 }

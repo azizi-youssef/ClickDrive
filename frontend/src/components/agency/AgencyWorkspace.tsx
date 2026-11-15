@@ -12,7 +12,8 @@ import { Topbar } from '@/components/agency/shell/Topbar';
 import { Toast } from '@/components/agency/shell/Feedback';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 import { DateRangeInputs, FilterChips } from '@/components/agency/shell/Controls';
-import { RANGE_PRESETS, resolveRange, type RangePreset } from '@/lib/design/tokens';
+import { RANGE_PRESETS, input as inputClass, resolveRange, type RangePreset } from '@/lib/design/tokens';
+import { cn } from '@/lib/utils';
 import {
   OverviewPanel,
   type AgendaResource,
@@ -35,6 +36,7 @@ import { VehicleFormModal } from '@/components/agency/fleet/VehicleFormModal';
 import { AgencyCalendarPanel } from '@/components/agency/calendar/AgencyCalendarPanel';
 import { AgencyRentalsPanel } from '@/components/agency/rentals/AgencyRentalsPanel';
 import { AgencyFinancesPanel } from '@/components/agency/finances/AgencyFinancesPanel';
+import { AgencyAnalyticsPanel } from '@/components/agency/analytics/AgencyAnalyticsPanel';
 import { AgencyCustomersPanel } from '@/components/agency/customers/AgencyCustomersPanel';
 import { AgencySettingsPanel } from '@/components/agency/settings/AgencySettingsPanel';
 import AgencyAccessPanel from '@/components/agency/AgencyAccessPanel';
@@ -46,6 +48,7 @@ import { AGENCY_SECTIONS } from '@/components/agency/shell/Sidebar';
 import { sectionFromUrl, statusFromUrl, workspaceUrl } from '@/lib/agency/workspace-url';
 import { TO_PROCESS_FILTER } from '@/lib/bookings/agency-queue';
 import { useRealtimeRefresh, type RealtimeTable } from '@/lib/supabase/realtime';
+import { AGENCY_SIDEBAR_COLLAPSED_KEY, useCollapsedPreference } from '@/lib/ui/use-collapsed-preference';
 
 export type AgencyIdentity = {
   id: string;
@@ -126,8 +129,12 @@ export function AgencyWorkspace({
     }
     window.history.pushState(null, '', workspaceUrl(next));
   }, [router]);
+  // « Réduire » de la barre latérale : préférence mémorisée dans le navigateur (partagée avec le Suivi GPS)
+  const [sidebarCollapsed, toggleSidebar] = useCollapsedPreference(AGENCY_SIDEBAR_COLLAPSED_KEY);
   const [rangePreset, setRangePreset] = useState<RangePreset>('30d');
   const [rangeInput, setRangeInput] = useState(() => resolveRange('30d'));
+  // Mobile : les dates personnalisées ne s'affichent que sur demande (sélecteur « Dates personnalisées… »)
+  const [customRangeOpen, setCustomRangeOpen] = useState(false);
 
   const [stats, setStats] = useState<OverviewResource>({ loading: true, error: null, data: null });
   // Nombre de voitures et de motos (navigation et vue d'ensemble)
@@ -406,13 +413,22 @@ export function AgencyWorkspace({
 
   /** Référence du dossier déjà ouvert pour l'adresse courante (évite de le relire) */
   const deepLinkHandled = useRef<string | null>(null);
+  /** La fiche ouverte depuis la liste a sa propre entrée d'historique : « Retour » (geste Android) la referme */
+  const detailHistoryEntry = useRef(false);
 
   /** Charge le dossier complet (lieux, horaires, historique) avant affichage. */
   const openDetail = useCallback(async (booking: AgencyBookingRow) => {
     const reference = bookingRefOf(booking);
-    // Le dossier ouvert a son adresse (sans nouvelle entrée d'historique)
+    // Le dossier ouvert a son adresse. Ouvert depuis la liste : nouvelle entrée d'historique, que « Retour »
+    // referme sans quitter la section. Rechargé ou déjà dans l'adresse (lien direct) : entrée remplacée.
     deepLinkHandled.current = reference;
-    window.history.replaceState(null, '', workspaceUrl(section, reference, urlFilters));
+    const url = workspaceUrl(section, reference, urlFilters);
+    if (new URLSearchParams(window.location.search).get('booking')) {
+      window.history.replaceState(null, '', url);
+    } else {
+      window.history.pushState(null, '', url);
+      detailHistoryEntry.current = true;
+    }
     setSelected(booking as BookingDetail);
     setDetail(null);
     setDetailError(null);
@@ -443,8 +459,27 @@ export function AgencyWorkspace({
   const closeDetail = useCallback(() => {
     setSelected(null);
     setPendingAction(null);
+    if (detailHistoryEntry.current) {
+      // Retire l'entrée ajoutée à l'ouverture : l'adresse redevient celle d'avant (filtre compris)
+      detailHistoryEntry.current = false;
+      window.history.back();
+      return;
+    }
     window.history.replaceState(null, '', workspaceUrl(section, null, urlFilters));
   }, [section, urlFilters]);
+
+  // « Retour » pendant que le dossier est ouvert (bouton du navigateur, geste Android) : le dossier se ferme
+  useEffect(() => {
+    if (!selected) return;
+    const onPopState = () => {
+      if (new URLSearchParams(window.location.search).get('booking')) return;
+      detailHistoryEntry.current = false;
+      setSelected(null);
+      setPendingAction(null);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [selected]);
 
   /**
    * Lien direct vers un dossier (notification e-mail ou WhatsApp, lien partagé) : le dossier est
@@ -631,8 +666,8 @@ export function AgencyWorkspace({
         sections={sections}
         active={section}
         onNavigate={setSection}
-        collapsed={false}
-        onToggleCollapsed={() => undefined}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebar}
         agencyName={agency.name}
         verified={agency.verified}
         logoUrl={currentLogoUrl}
@@ -674,7 +709,7 @@ export function AgencyWorkspace({
 
         <main
           id="agency-content"
-          className="mx-auto max-w-350 space-y-6 px-4 pt-6 pb-28 sm:px-6 lg:px-10 lg:py-8"
+          className="mx-auto max-w-350 space-y-6 px-4 pt-4 pb-28 sm:px-6 sm:pt-6 lg:px-10 lg:py-8"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
@@ -682,29 +717,66 @@ export function AgencyWorkspace({
               <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[32px]">
                 {currentLabel}
               </h1>
-              <p className="mt-1 text-sm capitalize text-slate-500">
+              {/* Sur mobile, la place va aux données : la date du jour est sur le téléphone */}
+              <p className="mt-1 hidden text-sm capitalize text-slate-500 sm:block">
                 {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
 
             {section === 'overview' && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <FilterChips
-                  options={RANGE_PRESETS}
-                  value={rangePreset}
-                  onChange={(value) => {
-                    setRangePreset(value);
-                    setRangeInput(resolveRange(value));
-                  }}
-                  label="Période des indicateurs"
-                />
-                <DateRangeInputs
-                  value={{ from: rangeInput.from ?? '', to: rangeInput.to ?? '' }}
-                  onChange={(next) => {
-                    setRangeInput(next);
-                    void loadOverview({ from: next.from || undefined, to: next.to || undefined });
-                  }}
-                />
+                {/* Mobile : un seul sélecteur au lieu de six boutons sur deux lignes et de deux champs de date */}
+                <div className="sm:hidden">
+                  <label htmlFor="overview-period" className="sr-only">
+                    Période des indicateurs
+                  </label>
+                  <select
+                    id="overview-period"
+                    value={customRangeOpen ? 'custom' : rangePreset}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value === 'custom') {
+                        setCustomRangeOpen(true);
+                        return;
+                      }
+                      const preset = value as RangePreset;
+                      setCustomRangeOpen(false);
+                      setRangeInput(resolveRange(preset));
+                      // Même préréglage qu'avant les dates personnalisées : l'effet ne se relancerait pas
+                      if (preset === rangePreset) void loadOverview(resolveRange(preset));
+                      else setRangePreset(preset);
+                    }}
+                    className={cn(inputClass, 'min-h-11')}
+                  >
+                    {RANGE_PRESETS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                    <option value="custom">Dates personnalisées…</option>
+                  </select>
+                </div>
+                <div className="hidden sm:block">
+                  <FilterChips
+                    options={RANGE_PRESETS}
+                    value={rangePreset}
+                    onChange={(value) => {
+                      setCustomRangeOpen(false);
+                      setRangePreset(value);
+                      setRangeInput(resolveRange(value));
+                    }}
+                    label="Période des indicateurs"
+                  />
+                </div>
+                <div className={cn(customRangeOpen ? 'block' : 'hidden', 'sm:block')}>
+                  <DateRangeInputs
+                    value={{ from: rangeInput.from ?? '', to: rangeInput.to ?? '' }}
+                    onChange={(next) => {
+                      setRangeInput(next);
+                      void loadOverview({ from: next.from || undefined, to: next.to || undefined });
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -726,28 +798,33 @@ export function AgencyWorkspace({
           </section>
 
           {section === 'overview' && (
-            <div className="space-y-6">
-              <FleetCapacityCard
-                subscription={subscription}
-                loading={subscriptionLoading}
-                error={subscriptionError}
-                onRetry={() => void loadSubscription()}
-                onOpenUpgradeModal={() => setSection('subscription')}
-              />
-              <OverviewPanel
-                stats={stats}
-                agenda={agenda}
-                onRetry={() => void loadOverview(resolveRange(rangePreset))}
-                onOpenBookings={() => setSection('bookings')}
-                pendingNow={pending}
-                onOpenPending={openPendingBookings}
-                onOpenFleet={() => setSection('fleet')}
-                onOpenMotos={() => setSection('fleet_motos')}
-                fleetTypeCounts={fleetTypeCounts}
-                onOpenCalendar={() => setSection('calendar')}
-                onOpenSubscription={() => setSection('subscription')}
-                onAddVehicle={canEditFleet(profile?.role) ? () => setSection('add_vehicle') : undefined}
-              />
+            // Mobile et tablette : alertes et indicateurs d'abord, la carte du forfait ensuite
+            <div className="flex flex-col gap-6">
+              <div className="order-2 lg:order-none">
+                <FleetCapacityCard
+                  subscription={subscription}
+                  loading={subscriptionLoading}
+                  error={subscriptionError}
+                  onRetry={() => void loadSubscription()}
+                  onOpenUpgradeModal={() => setSection('subscription')}
+                />
+              </div>
+              <div className="order-1 lg:order-none">
+                <OverviewPanel
+                  stats={stats}
+                  agenda={agenda}
+                  onRetry={() => void loadOverview(resolveRange(rangePreset))}
+                  onOpenBookings={() => setSection('bookings')}
+                  pendingNow={pending}
+                  onOpenPending={openPendingBookings}
+                  onOpenFleet={() => setSection('fleet')}
+                  onOpenMotos={() => setSection('fleet_motos')}
+                  fleetTypeCounts={fleetTypeCounts}
+                  onOpenCalendar={() => setSection('calendar')}
+                  onOpenSubscription={() => setSection('subscription')}
+                  onAddVehicle={canEditFleet(profile?.role) ? () => setSection('add_vehicle') : undefined}
+                />
+              </div>
             </div>
           )}
 
@@ -817,6 +894,10 @@ export function AgencyWorkspace({
             <AgencyFinancesPanel
               agencyId={agency.id}
             />
+          )}
+
+          {section === 'analytics' && (
+            <AgencyAnalyticsPanel agencyId={agency.id} agencyName={agency.name} />
           )}
 
           {section === 'access' && (

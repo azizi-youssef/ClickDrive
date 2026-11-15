@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Bell, Maximize2, RefreshCw, Satellite, Wifi, WifiOff } from 'lucide-react';
+import { Bell, Focus, Maximize2, Minimize2, RefreshCw, Satellite, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { button } from '@/lib/design/tokens';
+import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { formatAge } from '@/lib/tracking/geo.utils';
 import { matchesFilter, matchesSearch, mappable, vehicleLabel, type FleetFilter } from '@/lib/tracking/fleet-state';
 import type { RealtimeStatus } from '@/lib/tracking/tracking-realtime';
@@ -51,6 +52,10 @@ function toMapVehicle(vehicle: FleetVehicle): MapVehicle {
 
 const LEGEND: TrackingState[] = ['MOVING', 'STATIONARY', 'OFFLINE', 'AWAITING'];
 
+/** Boutons posés sur la carte, sous les boutons de zoom de MapLibre */
+const MAP_BUTTON =
+  'flex h-8.5 w-8.5 items-center justify-center rounded-md bg-white text-slate-700 shadow transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]';
+
 /** Écran principal : indicateurs de flotte, carte centrale, liste filtrable et détail du véhicule sélectionné. */
 export function TrackingDashboard() {
   const access = useTrackingAccess();
@@ -60,6 +65,11 @@ export function TrackingDashboard() {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [manualFit, setManualFit] = useState(0);
+  // Carte agrandie à tout l'écran (dans la page : fonctionne aussi sur mobile). La carte n'est pas recréée :
+  // seul son cadre change de taille et MapLibre suit le redimensionnement. Échap ou le même bouton la réduit ;
+  // le reste de la page devient inerte et ne défile plus, le focus revient au bouton à la fermeture.
+  const [expanded, setExpanded] = useState(false);
+  const expandedRef = useModalDialog<HTMLDivElement>(expanded, { onClose: () => setExpanded(false) });
 
   const visible = useMemo(() => fleet.vehicles.filter((v) => matchesFilter(v, filter) && matchesSearch(v, query)), [fleet.vehicles, filter, query]);
   const mapVehicles = useMemo(() => mappable(visible).map(toMapVehicle), [visible]);
@@ -184,8 +194,18 @@ export function TrackingDashboard() {
             )}
           </Card>
 
-          {/* Carte */}
-          <div className="relative order-1 h-[58vh] min-h-[22rem] lg:order-2 lg:h-[calc(100vh-15rem)] lg:min-h-[34rem]">
+          {/* Carte (cadre agrandi à tout l'écran à la demande ; même arbre d'éléments : la carte reste montée) */}
+          <div
+            ref={expandedRef}
+            {...(expanded ? { role: 'dialog', 'aria-modal': true, 'aria-label': 'Carte de la flotte agrandie' } : {})}
+            className={cn(
+              'order-1 lg:order-2',
+              expanded
+                ? 'fixed inset-0 z-[70] bg-[#F5F6F8] p-2 sm:p-3'
+                : 'h-[58vh] min-h-[22rem] lg:h-[calc(100vh-15rem)] lg:min-h-[34rem]'
+            )}
+          >
+          <div className="relative h-full w-full">
             {fleet.loading ? (
               <CardSkeleton tall rows={0} />
             ) : (
@@ -208,15 +228,27 @@ export function TrackingDashboard() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  type="button"
-                  onClick={() => setManualFit((n) => n + 1)}
-                  className="absolute right-3 top-24 z-10 flex h-8.5 w-8.5 items-center justify-center rounded-md bg-white text-slate-700 shadow transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
-                  aria-label="Afficher tous les véhicules"
-                  title="Afficher tous les véhicules"
-                >
-                  <Maximize2 aria-hidden="true" className="h-4 w-4" />
-                </button>
+                <div className="absolute right-3 top-24 z-10 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    data-autofocus
+                    onClick={() => setExpanded((value) => !value)}
+                    className={MAP_BUTTON}
+                    aria-label={expanded ? 'Réduire la carte' : 'Agrandir la carte'}
+                    title={expanded ? 'Réduire la carte (Échap)' : 'Agrandir la carte'}
+                  >
+                    {expanded ? <Minimize2 aria-hidden="true" className="h-4 w-4" /> : <Maximize2 aria-hidden="true" className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setManualFit((n) => n + 1)}
+                    className={MAP_BUTTON}
+                    aria-label="Afficher tous les véhicules"
+                    title="Afficher tous les véhicules"
+                  >
+                    <Focus aria-hidden="true" className="h-4 w-4" />
+                  </button>
+                </div>
                 {mapVehicles.length === 0 && fleet.vehicles.length > 0 && (
                   <p role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-xl bg-white/95 px-3 py-2 text-center text-sm text-slate-600 shadow">
                     Aucune position à afficher pour ce filtre.
@@ -227,6 +259,7 @@ export function TrackingDashboard() {
                 )}
               </>
             )}
+          </div>
           </div>
         </div>
       )}

@@ -48,6 +48,23 @@ export type FinanceData = {
   transactions: TransactionItem[];
 };
 
+/** Libellé court et couleur du statut d'une opération (tableau et cartes mobiles) */
+function transactionStatus(status: string): { label: string; className: string } {
+  if (status === 'COMPLETED') return { label: 'Clôturé', className: 'bg-emerald-100 text-emerald-800' };
+  if (status === 'ACTIVE') return { label: 'En cours', className: 'bg-blue-100 text-blue-800' };
+  if (status === 'REJECTED') return { label: 'Refusé', className: 'bg-slate-100 text-slate-600' };
+  if (status === 'CANCELLED') return { label: 'Annulé', className: 'bg-slate-100 text-slate-600' };
+  const normalized = normalizeBookingStatus(status);
+  if (normalized === 'REQUESTED') return { label: 'En attente', className: 'bg-amber-100 text-amber-800' };
+  if (['APPROVED', 'READY_FOR_PICKUP'].includes(normalized)) return { label: 'Confirmé', className: 'bg-amber-100 text-amber-800' };
+  return { label: status, className: 'bg-amber-100 text-amber-800' };
+}
+
+function TransactionStatus({ status }: { status: string }) {
+  const { label, className } = transactionStatus(status);
+  return <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-bold uppercase', className)}>{label}</span>;
+}
+
 export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
   const [data, setData] = useState<FinanceData | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -258,7 +275,35 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
             Aucune opération financière enregistrée pour le moment.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Téléphone : une carte par opération (le tableau à 7 colonnes défilerait à l'horizontale) */}
+          <ul className="divide-y divide-slate-100 sm:hidden" aria-label="Opérations">
+            {data.transactions.map((t) => (
+              <li key={t.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{t.customerName}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      <span className="font-mono font-bold text-slate-700">{t.reference}</span> · {new Date(t.date).toLocaleDateString('fr-FR')}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">{t.vehicle}</p>
+                  </div>
+                  <TransactionStatus status={t.status} />
+                </div>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <dt className="text-slate-500">Montant brut</dt>
+                    <dd className="font-semibold text-slate-900">{formatPrice(t.totalPrice)}</dd>
+                  </div>
+                  <div className="text-right">
+                    <dt className="text-slate-500">Part agence</dt>
+                    <dd className="font-bold text-emerald-700">{formatPrice(t.agencyAmount)}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-600">
                 <tr>
@@ -287,38 +332,14 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                       {formatPrice(t.agencyAmount)}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span
-                        className={cn(
-                          'rounded-md px-2 py-0.5 text-[11px] font-bold uppercase',
-                          t.status === 'COMPLETED'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : t.status === 'ACTIVE'
-                              ? 'bg-blue-100 text-blue-800'
-                              : t.status === 'REJECTED' || t.status === 'CANCELLED'
-                                ? 'bg-slate-100 text-slate-600'
-                                : 'bg-amber-100 text-amber-800'
-                        )}
-                      >
-                        {t.status === 'COMPLETED'
-                          ? 'Clôturé'
-                          : t.status === 'ACTIVE'
-                            ? 'En cours'
-                            : t.status === 'REJECTED'
-                              ? 'Refusé'
-                              : t.status === 'CANCELLED'
-                                ? 'Annulé'
-                                : normalizeBookingStatus(t.status) === 'REQUESTED'
-                                  ? 'En attente'
-                                  : ['APPROVED', 'READY_FOR_PICKUP'].includes(normalizeBookingStatus(t.status))
-                                    ? 'Confirmé'
-                                    : t.status}
-                      </span>
+                      <TransactionStatus status={t.status} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

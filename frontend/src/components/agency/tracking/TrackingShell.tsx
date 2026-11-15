@@ -7,6 +7,7 @@ import { Bell, Cpu, Map as MapIcon, MapPinned, Route, Settings, ShieldAlert, typ
 import { createClient } from '@/lib/supabase/client';
 import { signOutEverywhere } from '@/lib/auth/client';
 import { workspaceUrl } from '@/lib/agency/workspace-url';
+import { AGENCY_SIDEBAR_COLLAPSED_KEY, useCollapsedPreference } from '@/lib/ui/use-collapsed-preference';
 import { cn } from '@/lib/utils';
 import { AGENCY_SECTIONS, Sidebar, TRACKING_SECTION, type AgencySection } from '@/components/agency/shell/Sidebar';
 import { Topbar } from '@/components/agency/shell/Topbar';
@@ -47,6 +48,8 @@ export function TrackingShell({
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  // Même préférence « Réduire » que le tableau de bord agence
+  const [sidebarCollapsed, toggleSidebar] = useCollapsedPreference(AGENCY_SIDEBAR_COLLAPSED_KEY);
 
   const navigate = useCallback(
     (id: string) => router.push(id === 'tracking' ? '/agency/tracking' : workspaceUrl(id)),
@@ -77,8 +80,8 @@ export function TrackingShell({
           sections={SECTIONS}
           active="tracking"
           onNavigate={navigate}
-          collapsed={false}
-          onToggleCollapsed={() => undefined}
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={toggleSidebar}
           agencyName={agency.name}
           verified={agency.verified}
           logoUrl={agency.logoUrl}

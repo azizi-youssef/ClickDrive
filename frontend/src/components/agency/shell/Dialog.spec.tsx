@@ -104,3 +104,17 @@ describe('Modal — boîte de dialogue générique', () => {
     expect(opener).toHaveFocus();
   });
 });
+
+describe('Modal — téléphone', () => {
+  it('les actions du pied restent visibles : pied collé en bas de la zone qui défile, encoche comprise', () => {
+    render(
+      <Modal title="Dossier" onClose={() => undefined} footer={<button type="button">Approuver</button>}>
+        <p>Contenu long</p>
+      </Modal>
+    );
+    const footer = screen.getByRole('button', { name: 'Approuver' }).parentElement!;
+    expect(footer.className).toMatch(/\bsticky\b/);
+    expect(footer.className).toMatch(/\bbottom-0\b/);
+    expect(footer.className).toContain('safe-area-inset-bottom');
+  });
+});

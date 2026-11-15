@@ -74,6 +74,14 @@ describe('Vue d’ensemble admin — données réelles', () => {
     expect(screen.queryByText('Données d’abonnement indisponibles pour le moment.')).not.toBeInTheDocument();
   });
 
+  it('abonnements : seulement les statistiques agrégées en base, jamais la liste complète', async () => {
+    stubApi();
+    render(<AdminOverviewClient initialStats={stats} statsError={null} />);
+    await screen.findByText('3 agences à vérifier');
+    const urls = vi.mocked(fetch).mock.calls.map(([input]) => String(input)).filter((url) => url.startsWith('/api/admin/subscriptions'));
+    expect(urls).toEqual(['/api/admin/subscriptions?only=stats']);
+  });
+
   it('mobile : la liste « À traiter » est en colonne unique explicite (sinon le texte tronqué élargit la page)', async () => {
     stubApi();
     render(<AdminOverviewClient initialStats={stats} statsError={null} />);

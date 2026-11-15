@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
@@ -35,6 +35,7 @@ import { contactBadgeDescription, contactBadgeLabel } from '@/lib/admin/contact-
 import { ContactAlertToast } from '@/components/admin/messages/ContactAlerts';
 import { useContactAlerts } from '@/components/admin/messages/contact-alerts-store';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
+import { ADMIN_SIDEBAR_COLLAPSED_KEY, useCollapsedPreference } from '@/lib/ui/use-collapsed-preference';
 
 const MESSAGES_HREF = '/admin/messages';
 
@@ -83,40 +84,6 @@ function useIsActive() {
   const pathname = usePathname();
   return (item: NavItemDef) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
-}
-
-/* ── Préférence « sidebar réduite » (persistée, sans flash d'hydratation) ── */
-const COLLAPSE_KEY = 'clickdrive:admin-sidebar-collapsed';
-const COLLAPSE_EVENT = 'clickdrive:admin-sidebar';
-
-function readCollapsed() {
-  try {
-    return window.localStorage.getItem(COLLAPSE_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function subscribeCollapsed(callback: () => void) {
-  window.addEventListener(COLLAPSE_EVENT, callback);
-  window.addEventListener('storage', callback);
-  return () => {
-    window.removeEventListener(COLLAPSE_EVENT, callback);
-    window.removeEventListener('storage', callback);
-  };
-}
-
-function useSidebarCollapsed() {
-  const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
-  const toggle = useCallback(() => {
-    try {
-      window.localStorage.setItem(COLLAPSE_KEY, readCollapsed() ? '0' : '1');
-    } catch {
-      /* stockage indisponible : la préférence n'est simplement pas mémorisée */
-    }
-    window.dispatchEvent(new Event(COLLAPSE_EVENT));
-  }, []);
-  return [collapsed, toggle] as const;
 }
 
 /* ── Logo ──────────────────────────────────────────────────────────── */
@@ -553,7 +520,7 @@ export function AdminShell({
   actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const [collapsed, toggleCollapsed] = useSidebarCollapsed();
+  const [collapsed, toggleCollapsed] = useCollapsedPreference(ADMIN_SIDEBAR_COLLAPSED_KEY);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);

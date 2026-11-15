@@ -135,7 +135,8 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
         fetchAdminStats(),
         fetchAdminOverview(),
         fetchHealth(),
-        fetch('/api/admin/subscriptions')
+        // Statistiques seules, agrégées en base : la liste des abonnements n'est pas construite ici
+        fetch('/api/admin/subscriptions?only=stats')
           .then((r) => r.json())
           .catch(() => null),
       ]);

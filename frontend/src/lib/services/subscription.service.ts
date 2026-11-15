@@ -1,4 +1,4 @@
-import { createAdminClient, createPublicClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient, createPublicClient } from '@/lib/supabase/server';
 import { requireServiceRoleClient } from '@/lib/supabase/privileged';
 import { selectAll } from '@/lib/supabase/select-all';
 import {
@@ -35,8 +35,8 @@ export type VehicleCapacityCheck = {
 /** Statuts d'abonnement dont la formule fixe la capacité (PAST_DUE : délai de grâce) */
 export const CAPACITY_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'TRIAL', 'PAST_DUE']);
 
-/** Statuts d'abonnement comptés dans le revenu mensuel récurrent */
-const BILLED_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['ACTIVE', 'TRIAL']);
+/* Statuts comptés dans le revenu mensuel récurrent (ACTIVE, TRIAL) : règle appliquée en base,
+   admin_subscription_statistics() et analytics_subscription_report() */
 
 export type CapacitySubscription = {
   status: string | null;
@@ -681,52 +681,47 @@ class SubscriptionService {
   }
 
   /**
-   * Statistiques financières d'abonnement. Revenu mensuel récurrent : seuls les abonnements réels
-   * ACTIVE ou TRIAL d'agences actives (une formule déduite de la flotte n'est pas un revenu).
+   * Statistiques financières d'abonnement, calculées en base par admin_subscription_statistics()
+   * (migration 20261123000200) : aucune agence, aucun abonnement ni aucun véhicule n'est chargé ici.
+   * Revenu mensuel récurrent : seuls les abonnements réels ACTIVE ou TRIAL d'agences actives (une formule
+   * déduite de la flotte n'est pas un revenu). Appelée avec la session : la base revérifie agencies.read.
    */
   async getSubscriptionStats(): Promise<SubscriptionStats> {
-    const subs = await this.getAllAgencySubscriptions();
-    const plans = await this.getSubscriptionPlans();
-
-    let mrr = 0;
-    let activeSubscribers = 0;
-    let fleetCapacityTotal = 0;
-
-    const distributionMap: Record<string, { count: number; revenue: number; name: string }> = {};
-    for (const p of plans) {
-      distributionMap[p.slug] = { count: 0, revenue: 0, name: p.name };
-    }
-
-    for (const s of subs) {
-      fleetCapacityTotal += s.current_vehicles_count;
-      const billed = !s.is_deduced && s.agency_active !== false && BILLED_SUBSCRIPTION_STATUSES.has(s.status);
-      if (!billed) continue;
-
-      activeSubscribers++;
-      mrr += s.price_monthly;
-      const slug = s.plan.slug;
-      if (!distributionMap[slug]) {
-        distributionMap[slug] = { count: 0, revenue: 0, name: s.plan.name };
-      }
-      distributionMap[slug].count++;
-      distributionMap[slug].revenue += s.price_monthly;
-    }
-
-    const plansDistribution = Object.entries(distributionMap).map(([slug, data]) => ({
-      slug,
-      planName: data.name,
-      count: data.count,
-      revenue: data.revenue,
-    }));
-
-    return {
-      monthlyRecurringRevenue: mrr,
-      activeSubscribers,
-      totalAgencies: subs.length,
-      fleetCapacityTotal,
-      plansDistribution,
-    };
+    const supabase = await createClient();
+    if (!supabase) throw new Error('Statistiques d’abonnement indisponibles : base de données non configurée.');
+    const { data, error } = await supabase.rpc('admin_subscription_statistics');
+    if (error) throw new Error(`Statistiques d’abonnement illisibles : ${error.message}`);
+    return parseSubscriptionStats(data);
   }
+}
+
+/** Lecture validée de admin_subscription_statistics() : une valeur non numérique lève une erreur (jamais un faux zéro) */
+export function parseSubscriptionStats(value: unknown): SubscriptionStats {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('Statistiques d’abonnement invalides.');
+  }
+  const source = value as Record<string, unknown>;
+  const count = (raw: unknown, field: string): number => {
+    const parsed = typeof raw === 'string' && raw.trim() !== '' ? Number(raw) : raw;
+    if (typeof parsed !== 'number' || !Number.isFinite(parsed)) throw new Error(`Statistiques d’abonnement invalides (${field}).`);
+    return parsed;
+  };
+  const plans = Array.isArray(source.plansDistribution) ? source.plansDistribution : [];
+  return {
+    monthlyRecurringRevenue: count(source.monthlyRecurringRevenue, 'monthlyRecurringRevenue'),
+    activeSubscribers: count(source.activeSubscribers, 'activeSubscribers'),
+    totalAgencies: count(source.totalAgencies, 'totalAgencies'),
+    fleetCapacityTotal: count(source.fleetCapacityTotal, 'fleetCapacityTotal'),
+    plansDistribution: plans.map((entry, index) => {
+      const plan = (typeof entry === 'object' && entry !== null ? entry : {}) as Record<string, unknown>;
+      return {
+        slug: String(plan.slug ?? ''),
+        planName: String(plan.planName ?? plan.slug ?? 'Formule'),
+        count: count(plan.count, `plansDistribution[${index}].count`),
+        revenue: count(plan.revenue, `plansDistribution[${index}].revenue`),
+      };
+    }),
+  };
 }
 
 export const subscriptionService = new SubscriptionService();

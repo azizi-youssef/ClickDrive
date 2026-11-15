@@ -12,7 +12,12 @@ vi.mock('next/navigation', async () => {
   const { useSyncExternalStore } = await import('react');
   const subscribe = (callback: () => void) => {
     window.addEventListener('locationchange', callback);
-    return () => window.removeEventListener('locationchange', callback);
+    // « Retour » du navigateur : Next relit aussi l'adresse
+    window.addEventListener('popstate', callback);
+    return () => {
+      window.removeEventListener('locationchange', callback);
+      window.removeEventListener('popstate', callback);
+    };
   };
   return {
     useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
@@ -167,6 +172,37 @@ describe('Espace agence — « À traiter » mène aux demandes à traiter', () 
   });
 });
 
+describe('Espace agence — « Réduire » la barre latérale', () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it('réduit puis déplie le menu, et la préférence est retenue au rechargement', async () => {
+    const user = userEvent.setup();
+    const view = mount();
+    const sidebar = () => screen.getByRole('complementary', { name: 'Navigation du portail agence' });
+    await screen.findByRole('button', { name: /^À traiter/ });
+
+    await user.click(within(sidebar()).getByRole('button', { name: 'Réduire' }));
+    expect(sidebar().className).toMatch(/\bw-19\b/);
+    expect(within(sidebar()).queryByText('Atlas Rent Oujda')).not.toBeInTheDocument();
+    expect(window.localStorage.getItem('clickdrive:agency-sidebar-collapsed')).toBe('1');
+
+    // Rechargement : le menu reste réduit
+    view.unmount();
+    mount();
+    await screen.findByRole('button', { name: /^À traiter/ });
+    const expand = within(sidebar()).getByRole('button', { name: 'Déplier le menu' });
+    await user.click(expand);
+    expect(sidebar().className).toMatch(/\bw-64\b/);
+    expect(within(sidebar()).getByText('Atlas Rent Oujda')).toBeInTheDocument();
+  });
+
+  it('la section « Statistiques » est dans le menu', async () => {
+    mount();
+    await screen.findByRole('button', { name: /^À traiter/ });
+    expect(within(screen.getByRole('complementary', { name: 'Navigation du portail agence' })).getByRole('button', { name: 'Statistiques' })).toBeInTheDocument();
+  });
+});
+
 describe('Espace agence — le filtre de statut est dans l’adresse', () => {
   it('une adresse partagée (?status=TO_PROCESS) charge directement la liste filtrée', async () => {
     realReplace(null, '', '/agency?section=bookings&status=TO_PROCESS');
@@ -216,6 +252,76 @@ describe('Espace agence — le filtre de statut est dans l’adresse', () => {
     await waitFor(() => expect(window.location.search).toBe('?section=bookings&status=TO_PROCESS&booking=CD-2611-0041'));
     await user.keyboard('{Escape}');
     await waitFor(() => expect(window.location.search).toBe('?section=bookings&status=TO_PROCESS'));
+  });
+});
+
+describe('Espace agence — téléphone', () => {
+  it('la barre de navigation du bas n’est pas dans l’en-tête (son flou la placerait en haut de l’écran)', async () => {
+    mount();
+    await screen.findByRole('button', { name: /^À traiter/ });
+    const bottomNav = screen.getByRole('navigation', { name: 'Sections du tableau de bord' });
+    expect(bottomNav.closest('header')).toBeNull();
+    expect(bottomNav.className).toMatch(/\bfixed\b.*\bbottom-0\b/);
+  });
+
+  it('« Retour » (geste Android) ferme le dossier ouvert depuis la liste, sans quitter la section', async () => {
+    const user = userEvent.setup();
+    realReplace(null, '', '/agency?section=bookings&status=TO_PROCESS');
+    mount();
+    const cards = await screen.findByRole('list', { name: 'Réservations de votre agence' });
+    await user.click(within(cards).getByRole('button', { name: 'Ouvrir la réservation CD-2611-0041' }));
+    expect(await screen.findByRole('dialog', { name: /Dossier CD-2611-0041/ })).toBeInTheDocument();
+    // L'ouverture a ajouté une entrée d'historique : « Retour » la consomme et revient à la liste filtrée
+
+    window.history.back();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Dossier CD-2611-0041/ })).not.toBeInTheDocument());
+    expect(window.location.search).toBe('?section=bookings&status=TO_PROCESS');
+    expect(screen.getByRole('list', { name: 'Réservations de votre agence' })).toBeInTheDocument();
+  });
+
+  it('dossier ouvert par lien direct : « Fermer » retire la référence sans revenir en arrière', async () => {
+    const user = userEvent.setup();
+    realReplace(null, '', '/agency?section=bookings&booking=CD-2611-0042');
+    const back = vi.spyOn(window.history, 'back');
+    mount();
+    const dialog = await screen.findByRole('dialog', { name: /Dossier CD-2611-0042/ });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Fermer' })[0]);
+    await waitFor(() => expect(window.location.search).toBe('?section=bookings'));
+    expect(back).not.toHaveBeenCalled();
+    back.mockRestore();
+  });
+
+  it('période : un seul sélecteur ; « Dates personnalisées… » affiche les dates', async () => {
+    const user = userEvent.setup();
+    mount();
+    await screen.findByRole('button', { name: /^À traiter/ });
+    const period = screen.getByRole('combobox', { name: 'Période des indicateurs' });
+    const datesBlock = () => screen.getByLabelText('Du').closest('div[class*="sm:block"]') as HTMLElement;
+    const hidden = /(^|\s)hidden(\s|$)/;
+    expect(datesBlock().className).toMatch(hidden);
+
+    await user.selectOptions(period, 'custom');
+    expect(datesBlock().className).not.toMatch(hidden);
+
+    await user.selectOptions(period, '90d');
+    await waitFor(() => {
+      const last = vi
+        .mocked(fetch)
+        .mock.calls.map(([input]) => new URL(String(input), 'http://localhost'))
+        .filter((url) => url.pathname.endsWith('/dashboard'))
+        .at(-1)!;
+      const days = (Date.parse(String(last.searchParams.get('to'))) - Date.parse(String(last.searchParams.get('from')))) / 86_400_000 + 1;
+      expect(Math.round(days)).toBe(90);
+    });
+    expect(datesBlock().className).toMatch(hidden);
+  });
+
+  it('accueil : alertes et indicateurs avant la carte du forfait, sauf sur grand écran', async () => {
+    subscriptionOk = true;
+    mount();
+    const kpi = await screen.findByRole('button', { name: /^À traiter/ });
+    expect(kpi.closest('.order-1')).not.toBeNull();
+    expect((await screen.findByText('Capacité du parc')).closest('.order-2')).not.toBeNull();
   });
 });
 

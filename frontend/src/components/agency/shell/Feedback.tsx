@@ -121,7 +121,7 @@ export function Toast({
     <div
       role={kind === 'error' ? 'alert' : 'status'}
       className={cn(
-        'fixed right-4 top-4 z-50 flex max-w-sm items-start gap-2 rounded-2xl border px-4 py-3 text-sm shadow-lg',
+        'fixed inset-x-4 bottom-[calc(var(--cd-fixed-nav,0px)+0.75rem)] z-50 flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm shadow-lg sm:inset-x-auto sm:right-4 sm:bottom-auto sm:top-4 sm:max-w-sm',
         kind === 'error'
           ? 'border-red-200 bg-red-50 text-red-950'
           : 'border-emerald-200 bg-emerald-50 text-emerald-950'
@@ -132,7 +132,7 @@ export function Toast({
         type="button"
         onClick={onDismiss}
         aria-label="Fermer la notification"
-        className="shrink-0 rounded p-0.5 text-xs font-medium underline opacity-80 hover:opacity-100"
+        className="-my-2 -me-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg opacity-80 hover:opacity-100 sm:m-0 sm:h-auto sm:w-auto sm:p-0.5"
       >
         <X aria-hidden="true" className="h-3.5 w-3.5" />
       </button>

@@ -99,7 +99,7 @@ function PanelLink({ onClick, children }: { onClick: () => void; children: React
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-accent-text transition-colors hover:bg-[#FFF4F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+      className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-bold text-accent-text sm:min-h-9 transition-colors hover:bg-[#FFF4F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
     >
       {children}
       <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -403,7 +403,7 @@ export function OverviewPanel({
                   aria-selected={agendaTab === tab.id}
                   onClick={() => setAgendaTab(tab.id)}
                   className={cn(
-                    'flex min-h-9 items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors',
+                    'flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors sm:min-h-9',
                     agendaTab === tab.id ? 'bg-white text-[#0B1220] shadow-sm' : 'text-slate-500 hover:text-[#0B1220]'
                   )}
                 >

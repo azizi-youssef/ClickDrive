@@ -1,6 +1,20 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { MOTORCYCLE_CATEGORIES } from '@/lib/vehicles/kind';
 import type { AdminStats, AgencyStats } from '@/lib/api/stats.api';
+import {
+  parseAdminAnalyticsReport,
+  parseAgencyAnalyticsReport,
+  type AdminAnalyticsReport,
+  type AgencyAnalyticsReport,
+} from '@/lib/analytics/report';
+
+/** Période refusée par la base (bornes inversées ou plus de 3 ans) : erreur de saisie, pas de serveur */
+export class AnalyticsRangeError extends Error {
+  constructor() {
+    super('La période demandée est invalide (3 ans au plus).');
+    this.name = 'AnalyticsRangeError';
+  }
+}
 
 function requireSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -173,6 +187,49 @@ export class StatsService {
       agencyNet: numeric(result.agencyNet),
       occupancyRate: numeric(result.occupancyRate),
     };
+  }
+
+  /**
+   * Statistiques détaillées de l'agence (entonnoir, délais, occupation, tendances, répartitions) :
+   * agrégats calculés par agency_analytics_report(), qui revérifie reports.read sur l'agence.
+   */
+  async getAgencyAnalytics(agencyId: string, range?: AgencyDashboardRange): Promise<AgencyAnalyticsReport> {
+    requireSupabase();
+    const supabase = await createClient();
+    if (!supabase) throw new Error('Service de statistiques indisponible.');
+
+    const { data, error } = await supabase.rpc('agency_analytics_report', {
+      p_agency_id: agencyId,
+      p_from: range?.from ?? null,
+      p_to: range?.to ?? null,
+    });
+    if (error) {
+      if (error.code === '22023') throw new AnalyticsRangeError();
+      console.error('[StatsService] Agency analytics failed:', error.message);
+      throw new Error("Impossible de charger les statistiques de l'agence.");
+    }
+    return parseAgencyAnalyticsReport(data);
+  }
+
+  /**
+   * Statistiques de la plateforme : admin_analytics_report() (reports.read plateforme, donc SUPER_ADMIN),
+   * appelée avec la session de l'utilisateur pour que la base revérifie le droit.
+   */
+  async getAdminAnalytics(range?: AgencyDashboardRange): Promise<AdminAnalyticsReport> {
+    requireSupabase();
+    const supabase = await createClient();
+    if (!supabase) throw new Error('Service de statistiques indisponible.');
+
+    const { data, error } = await supabase.rpc('admin_analytics_report', {
+      p_from: range?.from ?? null,
+      p_to: range?.to ?? null,
+    });
+    if (error) {
+      if (error.code === '22023') throw new AnalyticsRangeError();
+      console.error('[StatsService] Platform analytics failed:', error.message);
+      throw new Error('Impossible de charger les statistiques de la plateforme.');
+    }
+    return parseAdminAnalyticsReport(data);
   }
 
   /** Enlevements / retours a venir et activite recente de l'agence. */

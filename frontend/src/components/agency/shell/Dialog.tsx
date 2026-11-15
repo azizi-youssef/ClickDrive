@@ -80,14 +80,15 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+            className="-me-2 -mt-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 sm:m-0 sm:h-8 sm:w-8 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
         <div className="px-5 py-5 sm:px-6">{children}</div>
+        {/* Collé en bas de la zone qui défile : les actions restent visibles sans faire défiler tout le contenu */}
         {footer && (
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t border-slate-200 bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_20px_-16px_rgba(11,18,32,0.35)] sm:flex-row sm:justify-end sm:px-6 sm:py-4">
             {footer}
           </div>
         )}

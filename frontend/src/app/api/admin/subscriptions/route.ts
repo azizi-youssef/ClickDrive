@@ -3,9 +3,22 @@ import { serverError } from '@/lib/api/server-error';
 import { requirePlatformPermissionApi } from '@/lib/auth/access-api';
 import { subscriptionService } from '@/lib/services/subscription.service';
 
-export async function GET() {
+/**
+ * Abonnements de la plateforme. `?only=stats` : seulement les statistiques (MRR, abonnés, répartition),
+ * agrégées en base, sans construire la liste des agences (vue d'ensemble admin).
+ */
+export async function GET(request: NextRequest) {
   const gate = await requirePlatformPermissionApi('agencies.read');
   if (gate.denied) return gate.denied;
+
+  if (request.nextUrl.searchParams.get('only') === 'stats') {
+    try {
+      const stats = await subscriptionService.getSubscriptionStats();
+      return NextResponse.json({ success: true, data: { stats } });
+    } catch (error: unknown) {
+      return serverError(error, '/api/admin/subscriptions', 'Impossible de charger les statistiques d’abonnement.');
+    }
+  }
 
   try {
     const [subscriptions, stats, plans] = await Promise.all([

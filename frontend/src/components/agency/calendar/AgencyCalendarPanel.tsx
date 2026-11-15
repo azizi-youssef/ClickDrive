@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
+import { SMALL_SCREEN_QUERY, useMediaQuery } from '@/lib/ui/use-media-query';
 import Image from 'next/image';
 import {
   ChevronLeft,
@@ -67,7 +68,10 @@ export function AgencyCalendarPanel({
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedVehicle, setSelectedVehicle] = useState<string>(initialVehicleId || 'all');
-  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  // Vue choisie par l'utilisateur ; à défaut, semaine sur téléphone (7 colonnes lisibles), mois sinon
+  const [viewChoice, setViewChoice] = useState<'month' | 'week' | null>(null);
+  const smallScreen = useMediaQuery(SMALL_SCREEN_QUERY);
+  const viewMode: 'month' | 'week' = viewChoice ?? (smallScreen ? 'week' : 'month');
 
   // Selected event modal
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -353,7 +357,7 @@ export function AgencyCalendarPanel({
           <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1 text-xs font-semibold">
             <button
               type="button"
-              onClick={() => setViewMode('month')}
+              onClick={() => setViewChoice('month')}
               className={cn(
                 'rounded-lg px-3 py-1 transition',
                 viewMode === 'month' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
@@ -363,7 +367,7 @@ export function AgencyCalendarPanel({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('week')}
+              onClick={() => setViewChoice('week')}
               className={cn(
                 'rounded-lg px-3 py-1 transition',
                 viewMode === 'week' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
@@ -416,17 +420,18 @@ export function AgencyCalendarPanel({
             Aucun véhicule disponible dans cette sélection.
           </div>
         ) : (
-          <table className="w-full min-w-200 border-collapse text-left text-xs">
+          <table className={cn('w-full border-collapse text-left text-xs', viewMode === 'month' ? 'min-w-200' : 'sm:min-w-200')}>
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="sticky left-0 z-10 w-56 border-r border-slate-200 bg-slate-50 p-3 font-semibold text-slate-700">
+                {/* Colonne véhicule étroite sur téléphone : la semaine entière reste visible sans défiler */}
+                <th className="sticky left-0 z-10 w-24 border-r border-slate-200 bg-slate-50 p-2 font-semibold text-slate-700 sm:w-56 sm:p-3">
                   Véhicule
                 </th>
                 {daysList.map((day) => (
                   <th
                     key={day.dateStr}
                     className={cn(
-                      'min-w-10.5 border-r border-slate-100 p-2 text-center',
+                      'min-w-8 border-r border-slate-100 px-0.5 py-1 text-center sm:min-w-10.5 sm:p-2',
                       day.isToday && 'bg-red-50 text-accent-text'
                     )}
                   >
@@ -445,9 +450,9 @@ export function AgencyCalendarPanel({
                 return (
                   <tr key={v.id} className="hover:bg-slate-50/50">
                     {/* Vehicle info card sticky column */}
-                    <td className="sticky left-0 z-10 border-r border-slate-200 bg-white p-3 font-medium">
+                    <td className="sticky left-0 z-10 max-w-24 border-r border-slate-200 bg-white p-2 font-medium sm:max-w-none sm:p-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                        <div className="relative hidden h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-slate-100 sm:block">
                           {v.primaryImage ? (
                             <Image
                               src={v.primaryImage}
@@ -482,7 +487,7 @@ export function AgencyCalendarPanel({
                         <td
                           key={day.dateStr}
                           className={cn(
-                            'border-r border-slate-100 p-1 text-center align-middle',
+                            'border-r border-slate-100 px-0.5 py-1 text-center align-middle sm:p-1',
                             day.isToday && 'bg-red-50/30'
                           )}
                         >
@@ -492,7 +497,7 @@ export function AgencyCalendarPanel({
                               onClick={() => setSelectedEvent(matchingEvent)}
                               title={`${matchingEvent.title} (${matchingEvent.startDate} au ${matchingEvent.endDate})`}
                               className={cn(
-                                'h-7 w-full rounded-md text-[11px] font-semibold text-white shadow-xs transition hover:brightness-110',
+                                'h-9 w-full rounded-md text-[11px] font-semibold text-white shadow-xs transition hover:brightness-110 sm:h-7',
                                 matchingEvent.type === 'MAINTENANCE' && 'bg-orange-500',
                                 matchingEvent.type === 'BLOCKED' && 'bg-slate-700',
                                 matchingEvent.type === 'BOOKING' &&
@@ -509,7 +514,7 @@ export function AgencyCalendarPanel({
                               •
                             </button>
                           ) : (
-                            <div className="h-7 w-full rounded-md opacity-20" />
+                            <div className="h-9 w-full rounded-md opacity-20 sm:h-7" />
                           )}
                         </td>
                       );

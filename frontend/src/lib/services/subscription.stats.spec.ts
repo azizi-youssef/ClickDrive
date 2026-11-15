@@ -4,15 +4,16 @@ import { createFakeSupabase, type FakeCall } from '@/tests/support/fake-supabase
 const state = vi.hoisted(() => ({
   service: null as unknown,
   publicClient: null as unknown,
+  session: null as unknown,
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
   createAdminClient: async () => state.service,
   createPublicClient: () => state.publicClient,
-  createClient: async () => null,
+  createClient: async () => state.session,
 }));
 
-import { subscriptionService } from './subscription.service';
+import { parseSubscriptionStats, subscriptionService } from './subscription.service';
 
 const PLANS = [
   { id: 'c1000000-0000-4000-8000-000000000001', name: 'Starter', slug: 'starter', min_vehicles: 5, max_vehicles: 15, price_monthly: 300, is_active: true, sort_order: 1, features: [] },
@@ -45,6 +46,23 @@ function subscription(agencyId: string, slug: string, status: string, pricePaid:
 }
 
 let serviceCalls: FakeCall[] = [];
+let publicCalls: FakeCall[] = [];
+let sessionCalls: FakeCall[] = [];
+let rpcResult: { data?: unknown; error?: { message: string; code?: string } | null } = {};
+
+/** Réponse de admin_subscription_statistics() pour le jeu de données ci-dessus (calculée en base) */
+const SQL_STATS = {
+  monthlyRecurringRevenue: 400,
+  activeSubscribers: 1,
+  totalAgencies: 4,
+  fleetCapacityTotal: 23,
+  plansDistribution: [
+    { slug: 'starter', planName: 'Starter', count: 0, revenue: 0 },
+    { slug: 'pro', planName: 'Pro', count: 1, revenue: '400.00' },
+    { slug: 'business', planName: 'Business', count: 0, revenue: 0 },
+    { slug: 'unlimited', planName: 'Premium', count: 0, revenue: 0 },
+  ],
+};
 
 beforeEach(() => {
   const service = createFakeSupabase((call) => {
@@ -70,9 +88,14 @@ beforeEach(() => {
     return undefined;
   });
   const publicClient = createFakeSupabase((call) => (call.table === 'subscription_plans' ? { data: PLANS } : undefined));
+  rpcResult = { data: SQL_STATS };
+  const session = createFakeSupabase((call) => (call.op === 'rpc' ? rpcResult : undefined));
   state.service = service.client;
   state.publicClient = publicClient.client;
+  state.session = session.client;
   serviceCalls = service.calls;
+  publicCalls = publicClient.calls;
+  sessionCalls = session.calls;
 });
 
 describe('Vue plateforme des abonnements', () => {
@@ -82,15 +105,30 @@ describe('Vue plateforme des abonnements', () => {
     expect(serviceCalls.length).toBeLessThanOrEqual(3);
   });
 
-  it('revenu mensuel : seuls les abonnements réels ACTIVE/TRIAL d’agences actives', async () => {
+  it('statistiques calculées en base : une seule RPC avec la session, aucune table chargée', async () => {
     const stats = await subscriptionService.getSubscriptionStats();
+    expect(sessionCalls.map((call) => [call.op, call.table])).toEqual([['rpc', 'admin_subscription_statistics']]);
+    expect(serviceCalls).toHaveLength(0);
+    expect(publicCalls).toHaveLength(0);
     // A (400) seulement : B sans abonnement (formule déduite), C suspendue, D annulé
     expect(stats.monthlyRecurringRevenue).toBe(400);
     expect(stats.activeSubscribers).toBe(1);
     expect(stats.totalAgencies).toBe(4);
     expect(stats.fleetCapacityTotal).toBe(23);
-    expect(stats.plansDistribution.find((plan) => plan.slug === 'pro')).toMatchObject({ count: 1, revenue: 400 });
+    expect(stats.plansDistribution.find((plan) => plan.slug === 'pro')).toEqual({ slug: 'pro', planName: 'Pro', count: 1, revenue: 400 });
     expect(stats.plansDistribution.find((plan) => plan.slug === 'unlimited')).toMatchObject({ count: 0, revenue: 0 });
+  });
+
+  it('erreur de la base ou réponse invalide : erreur explicite, jamais un MRR à zéro', async () => {
+    rpcResult = { error: { message: 'Not authorized to read subscription statistics', code: '42501' } };
+    await expect(subscriptionService.getSubscriptionStats()).rejects.toThrow(/Not authorized/);
+    expect(() => parseSubscriptionStats({ ...SQL_STATS, monthlyRecurringRevenue: 'n/a' })).toThrow(/monthlyRecurringRevenue/);
+    expect(() => parseSubscriptionStats(null)).toThrow(/invalides/);
+  });
+
+  it('base non configurée : erreur, pas de valeurs par défaut', async () => {
+    state.session = null;
+    await expect(subscriptionService.getSubscriptionStats()).rejects.toThrow(/indisponibles/);
   });
 
   it('capacité affichée : formule de l’abonnement, palier déduit sinon (même règle que le contrôle d’ajout)', async () => {

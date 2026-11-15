@@ -490,7 +490,7 @@ export function AgencyFleetPanel({
                     <label
                       title="Téléverser ou modifier la photo directement"
                       className={cn(
-                        'absolute right-3 top-3 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-black/60 text-white shadow-xs backdrop-blur-md transition hover:bg-action',
+                        'absolute right-3 top-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg bg-black/60 sm:h-8 sm:w-8 text-white shadow-xs backdrop-blur-md transition hover:bg-action',
                         uploadingVehicleId === v.id && 'pointer-events-none opacity-80'
                       )}
                     >
@@ -585,7 +585,7 @@ export function AgencyFleetPanel({
                             type="button"
                             onClick={() => setEditingVehicle({ ...v, vehicle_type: type })}
                             title="Modifier les informations"
-                            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg sm:h-auto sm:w-auto sm:p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -593,7 +593,7 @@ export function AgencyFleetPanel({
                             type="button"
                             onClick={() => togglePublish(v)}
                             title={v.published ? 'Retirer de la marketplace' : 'Publier le véhicule'}
-                            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg sm:h-auto sm:w-auto sm:p-2 text-slate-600 hover:bg-slate-100"
                           >
                             {v.published ? (
                               <EyeOff className="h-4 w-4 text-amber-600" />
@@ -613,7 +613,7 @@ export function AgencyFleetPanel({
                           setBlockEndDate(tmrw.toISOString().split('T')[0]!);
                         }}
                         title="Bloquer des dates"
-                        className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg sm:h-auto sm:w-auto sm:p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                       >
                         <Calendar className="h-4 w-4" />
                       </button>
@@ -624,7 +624,7 @@ export function AgencyFleetPanel({
                         type="button"
                         onClick={() => void deleteVehicle(v)}
                         title="Archiver / Supprimer le véhicule"
-                        className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg sm:h-auto sm:w-auto sm:p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

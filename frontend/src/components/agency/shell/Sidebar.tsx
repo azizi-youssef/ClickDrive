@@ -21,6 +21,7 @@ import {
   Sparkles,
   Motorbike,
   Satellite,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +51,7 @@ export const AGENCY_SECTIONS: readonly {
     | 'customers'
     | 'subscription'
     | 'finances'
+    | 'analytics'
     | 'access'
     | 'settings';
   label: string;
@@ -65,13 +67,17 @@ export const AGENCY_SECTIONS: readonly {
   { id: 'subscription', label: 'Forfait & Capacité', icon: Sparkles },
   { id: 'customers', label: 'Clients', icon: Users },
   { id: 'finances', label: 'Revenus locatifs', icon: CircleDollarSign },
+  { id: 'analytics', label: 'Statistiques', icon: BarChart3 },
   { id: 'access', label: 'Équipe & Permissions', icon: ShieldCheck },
   { id: 'settings', label: 'Paramètres agence', icon: Settings },
 ] as const;
 
-/** Regroupement visuel de la navigation (les sections absentes selon le rôle sont ignorées). */
-const SECTION_GROUPS: { title: string; ids: string[] }[] = [
-  { title: 'Pilotage', ids: ['overview', 'bookings', 'rentals', 'calendar'] },
+/**
+ * Regroupement visuel de la navigation (les sections absentes selon le rôle sont ignorées).
+ * Une section qui n'est dans aucun groupe n'apparaît pas : toute nouvelle section doit être ajoutée ici.
+ */
+export const SECTION_GROUPS: { title: string; ids: string[] }[] = [
+  { title: 'Pilotage', ids: ['overview', 'bookings', 'rentals', 'calendar', 'analytics'] },
   { title: 'Flotte', ids: ['fleet', 'fleet_motos', 'tracking', 'add_vehicle', 'subscription'] },
   { title: 'Agence', ids: ['customers', 'finances', 'access', 'settings'] },
 ];
@@ -227,6 +233,8 @@ export function Sidebar({
           type="button"
           onClick={onToggleCollapsed}
           aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Déplier le menu' : undefined}
+          title={collapsed ? 'Déplier le menu' : undefined}
           className={cn(
             'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]',
             collapsed && 'justify-center px-0'

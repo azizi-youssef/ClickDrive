@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ChevronRight, Home, LayoutGrid, X, type LucideIcon } from 'lucide-react';
@@ -35,6 +35,10 @@ export function MobileNav({
   pendingCount?: number;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** Le menu ouvert a sa propre entrée d'historique : « Retour » (bouton ou geste Android) le ferme */
+  const historyEntryRef = useRef(false);
+  /** Action à lancer une fois l'entrée du menu retirée de l'historique (ex. : aller à une section) */
+  const afterCloseRef = useRef<(() => void) | null>(null);
   const moreRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -60,6 +64,24 @@ export function MobileNav({
   const primary = PRIMARY_IDS.map((id) => sections.find((s) => s.id === id)).filter((s): s is Section => Boolean(s));
   const activeInMore = !primary.some((s) => s.id === activeSection);
 
+  const openSheet = () => {
+    window.history.pushState(null, '', window.location.href);
+    historyEntryRef.current = true;
+    setSheetOpen(true);
+  };
+
+  /** Ferme le menu en retirant son entrée d'historique ; `then` s'exécute ensuite (aucune entrée en double) */
+  const closeSheet = useCallback((then?: () => void) => {
+    if (historyEntryRef.current) {
+      historyEntryRef.current = false;
+      afterCloseRef.current = then ?? null;
+      window.history.back();
+      return;
+    }
+    setSheetOpen(false);
+    then?.();
+  }, []);
+
   useEffect(() => {
     if (!sheetOpen) return;
     const opener = moreRef.current;
@@ -67,25 +89,38 @@ export function MobileNav({
     document.body.style.overflow = 'hidden';
     sheetRef.current?.querySelector<HTMLElement>('button')?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSheetOpen(false);
+      if (e.key === 'Escape') closeSheet();
+    };
+    // Retour (bouton du navigateur, geste Android, ou closeSheet) : le menu se ferme, puis l'action suit
+    const onPopState = () => {
+      historyEntryRef.current = false;
+      setSheetOpen(false);
+      const then = afterCloseRef.current;
+      afterCloseRef.current = null;
+      // Après le traitement du retour par le routeur
+      if (then) window.setTimeout(then, 0);
     };
     document.addEventListener('keydown', onKey);
+    window.addEventListener('popstate', onPopState);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('popstate', onPopState);
       opener?.focus();
     };
-  }, [sheetOpen]);
+  }, [sheetOpen, closeSheet]);
 
   const go = (id: string) => {
-    setSheetOpen(false);
-    onNavigate(id);
-    window.scrollTo({ top: 0 });
+    closeSheet(() => {
+      onNavigate(id);
+      window.scrollTo({ top: 0 });
+    });
   };
 
   const itemClass = (active: boolean) =>
     cn(
-      'relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
+      // Pleine largeur de la colonne : toute la case réagit au toucher, pas seulement l'icône et le libellé
+      'relative flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-xl text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
       active ? 'text-[#0B1220]' : 'text-slate-500 hover:text-[#0B1220]'
     );
 
@@ -128,7 +163,7 @@ export function MobileNav({
             <button
               ref={moreRef}
               type="button"
-              onClick={() => setSheetOpen(true)}
+              onClick={openSheet}
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
               className={itemClass(activeInMore)}
@@ -144,7 +179,7 @@ export function MobileNav({
       {sheetOpen &&
         createPortal(
           <div className="fixed inset-0 z-[60] lg:hidden">
-            <button type="button" tabIndex={-1} aria-label="Fermer" onClick={() => setSheetOpen(false)} className="absolute inset-0 bg-[#0B1220]/50 backdrop-blur-[2px]" />
+            <button type="button" tabIndex={-1} aria-label="Fermer" onClick={() => closeSheet()} className="absolute inset-0 bg-[#0B1220]/50 backdrop-blur-[2px]" />
             <div
               ref={sheetRef}
               role="dialog"
@@ -159,7 +194,7 @@ export function MobileNav({
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setSheetOpen(false)}
+                  onClick={() => closeSheet()}
                   aria-label="Fermer le menu des sections"
                   className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
                 >
@@ -191,9 +226,14 @@ export function MobileNav({
 
               {/* Hors des sections : sortir de l'espace agence. Sur ordinateur, le même lien est en bas de la barre latérale. */}
               <div className="mt-3 border-t border-slate-100 pt-3">
+                {/* replace : la page d'accueil remplace l'entrée d'historique du menu (pas de « Retour » vers un menu fermé) */}
                 <Link
                   href="/"
-                  onClick={() => setSheetOpen(false)}
+                  replace
+                  onClick={() => {
+                    historyEntryRef.current = false;
+                    setSheetOpen(false);
+                  }}
                   className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200 px-3 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
                 >
                   <Home className="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />

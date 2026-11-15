@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@/tests/setup/dom';
-import { render, screen, within } from '@/tests/setup/render';
+import { render, screen, waitFor, within } from '@/tests/setup/render';
 import userEvent from '@testing-library/user-event';
 import { Car, ClipboardList, LayoutDashboard, CalendarDays, Settings } from 'lucide-react';
 import { describe, expect, it, vi } from 'vitest';
@@ -87,6 +87,55 @@ describe('Navigation mobile de l’espace agence — retour au site', () => {
     const { onNavigate } = setup();
     const dialog = await openSheet(user);
     await user.click(within(dialog).getByRole('button', { name: 'Paramètres agence' }));
-    expect(onNavigate).toHaveBeenCalledWith('settings');
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('settings'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('Navigation mobile de l’espace agence — téléphone', () => {
+  it('toute la case de la barre réagit au toucher (boutons à la largeur de leur colonne)', () => {
+    setup();
+    const bar = screen.getByRole('navigation', { name: 'Sections du tableau de bord' });
+    for (const button of within(bar).getAllByRole('button')) expect(button.className).toMatch(/\bw-full\b/);
+  });
+
+  it('« Retour » (geste Android) ferme la feuille « Plus » sans changer de section', async () => {
+    const user = userEvent.setup();
+    const { onNavigate } = setup();
+    await openSheet(user);
+    // Entrée d'historique propre au menu : « Retour » la consomme au lieu de quitter la page
+    window.history.back();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.body.style.overflow).not.toBe('hidden');
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it('choisir une section : l’entrée du menu est retirée avant la navigation (pas de doublon dans l’historique)', async () => {
+    const user = userEvent.setup();
+    const order: string[] = [];
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {
+      order.push('back');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    const onNavigate = vi.fn(() => {
+      order.push('navigate');
+    });
+    render(<MobileNav sections={sections} activeSection="overview" onNavigate={onNavigate} pendingCount={0} />);
+    const dialog = await openSheet(user);
+    await user.click(within(dialog).getByRole('button', { name: 'Paramètres agence' }));
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('settings'));
+    expect(order).toEqual(['back', 'navigate']);
+    back.mockRestore();
+  });
+
+  it('Échap ferme aussi la feuille en retirant son entrée d’historique', async () => {
+    const user = userEvent.setup();
+    const back = vi.spyOn(window.history, 'back');
+    setup();
+    await openSheet(user);
+    await user.keyboard('{Escape}');
+    expect(back).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    back.mockRestore();
   });
 });

@@ -262,6 +262,49 @@ describe('TrackingDashboard — flotte, filtres, sélection', () => {
     expect(container.querySelector('section[aria-label="Indicateurs de la flotte"]')!.className).toMatch(/grid-cols-2/);
     expect(container.querySelector('section[aria-label="Indicateurs de la flotte"]')!.className).toMatch(/xl:grid-cols-6/);
   });
+
+  it('« Agrandir la carte » : la carte occupe tout l’écran sans être recréée ; Échap ou « Réduire » la ramène', async () => {
+    const user = userEvent.setup();
+    mocks.api.mockResolvedValue(overview(fleet()));
+    renderDashboard();
+    await screen.findByText('Dacia Logan 1');
+    const map = screen.getByTestId('map');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Agrandir la carte' }));
+    const dialog = screen.getByRole('dialog', { name: 'Carte de la flotte agrandie' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog.className).toMatch(/\bfixed\b/);
+    expect(dialog.className).toMatch(/\binset-0\b/);
+    // Même carte (aucun rechargement de MapLibre), page derrière inerte et figée
+    expect(within(dialog).getByTestId('map')).toBe(map);
+    expect(screen.getByText('Dacia Logan 1').closest('[inert]')).not.toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
+    // Les commandes de la carte restent disponibles en grand
+    expect(within(dialog).getByRole('button', { name: 'Afficher tous les véhicules' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByTestId('map')).toBe(map);
+    expect(screen.getByText('Dacia Logan 1').closest('[inert]')).toBeNull();
+    expect(document.body.style.overflow).toBe('');
+
+    await user.click(screen.getByRole('button', { name: 'Agrandir la carte' }));
+    await user.click(screen.getByRole('button', { name: 'Réduire la carte' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Agrandir la carte' })).toHaveFocus();
+  });
+
+  it('« Afficher tous les véhicules » recadre la carte sur la flotte (nouvelle clé de cadrage)', async () => {
+    const user = userEvent.setup();
+    mocks.api.mockResolvedValue(overview(fleet()));
+    renderDashboard();
+    await screen.findByText('Dacia Logan 1');
+    const before = mocks.mapProps.at(-1)?.fitKey;
+    await user.click(screen.getByRole('button', { name: 'Afficher tous les véhicules' }));
+    expect(mocks.mapProps.at(-1)?.fitKey).not.toBe(before);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
 });
 
 describe('TrackingDashboard — temps réel', () => {

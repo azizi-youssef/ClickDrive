@@ -220,42 +220,47 @@ export function BookingDetailModal({
       wide
       footer={
         <>
-          <button type="button" className={button.secondary} onClick={onClose} disabled={busy}>
+          {/* Sur mobile, la croix et « Retour » ferment déjà le dossier : la place va aux décisions */}
+          <button type="button" className={cn(button.secondary, 'hidden sm:inline-flex')} onClick={onClose} disabled={busy}>
             Fermer
           </button>
           <button type="button" className={button.secondary} onClick={onDownloadPdf} disabled={busy}>
             <FileText aria-hidden="true" className="h-4 w-4" />
             Télécharger le PDF
           </button>
-          {canAct && actions.includes('reject') && (
-            <button
-              type="button"
-              className={button.danger}
-              onClick={() => submit('reject')}
-              disabled={busy}
-            >
-              {busy && pending === 'reject' ? (
-                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-              ) : (
-                <XCircle aria-hidden="true" className="h-4 w-4" />
+          {canAct && (actions.includes('reject') || actions.includes('approve')) && (
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              {actions.includes('reject') && (
+                <button
+                  type="button"
+                  className={button.danger}
+                  onClick={() => submit('reject')}
+                  disabled={busy}
+                >
+                  {busy && pending === 'reject' ? (
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <XCircle aria-hidden="true" className="h-4 w-4" />
+                  )}
+                  Refuser
+                </button>
               )}
-              Refuser
-            </button>
-          )}
-          {canAct && actions.includes('approve') && (
-            <button
-              type="button"
-              className={button.primary}
-              onClick={() => submit('approve')}
-              disabled={busy}
-            >
-              {busy && pending === 'approve' ? (
-                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
+              {actions.includes('approve') && (
+                <button
+                  type="button"
+                  className={cn(button.primary, !actions.includes('reject') && 'col-span-2')}
+                  onClick={() => submit('approve')}
+                  disabled={busy}
+                >
+                  {busy && pending === 'approve' ? (
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
+                  )}
+                  Approuver
+                </button>
               )}
-              Approuver
-            </button>
+            </div>
           )}
         </>
       }
@@ -295,7 +300,7 @@ export function BookingDetailModal({
             type="button"
             onClick={onReload}
             disabled={loadingDetail}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
+            className="-my-2 flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-slate-500 transition hover:text-slate-900 disabled:opacity-50 sm:my-0 sm:min-h-0 sm:px-0"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', loadingDetail && 'animate-spin text-[#E63946]')} />
             <span>{loadingDetail ? 'Actualisation...' : 'Actualiser le dossier'}</span>
