@@ -165,12 +165,14 @@ export function AdminAuditClient() {
             value={entityType}
             onChange={setEntityType}
             options={ENTITY_OPTIONS}
+            label="Filtrer par type d’élément"
             className="w-44"
           />
           <SelectFilter
             value={actionFilter}
             onChange={setActionFilter}
             options={ACTION_OPTIONS}
+            label="Filtrer par action"
             className="w-48"
           />
         </div>
@@ -197,8 +199,7 @@ export function AdminAuditClient() {
       {/* Main Table Card */}
       <AdminCard className="p-0 overflow-hidden">
         <TableWrapper>
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50/75">
+          <thead className="bg-slate-50/75">
               <tr>
                 <Th>Horodatage</Th>
                 <Th>Acteur</Th>
@@ -291,7 +292,6 @@ export function AdminAuditClient() {
                 })
               )}
             </tbody>
-          </table>
         </TableWrapper>
 
         {!loading && filteredLogs.length > 0 && (

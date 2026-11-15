@@ -1,5 +1,4 @@
 import { Booking } from '@/types';
-import { createClient } from '@/lib/supabase/server';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
 
 export interface WhatsAppPayload {
@@ -8,17 +7,10 @@ export interface WhatsAppPayload {
   bookingRef: string;
 }
 
-export interface DashboardNotificationPayload {
-  userId?: string;
-  agencyId?: string;
-  title: string;
-  message: string;
-  link: string;
-  type?: 'BOOKING' | 'SYSTEM' | 'COMMISSION';
-}
-
 class NotificationService {
-  // Les e-mails transactionnels sont envoyés par lib/email (Resend), voir lib/bookings/notifications.ts
+  // Les e-mails transactionnels sont envoyés par lib/email (Resend), voir lib/bookings/notifications.ts.
+  // Pas de notification « tableau de bord » enregistrée en base : dans l'espace agence, la cloche est
+  // calculée à partir des demandes à traiter et se met à jour en direct (AgencyWorkspace).
 
   /** Construit un lien WhatsApp avec message pré-rempli */
   generateWhatsAppLink(phone: string, text: string): string {
@@ -50,7 +42,7 @@ class NotificationService {
         ? `✈️ *Vol d'arrivée :* ${booking.flight_number} (${booking.flight_arrival_time || '—'})\n`
         : '') +
       `\n💰 *Montant total :* ${booking.total_price} DH\n` +
-      `🔒 *Caution :* ${booking.deposit_amount || 3000} DH\n\n` +
+      `🔒 *Caution :* ${booking.deposit_amount ?? 3000} DH\n\n` +
       `📄 *Fiche PDF :*\n${pdfUrl}\n\n` +
       `💻 *Dashboard Agence :*\n${dashboardUrl}`
     );
@@ -72,34 +64,6 @@ class NotificationService {
       `*Total estimé :* ${booking.total_price} DH\n\n` +
       `Suivez votre demande : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`
     );
-  }
-
-  /**
-   * Persiste une notification dans la table `notifications` Supabase.
-   * Silencieux si Supabase est indisponible.
-   */
-  async sendDashboardNotification(
-    payload: DashboardNotificationPayload
-  ): Promise<boolean> {
-    try {
-      const supabase = await createClient();
-      if (supabase && payload.userId) {
-        await supabase.from('notifications').insert({
-          user_id: payload.userId,
-          title: payload.title,
-          message: payload.message,
-          link: payload.link,
-          type: payload.type || 'BOOKING',
-        });
-        return true;
-      }
-    } catch (err) {
-      console.warn('[NotificationService] Could not persist dashboard notification:', err);
-    }
-
-    // Rien n'a été enregistré (notification d'agence sans destinataire individuel) : on ne prétend pas le contraire
-    console.log('[NotificationService] 🔔', payload.title);
-    return false;
   }
 }
 

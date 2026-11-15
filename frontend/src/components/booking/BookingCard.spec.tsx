@@ -252,3 +252,32 @@ describe('BookingCard → modale de demande', () => {
     expect(bookButton()).toHaveFocus();
   });
 });
+
+describe('BookingCard — remises distinctes voitures / motos', () => {
+  const agency = {
+    id: '22222222-2222-4222-8222-222222222222',
+    name: 'Agence Test',
+    duration_discounts: [{ min_days: 7, percent: 10 }],
+    motorcycle_duration_discounts: [{ min_days: 3, percent: 20 }],
+  } as Agency;
+
+  it('une moto : paliers et remise des motos (3 jours par défaut : −20 %)', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={testVehicle({ daily_price: 150, vehicle_type: 'MOTORCYCLE', category: 'Scooter', agency })} />);
+    await screen.findByText('Disponible pour ces dates');
+    expect(screen.getByText('−20 % dès 3 jours').closest('li')).toHaveTextContent('(appliquée)');
+    expect(screen.queryByText('−10 % dès 7 jours')).not.toBeInTheDocument();
+    // 150 DH × 3 jours = 450 DH, remise −90 DH, total 360 DH
+    expect(screen.getByText('Remise longue durée (−20 %)')).toBeInTheDocument();
+    expect(screen.getAllByText(/360\sDH/).length).toBeGreaterThan(0);
+  });
+
+  it('une voiture de la même agence : paliers des voitures, pas de remise à 3 jours', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={testVehicle({ daily_price: 300, vehicle_type: 'CAR', agency })} />);
+    await screen.findByText('Disponible pour ces dates');
+    expect(screen.getByText('−10 % dès 7 jours')).toBeInTheDocument();
+    expect(screen.queryByText('−20 % dès 3 jours')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Remise longue durée \(/)).not.toBeInTheDocument();
+  });
+});

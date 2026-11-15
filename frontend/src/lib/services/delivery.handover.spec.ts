@@ -33,8 +33,8 @@ type Options = {
   agencyId?: string;
   startMileage?: number | null;
   deposit?: number;
-  transition?: FakeResult;
-  vehicleUpdate?: FakeResult;
+  /** Réponse de la transaction SQL agency_record_handover (par défaut : enregistrée) */
+  record?: FakeResult;
 };
 
 let calls: FakeCall[] = [];
@@ -61,8 +61,7 @@ function setup(options: Options) {
         },
       };
     }
-    if (call.table === 'bookings' && call.op === 'update') return options.transition ?? { data: { id: BOOKING_ID } };
-    if (call.table === 'vehicles' && call.op === 'update') return options.vehicleUpdate ?? { data: null };
+    if (call.table === 'agency_record_handover' && call.op === 'rpc') return options.record ?? { data: { ok: true } };
     return undefined;
   });
   state.service = fake.client;
@@ -83,8 +82,14 @@ function input(overrides: Partial<HandoverInspectionInput> = {}): HandoverInspec
   };
 }
 
-const bookingUpdates = () => writesTo(calls, 'bookings').filter((call) => call.op === 'update');
-const anyBusinessWrite = () => writesTo(calls, 'bookings').length + writesTo(calls, 'vehicles').length;
+/** Appels de la transaction SQL de remise / restitution */
+const handoverCalls = () => calls.filter((call) => call.table === 'agency_record_handover' && call.op === 'rpc');
+/** Paramètres du dernier appel de la transaction */
+const handoverParams = () => handoverCalls().at(-1)?.payload as Record<string, unknown> | undefined;
+/** Écritures directes (hors transaction) : il ne doit jamais y en avoir */
+const directWrites = () =>
+  ['bookings', 'vehicles', 'booking_events', 'audit_logs'].reduce((total, table) => total + writesTo(calls, table).length, 0);
+const anyBusinessWrite = () => directWrites() + handoverCalls().length;
 
 beforeEach(() => {
   vi.stubEnv('WHATSAPP_API_TOKEN', '');
@@ -112,22 +117,45 @@ describe('validateHandover — machine à états', () => {
     }
   );
 
-  it.each(['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP'])('remise depuis %s : ACTIVE, écriture gardée par l’agence et le statut lu', async (status) => {
+  it.each(['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP'])('remise depuis %s : ACTIVE, une seule transaction gardée par l’agence et le statut lu', async (status) => {
     setup({ status });
-    const result = await deliveryService.validateHandover(input({ type: 'PICKUP' }));
-    expect(result).toMatchObject({ success: true, bookingStatus: 'ACTIVE', vehicleStatus: 'RENTED', warnings: [] });
-    const [update] = bookingUpdates();
-    expect(update.payload).toMatchObject({ status: 'ACTIVE' });
-    expect(eqValue(update, 'status')).toBe(status);
-    expect(eqValue(update, 'agency_id')).toBe(AGENCY_A);
-    const [vehicleUpdate] = writesTo(calls, 'vehicles');
-    expect(eqValue(vehicleUpdate, 'agency_id')).toBe(AGENCY_A);
+    const result = await deliveryService.validateHandover(input({ type: 'PICKUP', actorId: 'actor-1' }));
+    expect(result).toMatchObject({ success: true, bookingStatus: 'ACTIVE', vehicleStatus: 'RENTED' });
+    expect(handoverCalls()).toHaveLength(1);
+    expect(handoverParams()).toMatchObject({
+      p_booking_id: BOOKING_ID,
+      p_agency_id: AGENCY_A,
+      p_action: 'pickup',
+      p_expected_status: status,
+      p_actor_id: 'actor-1',
+      p_mileage: 42000,
+      p_vehicle_status: 'RENTED',
+      p_event_metadata: expect.objectContaining({ mileage: 42000, fuelLevel: 'FULL' }),
+      p_audit_metadata: expect.objectContaining({ vehicleId: VEHICLE_ID, mileage: 42000 }),
+    });
+    expect(directWrites()).toBe(0);
   });
 
-  it('restitution d’une location en cours : COMPLETED, distance calculée', async () => {
+  it('restitution d’une location en cours : COMPLETED, distance calculée, véhicule disponible', async () => {
     setup({ status: 'ACTIVE', startMileage: 42000 });
     const result = await deliveryService.validateHandover(input({ type: 'RETURN', mileage: 42650 }));
     expect(result).toMatchObject({ success: true, bookingStatus: 'COMPLETED', vehicleStatus: 'AVAILABLE', distanceDrivenKm: 650 });
+    expect(handoverParams()).toMatchObject({
+      p_action: 'return',
+      p_expected_status: 'ACTIVE',
+      p_vehicle_status: 'AVAILABLE',
+      p_event_metadata: expect.objectContaining({ distanceDrivenKm: 650 }),
+    });
+  });
+
+  it('restitution avec dégâts déclarés : véhicule en maintenance, dans la même transaction', async () => {
+    setup({ status: 'ACTIVE', startMileage: 42000 });
+    const result = await deliveryService.validateHandover(
+      input({ type: 'RETURN', mileage: 42300, damagesDescription: 'Rayure portière avant droite' })
+    );
+    expect(result).toMatchObject({ success: true, vehicleStatus: 'MAINTENANCE' });
+    expect(handoverParams()).toMatchObject({ p_vehicle_status: 'MAINTENANCE' });
+    expect(directWrites()).toBe(0);
   });
 });
 
@@ -160,25 +188,47 @@ describe('validateHandover — intégrité et erreurs', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('remise concurrente (aucune ligne modifiée) : conflit, pas de mise à jour du véhicule', async () => {
-    setup({ status: 'APPROVED', transition: { data: null } });
-    const result = await deliveryService.validateHandover(input());
-    expect(result).toMatchObject({ success: false, transitionConflict: true });
-    expect(writesTo(calls, 'vehicles')).toHaveLength(0);
+  it('kilométrage non entier : refusé sans requête', async () => {
+    setup({ status: 'APPROVED' });
+    const result = await deliveryService.validateHandover(input({ mileage: 42000.5 }));
+    expect(result).toMatchObject({ success: false, invalidInput: true });
+    expect(calls).toHaveLength(0);
   });
 
-  it('erreur base à la transition : échec, message neutre', async () => {
-    setup({ status: 'APPROVED', transition: { error: { message: 'deadlock detected on bookings_pkey', code: '40P01' } } });
+  it('remise concurrente (statut changé entre la lecture et la transaction) : conflit', async () => {
+    setup({ status: 'APPROVED', record: { data: { ok: false, code: 'transition_conflict', status: 'ACTIVE' } } });
+    const result = await deliveryService.validateHandover(input());
+    expect(result).toMatchObject({ success: false, transitionConflict: true });
+    expect(directWrites()).toBe(0);
+  });
+
+  it('réservation disparue entre-temps : introuvable', async () => {
+    setup({ status: 'APPROVED', record: { data: { ok: false, code: 'not_found' } } });
+    const result = await deliveryService.validateHandover(input());
+    expect(result).toMatchObject({ success: false, notFound: true });
+  });
+
+  it('chevauchement avec une autre location confirmée (23P01) : conflit explicite', async () => {
+    setup({ status: 'APPROVED', record: { error: { message: 'conflicting key value violates exclusion constraint', code: '23P01' } } });
+    const result = await deliveryService.validateHandover(input());
+    expect(result).toMatchObject({ success: false, transitionConflict: true });
+    expect(result.error).toContain('Une autre location confirmée');
+  });
+
+  it('erreur base pendant la transaction : échec, message neutre, jamais un succès partiel', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setup({ status: 'APPROVED', record: { error: { message: 'deadlock detected on bookings_pkey', code: '40P01' } } });
     const result = await deliveryService.validateHandover(input());
     expect(result.success).toBe(false);
     expect(result.error).not.toMatch(/deadlock|bookings_pkey/);
+    expect(directWrites()).toBe(0);
   });
 
-  it('véhicule non mis à jour après la transition : succès signalé avec avertissement, jamais masqué', async () => {
-    setup({ status: 'APPROVED', vehicleUpdate: { error: { message: 'timeout' } } });
+  it('fonction SQL absente (migration non appliquée) : service indisponible', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setup({ status: 'APPROVED', record: { error: { message: 'Could not find the function', code: 'PGRST202' } } });
     const result = await deliveryService.validateHandover(input());
-    expect(result.success).toBe(true);
-    expect(result.warnings).toContain('vehicle_not_updated');
+    expect(result).toMatchObject({ success: false, serviceUnavailable: true });
   });
 });
 

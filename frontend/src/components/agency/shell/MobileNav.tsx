@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, X, type LucideIcon } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronRight, Home, LayoutGrid, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Section = { id: string; label: string; icon: LucideIcon };
@@ -187,6 +188,22 @@ export function MobileNav({
                   );
                 })}
               </ul>
+
+              {/* Hors des sections : sortir de l'espace agence. Sur ordinateur, le même lien est en bas de la barre latérale. */}
+              <div className="mt-3 border-t border-slate-100 pt-3">
+                <Link
+                  href="/"
+                  onClick={() => setSheetOpen(false)}
+                  className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200 px-3 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                >
+                  <Home className="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-[#0B1220]">Retour au site</span>
+                    <span className="block text-xs text-slate-500">Quitter l’espace agence</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
+                </Link>
+              </div>
             </div>
           </div>,
           document.body

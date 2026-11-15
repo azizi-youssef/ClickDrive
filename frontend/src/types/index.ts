@@ -115,8 +115,10 @@ export interface Agency {
   delivery_fee_airport?: number | null;
   /** Frais de livraison au port de Beni Ansar, en MAD (null = non renseigné) */
   delivery_fee_port?: number | null;
-  /** Remises longue durée pour toute la flotte (« −10 % dès 7 jours ») ; voir lib/utils/pricing */
+  /** Remises longue durée des VOITURES (« −10 % dès 7 jours ») ; voir lib/utils/pricing */
   duration_discounts?: { min_days: number; percent: number }[] | null;
+  /** Remises longue durée des MOTOS, indépendantes de celles des voitures (absent : base pas encore migrée) */
+  motorcycle_duration_discounts?: { min_days: number; percent: number }[] | null;
 }
 
 export interface Vehicle {

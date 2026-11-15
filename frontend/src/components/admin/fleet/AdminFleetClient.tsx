@@ -121,7 +121,7 @@ export function AdminFleetClient({ vehicleType = 'CAR' }: { vehicleType?: Vehicl
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:p-5 border-b border-slate-100">
           <SearchInput value={search} onChange={setSearch} placeholder="Marque, modèle, agence, plaque…" className="flex-1" />
           <div className="flex items-center gap-2">
-            <SelectFilter value={category} onChange={setCategory} options={categoryOptions} />
+            <SelectFilter value={category} onChange={setCategory} options={categoryOptions} label="Filtrer par catégorie" />
             <Btn variant="secondary" size="sm" onClick={() => void load('refresh')} disabled={refreshing}>
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </Btn>

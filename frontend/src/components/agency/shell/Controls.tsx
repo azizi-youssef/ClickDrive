@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { input } from '@/lib/design/tokens';
@@ -15,9 +16,11 @@ export function SearchField({
   label: string;
   placeholder: string;
 }) {
+  // Identifiant généré : le libellé (avec espaces et accents) n'est pas un identifiant HTML valide
+  const id = useId();
   return (
     <div className="relative w-full md:max-w-sm">
-      <label htmlFor={`search-${label}`} className="sr-only">
+      <label htmlFor={id} className="sr-only">
         {label}
       </label>
       <Search
@@ -25,7 +28,7 @@ export function SearchField({
         className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
       />
       <input
-        id={`search-${label}`}
+        id={id}
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -88,13 +91,14 @@ export function SelectField({
   label: string;
   children: React.ReactNode;
 }) {
+  const id = useId();
   return (
     <div>
-      <label htmlFor={`select-${label}`} className="sr-only">
+      <label htmlFor={id} className="sr-only">
         {label}
       </label>
       <select
-        id={`select-${label}`}
+        id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`${input} md:max-w-48`}
@@ -206,10 +210,12 @@ export function Th({
   children,
   align = 'left',
   numeric = false,
+  className,
 }: {
   children: React.ReactNode;
   align?: 'left' | 'right';
   numeric?: boolean;
+  className?: string;
 }) {
   return (
     <th
@@ -217,7 +223,8 @@ export function Th({
       className={cn(
         'px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500',
         align === 'right' && 'text-right',
-        numeric && 'tabular-nums'
+        numeric && 'tabular-nums',
+        className
       )}
     >
       {children}

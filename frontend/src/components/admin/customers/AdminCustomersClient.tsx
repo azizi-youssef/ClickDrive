@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import {
   KpiCard,
+  AdminCard,
   TableWrapper,
   Th,
   Td,
@@ -200,6 +201,7 @@ export function AdminCustomersClient() {
               value={country}
               onChange={(v) => { setCountry(v); setPage(0); }}
               options={COUNTRY_OPTIONS}
+              label="Filtrer par pays"
             />
           </div>
         </div>
@@ -220,8 +222,8 @@ export function AdminCustomersClient() {
       {error && !customers.length ? (
         <ErrorBanner message={error} onRetry={() => loadData(true)} />
       ) : (
-        <TableWrapper>
-          <table className="w-full text-left text-sm">
+        <AdminCard noPadding className="overflow-hidden">
+          <TableWrapper tableClassName="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
                 <Th>Client</Th>
@@ -355,7 +357,7 @@ export function AdminCustomersClient() {
                 })
               )}
             </tbody>
-          </table>
+          </TableWrapper>
 
           {totalPages > 1 && (
             <div className="p-4 border-t border-slate-200">
@@ -369,7 +371,7 @@ export function AdminCustomersClient() {
               />
             </div>
           )}
-        </TableWrapper>
+        </AdminCard>
       )}
 
       {/* Modal Fiche Client Détaillée */}

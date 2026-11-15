@@ -119,6 +119,7 @@ export function serverAuthFor(actor: Actor): ServerAuthContext | null {
     memberships: [{ agencyId, role: memberRole as AgencyMemberRole }],
     agencyName: null,
     agencyLogoUrl: null,
+    agencyVerified: false,
   };
 }
 

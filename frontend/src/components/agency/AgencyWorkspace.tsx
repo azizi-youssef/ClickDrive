@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { signOutEverywhere } from '@/lib/auth/client';
@@ -20,6 +20,7 @@ import {
 } from '@/components/agency/overview/OverviewPanel';
 import {
   BookingsPanel,
+  STATUS_FILTERS,
   type AgencyBookingRow,
   type BookingQuery,
   type BookingsPage,
@@ -42,7 +43,9 @@ import { AgencySubscriptionPanel } from '@/components/agency/subscription/Agency
 import type { AgencySubscription } from '@/types';
 import type { UserRole } from '@clickdrive/shared/roles';
 import { AGENCY_SECTIONS } from '@/components/agency/shell/Sidebar';
-import { sectionFromUrl, workspaceUrl } from '@/lib/agency/workspace-url';
+import { sectionFromUrl, statusFromUrl, workspaceUrl } from '@/lib/agency/workspace-url';
+import { TO_PROCESS_FILTER } from '@/lib/bookings/agency-queue';
+import { useRealtimeRefresh, type RealtimeTable } from '@/lib/supabase/realtime';
 
 export type AgencyIdentity = {
   id: string;
@@ -64,7 +67,11 @@ type Alternative = { id: string; brand: string; model: string; daily_price: numb
 
 const PAGE_SIZE = 15;
 
+/** Tables écoutées pour la cloche « demandes à traiter » (constante : aucun réabonnement à chaque rendu) */
+const PENDING_REALTIME_TABLES: RealtimeTable[] = ['bookings'];
+
 const SECTION_IDS = new Set<string>(AGENCY_SECTIONS.map((entry) => entry.id));
+const STATUS_VALUES = new Set<string>(STATUS_FILTERS.map((entry) => entry.value));
 
 function bookingRefOf(booking: { booking_ref?: string | null; reference?: string | null; id: string }): string {
   return booking.booking_ref ?? booking.reference ?? booking.id;
@@ -106,6 +113,10 @@ export function AgencyWorkspace({
   const bookingParam = searchParams.get('booking');
   const sectionParam = searchParams.get('section');
   const section = sectionFromUrl(sectionParam, bookingParam, SECTION_IDS);
+  // Le filtre de statut des réservations est dans l'adresse : le lien « À traiter » du tableau de bord, le
+  // rechargement, le partage et « Précédent » retrouvent la même liste
+  const statusFilter = statusFromUrl(searchParams.get('status'), STATUS_VALUES);
+  const urlFilters = useMemo(() => (statusFilter ? { status: statusFilter } : undefined), [statusFilter]);
   /** Change de section : nouvelle entrée d'historique, sans rechargement serveur */
   const setSection = useCallback((next: string) => {
     // Le suivi GPS est un écran à part entière (carte plein écran, sous-pages) : navigation classique
@@ -126,8 +137,14 @@ export function AgencyWorkspace({
   const [bookings, setBookings] = useState<BookingsPage | null>(null);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
-  const [query, setQuery] = useState<BookingQuery>({ q: '', status: '', sort: 'created_at' });
-  const [bookingsPage, setBookingsPage] = useState(1);
+  // Recherche, tri et type vivent ici (ils survivent à un changement de section) ; le statut vient de l'adresse
+  const [filters, setFilters] = useState<Omit<BookingQuery, 'status'>>({ q: '', sort: 'created_at' });
+  const query = useMemo<BookingQuery>(() => ({ ...filters, status: statusFilter }), [filters, statusFilter]);
+  // La page appartient à un filtre : si l'adresse change de statut (Précédent), on revient à la page 1
+  const [pageState, setPageState] = useState({ page: 1, status: statusFilter });
+  const bookingsPage = pageState.status === statusFilter ? pageState.page : 1;
+  // Demandes à traiter, comptées par le serveur sans limite de période (voir loadPending)
+  const [pendingTotal, setPendingTotal] = useState<number | null>(null);
 
   const [selected, setSelected] = useState<BookingDetail | null>(null);
   const [detail, setDetail] = useState<BookingDetail | null>(null);
@@ -156,7 +173,9 @@ export function AgencyWorkspace({
   );
 
   const [subscription, setSubscription] = useState<AgencySubscription | null>(null);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  // Au premier rendu la lecture va partir : le cadre d'attente (et non un vide) occupe déjà la place
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState(false);
 
   const loadSubscription = useCallback(async () => {
     setSubscriptionLoading(true);
@@ -166,10 +185,14 @@ export function AgencyWorkspace({
       });
       const json = await res.json();
       if (res.ok && json.success) {
-        setSubscription(json.data);
+        setSubscription(json.data ?? null);
+        setSubscriptionError(false);
+      } else {
+        setSubscriptionError(true);
       }
     } catch {
-      // Silently continue
+      // La carte de capacité le dit et propose de réessayer ; le reste du tableau de bord reste utilisable
+      setSubscriptionError(true);
     } finally {
       setSubscriptionLoading(false);
     }
@@ -316,13 +339,69 @@ export function AgencyWorkspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, bookingsPage]);
 
-  const onQueryChange = useCallback((next: BookingQuery) => {
-    setBookingsPage(1);
-    setQuery(next);
-  }, []);
+  /**
+   * Demandes à traiter : décompte du serveur (toute la file, quelle que soit la période affichée). L'indicateur
+   * des statistiques ne compte que les demandes créées dans la période choisie : une demande ancienne qui
+   * attend toujours une réponse disparaissait du badge, de la cloche et de l'alerte avec « Aujourd'hui ».
+   */
+  const fetchPendingTotal = useCallback(async (): Promise<number | null> => {
+    try {
+      const json = await readJson(
+        await fetch(
+          `/api/agencies/${encodeURIComponent(agency.id)}/bookings?status=${TO_PROCESS_FILTER}&pageSize=1`,
+          { cache: 'no-store', credentials: 'same-origin' }
+        )
+      );
+      const total = (json as { meta?: { total?: unknown } }).meta?.total;
+      return typeof total === 'number' ? total : null;
+    } catch {
+      // Garde la valeur précédente ; à défaut, l'indicateur de la période sert de repli
+      return null;
+    }
+  }, [agency.id]);
 
-  const onPageChange = useCallback((page: number) => {
-    setBookingsPage(Math.max(1, page));
+  /** Relecture après une action ou une actualisation */
+  const loadPending = useCallback(async () => {
+    const total = await fetchPendingTotal();
+    if (total !== null && mounted.current) setPendingTotal(total);
+  }, [fetchPendingTotal]);
+
+  useEffect(() => {
+    let active = true;
+    void fetchPendingTotal().then((total) => {
+      if (active && total !== null) setPendingTotal(total);
+    });
+    return () => {
+      active = false;
+    };
+  }, [fetchPendingTotal]);
+
+  /**
+   * Nouvelle demande d'un client : la cloche et le badge « à traiter » se mettent à jour sans actualiser
+   * la page (Supabase Realtime sur bookings, retour sur l'onglet, relecture toutes les 60 s en secours).
+   */
+  useRealtimeRefresh({ tables: PENDING_REALTIME_TABLES, onRefresh: loadPending, pollingIntervalMs: 60_000 });
+
+  const onQueryChange = useCallback(
+    (next: BookingQuery) => {
+      setPageState({ page: 1, status: next.status });
+      setFilters({ q: next.q, sort: next.sort, type: next.type });
+      if (next.status !== statusFilter) {
+        // Un changement de filtre ne crée pas d'entrée d'historique ; le dossier ouvert reste dans l'adresse
+        window.history.replaceState(null, '', workspaceUrl('bookings', bookingParam, { status: next.status }));
+      }
+    },
+    [bookingParam, statusFilter]
+  );
+
+  const onPageChange = useCallback(
+    (page: number) => setPageState({ page: Math.max(1, page), status: statusFilter }),
+    [statusFilter]
+  );
+
+  /** Ouvre les réservations déjà filtrées sur les demandes à traiter (KPI, alerte et cloche) */
+  const openPendingBookings = useCallback(() => {
+    window.history.pushState(null, '', workspaceUrl('bookings', null, { status: TO_PROCESS_FILTER }));
   }, []);
 
   /** Référence du dossier déjà ouvert pour l'adresse courante (évite de le relire) */
@@ -333,7 +412,7 @@ export function AgencyWorkspace({
     const reference = bookingRefOf(booking);
     // Le dossier ouvert a son adresse (sans nouvelle entrée d'historique)
     deepLinkHandled.current = reference;
-    window.history.replaceState(null, '', workspaceUrl(section, reference));
+    window.history.replaceState(null, '', workspaceUrl(section, reference, urlFilters));
     setSelected(booking as BookingDetail);
     setDetail(null);
     setDetailError(null);
@@ -358,14 +437,14 @@ export function AgencyWorkspace({
     } finally {
       setLoadingDetail(false);
     }
-  }, [section]);
+  }, [section, urlFilters]);
 
-  /** Ferme le dossier et retire sa référence de l'adresse */
+  /** Ferme le dossier et retire sa référence de l'adresse (le filtre de statut reste) */
   const closeDetail = useCallback(() => {
     setSelected(null);
     setPendingAction(null);
-    window.history.replaceState(null, '', workspaceUrl(section));
-  }, [section]);
+    window.history.replaceState(null, '', workspaceUrl(section, null, urlFilters));
+  }, [section, urlFilters]);
 
   /**
    * Lien direct vers un dossier (notification e-mail ou WhatsApp, lien partagé) : le dossier est
@@ -461,6 +540,7 @@ export function AgencyWorkspace({
           closeDetail();
           await loadBookings(query, bookingsPage);
           await loadOverview(resolveRange(rangePreset));
+          await loadPending();
         }
       } catch (error) {
         notify('error', error instanceof Error ? error.message : 'Action impossible.');
@@ -468,7 +548,7 @@ export function AgencyWorkspace({
         setBusy(false);
       }
     },
-    [bookingsPage, closeDetail, loadBookings, loadOverview, notify, query, rangePreset]
+    [bookingsPage, closeDetail, loadBookings, loadOverview, loadPending, notify, query, rangePreset]
   );
 
   const downloadPdf = useCallback(
@@ -513,7 +593,8 @@ export function AgencyWorkspace({
     };
   }, [agency.id, section]);
 
-  const pending = stats.data?.pendingBookings ?? 0;
+  // Compteur serveur de toute la file ; repli sur l'indicateur de la période tant qu'il n'est pas arrivé
+  const pending = pendingTotal ?? stats.data?.pendingBookings ?? 0;
 
   const sections: AgencySection[] = AGENCY_SECTIONS.map((sec) => {
     if (sec.id === 'bookings') {
@@ -579,7 +660,9 @@ export function AgencyWorkspace({
           onRefresh={() => {
             void loadOverview(resolveRange(rangePreset));
             void loadBookings(query, bookingsPage);
+            void loadPending();
           }}
+          onOpenPending={openPendingBookings}
           refreshing={stats.loading || bookingsLoading}
           onSignOut={() => void handleSignOut()}
           signingOut={signingOut}
@@ -647,6 +730,8 @@ export function AgencyWorkspace({
               <FleetCapacityCard
                 subscription={subscription}
                 loading={subscriptionLoading}
+                error={subscriptionError}
+                onRetry={() => void loadSubscription()}
                 onOpenUpgradeModal={() => setSection('subscription')}
               />
               <OverviewPanel
@@ -654,6 +739,8 @@ export function AgencyWorkspace({
                 agenda={agenda}
                 onRetry={() => void loadOverview(resolveRange(rangePreset))}
                 onOpenBookings={() => setSection('bookings')}
+                pendingNow={pending}
+                onOpenPending={openPendingBookings}
                 onOpenFleet={() => setSection('fleet')}
                 onOpenMotos={() => setSection('fleet_motos')}
                 fleetTypeCounts={fleetTypeCounts}
@@ -669,6 +756,7 @@ export function AgencyWorkspace({
               page={bookings}
               loading={bookingsLoading}
               error={bookingsError}
+              query={query}
               onQueryChange={onQueryChange}
               onPageChange={onPageChange}
               onRetry={() => void loadBookings(query, bookingsPage)}

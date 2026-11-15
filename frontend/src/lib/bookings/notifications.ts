@@ -16,6 +16,7 @@ import { localizeHref } from '@/lib/i18n/routing';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
 import { signedBookingLink } from '@/lib/auth/booking-access-link';
 import { sendBookingTemplate, type BookingTemplateKey, type TemplateOutcome } from './whatsapp-templates';
+import { deliverableCustomerEmail } from './customer-email';
 import { bookingsService } from '@/lib/services/bookings.service';
 
 /**
@@ -70,6 +71,14 @@ function shortDate(value: string, locale: Locale = 'fr'): string {
   });
 }
 
+/**
+ * Destinataire des e-mails au client : jamais l'adresse de substitution d'un client sans e-mail
+ * (vide → envoi « skipped », le client reste prévenu par WhatsApp quand un modèle est configuré).
+ */
+function customerRecipient(booking: Booking): string {
+  return deliverableCustomerEmail(booking.customer_email) ?? '';
+}
+
 function agencyPhone(booking: Booking): string | null {
   return booking.agency?.whatsapp || booking.agency?.phone || null;
 }
@@ -122,7 +131,7 @@ export async function notifyBookingCreated(booking: Booking, appUrl: string): Pr
   const agencyInput = emailInput(booking, booking.status, appUrl, null, 'fr');
   const dashboardUrl = `${appUrl}/agency?booking=${encodeURIComponent(input.reference)}`;
   const [customer, agency] = await Promise.all([
-    sendEmail({ to: booking.customer_email, replyTo: contactInbox(), ...bookingReceivedCustomerEmail(input) }),
+    sendEmail({ to: customerRecipient(booking), replyTo: contactInbox(), ...bookingReceivedCustomerEmail(input) }),
     sendEmail({ to: booking.agency?.email ?? '', ...bookingNewAgencyEmail({ ...agencyInput, dashboardUrl }) }),
     sendBookingTemplate(
       'agencyNewRequest',
@@ -165,7 +174,7 @@ export async function notifyBookingStatus(
       : [firstName(booking), input.agencyName, input.reference, link];
   const [email] = await Promise.all([
     rendered
-      ? sendEmail({ to: booking.customer_email, replyTo: contactInbox(), ...rendered })
+      ? sendEmail({ to: customerRecipient(booking), replyTo: contactInbox(), ...rendered })
       : Promise.resolve<EmailResult>({ status: 'skipped', reason: 'invalid_recipient' }),
     templateKey ? sendBookingTemplate(templateKey, booking.customer_phone, parameters, context(booking, locale)) : Promise.resolve('skipped'),
   ]);
@@ -226,7 +235,7 @@ export async function offerPendingAlternatives(
     vehicle.url.startsWith(appUrl) ? { ...vehicle, url: customerUrl(appUrl, vehicle.url.slice(appUrl.length), locale) } : vehicle
   );
   const email = await sendEmail({
-    to: booking.customer_email,
+    to: customerRecipient(booking),
     replyTo: contactInbox(),
     ...bookingPendingAlternativesEmail({ ...input, alternatives: localized, searchUrl }),
   });
@@ -243,7 +252,7 @@ export async function requestReview(booking: Booking, appUrl: string): Promise<C
   const reviewUrl = customerUrl(appUrl, path, locale);
   const [email, whatsapp] = await Promise.all([
     sendEmail({
-      to: booking.customer_email,
+      to: customerRecipient(booking),
       replyTo: contactInbox(),
       ...reviewRequestEmail({
         customerName: booking.customer_name,

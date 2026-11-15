@@ -1,3 +1,5 @@
+import { vehicleTypeOf } from '@/lib/vehicles/kind';
+
 /**
  * ClickDrive Centralized Financial Engine
  * Calculates booking prices, commission amounts, and agency payouts.
@@ -59,7 +61,7 @@ export function calculateRentalDays(startDateStr: string, endDateStr: string): n
 /* Remises longue durée de l'agence                                           */
 /* -------------------------------------------------------------------------- */
 
-/** Palier de remise selon la durée, défini par l'agence pour toute sa flotte (« −10 % dès 7 jours ») */
+/** Palier de remise selon la durée, défini par l'agence (« −10 % dès 7 jours »), une liste pour les voitures et une pour les motos */
 export interface DurationDiscount {
   min_days: number;
   percent: number;
@@ -122,6 +124,33 @@ export function applicableDurationDiscount(value: unknown, days: number): Durati
 }
 
 /* -------------------------------------------------------------------------- */
+/* Remises : une liste pour les voitures, une pour les motos                  */
+/* -------------------------------------------------------------------------- */
+
+/** Paliers de remise d'une agence, tels que lus en base (migration 20261120000100) */
+export interface AgencyDurationDiscounts {
+  /** Paliers des voitures */
+  duration_discounts?: unknown;
+  /**
+   * Paliers des motos. Absents (base pas encore migrée) : ceux des voitures, qui valaient jusque-là pour toute
+   * la flotte. Une liste vide est un choix de l'agence (« aucune remise sur les motos »), jamais un repli.
+   */
+  motorcycle_duration_discounts?: unknown;
+}
+
+/** Paliers qui s'appliquent à un véhicule : ceux des motos pour une moto, ceux des voitures sinon */
+export function durationDiscountsFor(
+  agency: AgencyDurationDiscounts | null | undefined,
+  vehicle: { vehicle_type?: string | null; category?: string | null } | null | undefined
+): DurationDiscount[] {
+  if (!agency) return [];
+  if (vehicleTypeOf(vehicle) === 'MOTORCYCLE') {
+    return normalizeDurationDiscounts(agency.motorcycle_duration_discounts ?? agency.duration_discounts);
+  }
+  return normalizeDurationDiscounts(agency.duration_discounts);
+}
+
+/* -------------------------------------------------------------------------- */
 /* Tarif appliqué à une location                                              */
 /* -------------------------------------------------------------------------- */
 
@@ -130,11 +159,14 @@ export interface VehicleRates {
   daily_price: number;
   weekly_price?: number | null;
   monthly_price?: number | null;
+  /** Type du véhicule : décide de la liste de remises de l'agence (voitures ou motos) ; à défaut, sa catégorie */
+  vehicle_type?: string | null;
+  category?: string | null;
   /**
    * Agence du véhicule : ses remises longue durée s'appliquent. Côté serveur, le véhicule et son agence
    * sont relus en base : un client ne peut pas imposer une remise.
    */
-  agency?: { duration_discounts?: unknown } | null;
+  agency?: AgencyDurationDiscounts | null;
 }
 
 export type AppliedRate = 'daily' | 'weekly' | 'monthly' | 'duration';
@@ -155,7 +187,7 @@ export function effectiveDailyRate(
   if (days >= 30 && monthly !== null && monthly < daily) base = { rate: Math.round(monthly * 100) / 100, applied: 'monthly' };
   else if (days >= 7 && weekly !== null && weekly < daily) base = { rate: Math.round(weekly * 100) / 100, applied: 'weekly' };
 
-  const tier = applicableDurationDiscount(rates.agency?.duration_discounts, days);
+  const tier = applicableDurationDiscount(durationDiscountsFor(rates.agency, rates), days);
   if (tier) {
     const discounted = Math.round(daily * (100 - tier.percent)) / 100;
     if (discounted < base.rate) return { rate: discounted, applied: 'duration', discount: tier };

@@ -81,9 +81,10 @@ export function KpiCard({
           </span>
         )}
       </div>
-      <p className="mt-1 flex min-w-0 items-baseline gap-1.5 text-2xl font-extrabold sm:text-[28px] leading-tight tracking-tight tabular-nums text-[#0B1220]">
-        <span className="truncate">{value}</span>
-        {unit && <span className="text-sm font-bold text-slate-400">{unit}</span>}
+      {/* Valeur jamais tronquée : l'unité passe à la ligne si la carte est étroite (mobile) */}
+      <p className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-2xl font-extrabold sm:text-[28px] leading-tight tracking-tight tabular-nums text-[#0B1220]">
+        <span className="min-w-0 break-words">{value}</span>
+        {unit && <span className="text-sm font-bold text-slate-500">{unit}</span>}
       </p>
       {pct !== null && (
         <div
@@ -199,6 +200,7 @@ const AGENCY_STATUS_CONFIG: Record<string, { label: string; variant: StatusVaria
   PENDING: { label: 'En attente', variant: 'warning' },
   SUSPENDED: { label: 'Suspendue', variant: 'error' },
   REJECTED: { label: 'Rejetée', variant: 'error' },
+  ARCHIVED: { label: 'Archivée', variant: 'neutral' },
 };
 
 export function AgencyStatusBadge({ status }: { status: string }) {
@@ -569,17 +571,20 @@ export function SelectFilter({
   onChange,
   options,
   className,
+  label,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   className?: string;
+  /** Nom accessible du filtre (sa fonction, ex. « Filtrer par statut ») ; à défaut, le libellé de la 1re option */
+  label?: string;
 }) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      aria-label={options[0]?.label}
+      aria-label={label ?? options[0]?.label}
       className={cn(
         'h-10 cursor-pointer rounded-xl border border-slate-200 bg-white ps-3 pe-8 text-sm font-medium text-[#0B1220] outline-none transition-colors hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8',
         className

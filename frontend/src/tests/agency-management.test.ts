@@ -115,6 +115,7 @@ test('6. Refus d’accès d’un compte suspendu / sans agence active', () => {
     memberships: [],
     agencyName: null,
     agencyLogoUrl: null,
+    agencyVerified: false,
   };
   assert.equal(canAccessAgencyArea(customerAuth), false);
 
@@ -129,6 +130,7 @@ test('6. Refus d’accès d’un compte suspendu / sans agence active', () => {
     memberships: [{ agencyId: 'agency-101', role: 'agency_admin' as const }],
     agencyName: 'Agence',
     agencyLogoUrl: null,
+    agencyVerified: false,
   };
   assert.equal(canAccessAgencyArea(agencyAuth), true);
 });
@@ -144,6 +146,7 @@ test('7. Protection contre les accès inter-agences', () => {
     memberships: [{ agencyId: 'agency-101', role: 'agency_admin' as const }],
     agencyName: 'Agence',
     agencyLogoUrl: null,
+    agencyVerified: false,
   };
 
   // Peut gérer sa propre agence

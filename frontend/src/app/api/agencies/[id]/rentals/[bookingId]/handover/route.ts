@@ -84,19 +84,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return failure(result.error || 'Erreur lors de la validation de la remise', status);
   }
 
-  const warnings = result.warnings ?? [];
-  const baseMessage =
-    input.type === 'PICKUP'
-      ? 'Véhicule remis au client. Location en cours.'
-      : 'Véhicule restitué et inspecté. Réservation finalisée.';
-
   return NextResponse.json({
     success: true,
-    // Transition enregistrée ; une écriture secondaire en échec est signalée, jamais masquée
-    message: warnings.includes('vehicle_not_updated')
-      ? `${baseMessage} Le statut du véhicule n’a pas pu être mis à jour : vérifiez-le dans la flotte.`
-      : baseMessage,
-    warnings,
+    // Réservation, véhicule, état des lieux et journal enregistrés ensemble (transaction SQL)
+    message:
+      input.type === 'PICKUP'
+        ? 'Véhicule remis au client. Location en cours.'
+        : 'Véhicule restitué et inspecté. Réservation finalisée.',
     status: result.bookingStatus,
     vehicleStatus: result.vehicleStatus,
     distanceDrivenKm: result.distanceDrivenKm,

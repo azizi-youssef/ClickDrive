@@ -32,7 +32,8 @@ export default async function AgencyPage() {
       agency={{
         id: agencyId,
         name: auth.agencyName ?? 'Mon agence',
-        verified: true,
+        // Valeur réelle de l'agence : « Agence vérifiée » ne s'affiche que si ClickDrive l'a vérifiée
+        verified: auth.agencyVerified,
         logoUrl: auth.agencyLogoUrl,
       }}
       profile={{

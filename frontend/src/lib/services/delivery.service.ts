@@ -99,8 +99,6 @@ export interface HandoverValidationResult {
   invalidInput?: boolean;
   /** Base indisponible (503) */
   serviceUnavailable?: boolean;
-  /** Écritures secondaires en échec après une transition enregistrée */
-  warnings?: string[];
   bookingId?: string;
   type?: 'PICKUP' | 'RETURN';
   bookingStatus?: BookingStatus;
@@ -226,13 +224,13 @@ export class DeliveryService {
    *   (CONFIRMED historique inclus), restitution depuis ACTIVE seulement ;
    * - écriture gardée par l'agence et par le statut lu : une remise concurrente ou une décision prise
    *   entre-temps donne un conflit, jamais une double transition ;
-   * - chaque écriture est vérifiée ; une écriture secondaire en échec (véhicule, journal) est signalée
-   *   dans `warnings`, jamais masquée ; aucun détail technique n'est renvoyé.
+   * - réservation, véhicule, état des lieux et journal sont écrits dans une seule transaction SQL
+   *   (agency_record_handover) : tout ou rien ; aucun détail technique n'est renvoyé.
    * La permission (bookings.manage sur l'agence) est vérifiée par la route appelante.
    */
   public async validateHandover(input: HandoverInspectionInput): Promise<HandoverValidationResult> {
-    if (!Number.isFinite(input.mileage) || input.mileage < 0) {
-      return { success: false, error: 'Le kilométrage doit être positif.', invalidInput: true };
+    if (!Number.isInteger(input.mileage) || input.mileage < 0) {
+      return { success: false, error: 'Le kilométrage doit être un nombre entier positif.', invalidInput: true };
     }
     if (input.depositDeduction !== undefined && (!Number.isFinite(input.depositDeduction) || input.depositDeduction < 0)) {
       return { success: false, error: 'La retenue sur caution doit être positive.', invalidInput: true };
@@ -309,61 +307,21 @@ export class DeliveryService {
       // Si dégâts déclarés au retour, le véhicule passe en maintenance pour inspection
       const nextVehicleStatus: VehicleStatus = isPickup ? 'RENTED' : input.damagesDescription ? 'MAINTENANCE' : 'AVAILABLE';
       const nowIso = new Date().toISOString();
-      const warnings: string[] = [];
 
-      // 3. Transition gardée (agence + statut lu) : une seule remise / restitution possible
-      const { data: transitioned, error: bkUpdErr } = await supabase
-        .from('bookings')
-        .update(
-          isPickup
-            ? { status: nextBookingStatus, reviewed_at: nowIso, updated_at: nowIso }
-            : { status: nextBookingStatus, completed_at: nowIso, updated_at: nowIso }
-        )
-        .eq('id', booking.id)
-        .eq('agency_id', input.agencyId)
-        .eq('status', booking.status)
-        .select('id')
-        .maybeSingle();
-
-      if (bkUpdErr) {
-        console.error('[DeliveryService] Booking transition failed:', bkUpdErr.code, bkUpdErr.message);
-        if (bkUpdErr.code === '23P01') {
-          return {
-            success: false,
-            error: 'Une autre location confirmée occupe déjà ce véhicule sur ces dates.',
-            transitionConflict: true,
-          };
-        }
-        return { success: false, error: 'L’état des lieux n’a pas pu être enregistré. Réessayez dans un instant.' };
-      }
-      if (!transitioned) {
-        return {
-          success: false,
-          error: 'Cette réservation a été modifiée entre-temps. Actualisez la page avant de recommencer.',
-          transitionConflict: true,
-        };
-      }
-
-      // 4. Statut et compteur du véhicule (bornés à l'agence)
-      if (booking.vehicle_id) {
-        const { error: vehicleError } = await supabase
-          .from('vehicles')
-          .update({ status: nextVehicleStatus, mileage: input.mileage, updated_at: nowIso })
-          .eq('id', booking.vehicle_id)
-          .eq('agency_id', input.agencyId);
-        if (vehicleError) {
-          console.error('[DeliveryService] Vehicle not updated after handover:', vehicleError.message);
-          warnings.push('vehicle_not_updated');
-        }
-      }
-
-      // 5. État des lieux dans la timeline et journal d'audit
-      const { error: eventError } = await supabase.from('booking_events').insert({
-        booking_id: booking.id,
-        actor_id: input.actorId || null,
-        actor_role: input.actorRole || 'AGENCY_MANAGER',
-        event_type: isPickup ? 'HANDOVER_PICKUP_COMPLETED' : 'HANDOVER_RETURN_COMPLETED',
-        metadata: isPickup
+      // 3. Une seule transaction SQL (agency_record_handover, migration 20261122000100) : verrou de la
+      //    réservation, garde sur l'agence et le statut lu, puis statut de la réservation, statut et
+      //    compteur du véhicule, état des lieux (booking_events) et journal (audit_logs) ensemble.
+      //    Toute erreur annule l'ensemble : jamais de réservation terminée avec un véhicule non mis à jour.
+      const { data: recorded, error: recordError } = await supabase.rpc('agency_record_handover', {
+        p_booking_id: booking.id,
+        p_agency_id: input.agencyId,
+        p_action: action,
+        p_expected_status: booking.status,
+        p_actor_id: input.actorId || null,
+        p_actor_role: input.actorRole || 'AGENCY_MANAGER',
+        p_mileage: input.mileage,
+        p_vehicle_status: nextVehicleStatus,
+        p_event_metadata: isPickup
           ? {
               mileage: input.mileage,
               fuelLevel: input.fuelLevel,
@@ -386,18 +344,7 @@ export class DeliveryService {
               deductionReason: input.deductionReason || null,
               recordedAt: nowIso,
             },
-      });
-      if (eventError) {
-        console.error('[DeliveryService] Handover event not recorded:', eventError.message);
-        warnings.push('event_not_recorded');
-      }
-
-      const { error: auditError } = await supabase.from('audit_logs').insert({
-        action: isPickup ? 'VEHICLE_HANDOVER_PICKUP' : 'VEHICLE_HANDOVER_RETURN',
-        entity_type: 'booking',
-        entity_id: booking.id,
-        agency_id: input.agencyId,
-        metadata: isPickup
+        p_audit_metadata: isPickup
           ? { vehicleId: booking.vehicle_id, mileage: input.mileage, fuelLevel: input.fuelLevel }
           : {
               vehicleId: booking.vehicle_id,
@@ -406,12 +353,40 @@ export class DeliveryService {
               depositDeduction: input.depositDeduction || 0,
             },
       });
-      if (auditError) {
-        console.error('[DeliveryService] Handover audit log not recorded:', auditError.message);
-        warnings.push('audit_not_recorded');
+
+      if (recordError) {
+        console.error('[DeliveryService] agency_record_handover failed:', recordError.code, recordError.message);
+        if (recordError.code === '23P01') {
+          return {
+            success: false,
+            error: 'Une autre location confirmée occupe déjà ce véhicule sur ces dates.',
+            transitionConflict: true,
+          };
+        }
+        if (recordError.code === 'PGRST202' || recordError.code === '42883') {
+          // Fonction absente : la migration 20261122000100 n'est pas appliquée sur ce projet
+          return {
+            success: false,
+            error: 'L’état des lieux ne peut pas être enregistré pour le moment. Réessayez dans un instant.',
+            serviceUnavailable: true,
+          };
+        }
+        return { success: false, error: 'L’état des lieux n’a pas pu être enregistré. Réessayez dans un instant.' };
       }
 
-      // 6. Notification WhatsApp de synthèse au client (seulement après une transition enregistrée)
+      const outcome = (recorded ?? {}) as { ok?: boolean; code?: string };
+      if (!outcome.ok) {
+        if (outcome.code === 'not_found') {
+          return { success: false, error: 'Réservation introuvable pour cette agence.', notFound: true };
+        }
+        return {
+          success: false,
+          error: 'Cette réservation a été modifiée entre-temps. Actualisez la page avant de recommencer.',
+          transitionConflict: true,
+        };
+      }
+
+      // 4. Notification WhatsApp de synthèse au client (seulement après une transition enregistrée)
       let whatsappSent = false;
       let whatsappMessageId: string | undefined;
 
@@ -445,7 +420,6 @@ export class DeliveryService {
         distanceDrivenKm,
         whatsappSent,
         whatsappMessageId,
-        warnings,
       };
     } catch (err: unknown) {
       console.error('[DeliveryService] Handover failed:', err instanceof Error ? err.message : err);

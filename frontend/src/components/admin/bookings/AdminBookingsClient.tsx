@@ -162,11 +162,12 @@ export function AdminBookingsClient() {
             className="flex-1"
           />
           <div className="flex items-center gap-2">
-            <SelectFilter value={typeFilter} onChange={setTypeFilter} options={TYPE_OPTIONS} />
+            <SelectFilter value={typeFilter} onChange={setTypeFilter} options={TYPE_OPTIONS} label="Filtrer par type de véhicule" />
             <SelectFilter
               value={statusFilter}
               onChange={setStatusFilter}
               options={STATUS_OPTIONS}
+              label="Filtrer par statut"
             />
             <Btn variant="secondary" size="sm" onClick={() => void load('refresh')} disabled={refreshing}>
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />

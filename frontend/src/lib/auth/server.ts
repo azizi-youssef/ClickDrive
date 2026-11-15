@@ -17,6 +17,8 @@ export type ServerAuthContext = {
   memberships: AgencyMembershipContext[];
   agencyName: string | null;
   agencyLogoUrl: string | null;
+  /** Agence vérifiée par ClickDrive (colonne `agencies.verified`, distincte du statut ACTIVE) ; false si inconnue */
+  agencyVerified: boolean;
 };
 
 export async function getServerAuth(): Promise<ServerAuthContext | null> {
@@ -78,11 +80,11 @@ export async function getServerAuth(): Promise<ServerAuthContext | null> {
     });
   }
 
-  let activeAgencies: { id: string; name: string; logo_url: string | null }[] = [];
+  let activeAgencies: { id: string; name: string; logo_url: string | null; verified: boolean | null }[] = [];
   if (membershipsByAgency.size > 0) {
     const { data, error } = await supabase
       .from('agencies')
-      .select('id, name, logo_url')
+      .select('id, name, logo_url, verified')
       .in('id', [...membershipsByAgency.keys()])
       .eq('status', 'ACTIVE')
       .is('archived_at', null);
@@ -113,7 +115,9 @@ export async function getServerAuth(): Promise<ServerAuthContext | null> {
       avatarUrl = null;
     }
   }
-  const agency = activeAgencies[0];
+  // L'agence décrite (nom, logo, vérification) est celle de agencyIds[0], que l'espace agence utilise comme
+  // agence courante : l'ordre des lignes renvoyées par la base ne doit pas décider laquelle on affiche
+  const agency = activeAgencies.find((candidate) => candidate.id === agencyIds[0]) ?? activeAgencies[0];
 
   return {
     userId: user.id,
@@ -125,6 +129,7 @@ export async function getServerAuth(): Promise<ServerAuthContext | null> {
     memberships: activeMemberships,
     agencyName: agency?.name ?? null,
     agencyLogoUrl: agency?.logo_url ?? null,
+    agencyVerified: agency?.verified === true,
   };
 }
 

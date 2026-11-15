@@ -7,6 +7,7 @@ import {
   RECENT_BOOKINGS_LIMIT,
   PENDING_AGENCIES_LIMIT,
   type AdminOverview,
+  type AdminOverviewCount,
 } from '@/lib/admin/overview';
 
 const DAY_MS = 86_400_000;
@@ -40,8 +41,11 @@ export async function GET() {
   };
 
   try {
-    const canReadAgencies = await hasAccessPermission('agencies.read');
-    const [total, pending, confirmed, completed, closed, last30, previous30, recent, agencies] = await Promise.all([
+    const [canReadAgencies, canReadMessages] = await Promise.all([
+      hasAccessPermission('agencies.read'),
+      hasAccessPermission('customers.read'),
+    ]);
+    const [total, pending, confirmed, completed, closed, last30, previous30, recent, agencies, messages, planRequests] = await Promise.all([
       countBookings(),
       countBookings(ADMIN_OVERVIEW_GROUPS.pending),
       countBookings(ADMIN_OVERVIEW_GROUPS.confirmed),
@@ -64,12 +68,30 @@ export async function GET() {
             .order('created_at', { ascending: false })
             .limit(PENDING_AGENCIES_LIMIT)
         : Promise.resolve(null),
+      // Mêmes définitions que le compteur du menu « Messages » et que la carte « Demandes de changement de formule »
+      canReadMessages
+        ? supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'NEW')
+        : Promise.resolve(null),
+      canReadAgencies
+        ? supabase.from('subscription_change_requests').select('id', { count: 'exact', head: true }).eq('status', 'PENDING_PAYMENT')
+        : Promise.resolve(null),
     ]);
 
     const failed = [total, pending, confirmed, completed, closed, last30, previous30, recent, agencies].find(
       (result) => result && 'error' in result && result.error
     );
     if (failed && 'error' in failed && failed.error) throw failed.error;
+
+    // Ces deux décomptes sont secondaires : leur échec ne doit pas faire disparaître les réservations et
+    // les agences. Le nombre est alors déclaré indisponible, jamais présenté comme zéro.
+    const toCount = (label: string, result: { count: number | null; error: { message: string } | null } | null): AdminOverviewCount => {
+      if (!result) return { count: 0, restricted: true };
+      if (result.error) {
+        console.error(`[AdminOverview] Lecture « ${label} » impossible :`, result.error.message);
+        return { count: 0, unavailable: true };
+      }
+      return { count: result.count ?? 0 };
+    };
 
     const overview: AdminOverview = {
       bookings: {
@@ -85,6 +107,8 @@ export async function GET() {
       pendingAgencies: agencies
         ? { count: agencies.count ?? 0, items: (agencies.data ?? []) as AdminOverview['pendingAgencies']['items'] }
         : { count: 0, items: [], restricted: true },
+      contactMessages: toCount('messages de contact', messages),
+      planRequests: toCount('demandes de formule', planRequests),
       generatedAt: new Date(now).toISOString(),
     };
 

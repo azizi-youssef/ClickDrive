@@ -90,6 +90,7 @@ export function Topbar({
   sections,
   activeSection,
   pendingCount = 0,
+  onOpenPending,
 }: {
   agencyName: string;
   userLabel: string;
@@ -105,6 +106,8 @@ export function Topbar({
   activeSection: string;
   /** Demandes à traiter, affichées sur la navigation mobile */
   pendingCount?: number;
+  /** Ouvre directement la liste des demandes à traiter (sinon : les réservations) */
+  onOpenPending?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
@@ -187,7 +190,8 @@ export function Topbar({
                     role="menuitem"
                     onClick={() => {
                       setBellOpen(false);
-                      onNavigate('bookings');
+                      if (onOpenPending) onOpenPending();
+                      else onNavigate('bookings');
                     }}
                     className="flex w-full items-start gap-2.5 px-4 py-3 text-left transition-colors hover:bg-slate-50"
                   >

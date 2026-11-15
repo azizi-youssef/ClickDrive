@@ -538,7 +538,7 @@ export class WhatsAppService {
       `• *Période :* ${dates} (${booking.total_days} jours)\n` +
       `• *Lieu de prise en charge :* ${booking.pickup_location || 'Agence'}\n` +
       `• *Montant total :* ${booking.total_price} MAD\n` +
-      `• *Caution à l'arrivée :* ${booking.deposit_amount || 3000} MAD (empreinte)\n\n` +
+      `• *Caution à l'arrivée :* ${booking.deposit_amount ?? 3000} MAD (empreinte)\n\n` +
       `Un agent vous contactera pour organiser l'accueil et la remise des clés.\n` +
       `📄 Suivi en direct : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`;
 
@@ -573,7 +573,7 @@ export class WhatsAppService {
       `*Période :* du ${booking.start_date} au ${booking.end_date} (${booking.total_days} j)\n` +
       `*Rendez-vous :* ${booking.pickup_location}\n` +
       (booking.flight_number ? `*Vol d'arrivée :* ${booking.flight_number}\n` : '') +
-      `*Total :* ${booking.total_price} MAD | *Caution :* ${booking.deposit_amount || 3000} MAD\n\n` +
+      `*Total :* ${booking.total_price} MAD | *Caution :* ${booking.deposit_amount ?? 3000} MAD\n\n` +
       `📄 Fiche PDF : ${pdfUrl}\n` +
       `⚡ Valider : ${baseUrl}/agency?booking=${encodeURIComponent(ref)}`;
 

@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   Loader2,
   Wallet,
+  Mail,
+  CreditCard,
 } from 'lucide-react';
 import type { AdminStats } from '@/lib/api/stats.api';
 import { AdminCard, BookingStatusBadge, AgencyStatusBadge, Btn, ErrorBanner, EmptyState, KpiCard } from '@/components/admin/AdminUI';
@@ -27,6 +29,7 @@ import {
   type HealthReport,
 } from '@/lib/api/admin-dashboard.api';
 import type { AdminOverview, AdminOverviewAgency } from '@/lib/admin/overview';
+import { allClearMessage, buildTodos, type TodoKey, type TodoTone } from '@/lib/admin/overview-todos';
 import type { SubscriptionStats } from '@/types';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
@@ -198,6 +201,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
     ? { current: counts.createdLast30Days, previous: counts.createdPrevious30Days, label: 'vs 30 j. précédents' }
     : null;
   const confirmationRate = total > 0 ? Math.round(((confirmedBookings + completedBookings) / total) * 100) : 0;
+  // Donnée inconnue (échec de chargement) ≠ zéro : l'interface affiche « — » et le dit
+  const UNAVAILABLE = 'Indisponible pour le moment';
+  const bookingsTotal = counts?.total ?? stats?.totalBookings;
   const plans = (subscriptionStats?.plansDistribution ?? []).filter((plan) => plan.count > 0);
   const planTotal = plans.reduce((sum, plan) => sum + plan.count, 0);
 
@@ -208,38 +214,23 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
     { label: 'Annulées / refusées', value: closedBookings, color: 'bg-slate-300' },
   ];
 
-  const todos = [
-    pendingAgencyCount > 0 && {
-      key: 'agencies',
-      href: '/admin/agencies?filter=PENDING',
-      icon: Building2,
-      title: `${pendingAgencyCount} agence${pendingAgencyCount > 1 ? 's' : ''} à vérifier`,
-      text: 'Validez les nouvelles agences pour les rendre visibles.',
-      tone: 'amber',
-    },
-    pendingBookings > 0 && {
-      key: 'bookings',
-      href: '/admin/bookings',
-      icon: Inbox,
-      title: `${pendingBookings} réservation${pendingBookings > 1 ? 's' : ''} en attente`,
-      text: 'Demandes pas encore confirmées par les agences.',
-      tone: 'slate',
-    },
-    healthIssues.length > 0 && {
-      key: 'health',
-      href: '/admin/health',
-      icon: AlertTriangle,
-      title: `${healthIssues.length} service${healthIssues.length > 1 ? 's' : ''} à surveiller`,
-      text: healthIssues.map(([key]) => HEALTH_NAME[key] ?? key).join(', '),
-      tone: 'red',
-    },
-  ].filter(Boolean) as { key: string; href: string; icon: React.ElementType; title: string; text: string; tone: 'amber' | 'slate' | 'red' }[];
+  // Ce qui attend l'administrateur (règles et libellés : lib/admin/overview-todos.ts)
+  const todos = overview ? buildTodos(overview, healthIssues.map(([key]) => HEALTH_NAME[key] ?? key)) : [];
 
-  const todoTone = {
+  const todoIcon: Record<TodoKey, React.ElementType> = {
+    agencies: Building2,
+    bookings: Inbox,
+    messages: Mail,
+    plans: CreditCard,
+    health: AlertTriangle,
+  };
+
+  const todoTone: Record<TodoTone, string> = {
     amber: 'bg-amber-50 text-amber-700',
     slate: 'bg-[#F5F6F8] text-[#0B1220]',
     red: 'bg-red-50 text-[#B4232F]',
-  } as const;
+    blue: 'bg-blue-50 text-blue-700',
+  };
 
   return (
     <div className="space-y-6">
@@ -290,7 +281,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
       {error && <ErrorBanner message={error} onRetry={() => void load('refresh')} retrying={refreshing} />}
 
       {/* ── À traiter ────────────────────────────────────────────────── */}
-      {!loading && (
+      {!loading && overview && (
         <section aria-labelledby="admin-todo">
           <h2 id="admin-todo" className="sr-only">
             À traiter
@@ -298,14 +289,12 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           {todos.length === 0 ? (
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-5 py-4">
               <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
-              <p className="text-sm font-semibold text-emerald-900">
-                Tout est à jour : aucune agence ni réservation en attente, tous les services répondent.
-              </p>
+              <p className="text-sm font-semibold text-emerald-900">{allClearMessage(overview, Boolean(health))}</p>
             </div>
           ) : (
-            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {todos.map((todo) => {
-                const Icon = todo.icon;
+                const Icon = todoIcon[todo.key];
                 return (
                   <li key={todo.key}>
                     <Link
@@ -317,7 +306,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-extrabold text-[#0B1220]">{todo.title}</span>
-                        <span className="block truncate text-xs text-slate-500">{todo.text}</span>
+                        <span className="mt-0.5 line-clamp-2 block text-xs text-slate-500">{todo.text}</span>
                       </span>
                       <ArrowRight
                         className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-text motion-reduce:transition-none rtl:rotate-180"
@@ -339,21 +328,25 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           loading={loading}
           icon={Building2}
           label="Agences vérifiées"
-          value={stats?.verifiedAgencies ?? 0}
-          unit={`/ ${stats?.totalAgencies ?? 0}`}
-          progress={verificationRate}
-          sub={`${verificationRate} % du réseau vérifié`}
+          value={stats ? stats.verifiedAgencies : '—'}
+          unit={stats ? `/ ${stats.totalAgencies}` : undefined}
+          progress={stats ? verificationRate : undefined}
+          sub={stats ? `${verificationRate} % du réseau vérifié` : UNAVAILABLE}
         />
         <KpiCard
           href="/admin/fleet"
           loading={loading}
           icon={Car}
           label="Véhicules référencés"
-          value={nf.format(stats?.totalVehicles ?? 0)}
+          value={stats ? nf.format(stats.totalVehicles) : '—'}
           sub={
-            typeof stats?.totalMotorcycles === 'number'
-              ? `${nf.format(Math.max(0, (stats?.totalVehicles ?? 0) - stats.totalMotorcycles))} voitures · ${nf.format(stats.totalMotorcycles)} motos`
-              : `${nf.format(subscriptionStats?.fleetCapacityTotal ?? 0)} places couvertes par les forfaits`
+            !stats
+              ? UNAVAILABLE
+              : typeof stats.totalMotorcycles === 'number'
+              ? `${nf.format(Math.max(0, stats.totalVehicles - stats.totalMotorcycles))} voitures · ${nf.format(stats.totalMotorcycles)} motos`
+              : subscriptionStats
+                ? `${nf.format(subscriptionStats.fleetCapacityTotal ?? 0)} places couvertes par les forfaits`
+                : undefined
           }
         />
         <KpiCard
@@ -361,9 +354,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           loading={loading}
           icon={CalendarDays}
           label="Réservations"
-          value={nf.format(counts?.total ?? stats?.totalBookings ?? 0)}
+          value={typeof bookingsTotal === 'number' ? nf.format(bookingsTotal) : '—'}
           trend={bookingsTrend}
-          sub={`${counts?.createdLast30Days ?? 0} reçues sur 30 jours · ${confirmationRate} % confirmées ou terminées`}
+          sub={counts ? `${counts.createdLast30Days} reçues sur 30 jours · ${confirmationRate} % confirmées ou terminées` : UNAVAILABLE}
         />
         <KpiCard
           href="/admin/analytics"
@@ -371,9 +364,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           icon={Wallet}
           tone="success"
           label="Volume d’affaires"
-          value={nf.format(stats?.totalVolume ?? 0)}
-          unit="DH"
-          sub="Encaissé à 100 % par les agences"
+          value={stats ? nf.format(stats.totalVolume) : '—'}
+          unit={stats ? 'DH' : undefined}
+          sub={stats ? 'Encaissé à 100 % par les agences' : UNAVAILABLE}
         />
       </div>
 
@@ -383,7 +376,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
         className="relative overflow-hidden rounded-2xl bg-[#0B1220] px-6 py-6 text-white sm:px-8"
       >
         <div className="pointer-events-none absolute -top-16 end-0 h-48 w-72 rounded-full bg-[#E63946]/15 blur-3xl" aria-hidden="true" />
-        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
+        <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
               <Sparkles className="h-3 w-3 text-amber-300" aria-hidden="true" />
@@ -394,16 +387,20 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
             </h2>
             {loading ? (
               <span className="mt-2 block h-10 w-44 animate-pulse rounded-lg bg-white/10" aria-hidden="true" />
-            ) : (
+            ) : subscriptionStats ? (
               <p className="mt-1 text-4xl font-extrabold tracking-tight tabular-nums">
-                {nf.format(subscriptionStats?.monthlyRecurringRevenue ?? 0)}
+                {nf.format(subscriptionStats.monthlyRecurringRevenue ?? 0)}
                 <span className="ms-2 text-lg font-semibold text-slate-400">DH / mois</span>
               </p>
+            ) : (
+              <p className="mt-1 text-4xl font-extrabold tracking-tight text-slate-500">—</p>
             )}
             <p className="mt-1.5 text-sm text-slate-400">
-              {nf.format(subscriptionStats?.activeSubscribers ?? 0)} agence
-              {(subscriptionStats?.activeSubscribers ?? 0) > 1 ? 's' : ''} abonnée
-              {(subscriptionStats?.activeSubscribers ?? 0) > 1 ? 's' : ''}
+              {subscriptionStats
+                ? `${nf.format(subscriptionStats.activeSubscribers ?? 0)} agence${(subscriptionStats.activeSubscribers ?? 0) > 1 ? 's' : ''} abonnée${(subscriptionStats.activeSubscribers ?? 0) > 1 ? 's' : ''}`
+                : loading
+                  ? ' '
+                  : 'Données d’abonnement indisponibles pour le moment.'}
             </p>
             <Link
               href="/admin/finance"
@@ -418,6 +415,8 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Répartition des forfaits</p>
             {loading ? (
               <span className="mt-4 block h-3 animate-pulse rounded-full bg-white/10" aria-hidden="true" />
+            ) : !subscriptionStats ? (
+              <p className="mt-3 text-sm text-slate-400">Répartition indisponible pour le moment.</p>
             ) : planTotal === 0 ? (
               <p className="mt-3 text-sm text-slate-400">Aucun forfait actif pour le moment.</p>
             ) : (
@@ -450,7 +449,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
       </section>
 
       {/* ── Réservations + colonne droite ───────────────────────────── */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <AdminCard noPadding>
           <CardHeader title="Réservations récentes" href="/admin/bookings" linkLabel="Tout voir" />
 
@@ -467,7 +466,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                 <div key={d.label} className="flex items-center gap-2">
                   <span className={cn('h-2 w-2 shrink-0 rounded-full', d.color)} aria-hidden="true" />
                   <dt className="truncate text-xs text-slate-500">{d.label}</dt>
-                  <dd className="ms-auto text-sm font-extrabold tabular-nums text-[#0B1220]">{loading ? '—' : d.value}</dd>
+                  <dd className="ms-auto text-sm font-extrabold tabular-nums text-[#0B1220]">{loading || !counts ? '—' : d.value}</dd>
                 </div>
               ))}
             </dl>
@@ -486,6 +485,8 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                 </div>
               ))}
             </div>
+          ) : !overview ? (
+            <EmptyState icon={AlertTriangle} title="Données indisponibles" description="Les réservations n’ont pas pu être chargées. Utilisez « Actualiser » pour réessayer." />
           ) : bookings.length === 0 ? (
             <EmptyState icon={CalendarDays} title="Aucune réservation" description="Les réservations apparaîtront ici dès qu'elles arrivent." />
           ) : (
@@ -540,6 +541,10 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                   <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />
                 ))}
               </div>
+            ) : !overview ? (
+              <EmptyState icon={AlertTriangle} title="Données indisponibles" description="Les agences à vérifier n’ont pas pu être chargées." />
+            ) : overview.pendingAgencies.restricted ? (
+              <EmptyState icon={ShieldCheck} title="Accès restreint" description="Votre rôle ne permet pas de consulter les agences à vérifier." />
             ) : pendingAgencies.length === 0 ? (
               <EmptyState icon={CheckCircle2} title="Tout est à jour" description="Aucune agence en attente de vérification." />
             ) : (

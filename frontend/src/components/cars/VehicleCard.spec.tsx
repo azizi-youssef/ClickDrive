@@ -128,3 +128,39 @@ describe('VehicleCard — remise longue durée de l’agence', () => {
     expect(screen.queryByText(/appliquée/)).not.toBeInTheDocument();
   });
 });
+
+describe('VehicleCard — remises distinctes voitures / motos', () => {
+  const agency = (extra: Record<string, unknown>) =>
+    ({ id: '22222222-2222-4222-8222-222222222222', name: 'Agence Test', ...extra }) as Agency;
+  const both = agency({
+    duration_discounts: [{ min_days: 7, percent: 10 }],
+    motorcycle_duration_discounts: [{ min_days: 3, percent: 15 }],
+  });
+
+  it('une voiture annonce le palier des voitures', () => {
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 300, vehicle_type: 'CAR', agency: both })} />);
+    expect(screen.getByText('−10 % dès 7 jours')).toBeInTheDocument();
+    expect(screen.queryByText('−15 % dès 3 jours')).not.toBeInTheDocument();
+  });
+
+  it('une moto annonce le palier des motos', () => {
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 150, vehicle_type: 'MOTORCYCLE', category: 'Scooter', agency: both })} />);
+    expect(screen.getByText('−15 % dès 3 jours')).toBeInTheDocument();
+    expect(screen.queryByText('−10 % dès 7 jours')).not.toBeInTheDocument();
+  });
+
+  it('période choisie : la remise appliquée à une moto est celle des motos', () => {
+    // 150 DH × 3 jours = 450 DH ; −15 % → 382,5 arrondi 383 DH (3 jours : seuil des motos, pas des voitures)
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 150, vehicle_type: 'MOTORCYCLE', category: 'Scooter', agency: both })} selectedDays={3} />);
+    expect(screen.getByText('Remise −15 % appliquée')).toBeInTheDocument();
+    const car = render(<VehicleCard vehicle={testVehicle({ daily_price: 150, vehicle_type: 'CAR', agency: both })} selectedDays={3} />);
+    expect(car.container.querySelector('s')).toBeNull();
+  });
+
+  it('motos sans remise alors que les voitures en ont : la moto n’affiche aucune pastille', () => {
+    const carsOnly = agency({ duration_discounts: [{ min_days: 7, percent: 10 }], motorcycle_duration_discounts: [] });
+    render(<VehicleCard vehicle={testVehicle({ daily_price: 150, vehicle_type: 'MOTORCYCLE', category: 'Scooter', agency: carsOnly })} selectedDays={7} />);
+    expect(screen.queryByText(/dès \d+ jours/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/appliquée/)).not.toBeInTheDocument();
+  });
+});

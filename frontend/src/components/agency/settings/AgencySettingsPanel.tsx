@@ -6,6 +6,7 @@ import {
   AlertCircle,
   BadgePercent,
   Building2,
+  Car,
   CheckCircle2,
   Clock3,
   ExternalLink,
@@ -16,6 +17,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Motorbike,
   Phone,
   Plus,
   RotateCcw,
@@ -54,8 +56,10 @@ type EditableFields = {
   /** Montants en DH saisis en texte ; vide = non proposé */
   delivery_fee_airport: string;
   delivery_fee_port: string;
-  /** Paliers de remise longue durée, en JSON de lignes saisies (TierRow[]) */
+  /** Paliers de remise longue durée des voitures, en JSON de lignes saisies (TierRow[]) */
   duration_discounts: string;
+  /** Paliers de remise longue durée des motos (liste indépendante de celle des voitures) */
+  motorcycle_duration_discounts: string;
 };
 type FieldErrors = Partial<Record<keyof EditableFields, string>>;
 
@@ -73,6 +77,7 @@ const EMPTY: EditableFields = {
   delivery_fee_airport: '',
   delivery_fee_port: '',
   duration_discounts: '[]',
+  motorcycle_duration_discounts: '[]',
 };
 
 const FEE_KEYS = ['delivery_fee_airport', 'delivery_fee_port'] as const;
@@ -113,13 +118,17 @@ function tiersError(value: string): string | undefined {
 
 /** Durées proposées à l'ajout d'un palier (la remise reste à saisir par l'agence) */
 const SUGGESTED_TIER_DAYS = ['3', '7', '15', '30'];
-/** Prix d'exemple de l'aperçu (aucun véhicule réel) */
-const EXAMPLE_DAILY_PRICE = 300;
+
+/** Les deux listes de paliers : une pour les voitures, une pour les motos (prix d'exemple de l'aperçu, sans véhicule réel) */
+const DISCOUNT_LISTS = [
+  { key: 'duration_discounts', title: 'Voitures', noun: 'une voiture', icon: Car, vehicleType: 'CAR', exampleDailyPrice: 300 },
+  { key: 'motorcycle_duration_discounts', title: 'Motos', noun: 'une moto', icon: Motorbike, vehicleType: 'MOTORCYCLE', exampleDailyPrice: 150 },
+] as const;
 
 /** Valeur envoyée à l'API : langues en liste, frais en nombre (null = non proposé), texte nettoyé */
 function payloadValue(key: keyof EditableFields, value: string): unknown {
   if (key === 'languages') return value ? value.split(',').filter(Boolean) : [];
-  if (key === 'duration_discounts') return tierRowsToDiscounts(parseTierRows(value));
+  if (key === 'duration_discounts' || key === 'motorcycle_duration_discounts') return tierRowsToDiscounts(parseTierRows(value));
   if ((FEE_KEYS as readonly string[]).includes(key)) return value.trim() ? Number(value.replace(',', '.')) : null;
   return value.trim();
 }
@@ -138,9 +147,157 @@ function validate(form: EditableFields): FieldErrors {
     const message = feeError(form[key]);
     if (message) errors[key] = message;
   }
-  const tiersMessage = tiersError(form.duration_discounts);
-  if (tiersMessage) errors.duration_discounts = tiersMessage;
+  for (const { key } of DISCOUNT_LISTS) {
+    const tiersMessage = tiersError(form[key]);
+    if (tiersMessage) errors[key] = tiersMessage;
+  }
   return errors;
+}
+
+/**
+ * Paliers de remise d'un type de véhicule (voitures ou motos) : lignes « à partir de N jours → X % »,
+ * erreur, ajout d'un palier et aperçu sur un prix d'exemple. Les deux listes sont indépendantes.
+ */
+function DiscountTiersEditor({
+  id,
+  list,
+  rows,
+  error,
+  locked,
+  onChange,
+}: {
+  id: string;
+  list: (typeof DISCOUNT_LISTS)[number];
+  rows: TierRow[];
+  error?: string;
+  locked: boolean;
+  onChange: (rows: TierRow[]) => void;
+}) {
+  const Icon = list.icon;
+  const addRow = () => {
+    const used = new Set(rows.map((row) => row.days.trim()));
+    onChange([...rows, { days: SUGGESTED_TIER_DAYS.find((days) => !used.has(days)) ?? '', percent: '' }]);
+  };
+  const previewTiers = tiersError(JSON.stringify(rows)) ? [] : tierRowsToDiscounts(rows);
+
+  return (
+    <div
+      id={id}
+      tabIndex={-1}
+      role="group"
+      aria-labelledby={`${id}-title`}
+      aria-describedby={error ? `${id}-error` : undefined}
+      className="space-y-3 border-t border-slate-100 pt-4 outline-none first:border-t-0 first:pt-0"
+    >
+      <h4 id={`${id}-title`} className="flex items-center gap-2 text-sm font-extrabold text-[#0B1220]">
+        <Icon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+        {list.title}
+      </h4>
+
+      <div className="space-y-2">
+        {rows.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600">
+            Aucune remise sur les {list.title.toLowerCase()} pour l’instant : vos clients paient le prix par jour, ou le tarif semaine / mois prévu sur le véhicule.
+          </p>
+        ) : (
+          rows.map((row, index) => {
+            const invalid = Boolean(error);
+            const updateRow = (patch: Partial<TierRow>) =>
+              onChange(rows.map((current, i) => (i === index ? { ...current, ...patch } : current)));
+            return (
+              <div
+                key={index}
+                className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-[#F5F6F8]/70 px-3 py-2.5 text-sm text-[#0B1220]"
+              >
+                <span className="font-semibold">À partir de</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={2}
+                  value={row.days}
+                  disabled={locked}
+                  aria-label={`${list.title}, palier ${index + 1} : durée minimale en jours`}
+                  aria-invalid={invalid || undefined}
+                  onChange={(e) => updateRow({ days: e.target.value.replace(/\D/g, '') })}
+                  className={cn(input, 'w-16 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                />
+                <span>jours</span>
+                <span aria-hidden="true" className="text-slate-400">→</span>
+                <span className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={2}
+                    value={row.percent}
+                    placeholder="10"
+                    disabled={locked}
+                    aria-label={`${list.title}, palier ${index + 1} : remise en pourcentage`}
+                    aria-invalid={invalid || undefined}
+                    onChange={(e) => updateRow({ percent: e.target.value.replace(/\D/g, '') })}
+                    className={cn(input, 'w-20 pe-7 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                  />
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-3 flex items-center font-semibold text-slate-500">
+                    %
+                  </span>
+                </span>
+                <span>de remise</span>
+                {!locked && (
+                  <button
+                    type="button"
+                    onClick={() => onChange(rows.filter((_, i) => i !== index))}
+                    aria-label={`${list.title} : retirer le palier ${index + 1}`}
+                    className="ms-auto flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-[#B4232F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {error && (
+        <p id={`${id}-error`} className="flex items-start gap-1 text-xs font-semibold text-[#B4232F]">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
+      {!locked && rows.length < DURATION_DISCOUNT_RULES.maxTiers && (
+        <button type="button" onClick={addRow} className={button.secondary}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Ajouter un palier ({list.title.toLowerCase()})
+        </button>
+      )}
+
+      {previewTiers.length > 0 && (
+        <div className="rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
+          <p className="font-bold">
+            Exemple pour {list.noun} à {list.exampleDailyPrice} DH par jour
+          </p>
+          <ul className="mt-1.5 space-y-1">
+            {previewTiers.map((tier) => {
+              const price = calculateRentalPrice(
+                { daily_price: list.exampleDailyPrice, vehicle_type: list.vehicleType, agency: { [list.key]: previewTiers } },
+                tier.min_days
+              );
+              return (
+                <li key={tier.min_days} className="tabular-nums">
+                  {tier.min_days} jours : <s>{formatNumber(price.full_price, 'fr')} DH</s>{' '}
+                  <strong>{formatNumber(price.total, 'fr')} DH</strong> (−{tier.percent} %)
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-1.5">
+            Remise de {DURATION_DISCOUNT_RULES.minPercent} à {DURATION_DISCOUNT_RULES.maxPercent} %, dès{' '}
+            {DURATION_DISCOUNT_RULES.minDays} jours · {DURATION_DISCOUNT_RULES.maxTiers} paliers au maximum.
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Card({ icon: Icon, title, description, children }: { icon: typeof Building2; title: string; description: string; children: ReactNode }) {
@@ -231,6 +388,8 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
         delivery_fee_airport: data.delivery_fee_airport == null ? '' : String(Number(data.delivery_fee_airport)),
         delivery_fee_port: data.delivery_fee_port == null ? '' : String(Number(data.delivery_fee_port)),
         duration_discounts: discountsToTierRows(data.duration_discounts),
+        // Colonne absente (base pas encore migrée) : les motos suivent les paliers des voitures, comme avant
+        motorcycle_duration_discounts: discountsToTierRows(data.motorcycle_duration_discounts ?? data.duration_discounts),
       };
       setInitial(next);
       setForm(next);
@@ -329,14 +488,6 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
 
   const whatsappDigits = form.whatsapp.replace(/\D/g, '');
 
-  // Remises longue durée : lignes en cours de saisie et aperçu sur un véhicule d'exemple
-  const tierRows = parseTierRows(form.duration_discounts);
-  const setTierRows = (rows: TierRow[]) => update('duration_discounts', JSON.stringify(rows));
-  const addTierRow = () => {
-    const used = new Set(tierRows.map((row) => row.days.trim()));
-    setTierRows([...tierRows, { days: SUGGESTED_TIER_DAYS.find((days) => !used.has(days)) ?? '', percent: '' }]);
-  };
-  const previewTiers = tiersError(form.duration_discounts) ? [] : tierRowsToDiscounts(tierRows);
   const tiersLocked = !canManage || saving;
 
   return (
@@ -473,115 +624,19 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
           <Card
             icon={BadgePercent}
             title="Remises longue durée"
-            description="Appliquées automatiquement à tous vos véhicules selon la durée de location. Le client voit la remise sur la fiche et paie le meilleur prix : tarif semaine ou mois du véhicule, ou cette remise (sans cumul)."
+            description="Appliquées automatiquement selon la durée de location, séparément pour vos voitures et vos motos. Le client voit la remise sur la fiche et paie le meilleur prix : tarif semaine ou mois du véhicule, ou cette remise (sans cumul)."
           >
-            <div
-              id={`${uid}-duration_discounts`}
-              tabIndex={-1}
-              role="group"
-              aria-label="Paliers de remise longue durée"
-              aria-describedby={errors.duration_discounts ? `${uid}-duration_discounts-error` : undefined}
-              className="space-y-2 outline-none"
-            >
-              {tierRows.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600">
-                  Aucune remise pour l’instant : vos clients paient le prix par jour, ou le tarif semaine / mois prévu sur le véhicule.
-                </p>
-              ) : (
-                tierRows.map((row, index) => {
-                  const invalid = Boolean(errors.duration_discounts);
-                  const updateRow = (patch: Partial<TierRow>) =>
-                    setTierRows(tierRows.map((current, i) => (i === index ? { ...current, ...patch } : current)));
-                  return (
-                    <div
-                      key={index}
-                      className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-[#F5F6F8]/70 px-3 py-2.5 text-sm text-[#0B1220]"
-                    >
-                      <span className="font-semibold">À partir de</span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={row.days}
-                        disabled={tiersLocked}
-                        aria-label={`Palier ${index + 1} : durée minimale en jours`}
-                        aria-invalid={invalid || undefined}
-                        onChange={(e) => updateRow({ days: e.target.value.replace(/\D/g, '') })}
-                        className={cn(input, 'w-16 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
-                      />
-                      <span>jours</span>
-                      <span aria-hidden="true" className="text-slate-400">→</span>
-                      <span className="relative">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          value={row.percent}
-                          placeholder="10"
-                          disabled={tiersLocked}
-                          aria-label={`Palier ${index + 1} : remise en pourcentage`}
-                          aria-invalid={invalid || undefined}
-                          onChange={(e) => updateRow({ percent: e.target.value.replace(/\D/g, '') })}
-                          className={cn(input, 'w-20 pe-7 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
-                        />
-                        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-3 flex items-center font-semibold text-slate-500">
-                          %
-                        </span>
-                      </span>
-                      <span>de remise</span>
-                      {!tiersLocked && (
-                        <button
-                          type="button"
-                          onClick={() => setTierRows(tierRows.filter((_, i) => i !== index))}
-                          aria-label={`Retirer le palier ${index + 1}`}
-                          className="ms-auto flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-[#B4232F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {errors.duration_discounts && (
-              <p id={`${uid}-duration_discounts-error`} className="flex items-start gap-1 text-xs font-semibold text-[#B4232F]">
-                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {errors.duration_discounts}
-              </p>
-            )}
-
-            {!tiersLocked && tierRows.length < DURATION_DISCOUNT_RULES.maxTiers && (
-              <button type="button" onClick={addTierRow} className={button.secondary}>
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Ajouter un palier
-              </button>
-            )}
-
-            {previewTiers.length > 0 && (
-              <div className="rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
-                <p className="font-bold">Exemple pour un véhicule à {EXAMPLE_DAILY_PRICE} DH par jour</p>
-                <ul className="mt-1.5 space-y-1">
-                  {previewTiers.map((tier) => {
-                    const price = calculateRentalPrice(
-                      { daily_price: EXAMPLE_DAILY_PRICE, agency: { duration_discounts: previewTiers } },
-                      tier.min_days
-                    );
-                    return (
-                      <li key={tier.min_days} className="tabular-nums">
-                        {tier.min_days} jours : <s>{formatNumber(price.full_price, 'fr')} DH</s>{' '}
-                        <strong>{formatNumber(price.total, 'fr')} DH</strong> (−{tier.percent} %)
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="mt-1.5">
-                  Remise de {DURATION_DISCOUNT_RULES.minPercent} à {DURATION_DISCOUNT_RULES.maxPercent} %, dès{' '}
-                  {DURATION_DISCOUNT_RULES.minDays} jours · {DURATION_DISCOUNT_RULES.maxTiers} paliers au maximum.
-                </p>
-              </div>
-            )}
+            {DISCOUNT_LISTS.map((list) => (
+              <DiscountTiersEditor
+                key={list.key}
+                id={`${uid}-${list.key}`}
+                list={list}
+                rows={parseTierRows(form[list.key])}
+                error={errors[list.key]}
+                locked={tiersLocked}
+                onChange={(rows) => update(list.key, JSON.stringify(rows))}
+              />
+            ))}
           </Card>
         </form>
 

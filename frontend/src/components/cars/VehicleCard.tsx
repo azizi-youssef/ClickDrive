@@ -30,7 +30,7 @@ import type { VehicleMessages } from '@/lib/i18n/messages/vehicle';
 import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { isOptimizableImage } from '@/lib/utils/images';
 import { rentalPeriodQuery, type RentalPeriod } from '@/lib/utils/date-only';
-import { calculateRentalPrice, normalizeDurationDiscounts } from '@/lib/utils/pricing';
+import { calculateRentalPrice, durationDiscountsFor } from '@/lib/utils/pricing';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -362,7 +362,8 @@ function VehicleCardComponent({
   const rental = selectedDays && selectedDays > 0 ? calculateRentalPrice(vehicle, selectedDays) : null;
   const totalPrice = rental ? rental.total : null;
   // Remise longue durée de l'agence : appliquée à la période choisie, sinon palier d'entrée annoncé
-  const entryDiscount = normalizeDurationDiscounts(vehicle.agency?.duration_discounts)[0] ?? null;
+  // (les paliers des motos sont distincts de ceux des voitures)
+  const entryDiscount = durationDiscountsFor(vehicle.agency, vehicle)[0] ?? null;
   const durationDiscount = rental?.applied_rate === 'duration' ? rental.duration_discount : null;
   const discountShown = durationDiscount ?? entryDiscount;
   const isMoto = isMotorcycle(vehicle);

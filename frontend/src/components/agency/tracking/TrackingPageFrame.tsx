@@ -77,12 +77,12 @@ export async function TrackingPageFrame({ searchParams, children }: { searchPara
     );
   }
 
-  const { data: agency } = await db.from('agencies').select('name, logo_url').eq('id', agencyId).maybeSingle();
+  const { data: agency } = await db.from('agencies').select('name, logo_url, verified').eq('id', agencyId).maybeSingle();
   const agencyName = agency?.name ?? auth.agencyName ?? 'Mon agence';
 
   return (
     <TrackingShell
-      agency={{ name: agencyName, logoUrl: agency?.logo_url ?? auth.agencyLogoUrl, verified: true }}
+      agency={{ name: agencyName, logoUrl: agency?.logo_url ?? auth.agencyLogoUrl, verified: agency?.verified === true }}
       profile={{ displayName: auth.displayName, avatarUrl: auth.avatarUrl }}
       access={{
         agencyId,

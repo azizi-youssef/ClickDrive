@@ -214,6 +214,12 @@ export function useRealtimeRefresh({
           setIsConnected(false);
         }
       });
+    }).catch((error: unknown) => {
+      // Temps réel facultatif (module non chargé, client incomplet) : le polling et le retour sur l'onglet
+      // prennent le relais ; jamais de promesse rejetée sans gestionnaire.
+      if (cancelled) return;
+      console.warn('[useRealtimeRefresh] Temps réel indisponible :', error instanceof Error ? error.message : error);
+      setIsConnected(false);
     });
 
     // Nettoyage complet

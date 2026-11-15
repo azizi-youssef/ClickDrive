@@ -117,6 +117,7 @@ export function AgencyFleetPanel({
   const [pendingChange, setPendingChange] = useState<PlanChangeRequest | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [subLoading, setSubLoading] = useState(true);
+  const [subError, setSubError] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const loadSubscription = useCallback(async () => {
@@ -132,12 +133,16 @@ export function AgencyFleetPanel({
       if (subJson.success && subJson.data) {
         setSubscription(subJson.data);
         setPendingChange(subJson.pendingChange ?? null);
+        setSubError(false);
+      } else {
+        setSubError(true);
       }
       if (plansJson.success && plansJson.data) {
         setPlans(plansJson.data);
       }
     } catch (err) {
       console.warn('Could not load subscription data:', err);
+      setSubError(true);
     } finally {
       setSubLoading(false);
     }
@@ -318,6 +323,8 @@ export function AgencyFleetPanel({
       <FleetCapacityCard
         subscription={subscription}
         loading={subLoading}
+        error={subError}
+        onRetry={() => void loadSubscription()}
         onOpenUpgradeModal={() => setUpgradeModalOpen(true)}
       />
 

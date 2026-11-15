@@ -6,7 +6,7 @@ import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { formatNumber } from '@/lib/i18n/format';
 import { addDateDays, formatLocalDate, getEffectiveRentalDates, isValidDateOnly, type RentalPeriod } from '@/lib/utils/date-only';
-import { calculateRentalDays, calculateRentalPrice, normalizeDurationDiscounts } from '@/lib/utils/pricing';
+import { calculateRentalDays, calculateRentalPrice, durationDiscountsFor } from '@/lib/utils/pricing';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle,
@@ -156,7 +156,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
   // Tarif semaine ou mois de l'agence appliqué dès 7 ou 30 jours (même calcul que le serveur)
   // Tarifs semaine / mois du véhicule et remises longue durée de l'agence : même calcul que le serveur
   const pricing = calculateRentalPrice(vehicle, totalDays);
-  const durationTiers = normalizeDurationDiscounts(vehicle.agency?.duration_discounts);
+  const durationTiers = durationDiscountsFor(vehicle.agency, vehicle);
   // Remise longue durée réellement appliquée (meilleur prix) et économie réalisée sur le prix plein
   const durationShown = pricing.applied_rate === 'duration' && pricing.duration_discount !== null && !datesError;
   const durationSaving = Math.max(0, pricing.full_price - pricing.subtotal);
@@ -225,7 +225,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
               .join(' · ')}
           </p>
         )}
-        {/* Remises longue durée de l'agence (toute sa flotte), appliquées automatiquement au total */}
+        {/* Remises longue durée de l'agence pour ce type de véhicule (voiture ou moto), appliquées automatiquement au total */}
         <DurationDiscountTiers
           tiers={durationTiers}
           applied={durationShown ? pricing.duration_discount : null}

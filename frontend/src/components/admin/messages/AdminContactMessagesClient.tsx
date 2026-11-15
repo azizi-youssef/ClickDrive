@@ -95,7 +95,7 @@ export function AdminContactMessagesClient() {
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <BrowserAlertsToggle />
-          <SelectFilter value={filter} onChange={setFilter} options={FILTERS} />
+          <SelectFilter value={filter} onChange={setFilter} options={FILTERS} label="Filtrer les messages par statut" />
         </div>
       </div>
       <p className="text-xs text-slate-500">

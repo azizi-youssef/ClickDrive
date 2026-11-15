@@ -9,18 +9,35 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AgencySubscription } from '@/types';
+import { ErrorBanner } from '@/components/agency/shell/Feedback';
 
 interface Props {
   subscription: AgencySubscription | null;
+  /** Lecture en cours (un cadre d'attente tant qu'il n'y a encore rien à afficher) */
   loading?: boolean;
+  /** La lecture de la formule a échoué : sans donnée, on le dit et on propose de réessayer */
+  error?: boolean;
+  onRetry?: () => void;
   onOpenUpgradeModal: () => void;
 }
 
-export function FleetCapacityCard({ subscription, loading, onOpenUpgradeModal }: Props) {
-  if (loading || !subscription) {
-    return (
-      <div className="h-28 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />
-    );
+export function FleetCapacityCard({ subscription, loading, error, onRetry, onOpenUpgradeModal }: Props) {
+  if (!subscription) {
+    // Jamais de cadre d'attente indéfini : soit on charge, soit la lecture a échoué (message + réessayer),
+    // soit il n'y a rien à montrer
+    if (loading) {
+      return (
+        <div
+          role="status"
+          aria-label="Chargement de la capacité du parc"
+          className="h-28 w-full animate-pulse rounded-2xl border border-slate-200 bg-slate-100 motion-reduce:animate-none"
+        />
+      );
+    }
+    if (error) {
+      return <ErrorBanner message="La capacité de votre parc n’a pas pu être chargée." onRetry={onRetry} />;
+    }
+    return null;
   }
 
   const { plan, vehicle_capacity, is_at_capacity } = subscription;

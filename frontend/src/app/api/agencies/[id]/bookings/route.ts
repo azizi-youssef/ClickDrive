@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgencyPermissionApi } from '@/lib/auth/access-api';
 import { createClient } from '@/lib/supabase/server';
+import { AGENCY_TO_PROCESS_STATUSES, TO_PROCESS_FILTER } from '@/lib/bookings/agency-queue';
 import { CAR_CATEGORIES, MOTORCYCLE_CATEGORIES, parseVehicleTypeParam } from '@/lib/vehicles/kind';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -55,7 +56,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
   if (vehicleType) {
     query = query.in('vehicle.category', [...(vehicleType === 'MOTORCYCLE' ? MOTORCYCLE_CATEGORIES : CAR_CATEGORIES)]);
   }
-  if (status) query = query.eq('status', status);
+  // TO_PROCESS : toute la file des demandes qui attendent une décision de l'agence (liste de statuts, pas un statut)
+  if (status === TO_PROCESS_FILTER) query = query.in('status', [...AGENCY_TO_PROCESS_STATUSES]);
+  else if (status) query = query.eq('status', status);
 
   if (search) {
     // Echappe les jokers PostgRES pour eviter les injections de motif ilike.

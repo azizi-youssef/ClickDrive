@@ -35,6 +35,12 @@ export type AdminOverviewAgency = {
   verified: boolean;
 };
 
+/**
+ * Décompte d'éléments en attente. Deux cas où le nombre n'existe pas, à ne jamais lire comme « zéro » :
+ * `restricted` (le compte n'a pas le droit de les lire) et `unavailable` (la lecture a échoué).
+ */
+export type AdminOverviewCount = { count: number; restricted?: boolean; unavailable?: boolean };
+
 export type AdminOverview = {
   bookings: {
     total: number;
@@ -48,5 +54,9 @@ export type AdminOverview = {
   recentBookings: AdminOverviewBooking[];
   /** `restricted` : le compte n'a pas le droit de lire les agences */
   pendingAgencies: { count: number; items: AdminOverviewAgency[]; restricted?: boolean };
+  /** Messages de contact au statut « Nouveau » (ni pris en charge, ni traités) : droit `customers.read` */
+  contactMessages: AdminOverviewCount;
+  /** Demandes de changement de formule en attente de paiement : droit `agencies.read` */
+  planRequests: AdminOverviewCount;
   generatedAt: string;
 };

@@ -110,16 +110,10 @@ export async function POST(req: NextRequest) {
     const trackingPath = signedBookingLink('track', result.booking.reference || '');
 
     if (!result.idempotentReplay) {
-      // E-mails au client (accusé de réception) et à l'agence, envoyés après la réponse
+      // E-mails et WhatsApp au client (accusé de réception) et à l'agence, envoyés après la réponse.
+      // Dans l'espace agence, la cloche « demandes à traiter » se met à jour d'elle-même (AgencyWorkspace).
       const createdBooking = result.booking;
       after(() => notifyBookingCreated(createdBooking, appUrl));
-      await notificationService.sendDashboardNotification({
-        agencyId: result.booking.agency_id,
-        title: `Nouvelle demande de réservation ${result.booking.reference}`,
-        message: `${result.booking.customer_name} — ${result.booking.vehicle?.brand} ${result.booking.vehicle?.model} (${result.booking.total_days}j à ${result.booking.pickup_location})`,
-        link: `/agency?booking=${encodeURIComponent(result.booking.reference || '')}`,
-        type: 'BOOKING',
-      });
     }
 
     return NextResponse.json({

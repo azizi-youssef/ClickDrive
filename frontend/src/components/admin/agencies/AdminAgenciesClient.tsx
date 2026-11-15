@@ -1,29 +1,12 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Building2,
-  Plus,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  KeyRound,
-  Edit2,
-  Trash2,
-  MapPin,
-  Phone,
-  Car,
-  Calendar,
-  Sparkles,
-} from 'lucide-react';
+import { Building2, Plus, RefreshCw, CheckCircle } from 'lucide-react';
 import type { Agency, AgencySubscription } from '@/types';
 import {
   AdminCard,
   TableWrapper,
   Th,
-  Td,
-  TableSkeletonRows,
-  AgencyStatusBadge,
   EmptyState,
   Pagination,
   SearchInput,
@@ -43,6 +26,9 @@ import { ResetPasswordModal } from './ResetPasswordModal';
 import { DeleteAgencyModal } from './DeleteAgencyModal';
 import { AgencyCredentialsSuccessModal } from './AgencyCredentialsSuccessModal';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
+import { cn } from '@/lib/utils';
+import type { AgencyActionHandlers } from './AgencyRowActions';
+import { AgencyCard, AgencySkeletonRows, AgencyTableRow, COLUMN } from './AgencyRows';
 
 const PAGE_SIZE = 15;
 
@@ -234,6 +220,13 @@ export function AdminAgenciesClient({ initialStatus = 'ALL' }: { initialStatus?:
     void load('refresh');
   };
 
+  const handlers: AgencyActionHandlers = {
+    onToggleStatus: (agency) => void handleToggleStatus(agency),
+    onEdit: setEditingAgency,
+    onResetPassword: setResetPwdAgency,
+    onDelete: setDeletingAgency,
+  };
+
   return (
     <div className="space-y-5">
       {/* Toast Notification */}
@@ -297,12 +290,14 @@ export function AdminAgenciesClient({ initialStatus = 'ALL' }: { initialStatus?:
               value={statusFilter}
               onChange={setStatusFilter}
               options={STATUS_OPTIONS}
+              label="Filtrer par statut"
               className="w-full sm:w-44"
             />
             <SelectFilter
               value={cityFilter}
               onChange={setCityFilter}
               options={CITY_OPTIONS}
+              label="Filtrer par ville"
               className="w-full sm:w-48"
             />
             <Btn
@@ -317,220 +312,98 @@ export function AdminAgenciesClient({ initialStatus = 'ALL' }: { initialStatus?:
           </div>
         </div>
 
-        {/* Table */}
-        <TableWrapper tableClassName="min-w-[1180px]">
-          <thead className="bg-slate-50/75">
-            <tr>
-              <Th>Agence & Compte</Th>
-              <Th className="hidden sm:table-cell">Ville & Région</Th>
-              <Th className="hidden md:table-cell">Contact</Th>
-              <Th className="hidden lg:table-cell text-center">Flotte</Th>
-              <Th className="hidden md:table-cell">Forfait</Th>
-              <Th className="hidden xl:table-cell">Créée le</Th>
-              <Th>Statut</Th>
-              <Th className="text-right">Actions</Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
-            {loading ? (
-              <TableSkeletonRows cols={8} rows={8} />
-            ) : agencies.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="py-0">
-                  <EmptyState
-                    icon={Building2}
-                    title="Aucune agence trouvée"
-                    description={
-                      search || statusFilter !== 'ALL' || cityFilter !== 'ALL'
-                        ? 'Aucune agence ne correspond à vos filtres de recherche.'
-                        : 'Aucune agence n’est encore configurée. Ajoutez votre première agence partenaire.'
-                    }
-                    action={
-                      !search && statusFilter === 'ALL' && cityFilter === 'ALL' ? (
-                        <Btn variant="primary" size="sm" onClick={() => setIsAddModalOpen(true)}>
-                          <Plus className="h-3.5 w-3.5 mr-1.5" />
-                          Ajouter la première agence
-                        </Btn>
-                      ) : undefined
-                    }
-                  />
-                </td>
-              </tr>
-            ) : (
-              agencies.map((agency) => {
-                const initials = agency.name
-                  .split(' ')
-                  .map((w) => w[0])
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase();
-
-                const createdAtStr = new Date(agency.created_at).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                });
-
-                const isSuspended = agency.status === 'SUSPENDED';
-                const isArchived = Boolean(agency.archived_at);
-
-                return (
-                  <tr
-                    key={agency.id}
-                    className={`hover:bg-slate-50/75 transition-colors ${
-                      isArchived ? 'opacity-60 bg-slate-50/40' : ''
-                    }`}
-                  >
-                    {/* Agence & Email */}
-                    <Td>
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-linear-to-br from-red-500 to-rose-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs border border-red-400/20">
-                          {initials}
+        {/*
+          Liste des agences. Cartes en dessous de 56 rem de largeur utile, tableau au-delà.
+          Le seuil porte sur le conteneur (container query) et non sur la fenêtre : la barre latérale de
+          l'administration retire 16 rem à la page, donc à 1024 px de fenêtre il ne reste que ~690 px, et un
+          tableau à largeur forcée y cachait « Statut » et « Actions » hors de l'écran.
+        */}
+        <div className="@container">
+          {!loading && agencies.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="Aucune agence trouvée"
+              description={
+                search || statusFilter !== 'ALL' || cityFilter !== 'ALL'
+                  ? 'Aucune agence ne correspond à vos filtres de recherche.'
+                  : 'Aucune agence n’est encore configurée. Ajoutez votre première agence partenaire.'
+              }
+              action={
+                !search && statusFilter === 'ALL' && cityFilter === 'ALL' ? (
+                  <Btn variant="primary" size="sm" onClick={() => setIsAddModalOpen(true)}>
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    Ajouter la première agence
+                  </Btn>
+                ) : undefined
+              }
+            />
+          ) : (
+            <>
+              {/* Mobile / tablette / petite fenêtre : une carte par agence */}
+              <ul
+                aria-label="Agences partenaires"
+                aria-busy={loading}
+                className="grid grid-cols-1 divide-y divide-slate-100 @4xl:hidden"
+              >
+                {loading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <li key={i} aria-hidden="true" className="space-y-3 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 shrink-0 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none" />
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100 motion-reduce:animate-none" />
+                            <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100 motion-reduce:animate-none" />
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {agency.name}
-                          </p>
-                          <p className="text-xs font-mono text-slate-500 truncate max-w-50">
-                            {agency.email}
-                          </p>
-                        </div>
-                      </div>
-                    </Td>
-
-                    {/* Ville & Région */}
-                    <Td className="hidden sm:table-cell whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        <span>{agency.city}</span>
-                        <span className="text-slate-400">· Oriental</span>
-                      </div>
-                    </Td>
-
-                    {/* Contact */}
-                    <Td className="hidden md:table-cell whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        <span className="font-mono">{agency.phone}</span>
-                      </div>
-                    </Td>
-
-                    {/* Flotte */}
-                    <Td className="hidden lg:table-cell text-center whitespace-nowrap">
-                      <span
-                        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
-                        title={
-                          agency.vehicle_count == null
-                            ? 'Le nombre de véhicules n’a pas été transmis.'
-                            : `${agency.vehicle_count} véhicule(s) dans cette agence.`
-                        }
-                      >
-                        <Car className="h-3 w-3" />
-                        <span>{agency.vehicle_count == null ? 'Non transmis' : agency.vehicle_count}</span>
-                      </span>
-                    </Td>
-
-                    {/* Forfait Abonnements */}
-                    <Td className="hidden md:table-cell whitespace-nowrap">
-                      {(() => {
-                        const sub = subscriptionsMap[agency.id];
-                        if (!sub) {
-                          return <span className="text-xs text-slate-400">Non abonné</span>;
-                        }
-                        return (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#0B1220] border border-blue-200">
-                            <Sparkles className="h-3 w-3 text-amber-500" />
-                            {sub.plan.name}
-                          </span>
-                        );
-                      })()}
-                    </Td>
-
-                    {/* Créée le */}
-                    <Td className="hidden xl:table-cell whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        <span>{createdAtStr}</span>
-                      </div>
-                    </Td>
-
-                    {/* Statut */}
-                    <Td className="whitespace-nowrap">
-                      <AgencyStatusBadge
-                        status={isArchived ? 'ARCHIVED' : (agency.status as any)}
+                        <div className="h-10 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none" />
+                      </li>
+                    ))
+                  : agencies.map((agency) => (
+                      <AgencyCard
+                        key={agency.id}
+                        agency={agency}
+                        subscription={subscriptionsMap[agency.id]}
+                        busy={actionInProgressId === agency.id}
+                        handlers={handlers}
                       />
-                    </Td>
+                    ))}
+              </ul>
 
-                    {/* Actions */}
-                    <Td className="text-right whitespace-nowrap">
-                      <div className="flex flex-nowrap items-center justify-end gap-2">
-                        {/* Quick Activation Toggle */}
-                        {!isArchived && (
-                          <button
-                            type="button"
-                            disabled={actionInProgressId === agency.id}
-                            onClick={() => handleToggleStatus(agency)}
-                            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                              isSuspended
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                            }`}
-                            title={isSuspended ? 'Réactiver l’agence' : 'Suspendre l’agence'}
-                          >
-                            {actionInProgressId === agency.id ? (
-                              <RefreshCw className="h-3 w-3 animate-spin" />
-                            ) : isSuspended ? (
-                              <>
-                                <CheckCircle className="h-3 w-3 text-emerald-600" />
-                                <span>Activer</span>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="h-3 w-3 text-slate-500" />
-                                <span>Suspendre</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => setEditingAgency(agency)}
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          Modifier
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setResetPwdAgency(agency)}
-                          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-                        >
-                          <KeyRound className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" />
-                          Réinitialiser
-                        </button>
-
-                        {!isArchived && (
-                          <button
-                            type="button"
-                            disabled={actionInProgressId === agency.id}
-                            onClick={() => setDeletingAgency(agency)}
-                            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            Supprimer / archiver
-                          </button>
-                        )}
-                      </div>
-                    </Td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </TableWrapper>
+              {/* Grande fenêtre : tableau, sans largeur minimale forcée (les colonnes secondaires apparaissent avec la place) */}
+              <div className="hidden @4xl:block">
+                <TableWrapper>
+                  <caption className="sr-only">Agences partenaires</caption>
+                  <thead className="bg-slate-50/75">
+                    <tr>
+                      <Th>Agence & Compte</Th>
+                      <Th>Ville & Contact</Th>
+                      <Th className={cn('text-center', COLUMN.fleet)}>Flotte</Th>
+                      <Th className={COLUMN.plan}>Forfait</Th>
+                      <Th className={COLUMN.created}>Créée le</Th>
+                      <Th>Statut</Th>
+                      <Th className="text-right">Actions</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {loading ? (
+                      <AgencySkeletonRows rows={8} />
+                    ) : (
+                      agencies.map((agency) => (
+                        <AgencyTableRow
+                          key={agency.id}
+                          agency={agency}
+                          subscription={subscriptionsMap[agency.id]}
+                          busy={actionInProgressId === agency.id}
+                          handlers={handlers}
+                        />
+                      ))
+                    )}
+                  </tbody>
+                </TableWrapper>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Distinct Table Footer & Pagination */}
         {!loading && agencies.length > 0 && (

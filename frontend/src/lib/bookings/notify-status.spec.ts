@@ -45,6 +45,30 @@ describe('Réponse de l’agence : notification du client', () => {
     );
   });
 
+  it('client sans e-mail : l’adresse de substitution ne reçoit rien', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    mocks.getBookingByReference.mockResolvedValue({
+      id: 'b2',
+      reference: 'CD-2026-415049',
+      status: 'CONFIRMED',
+      customer_name: 'Karim Ouali',
+      customer_email: '212612345678@clickdrive.ma',
+      customer_phone: '+212612345678',
+      start_date: '2026-12-01',
+      end_date: '2026-12-04',
+      total_days: 3,
+      total_price: 1050,
+      agency_id: 'a1',
+      agency: { name: 'Agence Test' },
+      vehicle: { brand: 'Renault', model: 'Clio', year: 2025 },
+    });
+    await notifyBookingStatusByReference('CD-2026-415049', 'CONFIRMED', 'https://clickdrive.ma');
+
+    // Destinataire vide : sendEmail renvoie « skipped » (invalid_recipient) sans rien envoyer
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(1);
+    expect(mocks.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: '' }));
+  });
+
   it('réservation introuvable : aucun envoi, aucune exception', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     mocks.getBookingByReference.mockResolvedValue(null);

@@ -596,7 +596,7 @@ export function AgencyRentalsPanel({
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-emerald-950">
-                        Caution ({activeHandover.rental.deposit_amount || 3000} DH)
+                        Caution ({activeHandover.rental.deposit_amount ?? 3000} DH)
                       </h4>
                       <p className="text-emerald-700">
                         Restitution de la préautorisation carte bancaire

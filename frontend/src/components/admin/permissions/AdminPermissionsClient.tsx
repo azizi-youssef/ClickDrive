@@ -338,9 +338,8 @@ export function AdminPermissionsClient() {
             </div>
           </div>
 
-          <TableWrapper>
-            <table className="w-full text-left text-sm">
-              <thead>
+          <TableWrapper tableClassName="w-full text-left text-sm">
+            <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
                   <Th>Utilisateur</Th>
                   <Th>Email</Th>
@@ -424,7 +423,6 @@ export function AdminPermissionsClient() {
                   })
                 )}
               </tbody>
-            </table>
           </TableWrapper>
         </div>
       )}

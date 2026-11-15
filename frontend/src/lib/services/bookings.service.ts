@@ -11,6 +11,7 @@ import { commissionService } from './commission.service';
 import { vehiclesService } from './vehicles.service';
 import { isUuid, type AvailabilityStatus } from '@/lib/availability/status';
 import { PRIVATE_VEHICLE_FIELDS } from '@/lib/vehicles/public';
+import { placeholderCustomerEmail } from '@/lib/bookings/customer-email';
 
 /* -------------------------------------------------------------------------- */
 /* Colonnes sélectionnées                                                     */
@@ -458,7 +459,8 @@ export class BookingsService {
           last_name: input.lastName,
           customer_name: fullName,
           cin: input.cin || null,
-          customer_email: input.email || `${input.phone.replace(/[^0-9]/g, '')}@clickdrive.ma`,
+          // Sans e-mail : adresse de substitution (colonne NOT NULL), jamais utilisée pour un envoi
+          customer_email: input.email || placeholderCustomerEmail(input.phone),
           customer_phone: input.phone,
           customer_country: input.country,
           birth_date: input.birthDate,
@@ -482,7 +484,7 @@ export class BookingsService {
           daily_price: pricing.daily_price,
           total_price: pricing.total,
           commission_rate: pricing.commission_rate,
-          deposit_amount: vehicle.deposit || 3000,
+          deposit_amount: vehicle.deposit ?? 3000,
           // Statut de la machine à états partagée (PENDING n'est plus écrit : statut historique)
           status: 'REQUESTED',
           commission_status: 'PENDING',

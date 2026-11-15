@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import type { Booking } from '@/types';
 import { bookingStatusLabel, bookingStatusTone, bookingNextStepHint } from '@/lib/bookings/status';
 import { formatEngineCc, isMotorcycle, motorcycleLicenseLabel } from '@/lib/vehicles/kind';
+import { deliverableCustomerEmail } from '@/lib/bookings/customer-email';
 
 /* ================================================================
    Fiche « Demande de réservation » ClickDrive — une seule page A4
@@ -493,11 +494,12 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
   /* ---------- Client ---------- */
   section('Client et conducteur');
   const customerName = oneLine(booking.customer_name) || oneLine(`${booking.first_name ?? ''} ${booking.last_name ?? ''}`);
-  const showEmail = Boolean(booking.customer_email) && !booking.customer_email.endsWith('@clickdrive.ma');
+  // Adresse de substitution d'un client sans e-mail : jamais présentée comme son adresse
+  const customerEmail = deliverableCustomerEmail(booking.customer_email);
   layout.fields([
     { label: 'Nom complet', value: customerName, emphasis: true },
     { label: 'Téléphone / WhatsApp', value: oneLine(booking.customer_phone) },
-    ...(showEmail ? [{ label: 'E-mail', value: oneLine(booking.customer_email) }] : []),
+    ...(customerEmail ? [{ label: 'E-mail', value: oneLine(customerEmail) }] : []),
     { label: 'CIN / Passeport', value: oneLine(booking.cin) || 'À présenter à la remise' },
     { label: 'N° de permis de conduire', value: oneLine(booking.license_number) || 'À présenter à la remise' },
     { label: 'Validité du permis', value: formatPdfDate(booking.license_expiry) || oneLine(booking.license_expiry) },

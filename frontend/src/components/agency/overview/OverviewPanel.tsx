@@ -198,6 +198,8 @@ export function OverviewPanel({
   agenda,
   onRetry,
   onOpenBookings,
+  pendingNow,
+  onOpenPending,
   onOpenFleet,
   onOpenCalendar,
   onOpenSubscription,
@@ -209,6 +211,10 @@ export function OverviewPanel({
   agenda: AgendaResource;
   onRetry: () => void;
   onOpenBookings: () => void;
+  /** Demandes qui attendent une réponse, toutes périodes confondues (sinon : celles de la période affichée) */
+  pendingNow?: number | null;
+  /** Ouvre la liste des réservations déjà filtrée sur ces demandes (sinon : la liste complète) */
+  onOpenPending?: () => void;
   onOpenFleet: () => void;
   onOpenCalendar: () => void;
   onOpenSubscription: () => void;
@@ -242,6 +248,9 @@ export function OverviewPanel({
   }
 
   const d = stats.data;
+  // « À traiter » n'est pas une statistique de période : une demande ancienne attend toujours une réponse
+  const pendingCount = pendingNow ?? d.pendingBookings;
+  const openPending = onOpenPending ?? onOpenBookings;
   const pickups = agenda.data?.upcomingPickups ?? [];
   const returns = agenda.data?.upcomingReturns ?? [];
   const recentActivity = agenda.data?.recentActivity ?? [];
@@ -249,13 +258,13 @@ export function OverviewPanel({
 
   /* Alertes prioritaires */
   const alerts: { id: string; label: string; tone: 'urgent' | 'warn'; cta: string; action: () => void }[] = [];
-  if (d.pendingBookings > 0) {
+  if (pendingCount > 0) {
     alerts.push({
       id: 'pending',
       tone: 'urgent',
-      label: `${d.pendingBookings} demande${d.pendingBookings > 1 ? 's' : ''} de réservation attend${d.pendingBookings > 1 ? 'ent' : ''} votre réponse`,
+      label: `${pendingCount} demande${pendingCount > 1 ? 's' : ''} de réservation attend${pendingCount > 1 ? 'ent' : ''} votre réponse`,
       cta: 'Répondre',
-      action: onOpenBookings,
+      action: openPending,
     });
   }
   if (d.availableVehicles === 0 && d.totalVehicles > 0) {
@@ -294,7 +303,7 @@ export function OverviewPanel({
   const actions = [
     { label: 'Ajouter un véhicule', desc: 'Enrichir votre flotte', icon: PlusCircle, onClick: onAddVehicle ?? onOpenFleet },
     { label: 'Gérer les disponibilités', desc: 'Bloquer ou ouvrir des dates', icon: CalendarClock, onClick: onOpenCalendar },
-    { label: 'Traiter les réservations', desc: 'Demandes reçues', icon: ClipboardList, onClick: onOpenBookings },
+    { label: 'Traiter les réservations', desc: 'Demandes reçues', icon: ClipboardList, onClick: openPending },
     { label: 'Mon forfait', desc: 'Capacité et formule', icon: Sparkles, onClick: onOpenSubscription },
   ];
 
@@ -346,11 +355,11 @@ export function OverviewPanel({
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <KpiCard
           label="À traiter"
-          value={d.pendingBookings}
-          hint={d.pendingBookings > 0 ? 'Demandes en attente de réponse' : 'Aucune demande en attente'}
+          value={pendingCount}
+          hint={pendingCount > 0 ? 'Demandes en attente de réponse' : 'Aucune demande en attente'}
           icon={Clock3}
-          urgent={d.pendingBookings > 0}
-          onClick={onOpenBookings}
+          urgent={pendingCount > 0}
+          onClick={openPending}
         />
         <KpiCard
           label="Disponibles"

@@ -34,6 +34,7 @@ import { fetchClientAuthProfile, type ClientAuthProfile } from '@/lib/auth/clien
 import { contactBadgeDescription, contactBadgeLabel } from '@/lib/admin/contact-alerts';
 import { ContactAlertToast } from '@/components/admin/messages/ContactAlerts';
 import { useContactAlerts } from '@/components/admin/messages/contact-alerts-store';
+import { useModalDialog } from '@/lib/a11y/useModalDialog';
 
 const MESSAGES_HREF = '/admin/messages';
 
@@ -304,29 +305,18 @@ export function AdminMobileDrawer({
   loggingOut: boolean;
   messageCount?: number;
 }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open, onClose]);
+  // Comportement commun des dialogues (convention du projet, voir ARCHITECTURE.md) : focus initial, Tab piégé,
+  // Échap, reste de la page inerte, défilement bloqué, focus rendu au bouton du menu à la fermeture
+  const panelRef = useModalDialog<HTMLElement>(open, { onClose });
 
   if (!open) return null;
 
   return (
     <div className="lg:hidden">
-      <div className="fixed inset-0 z-40 bg-[#0B1220]/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div data-modal-backdrop className="fixed inset-0 z-40 bg-[#0B1220]/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <aside
+        ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Menu administration"
@@ -335,7 +325,7 @@ export function AdminMobileDrawer({
         <div className="flex h-16 items-center justify-between border-b border-white/10 ps-5 pe-3">
           <SidebarLogo collapsed={false} />
           <button
-            ref={closeRef}
+            data-autofocus
             type="button"
             onClick={onClose}
             aria-label="Fermer le menu"
