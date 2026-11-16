@@ -3,6 +3,7 @@
 import { useId, useState, type ReactNode } from 'react';
 import { BarChart3, Minus, Table2, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import {
   ANALYTICS_PRESETS,
   comparisonBadge,
@@ -117,10 +118,10 @@ export function ChartCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
-          <h3 id={headingId} className="flex items-center gap-2 text-[15px] font-extrabold text-[#0B1220]">
+          <h2 id={headingId} className={cn('flex items-center gap-2', heading.block)}>
             {Icon && <Icon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />}
             {title}
-          </h3>
+          </h2>
           {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -213,7 +214,7 @@ export function StatTile({
   return (
     <article className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(11,18,32,0.04)] sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="pt-0.5 text-[13px] font-semibold leading-snug text-slate-500">{label}</h3>
+        <p className="pt-0.5 text-[13px] font-semibold leading-snug text-slate-500">{label}</p>
         {Icon && (
           <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
             <Icon className="h-4 w-4" />
@@ -420,7 +421,7 @@ export function FunnelChart({ totals }: { totals: AnalyticsTotals }) {
       </ol>
       {outcomes.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Devenir des autres demandes</h4>
+          <h3 className={cn('mb-2', heading.sub)}>Devenir des autres demandes</h3>
           <ul className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
             {outcomes.map((outcome) => (
               <li key={outcome.key} className="flex items-center justify-between gap-3">

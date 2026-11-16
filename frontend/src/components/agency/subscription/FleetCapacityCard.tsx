@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import type { AgencySubscription } from '@/types';
 import { ErrorBanner } from '@/components/agency/shell/Feedback';
 
@@ -63,7 +64,7 @@ export function FleetCapacityCard({ subscription, loading, error, onRetry, onOpe
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
               <ShieldCheck className="h-3.5 w-3.5" />
-              0% de commission ClickDrive
+              0 % de commission ClickDrive
             </span>
             {is_at_capacity && (
               <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 animate-pulse">
@@ -74,9 +75,9 @@ export function FleetCapacityCard({ subscription, loading, error, onRetry, onOpe
           </div>
 
           <div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h2 className={heading.block}>
               Capacité du parc
-            </h3>
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {isUnlimited ? (
                 'Votre concession bénéficie d’un quota illimité de véhicules actifs.'

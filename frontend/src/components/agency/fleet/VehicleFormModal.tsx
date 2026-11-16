@@ -24,6 +24,7 @@ import {
   type VehicleType,
 } from '@/lib/vehicles/kind';
 import { cn } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 
 export type EditableVehicle = {
   id?: string;
@@ -93,7 +94,7 @@ const TYPE_DEFAULTS: Record<VehicleType, Partial<EditableVehicle>> = {
   },
 };
 
-const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600';
+const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600';
 
 export function VehicleFormModal({
   agencyId,
@@ -336,7 +337,7 @@ export function VehicleFormModal({
               {isMoto ? <Motorbike className="h-5 w-5" aria-hidden="true" /> : <Car className="h-5 w-5" aria-hidden="true" />}
             </div>
             <div>
-              <h2 id={titleId} className="text-lg font-bold">
+              <h2 id={titleId} className={heading.dialog}>
                 {form.id
                   ? `Modifier : ${form.brand} ${form.model}`
                   : isMoto
@@ -475,7 +476,7 @@ export function VehicleFormModal({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="vehicle-field-1" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-1" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Marque *
                   </label>
                   <input
@@ -489,7 +490,7 @@ export function VehicleFormModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-2" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-2" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Modèle *
                   </label>
                   <input
@@ -506,7 +507,7 @@ export function VehicleFormModal({
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                  <label htmlFor="vehicle-field-3" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-3" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Année *
                   </label>
                   <input
@@ -520,7 +521,7 @@ export function VehicleFormModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-4" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-4" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Catégorie
                   </label>
                   <select
@@ -549,7 +550,7 @@ export function VehicleFormModal({
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-5" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-5" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     {isMoto ? 'Boîte' : 'Transmission'}
                   </label>
                   <select
@@ -565,7 +566,7 @@ export function VehicleFormModal({
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-6" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-6" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Carburant
                   </label>
                   <select
@@ -589,7 +590,7 @@ export function VehicleFormModal({
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                  <label htmlFor="vehicle-field-7" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-7" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Places
                   </label>
                   <input
@@ -620,7 +621,7 @@ export function VehicleFormModal({
                   </div>
                 ) : (
                   <div>
-                    <label htmlFor="vehicle-field-8" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    <label htmlFor="vehicle-field-8" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                       Portes
                     </label>
                     <input
@@ -635,7 +636,7 @@ export function VehicleFormModal({
                   </div>
                 )}
                 <div>
-                  <label htmlFor="vehicle-field-9" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-9" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Kilométrage actuel
                   </label>
                   <input
@@ -649,7 +650,7 @@ export function VehicleFormModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-10" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-10" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Immatriculation
                   </label>
                   <input
@@ -723,7 +724,7 @@ export function VehicleFormModal({
               )}
 
               <div>
-                <p id="vehicle-features-label" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <p id="vehicle-features-label" className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                   Équipements & Options
                 </p>
                 <div className="flex flex-wrap gap-2" role="group" aria-labelledby="vehicle-features-label">
@@ -757,7 +758,7 @@ export function VehicleFormModal({
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <label htmlFor="vehicle-daily-price" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  <label htmlFor="vehicle-daily-price" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-700">
                     Prix par jour (DH) *
                   </label>
                   <div className="relative mt-1">
@@ -781,7 +782,7 @@ export function VehicleFormModal({
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <label htmlFor="vehicle-deposit" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  <label htmlFor="vehicle-deposit" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-700">
                     Caution exigée (DH) *
                   </label>
                   <div className="relative mt-1">
@@ -804,7 +805,7 @@ export function VehicleFormModal({
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:col-span-2">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-700">Assurance incluse dans le prix</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-700">Assurance incluse dans le prix</p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label htmlFor="vehicle-insurance" className="mb-1 block text-xs font-semibold text-slate-600">
@@ -850,7 +851,7 @@ export function VehicleFormModal({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label htmlFor="vehicle-field-11" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-11" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Durée minimale (jours)
                   </label>
                   <input
@@ -864,7 +865,7 @@ export function VehicleFormModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-12" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-12" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Prix semaine (Optionnel)
                   </label>
                   <input
@@ -883,7 +884,7 @@ export function VehicleFormModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="vehicle-field-13" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-field-13" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Prix mensuel (Optionnel)
                   </label>
                   <input
@@ -911,7 +912,7 @@ export function VehicleFormModal({
               {/* Image Uploader */}
               <div>
                 <div className="mb-5">
-                  <label htmlFor="vehicle-description" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <label htmlFor="vehicle-description" className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                     Présentation {isMoto ? 'de la moto' : 'du véhicule'}
                   </label>
                   <textarea
@@ -927,7 +928,7 @@ export function VehicleFormModal({
                     {(form.description ?? '').length}/1 500 caractères — affichée sur la fiche, elle aide le client à choisir.
                   </p>
                 </div>
-                <p id="vehicle-photos-label" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <p id="vehicle-photos-label" className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
                   {isMoto ? 'Photos de la moto' : 'Photos du véhicule'}
                 </p>
                 <input
@@ -999,7 +1000,7 @@ export function VehicleFormModal({
               {/* Photos Gallery */}
               {form.images.length > 0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
                     Photos ajoutées ({form.images.length}) — La première photo est la photo principale
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1053,7 +1054,7 @@ export function VehicleFormModal({
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 id="vehicle-publish-label" className="text-sm font-semibold text-slate-900">
+                    <h3 id="vehicle-publish-label" className={heading.sub}>
                       Publier immédiatement sur la marketplace
                     </h3>
                     <p id="vehicle-publish-hint" className="text-xs text-slate-500">

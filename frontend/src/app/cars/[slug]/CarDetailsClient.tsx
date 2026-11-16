@@ -47,6 +47,9 @@ import {
 } from 'lucide-react';
 import { formatEngineCc, isMotorcycle } from '@/lib/vehicles/kind';
 import type { RentalPeriod } from '@/lib/utils/date-only';
+import { calculateRentalDays } from '@/lib/utils/pricing';
+import { searchContextQuery } from '@/lib/catalog/search-context';
+import { toggleFavorite, useFavoriteIds } from '@/lib/ui/use-favorites';
 
 interface CarDetailsClientProps {
   slug: string;
@@ -56,9 +59,11 @@ interface CarDetailsClientProps {
   alternativesPool: Vehicle[];
   /** Dates choisies dans la recherche (adresse), reprises par la carte de réservation */
   requestedPeriod?: RentalPeriod;
+  /** Lieu de prise en charge choisi dans la recherche (adresse), repris par la demande */
+  requestedLocation?: string;
 }
 
-export function CarDetailsClient({ slug, initialVehicle, alternativesPool, requestedPeriod }: CarDetailsClientProps) {
+export function CarDetailsClient({ slug, initialVehicle, alternativesPool, requestedPeriod, requestedLocation }: CarDetailsClientProps) {
   const reduceMotion = useReducedMotion();
   const { t, locale, fmt, plural, date, money } = useTranslation();
   const c = t.car;
@@ -66,9 +71,27 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
 
   const [vehicle, setVehicle] = useState<Vehicle>(initialVehicle);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [favorite, setFavorite] = useState(false);
+  // Favori mémorisé dans le navigateur (même liste que les cartes et le filtre du catalogue)
+  const favorite = useFavoriteIds().includes(vehicle.id);
   const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
   const [dateAvailability, setDateAvailability] = useState<BookingAvailability>('checking');
+  // Période affichée par la carte de réservation : reprise par les véhicules similaires et le catalogue
+  const [period, setPeriod] = useState<RentalPeriod | null>(requestedPeriod ?? null);
+  const hadRequestedPeriod = Boolean(requestedPeriod);
+  const handlePeriodChange = useCallback(
+    (next: RentalPeriod | null, chosen: boolean) => {
+      setPeriod(next);
+      // Adresse tenue à jour quand le visiteur change ses dates (ou en avait déjà) : rechargement, partage
+      // et retour arrière les gardent. Les dates proposées par défaut n'y sont pas ajoutées.
+      if (!next || (!chosen && !hadRequestedPeriod)) return;
+      const query = new URLSearchParams(window.location.search);
+      if (query.get('startDate') === next.startDate && query.get('endDate') === next.endDate) return;
+      query.set('startDate', next.startDate);
+      query.set('endDate', next.endDate);
+      window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}`);
+    },
+    [hadRequestedPeriod]
+  );
 
   // Rafraîchissement : la fiche (prix, statut) et ses avis. Le catalogue complet n'est plus rechargé
   // (les alternatives du même modèle sont fournies par le serveur).
@@ -101,6 +124,39 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
     allVehicles: alternativesPool.length > 0 ? alternativesPool : [vehicle],
     allBookings: [],
   }).slice(0, 6);
+
+  // Véhicules similaires vérifiés pour la période affichée : seuls ceux qui sont libres sont proposés.
+  // Tant que la vérification n'a pas abouti (ou si elle échoue), ils restent affichés sans promesse de dates.
+  const alternativeIds = alternatives.map((alt) => alt.id).join(',');
+  const alternativesKey = period && alternativeIds ? `${period.startDate}|${period.endDate}|${alternativeIds}` : '';
+  const [freeAlternatives, setFreeAlternatives] = useState<{ key: string; ids: ReadonlySet<string> } | null>(null);
+  useEffect(() => {
+    if (!alternativesKey) return;
+    const [startDate, endDate, ids] = alternativesKey.split('|');
+    const query = new URLSearchParams({ startDate, endDate });
+    let active = true;
+    Promise.all(
+      ids.split(',').map(async (id) => {
+        const response = await fetch(`/api/vehicles/${encodeURIComponent(id)}/availability?${query}`, { cache: 'no-store' });
+        const body = await response.json();
+        if (!response.ok || !body.success) throw new Error('availability');
+        return body.data?.status === 'AVAILABLE' ? id : null;
+      })
+    )
+      .then((results) => {
+        if (active) setFreeAlternatives({ key: alternativesKey, ids: new Set(results.filter((id): id is string => id !== null)) });
+      })
+      .catch(() => {
+        /* vérification impossible : alternatives affichées sans promesse de dates */
+      });
+    return () => {
+      active = false;
+    };
+  }, [alternativesKey]);
+  const checkedFree = freeAlternatives && freeAlternatives.key === alternativesKey ? freeAlternatives.ids : null;
+  const shownAlternatives = checkedFree ? alternatives.filter((alt) => checkedFree.has(alt.id)) : alternatives;
+  const periodDays = period ? calculateRentalDays(period.startDate, period.endDate) : undefined;
+  const searchContext = searchContextQuery(period, requestedLocation);
 
   const title = `${vehicle.brand} ${vehicle.model} ${vehicle.year}`;
   const isMoto = isMotorcycle(vehicle);
@@ -312,7 +368,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
               <motion.button
                 type="button"
                 whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                onClick={() => setFavorite((current) => !current)}
+                onClick={() => toggleFavorite(vehicle.id)}
                 aria-pressed={favorite}
                 aria-label={favorite ? c.removeFavorite : c.addFavorite}
                 className={cn(
@@ -375,7 +431,13 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
               « Réserver » (placé haut dans la carte) reste visible et atteignable au focus (WCAG 2.4.11). */}
           <aside className="order-4 mt-2 min-w-0 lg:order-none lg:col-start-2 lg:row-span-3 lg:row-start-2 lg:mt-0" aria-label={c.bookingAria}>
             <div className="space-y-3 lg:sticky lg:top-28 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-2xl lg:[scrollbar-width:thin]">
-              <BookingCard vehicle={vehicle} requestedPeriod={requestedPeriod} onAvailabilityChange={setDateAvailability} />
+              <BookingCard
+                vehicle={vehicle}
+                requestedPeriod={requestedPeriod}
+                defaultLocation={requestedLocation}
+                onAvailabilityChange={setDateAvailability}
+                onPeriodChange={handlePeriodChange}
+              />
 
               <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -567,7 +629,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
         </div>
 
         {/* ── Véhicules similaires (pleine largeur) ──────────────── */}
-        {alternatives.length > 0 && (
+        {shownAlternatives.length > 0 && (
           <section aria-labelledby="similar-title" className="mt-12 lg:mt-16">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -578,18 +640,24 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                 <h2 id="similar-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220]">
                   {c.similarTitle}
                 </h2>
-                <p className="mt-1 text-sm text-ink-secondary">{c.similarText}</p>
+                <p className="mt-1 text-sm text-ink-secondary">{checkedFree ? c.similarTextFree : c.similarText}</p>
               </div>
-              <Link href="/search" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#0B1220] hover:text-accent-text">
+              <Link href={`${isMoto ? '/motos' : '/search'}${searchContext}`} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#0B1220] hover:text-accent-text">
                 {c.fullCatalog}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
             </div>
             {/* Mobile : carrousel — tablette : 2 colonnes — desktop : 3 colonnes */}
             <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 xl:grid-cols-3">
-              {alternatives.map((alt) => (
+              {shownAlternatives.map((alt) => (
                 <li key={alt.id} className="w-[84%] shrink-0 snap-start sm:w-auto">
-                  <VehicleCard vehicle={alt} />
+                  <VehicleCard
+                    vehicle={alt}
+                    period={period ?? undefined}
+                    selectedDays={periodDays}
+                    availabilityChecked={Boolean(checkedFree)}
+                    location={requestedLocation}
+                  />
                 </li>
               ))}
             </ul>

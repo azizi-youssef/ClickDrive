@@ -3,7 +3,7 @@
 import { useId, type ReactNode } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { button } from '@/lib/design/tokens';
+import { button, heading } from '@/lib/design/tokens';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 
 /**
@@ -67,7 +67,7 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-bold tracking-tight text-[#0F172A]">
+            <h2 id={titleId} className={heading.dialog}>
               {title}
             </h2>
             {description && (
@@ -144,7 +144,7 @@ export function ConfirmDialog({
             </span>
           )}
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-bold text-[#0F172A]">
+            <h2 id={titleId} className={heading.dialog}>
               {title}
             </h2>
             <p id={`${titleId}-message`} className="mt-1.5 text-sm text-[#64748B]">

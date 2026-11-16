@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { eyebrowMuted, heading } from '@/lib/design/tokens';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { CardSkeleton, EmptyState, ErrorBanner, KpiSkeleton } from '@/components/agency/shell/Feedback';
 
@@ -84,7 +85,7 @@ function Panel({
     <section className={cn('flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]', className)}>
       <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-extrabold text-[#0B1220]">{title}</h3>
+          <h2 className={heading.block}>{title}</h2>
           {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
         </div>
         {action}
@@ -135,7 +136,7 @@ function KpiCard({
     >
       {urgent && <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[#E63946]" />}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">{label}</span>
+        <span className={eyebrowMuted}>{label}</span>
         <span
           aria-hidden="true"
           className={cn(

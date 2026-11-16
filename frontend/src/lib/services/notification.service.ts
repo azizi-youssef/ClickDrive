@@ -47,24 +47,6 @@ class NotificationService {
       `💻 *Dashboard Agence :*\n${dashboardUrl}`
     );
   }
-
-  /** Message WhatsApp destiné au client */
-  formatCustomerWhatsAppMessage(booking: Booking): string {
-    const vehicleName = booking.vehicle
-      ? `${booking.vehicle.brand} ${booking.vehicle.model}`
-      : 'Véhicule';
-    const ref = booking.reference || booking.booking_ref || '';
-
-    return (
-      `✅ *Demande ClickDrive enregistrée*\n\n` +
-      `Bonjour ${booking.customer_name},\n` +
-      `Votre demande pour la *${vehicleName}* a bien été transmise à l'agence ${booking.agency?.name || ''}.\n\n` +
-      `*Référence :* ${ref}\n` +
-      `*Période :* du ${booking.start_date} au ${booking.end_date}\n` +
-      `*Total estimé :* ${booking.total_price} DH\n\n` +
-      `Suivez votre demande : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`
-    );
-  }
 }
 
 export const notificationService = new NotificationService();

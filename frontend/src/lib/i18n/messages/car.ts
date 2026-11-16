@@ -116,6 +116,7 @@ const fr = {
   similarEyebrow: 'Alternatives',
   similarTitle: 'Véhicules similaires',
   similarText: 'Même modèle ou même catégorie chez d’autres agences. Disponibilité à vérifier sur chaque fiche.',
+  similarTextFree: 'Même modèle ou même catégorie chez d’autres agences, libres aux mêmes dates.',
   fullCatalog: 'Tout le catalogue',
   gallery: {
     unavailable: "{title} — photo indisponible",
@@ -252,6 +253,7 @@ export const car: Record<Locale, CarMessages> = {
     similarEyebrow: 'Alternatives',
     similarTitle: 'Similar vehicles',
     similarText: 'Same model or category at other agencies. Check availability on each listing.',
+    similarTextFree: 'Same model or category at other agencies, available on the same dates.',
     fullCatalog: 'Full catalogue',
     gallery: {
       unavailable: "{title} — photo unavailable",
@@ -383,6 +385,7 @@ export const car: Record<Locale, CarMessages> = {
     similarEyebrow: 'Alternativas',
     similarTitle: 'Vehículos similares',
     similarText: 'Mismo modelo o categoría en otras agencias. Comprueba la disponibilidad en cada ficha.',
+    similarTextFree: 'Mismo modelo o categoría en otras agencias, libres en las mismas fechas.',
     fullCatalog: 'Todo el catálogo',
     gallery: {
       unavailable: "{title} — foto no disponible",
@@ -514,6 +517,7 @@ export const car: Record<Locale, CarMessages> = {
     similarEyebrow: 'Alternativen',
     similarTitle: 'Ähnliche Fahrzeuge',
     similarText: 'Gleiches Modell oder gleiche Kategorie bei anderen Vermietern. Verfügbarkeit auf jedem Angebot prüfen.',
+    similarTextFree: 'Gleiches Modell oder gleiche Kategorie bei anderen Vermietern, zu denselben Daten frei.',
     fullCatalog: 'Gesamter Katalog',
     gallery: {
       unavailable: "{title} — Foto nicht verfügbar",
@@ -645,6 +649,7 @@ export const car: Record<Locale, CarMessages> = {
     similarEyebrow: 'Alternatieven',
     similarTitle: 'Vergelijkbare voertuigen',
     similarText: 'Hetzelfde model of dezelfde categorie bij andere verhuurders. Controleer de beschikbaarheid per advertentie.',
+    similarTextFree: 'Hetzelfde model of dezelfde categorie bij andere verhuurders, vrij op dezelfde data.',
     fullCatalog: 'Hele catalogus',
     gallery: {
       unavailable: "{title} — foto niet beschikbaar",
@@ -782,6 +787,7 @@ export const car: Record<Locale, CarMessages> = {
     similarEyebrow: 'بدائل',
     similarTitle: 'مركبات مشابهة',
     similarText: 'نفس الموديل أو نفس الفئة لدى وكالات أخرى. تحقق من التوفر في كل إعلان.',
+    similarTextFree: 'نفس الموديل أو نفس الفئة لدى وكالات أخرى، متاحة في التواريخ نفسها.',
     fullCatalog: 'الكتالوج الكامل',
     gallery: {
       unavailable: "{title} — الصورة غير متوفرة",

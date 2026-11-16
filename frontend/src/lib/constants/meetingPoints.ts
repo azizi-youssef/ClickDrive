@@ -100,8 +100,16 @@ export const MEETING_POINTS: MeetingPoint[] = [
 export function getMeetingPoint(locationStr?: string): MeetingPoint {
   if (!locationStr) return MEETING_POINTS[0];
 
-  const lower = locationStr.toLowerCase();
-  if (lower.includes('aéro') || lower.includes('aeroport') || lower.includes('aroui') || lower.includes('ndr')) {
+  const fold = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const lower = fold(locationStr);
+
+  // 1. Nom exact (accents ignorés) : valeurs enregistrées par la demande et lieux du catalogue
+  const exact = MEETING_POINTS.find((point) => [point.name, point.shortName, point.id].some((value) => fold(value) === lower));
+  if (exact) return exact;
+
+  // 2. Saisie libre : mots-clés. La gare passe avant le centre-ville (« Gare ONCF Nador Ville ») ; les
+  //    autres localités (« Selouane Centre », « Al-Aroui Ville ») restent des lieux convenus.
+  if (lower.includes('aero') || lower.includes('airport') || lower.includes('ndr')) {
     return MEETING_POINTS[0];
   }
   if (lower.includes('port') || lower.includes('ansar') || lower.includes('ferry') || lower.includes('maritime')) {
@@ -110,14 +118,20 @@ export function getMeetingPoint(locationStr?: string): MeetingPoint {
   if (lower.includes('agence') || lower.includes('comptoir')) {
     return MEETING_POINTS[2];
   }
-  if (lower.includes('centre') || lower.includes('ville') || lower.includes('boulevard') || lower.includes('mohammed')) {
-    return MEETING_POINTS[3];
+  if (lower.includes('gare') || lower.includes('oncf') || lower.includes('train')) {
+    return MEETING_POINTS[5];
   }
   if (lower.includes('marchica') || lower.includes('corniche') || lower.includes('lagune') || lower.includes('resort')) {
     return MEETING_POINTS[4];
   }
-  if (lower.includes('gare') || lower.includes('oncf') || lower.includes('train')) {
-    return MEETING_POINTS[5];
+  if (
+    lower.includes('centre-ville') ||
+    lower.includes('centre ville') ||
+    lower.includes('boulevard') ||
+    lower.includes('mohammed') ||
+    (lower.includes('centre') && lower.includes('nador'))
+  ) {
+    return MEETING_POINTS[3];
   }
 
   // Fallback personnalisé

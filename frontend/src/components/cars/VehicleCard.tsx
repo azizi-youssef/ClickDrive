@@ -29,8 +29,11 @@ import { categoryLabel, fuelLabel, transmissionLabel } from '@/lib/i18n/labels';
 import type { VehicleMessages } from '@/lib/i18n/messages/vehicle';
 import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { isOptimizableImage } from '@/lib/utils/images';
-import { rentalPeriodQuery, type RentalPeriod } from '@/lib/utils/date-only';
+import type { RentalPeriod } from '@/lib/utils/date-only';
+import { searchContextQuery } from '@/lib/catalog/search-context';
 import { calculateRentalPrice, durationDiscountsFor } from '@/lib/utils/pricing';
+import { priceReduction } from '@/lib/utils/promotion';
+import { toggleFavorite, useFavoriteIds } from '@/lib/ui/use-favorites';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -42,6 +45,8 @@ interface VehicleCardProps {
   selectedDays?: number;
   /** Dates de la recherche : transmises à la fiche, qui les reprend au lieu de repartir d'aujourd'hui */
   period?: RentalPeriod;
+  /** Lieu de prise en charge de la recherche : transmis à la fiche, repris par la demande */
+  location?: string;
   /** Abonnement « me prévenir » pour un véhicule indisponible (bouton masqué si absent) */
   onNotify?: (vehicleId: string) => void;
 }
@@ -341,14 +346,16 @@ function VehicleCardComponent({
   isFavorite: externalFavorite,
   selectedDays,
   period,
+  location,
   onNotify,
 }: VehicleCardProps) {
   const { t, locale, fmt, plural, date, money } = useTranslation();
   const card = t.vehicle.card;
   // Devise de la langue (« DH », « درهم ») : même libellé que le reste du site
   const mad = money;
-  const [internalFavorite, setInternalFavorite] = useState(false);
-  const isFavorite = externalFavorite ?? internalFavorite;
+  // Favoris mémorisés dans le navigateur (partagés avec la fiche et le filtre du catalogue)
+  const favoriteIds = useFavoriteIds();
+  const isFavorite = externalFavorite ?? favoriteIds.includes(vehicle.id);
 
   const images = vehicle.images ?? [];
   const { isBookable, style: status, labelKey } = resolveStatus(vehicle.status, availabilityChecked);
@@ -357,15 +364,24 @@ function VehicleCardComponent({
   const agencyRating = typeof agency?.rating === 'number' ? agency.rating : null;
   const showRating = agencyRating !== null && reviewCount >= MIN_REVIEWS_FOR_RATING;
   const vehicleName = `${vehicle.brand} ${vehicle.model}`;
-  const detailsHref = `/cars/${encodeURIComponent(vehicle.slug)}${rentalPeriodQuery(period)}`;
+  const detailsHref = `/cars/${encodeURIComponent(vehicle.slug)}${searchContextQuery(period, location)}`;
   // Total de la période : tarifs semaine / mois et remises longue durée inclus (même calcul que la réservation)
   const rental = selectedDays && selectedDays > 0 ? calculateRentalPrice(vehicle, selectedDays) : null;
   const totalPrice = rental ? rental.total : null;
   // Remise longue durée de l'agence : appliquée à la période choisie, sinon palier d'entrée annoncé
   // (les paliers des motos sont distincts de ceux des voitures)
   const entryDiscount = durationDiscountsFor(vehicle.agency, vehicle)[0] ?? null;
-  const durationDiscount = rental?.applied_rate === 'duration' ? rental.duration_discount : null;
-  const discountShown = durationDiscount ?? entryDiscount;
+  // Réduction obtenue sur la période choisie (remise, tarif semaine ou mois) : prix barré et économie
+  const reduction = rental ? priceReduction(rental) : null;
+  const promoLabel = reduction
+    ? reduction.kind === 'duration'
+      ? fmt(card.discountApplied, { percent: formatNumber(reduction.percent, locale) })
+      : reduction.kind === 'monthly'
+        ? card.monthlyRateApplied
+        : card.weeklyRateApplied
+    : entryDiscount
+      ? fmt(card.discountFrom, { percent: formatNumber(entryDiscount.percent, locale), days: formatNumber(entryDiscount.min_days, locale) })
+      : null;
   const isMoto = isMotorcycle(vehicle);
   const engineCc = formatEngineCc(vehicle.engine_cc);
 
@@ -374,7 +390,7 @@ function VehicleCardComponent({
       e.preventDefault();
       e.stopPropagation();
       if (onFavorite) onFavorite(vehicle.id);
-      else setInternalFavorite((prev) => !prev);
+      else toggleFavorite(vehicle.id);
     },
     [onFavorite, vehicle.id]
   );
@@ -419,6 +435,19 @@ function VehicleCardComponent({
           <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} aria-hidden="true" />
           {card[labelKey]}
         </span>
+
+        {/* Promotion : pleine quand elle s'applique aux dates choisies, claire quand elle est annoncée */}
+        {promoLabel && (
+          <span
+            className={cn(
+              'pointer-events-none absolute start-3 top-12 z-10 inline-flex max-w-[calc(100%-4.5rem)] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums shadow-sm',
+              reduction ? 'bg-emerald-700 text-white' : 'bg-white/95 text-emerald-800 backdrop-blur-sm'
+            )}
+          >
+            <BadgePercent className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{promoLabel}</span>
+          </span>
+        )}
 
         <button
           type="button"
@@ -528,34 +557,31 @@ function VehicleCardComponent({
               <span className="ms-1 text-xs font-bold text-[#0B1220]">{t.common.currency}</span>
               <span className="ms-1 text-xs font-medium text-slate-500">{card.perDay}</span>
             </p>
-            {totalPrice !== null ? (
+            {totalPrice !== null && !reduction ? (
               <p className="whitespace-nowrap text-end text-xs font-semibold text-slate-600">
-                {rental && durationDiscount && <s className="me-1.5 font-medium text-ink-secondary">{mad(rental.full_price)}</s>}
-                <span className={durationDiscount ? 'text-emerald-800' : undefined}>{mad(totalPrice)}</span> ·{' '}
-                {plural(selectedDays ?? 0, t.vehicle.daysShort)}
+                {mad(totalPrice)} · {plural(selectedDays ?? 0, t.vehicle.daysShort)}
               </p>
-            ) : (vehicle.deposit ?? 0) > 0 ? (
+            ) : totalPrice === null && (vehicle.deposit ?? 0) > 0 ? (
               <p className="whitespace-nowrap text-end text-xs font-medium text-slate-500">
                 {fmt(card.deposit, { amount: mad(vehicle.deposit) })}
               </p>
             ) : null}
           </div>
 
-          {discountShown && (
-            <p
-              className={cn(
-                'mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold tabular-nums',
-                durationDiscount ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-emerald-200 bg-emerald-50 text-emerald-900'
-              )}
-            >
-              <BadgePercent className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              {durationDiscount
-                ? fmt(card.discountApplied, { percent: formatNumber(durationDiscount.percent, locale) })
-                : fmt(card.discountFrom, {
-                    percent: formatNumber(discountShown.percent, locale),
-                    days: formatNumber(discountShown.min_days, locale),
-                  })}
-            </p>
+          {reduction && (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 rounded-lg bg-emerald-50 px-2.5 py-1.5">
+              <p className="whitespace-nowrap text-sm">
+                <span className="font-extrabold tabular-nums text-ink">{mad(reduction.total)}</span>{' '}
+                <span className="text-xs font-medium text-slate-600">
+                  {fmt(card.totalFor, { days: plural(selectedDays ?? 0, t.vehicle.daysShort) })}
+                </span>
+              </p>
+              <p className="flex items-center gap-1.5 whitespace-nowrap text-xs">
+                <span className="sr-only">{card.fullPriceLabel}</span>
+                <s className="tabular-nums text-slate-500">{mad(reduction.full)}</s>
+                <span className="font-bold text-emerald-800">{fmt(card.saving, { amount: mad(reduction.saving) })}</span>
+              </p>
+            </div>
           )}
 
           {!isBookable && vehicle.status === 'RENTED' && vehicle.available_from && (

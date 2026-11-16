@@ -22,6 +22,8 @@ export type CatalogFilterState = {
   brandQuery: string;
   agency: string;
   maxPrice: number;
+  /** Seulement les véhicules mis en favoris dans ce navigateur */
+  favoritesOnly: boolean;
 };
 
 export const DEFAULT_FILTERS: CatalogFilterState = {
@@ -32,6 +34,7 @@ export const DEFAULT_FILTERS: CatalogFilterState = {
   brandQuery: '',
   agency: 'ALL',
   maxPrice: PRICE_CEILING,
+  favoritesOnly: false,
 };
 
 export const TRANSMISSION_LABELS: Record<Exclude<CatalogFilterState['transmission'], 'ALL'>, string> = {
@@ -61,6 +64,7 @@ export function countActiveFilters(filters: CatalogFilterState): number {
     filters.brandQuery.trim() !== '',
     filters.agency !== 'ALL',
     filters.maxPrice < PRICE_CEILING,
+    filters.favoritesOnly,
   ].filter(Boolean).length;
 }
 

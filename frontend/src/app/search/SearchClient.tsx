@@ -37,6 +37,7 @@ import { catalogFacets, sortByRelevance } from '@/lib/catalog/discovery';
 import { CATALOG_PATHS, vehicleTypeOf, type VehicleType } from '@/lib/vehicles/kind';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { BrandMarquee, normalizeBrandKey } from '@/components/shared/BrandMarquee';
+import { useFavoriteIds } from '@/lib/ui/use-favorites';
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -44,6 +45,7 @@ import {
   Car,
   ChevronDown,
   ChevronRight,
+  Heart,
   MapPin,
   Motorbike,
   RefreshCw,
@@ -84,6 +86,8 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
 
   const [filters, setFilters] = useState<CatalogFilterState>({
     ...DEFAULT_FILTERS,
+    // Lien « Mes favoris » (?favoris=1)
+    favoritesOnly: searchParams.get('favoris') === '1',
     category: initialCategory,
     brand: initialBrand,
     brandQuery: initialQuery,
@@ -186,8 +190,15 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
     [typeScopedVehicles]
   );
 
+  // Favoris mémorisés dans ce navigateur (cœur des cartes et des fiches)
+  const favoriteIds = useFavoriteIds();
+
   const filteredVehicles = useMemo(() => {
     let result = [...typeScopedVehicles];
+
+    if (filters.favoritesOnly) {
+      result = result.filter((v) => favoriteIds.includes(v.id));
+    }
 
     if (filters.category && filters.category !== ALL_CATEGORIES) {
       const normSelected = normalize(filters.category);
@@ -226,7 +237,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
     }
 
     return result;
-  }, [typeScopedVehicles, filters, sortBy, searchPeriod]);
+  }, [typeScopedVehicles, filters, sortBy, searchPeriod, favoriteIds]);
 
   // ── Pagination ───────────────────────────────────────────────────────────
   const PAGE_SIZE = 12; // 3 columns × 4 rows
@@ -314,6 +325,9 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
   }
   if (filters.agency !== 'ALL') {
     activeChips.push({ key: 'agency', label: agencyName ?? catalog.agencyFallback, clear: { agency: 'ALL' } });
+  }
+  if (filters.favoritesOnly) {
+    activeChips.push({ key: 'favorites', label: catalog.favoritesChip, clear: { favoritesOnly: false } });
   }
   if (filters.maxPrice < PRICE_CEILING) {
     activeChips.push({ key: 'price', label: fmt(catalog.priceChip, { amount: formatNumber(filters.maxPrice, locale) }), clear: { maxPrice: PRICE_CEILING } });
@@ -538,6 +552,25 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     )}
                   </button>
 
+                  {/* Favoris : affiché dès qu'un véhicule est mis de côté dans ce navigateur */}
+                  {(favoriteIds.length > 0 || filters.favoritesOnly) && (
+                    <button
+                      type="button"
+                      onClick={() => updateFilters({ favoritesOnly: !filters.favoritesOnly })}
+                      aria-pressed={filters.favoritesOnly}
+                      className={cn(
+                        'inline-flex h-11 flex-none items-center justify-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors',
+                        filters.favoritesOnly
+                          ? 'border-[#F8C9CD] bg-[#FFF6F7] text-accent-text'
+                          : 'border-slate-200 bg-white text-[#0B1220] hover:border-slate-300'
+                      )}
+                    >
+                      <Heart className={cn('h-4 w-4', filters.favoritesOnly && 'fill-current')} aria-hidden="true" />
+                      <span className="sr-only sm:not-sr-only">{catalog.favorites}</span>
+                      <span className="tabular-nums">({formatNumber(favoriteIds.length, locale)})</span>
+                    </button>
+                  )}
+
                   <div className="relative flex-1 sm:flex-none">
                     <ArrowUpDown
                       className="pointer-events-none absolute start-3 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-slate-400 sm:block"
@@ -628,6 +661,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                           availabilityChecked={Boolean(initialStartDate && initialEndDate)}
                           // Période recherchée : total affiché sur la carte et dates reprises par la fiche
                           period={hasPeriod ? searchPeriod : undefined}
+                          location={initialLocation || undefined}
                           selectedDays={periodDays}
                         />
                       ))}

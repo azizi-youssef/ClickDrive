@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { AgencyMemberRole } from '@clickdrive/shared/roles';
+import { heading } from '@/lib/design/tokens';
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Loader2, RefreshCw, Search, Shield, UserPlus, Users, X } from 'lucide-react';
 import type { ClientAuthProfile } from '@/lib/auth/client';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
@@ -295,9 +296,9 @@ export default function AgencyAccessPanel({
 
   return (
     <section className="space-y-5">
+      {/* Le titre de page (« Équipe et permissions ») suffit : pas de second titre qui le répète */}
       <header>
-        <h2 className="text-xl font-bold">Accès et permissions</h2>
-        <p className="mt-1 text-sm text-slate-500">Gérez les droits de {agencyName} et les dossiers clients autorisés.</p>
+        <p className="text-sm text-slate-500">Gérez les droits de {agencyName} et les dossiers clients autorisés.</p>
       </header>
       {notice && (
         <div role={notice.kind === 'error' ? 'alert' : 'status'} className={`flex items-start gap-2 rounded-xl border p-3 text-sm ${notice.kind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}>
@@ -324,7 +325,7 @@ export default function AgencyAccessPanel({
           )}
           {!canReadMembers ? <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Votre rôle ne permet pas de consulter les membres de cette agence.</p> : (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="flex items-center justify-between border-b border-slate-100 p-4"><div><h3 className="font-bold">Membres et invitations</h3><p className="text-xs text-slate-500">Seuls les comptes actifs peuvent accéder à cette agence.</p></div><button type="button" onClick={() => void loadMembers()} disabled={membersLoading} className="rounded-lg border border-slate-200 p-2" aria-label="Actualiser les membres"><RefreshCw className={`h-4 w-4 ${membersLoading ? 'animate-spin' : ''}`} /></button></div>
+              <div className="flex items-center justify-between border-b border-slate-100 p-4"><div><h2 className={heading.block}>Membres et invitations</h2><p className="text-xs text-slate-500">Seuls les comptes actifs peuvent accéder à cette agence.</p></div><button type="button" onClick={() => void loadMembers()} disabled={membersLoading} className="rounded-lg border border-slate-200 p-2" aria-label="Actualiser les membres"><RefreshCw className={`h-4 w-4 ${membersLoading ? 'animate-spin' : ''}`} /></button></div>
               {membersLoading ? <p className="p-6 text-sm text-slate-500">Chargement…</p> : members.length === 0 ? <p className="p-6 text-sm text-slate-500">Aucun membre ni invitation.</p> : (
                 <div className="divide-y divide-slate-100">
                   {members.map((member) => <article key={member.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
@@ -343,7 +344,7 @@ export default function AgencyAccessPanel({
           )}
           {canReadMembers && (
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h3 className="font-bold">Historique des droits</h3>
+              <h2 className={heading.block}>Historique des droits</h2>
               {audit.length === 0 ? <p className="mt-3 text-sm text-slate-500">Aucun changement enregistré.</p> : <ol className="mt-3 divide-y divide-slate-100">
                 {audit.map((entry) => <li key={entry.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{roleLabels[entry.action] ?? entry.action}</span><time className="text-xs text-slate-500" dateTime={entry.created_at}>{formatDate(entry.created_at)}</time></li>)}
               </ol>}
@@ -380,10 +381,10 @@ export default function AgencyAccessPanel({
       {(dossier || dossierLoading || dossierError) && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setDossier(null); setDossierError(null); } }}>
           <section ref={dossierDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="customer-dossier-title" className="max-h-[90vh] outline-none w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
-            <div className="flex items-start justify-between gap-3"><div><h3 id="customer-dossier-title" className="text-lg font-bold">Dossier locataire</h3><p className="text-sm text-slate-500">Consultation limitée à l’agence autorisée.</p></div><button type="button" aria-label="Fermer" className="rounded-lg p-2 hover:bg-slate-100" onClick={() => { setDossier(null); setDossierError(null); }}><X className="h-5 w-5" /></button></div>
+            <div className="flex items-start justify-between gap-3"><div><h2 id="customer-dossier-title" className={heading.dialog}>Dossier locataire</h2><p className="text-sm text-slate-500">Consultation limitée à l’agence autorisée.</p></div><button type="button" aria-label="Fermer" className="rounded-lg p-2 hover:bg-slate-100" onClick={() => { setDossier(null); setDossierError(null); }}><X className="h-5 w-5" /></button></div>
             {dossierLoading && <p className="flex items-center gap-2 py-8 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</p>}
             {dossierError && <p role="alert" className="py-5 text-sm text-red-700">{dossierError}</p>}
-            {dossier && !dossierLoading && <><div className="mt-5 rounded-xl bg-slate-50 p-4"><h4 className="font-semibold">{dossier.dossier.customer_name}</h4><p className="text-sm">{dossier.dossier.customer_email} · {dossier.dossier.customer_phone}</p><p className="mt-1 text-xs text-slate-500">Dossier {dossier.dossier.reference || dossier.dossier.booking_ref || dossier.dossier.id}</p></div><h4 className="mt-5 font-semibold">Historique des locations</h4><ul className="mt-2 divide-y divide-slate-100">{dossier.history.map((booking) => <li key={booking.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{booking.reference || booking.booking_ref} · {booking.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model}` : 'Véhicule'} · {booking.status}</span><span className="text-slate-500">{booking.start_date} – {booking.end_date}</span></li>)}</ul><Pagination meta={dossier.meta} onChange={(page) => void loadDossierPage(page)} /></>}
+            {dossier && !dossierLoading && <><div className="mt-5 rounded-xl bg-slate-50 p-4"><p className="font-semibold text-ink">{dossier.dossier.customer_name}</p><p className="text-sm">{dossier.dossier.customer_email} · {dossier.dossier.customer_phone}</p><p className="mt-1 text-xs text-slate-500">Dossier {dossier.dossier.reference || dossier.dossier.booking_ref || dossier.dossier.id}</p></div><h3 className={`mt-5 ${heading.sub}`}>Historique des locations</h3><ul className="mt-2 divide-y divide-slate-100">{dossier.history.map((booking) => <li key={booking.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{booking.reference || booking.booking_ref} · {booking.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model}` : 'Véhicule'} · {booking.status}</span><span className="text-slate-500">{booking.start_date} – {booking.end_date}</span></li>)}</ul><Pagination meta={dossier.meta} onChange={(page) => void loadDossierPage(page)} /></>}
           </section>
         </div>
       )}

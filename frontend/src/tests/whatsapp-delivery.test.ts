@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { whatsappService } from '../lib/services/whatsapp.service';
 import { deliveryService } from '../lib/services/delivery.service';
 import { getMeetingPoint } from '../lib/constants/meetingPoints';
-import { Booking } from '../types';
 
 test('1. Normalisation des numéros WhatsApp (Maroc et International)', () => {
   // Mobile Maroc
@@ -29,20 +28,9 @@ test('2. Génération de liens direct Click-to-Chat WhatsApp', () => {
 });
 
 test('3. Envoi de notification WhatsApp en mode simulation & wamid', async () => {
-  const dummyBooking: Partial<Booking> = {
-    id: 'bk-test-123',
-    reference: 'CD-2026-TEST01',
-    customer_name: 'Karim Alaoui',
-    customer_phone: '0612345678',
-    start_date: '2026-10-20',
-    end_date: '2026-10-25',
-    total_days: 5,
-    total_price: 1800,
-    deposit_amount: 3000,
-    pickup_location: 'Aéroport Nador Al-Aroui',
-  };
-
-  const res = await whatsappService.sendBookingConfirmation(dummyBooking as Booking);
+  const res = await whatsappService.sendTextMessage('0612345678', 'Votre demande CD-2026-TEST01 est enregistrée.', {
+    bookingRef: 'CD-2026-TEST01',
+  });
   assert.equal(res.success, true);
   assert.equal(res.status, 'SIMULATED');
   assert.equal(res.recipient, '212612345678');

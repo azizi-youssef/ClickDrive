@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Bell, ChevronDown, Home, LogOut, RefreshCw, Settings, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { eyebrowMuted } from '@/lib/design/tokens';
 import { MobileNav } from './MobileNav';
 
 export type TopbarCrumb = { label: string; href?: string };
@@ -119,15 +120,16 @@ export function Topbar({
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
         <nav aria-label="Fil d'Ariane" className="min-w-0 flex-1">
           <ol className="flex min-w-0 items-center gap-1.5 text-sm">
-            <li className="hidden shrink-0 sm:block">
-              <Link href="/agency" className="text-[#64748B] transition-colors hover:text-[#0F172A]">
+            {/* Mobile : le nom de l'agence (la section est le titre de la page, juste en dessous) */}
+            <li className="min-w-0 sm:shrink-0">
+              <Link href="/agency" className="block truncate font-semibold text-ink transition-colors hover:text-[#0F172A] sm:font-normal sm:text-[#64748B]">
                 {agencyName}
               </Link>
             </li>
             {crumbs.map((crumb, index) => {
               const isLast = index === crumbs.length - 1;
               return (
-                <li key={crumb.label} className="flex min-w-0 items-center gap-1.5">
+                <li key={crumb.label} className="hidden min-w-0 items-center gap-1.5 sm:flex">
                   <span aria-hidden="true" className="hidden shrink-0 text-slate-300 sm:inline">/</span>
                   {crumb.href && !isLast ? (
                     <Link href={crumb.href} className="truncate text-[#64748B] transition-colors hover:text-[#0F172A]">
@@ -177,7 +179,7 @@ export function Topbar({
             </button>
           )}
         >
-          <p className="border-b border-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <p className={cn('border-b border-slate-100 px-4 py-3', eyebrowMuted)}>
             Notifications
           </p>
           {notifications.length === 0 ? (

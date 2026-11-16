@@ -12,6 +12,7 @@ import { vehiclesService } from './vehicles.service';
 import { isUuid, type AvailabilityStatus } from '@/lib/availability/status';
 import { PRIVATE_VEHICLE_FIELDS } from '@/lib/vehicles/public';
 import { placeholderCustomerEmail } from '@/lib/bookings/customer-email';
+import type { CustomerCancelReason } from '@/lib/bookings/customer-cancel';
 
 /* -------------------------------------------------------------------------- */
 /* Colonnes sélectionnées                                                     */
@@ -108,6 +109,16 @@ type BookingRequestResult = {
 };
 
 /** Résultat d'une décision agence ; les drapeaux déterminent le code HTTP de la route */
+export type CustomerCancelResult = {
+  success: boolean;
+  error?: string;
+  notFound?: boolean;
+  /** L'agence a déjà répondu (acceptée, refusée…) ou la demande est close */
+  notCancellable?: boolean;
+  status?: string;
+  serviceUnavailable?: boolean;
+};
+
 export type AgencyDecisionResult = {
   success: boolean;
   booking?: Booking;
@@ -610,6 +621,33 @@ export class BookingsService {
     return {
       success: true,
       booking: refreshed ?? { ...booking, status: (outcome.status ?? booking.status) as BookingStatus },
+    };
+  }
+
+  /**
+   * Annulation par le client d'une demande pas encore acceptée (CANCELLED), dans une transaction SQL
+   * (customer_cancel_booking_request) : verrou, statut relu, commission et journal ensemble.
+   * L'appelant a vérifié le lien de suivi signé : la référence vaut preuve d'identité du client.
+   */
+  async cancelByCustomer(reference: string, reason: CustomerCancelReason | null): Promise<CustomerCancelResult> {
+    requireSupabase();
+    const supabase = await requireServiceRoleClient('bookings.customer_cancel');
+    const { data, error } = await supabase.rpc('customer_cancel_booking_request', {
+      p_reference: reference,
+      p_reason: reason,
+    });
+    if (error) {
+      console.error('[BookingsService] customer_cancel_booking_request failed:', error.code, error.message);
+      return { success: false, error: 'L’annulation n’a pas pu être enregistrée. Réessayez dans un instant.', serviceUnavailable: true };
+    }
+    const outcome = (data ?? {}) as { ok?: boolean; code?: string; status?: string };
+    if (outcome.ok) return { success: true };
+    if (outcome.code === 'not_found') return { success: false, error: 'Réservation introuvable', notFound: true };
+    return {
+      success: false,
+      error: 'L’agence a déjà répondu à cette demande : contactez-la pour toute annulation.',
+      notCancellable: true,
+      status: outcome.status,
     };
   }
 

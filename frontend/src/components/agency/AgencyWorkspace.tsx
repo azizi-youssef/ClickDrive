@@ -12,7 +12,7 @@ import { Topbar } from '@/components/agency/shell/Topbar';
 import { Toast } from '@/components/agency/shell/Feedback';
 import { ConfirmDialog } from '@/components/agency/shell/Dialog';
 import { DateRangeInputs, FilterChips } from '@/components/agency/shell/Controls';
-import { RANGE_PRESETS, input as inputClass, resolveRange, type RangePreset } from '@/lib/design/tokens';
+import { RANGE_PRESETS, eyebrow, heading, input as inputClass, resolveRange, type RangePreset } from '@/lib/design/tokens';
 import { cn } from '@/lib/utils';
 import {
   OverviewPanel,
@@ -713,8 +713,9 @@ export function AgencyWorkspace({
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold uppercase tracking-[0.16em] text-accent-text">{agency.name}</p>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[32px]">
+              {/* Sur mobile, le nom de l'agence est dans l'en-tête : il n'est pas répété ici */}
+              <p className={cn(eyebrow, 'hidden truncate text-accent-text sm:block')}>{agency.name}</p>
+              <h1 className={cn('sm:mt-1', heading.page)}>
                 {currentLabel}
               </h1>
               {/* Sur mobile, la place va aux données : la date du jour est sur le téléphone */}

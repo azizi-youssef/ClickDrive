@@ -180,6 +180,18 @@ export function ContactClient() {
                 <div className="mb-2">
                   <h2 className="text-lg font-bold text-slate-900">{c.formTitle}</h2>
                   <p className="text-sm text-slate-500">{c.formHint}</p>
+                  {/* L'e-mail est requis pour répondre au formulaire ; sans adresse, WhatsApp (clients comme agences) */}
+                  <p className="mt-1 text-sm text-slate-500">
+                    {c.noEmail}{' '}
+                    <a
+                      href={clickdriveWhatsAppUrl(c.whatsappGreeting)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-accent-text underline underline-offset-2"
+                    >
+                      {c.noEmailLink}
+                    </a>
+                  </p>
                 </div>
 
                 {/* Name + Email */}
@@ -191,6 +203,7 @@ export function ContactClient() {
                       aria-describedby={errors.name ? "contact-name-error" : undefined}
                       type="text"
                       required
+                      autoComplete="name"
                       placeholder={c.namePlaceholder}
                       value={form.name}
                       onChange={update('name')}
@@ -204,6 +217,7 @@ export function ContactClient() {
                       aria-describedby={errors.email ? "contact-email-error" : undefined}
                       type="email"
                       required
+                      autoComplete="email"
                       placeholder={c.emailPlaceholder}
                       value={form.email}
                       onChange={update('email')}
@@ -218,6 +232,8 @@ export function ContactClient() {
                     <input
                       id="contact-phone"
                       type="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
                       placeholder="+212 6XX XXX XXX"
                       value={form.phone}
                       onChange={update('phone')}
@@ -339,11 +355,14 @@ export function ContactClient() {
                     href: 'mailto:privacy@clickdrive.ma',
                   },
                   {
+                    // Conciergerie ClickDrive : même numéro que la fiche véhicule et les réponses automatiques
                     icon: MessageCircle,
                     label: c.whatsapp,
                     value: c.whatsappValue,
+                    href: clickdriveWhatsAppUrl(c.whatsappGreeting),
+                    external: true,
                   },
-                ].map(({ icon: Icon, label, value, href }) => (
+                ].map(({ icon: Icon, label, value, href, external }) => (
                   <li key={label} className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
                       <Icon className="h-4 w-4 text-slate-600" />
@@ -351,7 +370,13 @@ export function ContactClient() {
                     <div>
                       <p className="text-xs font-semibold text-slate-500">{label}</p>
                       {href ? (
-                        <a href={href} className="text-sm font-medium text-accent-text hover:underline">{value}</a>
+                        <a
+                          href={href}
+                          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                          className="text-sm font-medium text-accent-text hover:underline"
+                        >
+                          {value}
+                        </a>
                       ) : (
                         <p className="text-sm font-medium text-slate-800">{value}</p>
                       )}

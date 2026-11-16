@@ -6,6 +6,7 @@ import { ArrowUpRight, Building2, Download, MapPin, RefreshCw, Sparkles, Star, W
 import { Btn, ErrorBanner } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh, type RealtimeTable } from '@/lib/supabase/realtime';
 import { cn } from '@/lib/utils';
+import { eyebrow, heading } from '@/lib/design/tokens';
 import { csvFileName, downloadCsv } from '@/lib/export/csv';
 import { parseAdminAnalyticsReport, type AdminAnalyticsReport } from '@/lib/analytics/report';
 import { useAnalyticsReport } from '@/lib/analytics/use-analytics-report';
@@ -130,7 +131,7 @@ function MrrBanner({ report }: { report: AdminAnalyticsReport }) {
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             Modèle forfaits mensuels · 0 % de commission
           </div>
-          <h2 id="mrr-overview-title" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <h2 id="mrr-overview-title" className={cn(eyebrow, 'text-slate-400')}>
             Revenu récurrent mensuel (MRR plateforme)
           </h2>
           <p className="mt-2 text-4xl font-extrabold tracking-[-0.04em] text-white sm:text-5xl">
@@ -200,7 +201,7 @@ function AgencyRanking({ report }: { report: AdminAnalyticsReport }) {
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
         <div>
-          <h3 className="text-[15px] font-extrabold text-[#0B1220]">Agences les plus sollicitées</h3>
+          <h2 className={heading.block}>Agences les plus sollicitées</h2>
           <p className="text-xs text-slate-500">
             Demandes, acceptation et réactivité sur la période
             {network.agenciesWithoutRequests > 0 &&

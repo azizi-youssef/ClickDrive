@@ -18,6 +18,7 @@ import { cn, formatPrice } from '@/lib/utils';
 import { bookingStatusLabel } from '@/lib/bookings/status';
 import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
+import { eyebrow, eyebrowMuted, heading } from '@/lib/design/tokens';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
 import { PendingPlanChangeBanner } from '../subscription/PendingPlanChangeBanner';
@@ -127,7 +128,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-slate-500">
-            Modèle par abonnement mensuel : <strong>0% de commission ClickDrive</strong>. Vous conservez 100% de vos montants de location.
+            Modèle par abonnement mensuel : <strong>0 % de commission ClickDrive</strong>. Vous conservez 100 % de vos montants de location.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -167,8 +168,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-ink uppercase tracking-wider">
-                  Forfait Concession Actif
+                <span className={cn(eyebrow, 'text-ink')}>
+                  Forfait actif
                 </span>
                 <span className="rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5">
                   {data.subscription.status}
@@ -207,7 +208,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
             <>
               <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">CA Brut</span>
+                  <span className={eyebrowMuted}>CA brut</span>
                   <TrendingUp className="h-4 w-4 text-slate-400" />
                 </div>
                 <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.grossRevenue)}</p>
@@ -216,7 +217,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
 
               <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Commission</span>
+                  <span className={eyebrowMuted}>Commission</span>
                   <BarChart3 className="h-4 w-4 text-slate-400" />
                 </div>
                 <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.platformCommission)}</p>
@@ -228,7 +229,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           {/* Net agence */}
           <div className="flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Net Agence</span>
+              <span className={cn(eyebrow, 'text-emerald-700')}>Net agence</span>
               <Wallet className="h-4 w-4 text-emerald-500" />
             </div>
             <p className="text-2xl font-extrabold text-emerald-800">{formatPrice(data.kpis.agencyNet)}</p>
@@ -238,7 +239,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           {/* Réglé */}
           <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-blue-700">Réglé</span>
+              <span className={cn(eyebrow, 'text-blue-700')}>Réglé</span>
               <CheckSquare className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-extrabold text-blue-800">{formatPrice(data.kpis.settledNet)}</p>
@@ -248,7 +249,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           {/* En attente */}
           <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">En attente</span>
+              <span className={cn(eyebrow, 'text-amber-700')}>En attente</span>
               <Clock className="h-4 w-4 text-amber-500" />
             </div>
             <p className="text-2xl font-extrabold text-amber-800">{formatPrice(data.kpis.pendingNet)}</p>
@@ -260,7 +261,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       {/* Transactions Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div className="border-b border-slate-100 bg-slate-50/70 px-6 py-4">
-          <h3 className="font-bold text-slate-900">Grand livre des réservations</h3>
+          <h2 className={heading.block}>Grand livre des réservations</h2>
           <p className="text-xs text-slate-500">
             Relevé de vos réservations et des montants associés.
           </p>
@@ -311,8 +312,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3">Véhicule</th>
-                  <th className="px-4 py-3 text-right">Montant Brut</th>
-                  <th className="px-4 py-3 text-right">Part Agence</th>
+                  <th className="px-4 py-3 text-right">Montant brut</th>
+                  <th className="px-4 py-3 text-right">Part agence</th>
                   <th className="px-4 py-3 text-center">Statut</th>
                 </tr>
               </thead>

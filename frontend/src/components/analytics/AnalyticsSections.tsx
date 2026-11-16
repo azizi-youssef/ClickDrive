@@ -32,6 +32,8 @@ import {
   type MetricComparison,
 } from '@/lib/analytics/insights';
 import type { AnalyticsReport } from '@/lib/analytics/report';
+import { heading } from '@/lib/design/tokens';
+import { cn } from '@/lib/utils';
 import {
   ChartCard,
   ComparisonPill,
@@ -191,13 +193,13 @@ export function VehicleTypeCard({ report }: { report: AnalyticsReport }) {
             const Icon = type === 'MOTORCYCLE' ? Motorbike : Car;
             return (
               <div key={type} className="rounded-xl border border-slate-200 p-4">
-                <h4 className="flex items-center gap-2 text-sm font-extrabold text-[#0B1220]">
+                <h3 className={cn('flex items-center gap-2', heading.sub)}>
                   <Icon className="h-4 w-4 text-slate-400" aria-hidden="true" />
                   {vehicleTypeLabel(type)}
                   <span className="ml-auto text-xs font-semibold text-slate-500">
                     {formatCount(fleet?.vehicles ?? 0)} en flotte
                   </span>
-                </h4>
+                </h3>
                 <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
                   <dt className="text-slate-500">Demandes</dt>
                   <dd className="text-right font-bold tabular-nums">{formatCount(demand?.requests ?? 0)}</dd>

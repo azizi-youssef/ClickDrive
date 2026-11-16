@@ -11,13 +11,14 @@ import { Vehicle } from '@/types';
 import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { categoryLabel, fuelLabel, licenseLabel, meetingPointText, transmissionLabel } from '@/lib/i18n/labels';
+import { categoryLabel, fuelLabel, licenseLabel, locationLabel, meetingPointText, transmissionLabel } from '@/lib/i18n/labels';
 import { MEETING_POINTS, getMeetingPoint, type MeetingPoint } from '@/lib/constants/meetingPoints';
 import { MeetingPointBadge } from './MeetingPointBadge';
 import { addDateDays, formatLocalDate, isValidDateOnly } from '@/lib/utils/date-only';
 import { notifyRealtimeChange } from '@/lib/supabase/realtime';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
+import { rememberRecentRequest } from '@/lib/bookings/recent-requests';
 import {
   AlertCircle,
   Anchor,
@@ -195,7 +196,10 @@ export function BookingRequestModal({
           new Date(`${value}T00:00:00Z`)
         )
       : value;
-  const pointName = (location: string) => meetingPointText(t, getMeetingPoint(location)).shortName;
+  const pointName = (location: string) => {
+    const point = getMeetingPoint(location);
+    return point.id === 'custom-location' ? locationLabel(t, location) : meetingPointText(t, point).shortName;
+  };
   const today = formatLocalDate(new Date());
   const requestedStartDate =
     defaultStartDate && isValidDateOnly(defaultStartDate) && defaultStartDate >= today
@@ -207,6 +211,10 @@ export function BookingRequestModal({
       : addDateDays(requestedStartDate, 3);
   const initialPickup = toMeetingPointName(defaultLocation) ?? MEETING_POINTS[0].name;
   const initialDropoff = toMeetingPointName(defaultDropoffLocation) ?? initialPickup;
+  // Lieu choisi dans la recherche hors des points de rendez-vous (Selouane, Al-Aroui ville…) : proposé
+  // tel quel en plus des points habituels, l'agence convient du lieu exact avec le client
+  const initialPoint = getMeetingPoint(initialPickup);
+  const pickupChoices = initialPoint.id === 'custom-location' ? [...MEETING_POINTS, initialPoint] : MEETING_POINTS;
 
   // Étapes : 1 (Infos), 2 (Location), 3 (Options), 4 (Récapitulatif), 5 (Confirmé)
   const [currentStep, setCurrentStep] = useState<StepNumber | 5>(1);
@@ -415,6 +423,16 @@ export function BookingRequestModal({
       setConfirmedBookingRef(data.reference);
       setConfirmedPdfUrl(typeof data.pdfUrl === 'string' ? data.pdfUrl : null);
       setTrackingUrl(typeof data.trackingUrl === 'string' ? data.trackingUrl : null);
+      // Sans compte ni e-mail, ce lien est le seul accès au suivi : gardé sur cet appareil
+      if (typeof data.reference === 'string' && typeof data.trackingUrl === 'string') {
+        rememberRecentRequest({
+          reference: data.reference,
+          trackingPath: data.trackingUrl,
+          vehicle: `${vehicle.brand} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}`,
+          startDate,
+          endDate,
+        });
+      }
       track('Demande envoyée', { type: isMoto ? 'moto' : 'voiture' });
       if (data.agencyWhatsAppUrl) {
         setAgencyWhatsAppUrl(data.agencyWhatsAppUrl);
@@ -755,7 +773,7 @@ export function BookingRequestModal({
                   <fieldset>
                     <legend className="mb-2 text-[13px] font-extrabold text-ink">{m.meetingPoint}</legend>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {MEETING_POINTS.map((mp) => {
+                      {pickupChoices.map((mp) => {
                         const selected = pickupLocation === mp.name;
                         return (
                           <label
@@ -782,7 +800,7 @@ export function BookingRequestModal({
                               <MeetingPointIcon point={mp} className="h-4 w-4" />
                             </span>
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-bold text-ink">{meetingPointText(t, mp).shortName}</span>
+                              <span className="block truncate text-sm font-bold text-ink">{pointName(mp.name)}</span>
                               <span className="block truncate text-xs text-slate-500">{meetingPointText(t, mp).badgeLabel}</span>
                             </span>
                             <span
@@ -800,7 +818,11 @@ export function BookingRequestModal({
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field id={`${uid}-dropoff`} label={m.dropoffPlace} required>
                       <select id={`${uid}-dropoff`} value={dropoffLocation} onChange={(e) => setDropoffLocation(e.target.value)} className={inputClass}>
-                        {!MEETING_POINTS.some((mp) => mp.name === dropoffLocation) && <option value={dropoffLocation}>{dropoffLocation}</option>}
+                        {!MEETING_POINTS.some((mp) => mp.name === dropoffLocation) && (
+                          <option value={dropoffLocation}>
+                            {dropoffLocation === pickupLocation ? fmt(m.samePlace, { place: pointName(dropoffLocation) }) : pointName(dropoffLocation)}
+                          </option>
+                        )}
                         {MEETING_POINTS.map((mp) => (
                           <option key={mp.id} value={mp.name}>
                             {mp.name === pickupLocation ? fmt(m.samePlace, { place: meetingPointText(t, mp).shortName }) : meetingPointText(t, mp).shortName}

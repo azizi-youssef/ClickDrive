@@ -26,7 +26,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { button, input } from '@/lib/design/tokens';
+import { button, heading, input } from '@/lib/design/tokens';
 import { AccountProfileSettings } from '@/components/shared/AccountProfileSettings';
 import { AgencyLogoUploader } from '@/components/agency/settings/AgencyLogoUploader';
 import { CardSkeleton, ErrorBanner } from '@/components/agency/shell/Feedback';
@@ -189,10 +189,10 @@ function DiscountTiersEditor({
       aria-describedby={error ? `${id}-error` : undefined}
       className="space-y-3 border-t border-slate-100 pt-4 outline-none first:border-t-0 first:pt-0"
     >
-      <h4 id={`${id}-title`} className="flex items-center gap-2 text-sm font-extrabold text-[#0B1220]">
+      <h3 id={`${id}-title`} className={cn('flex items-center gap-2', heading.sub)}>
         <Icon className="h-4 w-4 text-slate-500" aria-hidden="true" />
         {list.title}
-      </h4>
+      </h3>
 
       <div className="space-y-2">
         {rows.length === 0 ? (
@@ -308,7 +308,7 @@ function Card({ icon: Icon, title, description, children }: { icon: typeof Build
           <Icon className="h-4.5 w-4.5" />
         </span>
         <div>
-          <h3 className="text-[15px] font-extrabold text-[#0B1220]">{title}</h3>
+          <h2 className={heading.block}>{title}</h2>
           <p className="mt-0.5 text-xs text-slate-500">{description}</p>
         </div>
       </header>
@@ -564,7 +564,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
             </div>
           </Card>
 
-          <Card icon={Clock3} title="Infos pratiques" description="Affichées sur votre page agence et sur vos fiches véhicules : le client sait tout avant de réserver.">
+          <Card icon={Clock3} title="Informations pratiques" description="Affichées sur votre page agence et sur vos fiches véhicules : le client sait tout avant de réserver.">
             <Field id={`${uid}-opening_hours`} label="Horaires d’ouverture" error={errors.opening_hours} hint="Ex. Lun–Sam 8h–20h, dimanche sur rendez-vous">
               <input type="text" maxLength={300} onChange={(e) => update('opening_hours', e.target.value)} {...fieldProps('opening_hours')} />
             </Field>
@@ -662,10 +662,10 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
 
           <section aria-labelledby={`${uid}-preview`} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
             <div className="flex items-center justify-between gap-2 px-5 py-3">
-              <h3 id={`${uid}-preview`} className="flex items-center gap-2 text-[13px] font-extrabold text-[#0B1220]">
+              <h2 id={`${uid}-preview`} className={cn('flex items-center gap-2', heading.block)}>
                 <Eye className="h-4 w-4 text-accent-text" aria-hidden="true" />
                 Aperçu côté client
-              </h3>
+              </h2>
               {branding.slug && (
                 <Link href={`/agencies/${branding.slug}`} target="_blank" className="inline-flex min-h-8 items-center gap-1 text-xs font-bold text-accent-text hover:underline">
                   Ma page
@@ -730,7 +730,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
             <UserRound className="h-4.5 w-4.5" />
           </span>
           <div>
-            <h2 id={`${uid}-account`} className="text-lg font-extrabold text-[#0B1220]">Mon compte</h2>
+            <h2 id={`${uid}-account`} className={heading.block}>Mon compte</h2>
             <p className="text-sm text-slate-500">Votre profil personnel, indépendant des informations de l’agence.</p>
           </div>
         </div>

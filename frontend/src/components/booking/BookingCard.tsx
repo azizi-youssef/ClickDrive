@@ -10,7 +10,6 @@ import { calculateRentalDays, calculateRentalPrice, durationDiscountsFor } from 
 import { cn } from '@/lib/utils';
 import {
   AlertCircle,
-  BadgePercent,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react';
 import { BookingRequestModal } from './BookingRequestModal';
 import { DurationDiscountTiers } from './DurationDiscountTiers';
+import { priceReduction } from '@/lib/utils/promotion';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 
 export type BookingAvailability = 'checking' | 'available' | 'unavailable' | 'error';
@@ -32,6 +32,13 @@ interface BookingCardProps {
   requestedPeriod?: RentalPeriod;
   /** Remonte la disponibilité réelle pour les dates choisies (badges de la fiche). */
   onAvailabilityChange?: (availability: BookingAvailability) => void;
+  /** Lieu de prise en charge choisi dans la recherche, repris par la demande */
+  defaultLocation?: string;
+  /**
+   * Remonte la période affichée (null tant qu'elle est invalide) ; `chosen` : dates modifiées ici par
+   * le visiteur, et non reprises de l'adresse ou proposées par défaut.
+   */
+  onPeriodChange?: (period: RentalPeriod | null, chosen: boolean) => void;
 }
 
 function getInitialDates(requested?: RentalPeriod) {
@@ -47,7 +54,7 @@ const fieldClass =
 
 const labelClass = 'mb-1.5 block text-xs font-bold text-slate-600';
 
-export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: BookingCardProps) {
+export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, defaultLocation, onPeriodChange }: BookingCardProps) {
   const uid = useId();
   const mobileBarRef = useRef<HTMLDivElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -91,6 +98,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
   // et restitution sont choisis à l'étape « Location » de la demande, qui les détaille.
   const [startDate, setStartDate] = useState(initialDates.startDate);
   const [endDate, setEndDate] = useState(initialDates.endDate);
+  const [datesChosen, setDatesChosen] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] = useState<BookingAvailability>('checking');
@@ -105,6 +113,10 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
   useEffect(() => {
     onAvailabilityChange?.(availability);
   }, [availability, onAvailabilityChange]);
+
+  useEffect(() => {
+    onPeriodChange?.(datesError ? null : { startDate, endDate }, datesChosen);
+  }, [startDate, endDate, datesError, datesChosen, onPeriodChange]);
 
   const focusDates = () => {
     const input = document.getElementById('booking-start-date');
@@ -160,6 +172,8 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
   // Remise longue durée réellement appliquée (meilleur prix) et économie réalisée sur le prix plein
   const durationShown = pricing.applied_rate === 'duration' && pricing.duration_discount !== null && !datesError;
   const durationSaving = Math.max(0, pricing.full_price - pricing.subtotal);
+  // Réduction obtenue sur la période (remise ou tarif semaine / mois) : même règle que le catalogue
+  const reduction = datesError ? null : priceReduction(pricing);
 
   // Une demande n'est possible que sur une disponibilité vérifiée
   const canBook = !datesError && availability === 'available';
@@ -231,6 +245,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
           applied={durationShown ? pricing.duration_discount : null}
           days={totalDays}
           showNext={!datesError}
+          reduction={reduction}
         />
         {(vehicle.deposit ?? 0) > 0 && (
           <p className="mt-2 text-[13px] text-ink-secondary">
@@ -264,6 +279,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
                 aria-invalid={datesErrorKind === 'start'}
                 aria-describedby={datesError ? `${uid}-dates-error` : undefined}
                 onChange={(e) => {
+                  setDatesChosen(true);
                   setStartDate(e.target.value);
                   if (isValidDateOnly(e.target.value) && e.target.value >= endDate) {
                     setEndDate(addDateDays(e.target.value, 1));
@@ -284,7 +300,10 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
                 value={endDate}
                 aria-invalid={datesErrorKind === 'end'}
                 aria-describedby={datesError ? `${uid}-dates-error` : undefined}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setDatesChosen(true);
+                  setEndDate(e.target.value);
+                }}
                 className={fieldClass}
               />
             </div>
@@ -360,6 +379,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
                   {(pricing.applied_rate === 'weekly' || pricing.applied_rate === 'monthly') && (
                     <span className="block text-xs font-semibold text-emerald-700">
                       {pricing.applied_rate === 'monthly' ? c.monthlyApplied : c.weeklyApplied}
+                      {reduction && ` · ${fmt(c.durationSaved, { amount: formatMad(reduction.saving) })}`}
                     </span>
                   )}
                 </dt>
@@ -375,12 +395,6 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
               <dd className="tabular-nums">{datesError ? '—' : formatMad(pricing.total)}</dd>
             </div>
           </dl>
-          {durationShown && durationSaving > 0 && (
-            <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-900">
-              <BadgePercent className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {fmt(c.durationSaved, { amount: formatMad(durationSaving) })}
-            </p>
-          )}
           <p className="mt-2 text-xs leading-relaxed text-ink-secondary">
             {isMotorcycle(vehicle) ? c.optionsMoto : c.optionsCar}
           </p>
@@ -420,6 +434,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange }: 
           onClose={() => setIsModalOpen(false)}
           defaultStartDate={startDate}
           defaultEndDate={endDate}
+          defaultLocation={defaultLocation}
         />
       )}
 

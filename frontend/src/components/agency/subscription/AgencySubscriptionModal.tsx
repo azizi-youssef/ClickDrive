@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 
 interface Props {
@@ -91,12 +92,12 @@ export function AgencySubscriptionModal({
             <span>Abonnement Mensuel Concessionnaire</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+          <h2 className={heading.dialog}>
             Gérez votre capacité de flotte ClickDrive
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
             Abonnement calculé en fonction de la taille de votre parc de véhicules.
-            <strong> 0% de commission sur vos réservations</strong> : vous conservez 100% de vos revenus locatifs.
+            <strong> 0 % de commission sur vos réservations</strong> : vous conservez 100 % de vos revenus locatifs.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs bg-white/10 rounded-xl px-4 py-2 w-fit">
@@ -151,7 +152,7 @@ export function AgencySubscriptionModal({
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-slate-900 text-base">{plan.name}</h3>
+                      <h3 className={heading.block}>{plan.name}</h3>
                       {isCurrent && (
                         <span className="rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5">
                           Actuel

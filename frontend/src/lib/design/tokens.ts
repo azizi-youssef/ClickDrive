@@ -12,6 +12,27 @@ export const BRAND = {
   textMuted: '#64748B',
 } as const;
 
+/**
+ * Échelle des titres (espace agence et écrans Statistiques) : un style par rôle, une seule couleur.
+ *   page    — h1, un seul par écran ;
+ *   dialog  — h2, titre d'une fenêtre ou d'un panneau ;
+ *   block   — titre d'une carte ou d'une section (h2 sous le titre de page, h3 dans une liste titrée) ;
+ *   sub     — sous-titre à l'intérieur d'un bloc (h3, ou h4 dans une fenêtre) ;
+ *   eyebrow — étiquette en capitales au-dessus d'une valeur ou d'un titre, libellé de champ, en-tête
+ *             de tableau : jamais une balise de titre ; couleur ajoutée par l'appelant (`eyebrowMuted` : gris).
+ * Le niveau suit la structure de la page ; le style suit le rôle. Une valeur (nom de client, de
+ * véhicule), un indicateur ou un état vide n'est pas un titre.
+ */
+export const heading = {
+  page: 'text-2xl font-extrabold tracking-tight text-ink sm:text-[32px]',
+  dialog: 'text-lg font-extrabold tracking-tight text-ink',
+  block: 'text-[15px] font-extrabold leading-snug text-ink',
+  sub: 'text-sm font-bold text-ink',
+} as const;
+
+export const eyebrow = 'text-xs font-semibold uppercase tracking-[0.08em]';
+export const eyebrowMuted = `${eyebrow} text-slate-500`;
+
 /** Classes Tailwind reutilisables (bordures, etats, focus). */
 export const shell = {
   page: 'min-h-screen bg-[#F5F6F8] text-[#0F172A]',

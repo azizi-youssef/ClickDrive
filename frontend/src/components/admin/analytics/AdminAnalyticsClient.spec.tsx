@@ -53,10 +53,12 @@ describe('Statistiques plateforme', () => {
 
   it('indicateurs comparés à la période précédente', async () => {
     render(<AdminAnalyticsClient />);
-    const tile = (await screen.findByRole('heading', { name: 'Demandes reçues' })).closest('article')!;
+    // Libellé d'indicateur : une étiquette, pas un titre (il n'encombre pas la navigation par titres)
+    const tile = (await screen.findByText('Demandes reçues', { selector: 'article p' })).closest('article')!;
+    expect(screen.queryByRole('heading', { name: 'Demandes reçues' })).not.toBeInTheDocument();
     expect(tile).toHaveTextContent('40');
     expect(tile).toHaveTextContent(/\+8 \(\+25 %\) vs période préc\./);
-    const response = screen.getByRole('heading', { name: 'Délai de réponse médian' }).closest('article')!;
+    const response = screen.getByText('Délai de réponse médian', { selector: 'article p' }).closest('article')!;
     expect(response).toHaveTextContent('42 min');
     // Délai en baisse : bonne nouvelle, affichée comme telle
     expect(within(response).getByText(/−18 min/)).toHaveClass('text-emerald-700');

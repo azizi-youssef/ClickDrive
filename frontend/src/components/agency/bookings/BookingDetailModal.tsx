@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { canPerformAgencyBookingAction } from '@clickdrive/shared/booking-state-machine';
 import { cn } from '@/lib/utils';
+import { eyebrow, eyebrowMuted, heading } from '@/lib/design/tokens';
 import { button } from '@/lib/design/tokens';
 import { Modal } from '@/components/agency/shell/Dialog';
 import {
@@ -316,10 +317,10 @@ export function BookingDetailModal({
                 <Car className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Véhicule réservé</span>
-                <h4 className="truncate text-base font-extrabold text-slate-900">
+                <span className={eyebrowMuted}>Véhicule réservé</span>
+                <p className="truncate text-base font-extrabold text-ink">
                   {loaded.vehicle ? `${loaded.vehicle.brand} ${loaded.vehicle.model}` : 'Véhicule'}
-                </h4>
+                </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   {loaded.vehicle?.category && (
                     <span className="rounded-md bg-slate-100 px-2 py-0.5 font-medium text-slate-700">
@@ -341,10 +342,10 @@ export function BookingDetailModal({
                 {customerInitials || <User className="h-5 w-5" />}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Client</span>
-                <h4 className="truncate text-base font-extrabold text-slate-900">
+                <span className={eyebrowMuted}>Client</span>
+                <p className="truncate text-base font-extrabold text-ink">
                   {loaded.customer_name}
-                </h4>
+                </p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {loaded.customer_phone ? (
@@ -399,7 +400,7 @@ export function BookingDetailModal({
         {/* ── 3. Parcours de Location (Itinéraire Départ & Retour) ── */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <h3 className={cn('flex items-center gap-2', heading.sub)}>
               <Calendar className="h-4 w-4 text-[#E63946]" />
               <span>Détails de la période et lieux</span>
             </h3>
@@ -417,7 +418,7 @@ export function BookingDetailModal({
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
                   1
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                <span className={cn(eyebrow, 'text-emerald-800')}>
                   Prise en charge (Départ)
                 </span>
               </div>
@@ -444,7 +445,7 @@ export function BookingDetailModal({
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
                   2
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-800">
+                <span className={cn(eyebrow, 'text-blue-800')}>
                   Restitution (Retour)
                 </span>
               </div>
@@ -470,7 +471,7 @@ export function BookingDetailModal({
         {/* ── 4. Synthèse Financière ── */}
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
           <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-3.5 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <h3 className={cn('flex items-center gap-2', heading.sub)}>
               <Wallet className="h-4 w-4 text-emerald-600" />
               <span>Montants</span>
             </h3>
@@ -483,7 +484,7 @@ export function BookingDetailModal({
           <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
             {/* Montant total */}
             <div className="flex flex-col gap-1 p-5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Montant total</span>
+              <span className={eyebrowMuted}>Montant total</span>
               <p className="text-2xl font-extrabold tabular-nums text-slate-900">
                 {money(loaded.total_price)}
               </p>
@@ -492,7 +493,7 @@ export function BookingDetailModal({
 
             {/* Net Agence (mis en valeur) */}
             <div className="flex flex-col gap-1 bg-emerald-50/60 p-5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Net agence</span>
+              <span className={cn(eyebrow, 'text-emerald-700')}>Net agence</span>
               <p className="text-2xl font-extrabold tabular-nums text-emerald-800">
                 {money(loaded.agency_amount)}
               </p>
@@ -539,7 +540,7 @@ export function BookingDetailModal({
         {/* ── 6. Proposer une alternative ── */}
         {canAct && actions.includes('propose_alternative') && (
           <section className="rounded-2xl border border-amber-200 bg-amber-50/30 p-5">
-            <h3 className="mb-1 text-sm font-bold text-slate-900">Proposer un véhicule alternatif</h3>
+            <h3 className={cn('mb-1', heading.sub)}>Proposer un véhicule alternatif</h3>
             <p className="mb-3 text-xs text-slate-500">
               Sélectionnez un véhicule de remplacement disponible sur cette même période pour le soumettre au client.
             </p>
@@ -601,7 +602,7 @@ export function BookingDetailModal({
 
         {/* ── 7. Historique du dossier ── */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-          <h3 className="mb-3 text-sm font-bold text-slate-900 flex items-center gap-2">
+          <h3 className={cn('mb-3 flex items-center gap-2', heading.sub)}>
             <Clock className="h-4 w-4 text-slate-400" />
             <span>Historique des événements</span>
           </h3>

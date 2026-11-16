@@ -12,6 +12,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { PendingPlanChangeBanner } from './PendingPlanChangeBanner';
 import { FleetCapacityCard } from './FleetCapacityCard';
@@ -97,12 +98,10 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
       {/* En-tête de section */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-accent-text" />
-            Abonnement & Capacité Flotte
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Gérez votre capacité de véhicules et profitez de <strong>0% de commission</strong> sur toutes vos réservations.
+          {/* Le titre de page (« Forfait et capacité ») suffit : pas de second titre qui le répète */}
+          <p className="text-sm text-slate-500">
+            <Sparkles className="me-1.5 inline h-4 w-4 -translate-y-px text-accent-text" aria-hidden="true" />
+            Gérez votre capacité de véhicules et profitez de <strong>0 % de commission</strong> sur toutes vos réservations.
           </p>
         </div>
 
@@ -151,7 +150,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
           </div>
           <p className="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
-            0% commission prélevée
+            0 % de commission prélevée
           </p>
         </div>
 
@@ -204,9 +203,9 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                100% de vos gains locatifs vous reviennent
-              </h3>
+              <h2 className={heading.block}>
+                100 % de vos gains locatifs vous reviennent
+              </h2>
               <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
                 ClickDrive fonctionne avec un forfait mensuel fixe calculé selon la capacité de votre flotte.
                 Aucune commission n’est prélevée sur le montant payé par les clients : vous encaissez directement la totalité de vos locations.
@@ -228,9 +227,9 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
       {/* Grille comparative des formules disponibles */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">
+          <h2 className={heading.block}>
             Toutes les formules d’abonnement ClickDrive
-          </h3>
+          </h2>
           <p className="text-xs text-slate-500">
             Faites évoluer votre capacité en temps réel selon la croissance de votre parc automobile.
           </p>

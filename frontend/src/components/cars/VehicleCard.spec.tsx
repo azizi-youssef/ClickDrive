@@ -164,3 +164,43 @@ describe('VehicleCard — remises distinctes voitures / motos', () => {
     expect(screen.queryByText(/appliquée/)).not.toBeInTheDocument();
   });
 });
+
+describe('VehicleCard — présentation de la promotion', () => {
+  const agency = (overrides: Partial<Agency> = {}) =>
+    ({ id: '22222222-2222-4222-8222-222222222222', name: 'Agence Test', duration_discounts: [{ min_days: 3, percent: 5 }, { min_days: 7, percent: 10 }], ...overrides }) as Agency;
+
+  it('sans dates : promotion annoncée sur la photo (pastille claire), pas de bande d’économie', () => {
+    const { container } = render(<VehicleCard vehicle={testVehicle({ daily_price: 300, agency: agency() })} />);
+    const badge = screen.getByText('−5 % dès 3 jours').closest('span.absolute')!;
+    expect(badge.className).toMatch(/\bbg-white\/95\b/);
+    expect(container.querySelector('s')).toBeNull();
+    expect(screen.queryByText(/^Économie/)).not.toBeInTheDocument();
+  });
+
+  it('remise appliquée : pastille pleine sur la photo et bande « total pour N j · prix barré · économie »', () => {
+    const { container } = render(<VehicleCard vehicle={testVehicle({ daily_price: 350, agency: agency() })} selectedDays={8} />);
+    const badge = screen.getByText('Remise −10 % appliquée').closest('span.absolute')!;
+    expect(badge.className).toMatch(/\bbg-emerald-700\b/);
+    const band = container.querySelector('s')!.closest('div')!;
+    expect(band).toHaveTextContent(/2\s520\sDH pour 8 j/);
+    expect(band).toHaveTextContent(/Prix sans réduction :\s*2\s800\sDH/);
+    expect(band).toHaveTextContent(/Économie 280\sDH/);
+  });
+
+  it('tarif semaine : traité comme une réduction (pastille, prix barré, économie)', () => {
+    const { container } = render(
+      <VehicleCard vehicle={testVehicle({ daily_price: 550, weekly_price: 3300, agency: agency({ duration_discounts: [] }) })} selectedDays={8} />
+    );
+    expect(screen.getByText('Tarif semaine appliqué')).toBeInTheDocument();
+    expect(container.querySelector('s')).toHaveTextContent(/4\s400\sDH/);
+    expect(screen.getByText(/Économie 629\sDH/)).toBeInTheDocument();
+  });
+
+  it('tarif semaine sans économie réelle : rien d’annoncé', () => {
+    const { container } = render(
+      <VehicleCard vehicle={testVehicle({ daily_price: 300, weekly_price: 2100, agency: agency({ duration_discounts: [] }) })} selectedDays={7} />
+    );
+    expect(screen.queryByText('Tarif semaine appliqué')).not.toBeInTheDocument();
+    expect(container.querySelector('s')).toBeNull();
+  });
+});

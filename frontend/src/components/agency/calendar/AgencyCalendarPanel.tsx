@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 
 /** Statuts d'une réservation acceptée par l'agence, pas encore commencée */
@@ -324,7 +325,7 @@ export function AgencyCalendarPanel({
             </button>
           </div>
 
-          <h2 className="text-base font-bold text-slate-900">
+          <h2 className={cn('first-letter:uppercase', heading.block)}>
             {viewMode === 'week' && daysList.length === 7
               ? `Semaine du ${new Date(daysList[0]!.dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} au ${new Date(daysList[6]!.dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
               : currentDate.toLocaleDateString('fr-FR', {
@@ -547,7 +548,7 @@ export function AgencyCalendarPanel({
                     ? 'Maintenance garage'
                     : 'Période bloquée'}
                 </span>
-                <h3 className="mt-2 text-lg font-bold text-slate-900">{selectedEvent.title}</h3>
+                <h2 className={cn('mt-2', heading.dialog)}>{selectedEvent.title}</h2>
               </div>
               <button
                 type="button"
@@ -607,7 +608,7 @@ export function AgencyCalendarPanel({
       {blockingOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">Bloquer une période de disponibilité</h3>
+            <h2 className={heading.dialog}>Bloquer une période de disponibilité</h2>
             <p className="mt-1 text-xs text-slate-500">
               Verrouille le calendrier contre toute nouvelle réservation en ligne.
             </p>

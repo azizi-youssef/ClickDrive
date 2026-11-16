@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ChevronRight, Home, LayoutGrid, X, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 
 type Section = { id: string; label: string; icon: LucideIcon };
 
@@ -189,7 +190,7 @@ export function MobileNav({
             >
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200" aria-hidden="true" />
               <div className="mb-3 flex items-center justify-between">
-                <h2 id="agency-sections-title" className="text-base font-extrabold text-[#0B1220]">
+                <h2 id="agency-sections-title" className={heading.dialog}>
                   Toutes les sections
                 </h2>
                 <button

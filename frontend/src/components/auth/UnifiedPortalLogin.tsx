@@ -44,6 +44,7 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { delocalizeHref, localizeHref } from '@/lib/i18n/routing';
 import { interpolate } from '@/lib/i18n/format';
 import { LOGIN_FR, type LoginMessages } from '@/lib/i18n/messages/login.fr';
+import { RecentRequests } from '@/components/booking/RecentRequests';
 
 const MAX_ATTEMPTS = 5;
 const LOCK_SECONDS = 30;
@@ -1120,6 +1121,9 @@ function PortalLoginForm() {
                 </Link>
               </p>
             )}
+
+            {/* Demande envoyée sans compte depuis ce navigateur : son suivi, sans se connecter */}
+            {portal === 'client' && !isRegistration && <RecentRequests className="mt-5" />}
 
             {portal === 'agency' && (
               <p className="cd-join">

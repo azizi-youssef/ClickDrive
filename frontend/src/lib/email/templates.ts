@@ -260,6 +260,22 @@ export function bookingAgencyReminderEmail(
   };
 }
 
+/** Le client a retiré sa demande depuis son lien de suivi : l'agence n'a plus à y répondre */
+export function bookingCancelledByCustomerAgencyEmail(
+  input: BookingEmailInput & { dashboardUrl: string; reasonLabel: string | null }
+): Rendered {
+  const details = bookingDetails(input);
+  const reason = input.reasonLabel ? `<p>Motif indiqué : <strong>${escapeHtml(input.reasonLabel)}</strong></p>` : '';
+  return {
+    subject: `Demande ${input.reference} annulée par le client`,
+    html: layout(
+      'Demande annulée par le client',
+      `<p>Le client a annulé sa demande ${escapeHtml(input.reference)} depuis son lien de suivi, avant votre réponse. Elle n’attend plus rien de votre part.</p>${reason}${details.html}${button(input.dashboardUrl, 'Voir la demande')}`
+    ),
+    text: `Le client a annulé sa demande ${input.reference} depuis son lien de suivi, avant votre réponse.${input.reasonLabel ? `\nMotif indiqué : ${input.reasonLabel}` : ''}\n\n${details.text}\n\nVoir : ${input.dashboardUrl}`,
+  };
+}
+
 export type AlternativeVehicle = { label: string; pricePerDay: number; url: string };
 
 /** Le client attend toujours : véhicules libres aux mêmes dates, sans annuler sa demande */

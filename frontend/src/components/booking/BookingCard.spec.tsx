@@ -281,3 +281,44 @@ describe('BookingCard — remises distinctes voitures / motos', () => {
     expect(screen.queryByText(/Remise longue durée \(/)).not.toBeInTheDocument();
   });
 });
+
+describe('BookingCard — présentation de la promotion', () => {
+  const day = (offset: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+  const agency = {
+    id: '22222222-2222-4222-8222-222222222222',
+    name: 'Agence Test',
+    duration_discounts: [{ min_days: 3, percent: 5 }, { min_days: 7, percent: 10 }, { min_days: 30, percent: 20 }],
+  } as Agency;
+
+  it('8 jours : palier appliqué coché, palier dépassé atténué, économie et prix « au lieu de » ; palier de 30 jours trop loin pour une invitation', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(<BookingCard vehicle={testVehicle({ daily_price: 350, agency })} requestedPeriod={{ startDate: day(2), endDate: day(10) }} />);
+    await screen.findByText('Disponible pour ces dates');
+    const applied = screen.getByText('−10 % dès 7 jours').closest('li')!;
+    expect(applied).toHaveTextContent('(appliquée)');
+    expect(applied.className).toMatch(/\bbg-emerald-700\b/);
+    expect(screen.getByText('−5 % dès 3 jours').closest('li')!.className).toMatch(/text-emerald-900\/55/);
+    expect(screen.getByText('−20 % dès 30 jours').closest('li')!.className).toMatch(/\bborder-dashed\b/);
+    expect(screen.getByText(/Vous économisez 280\sDH/)).toBeInTheDocument();
+    expect(screen.getByText(/2\s520\sDH au lieu de 2\s800\sDH/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Encore \d+ jours/)).not.toBeInTheDocument();
+    // L'économie n'est dite qu'une fois (plus de bandeau en double sous le récapitulatif)
+    expect(screen.getAllByText(/Vous économisez/)).toHaveLength(1);
+  });
+
+  it('tarif semaine : économie indiquée à côté du tarif appliqué', async () => {
+    queueFetch(availabilityResponse('AVAILABLE'));
+    render(
+      <BookingCard
+        vehicle={testVehicle({ daily_price: 550, weekly_price: 3300, agency: { ...agency, duration_discounts: [] } as Agency })}
+        requestedPeriod={{ startDate: day(2), endDate: day(10) }}
+      />
+    );
+    await screen.findByText('Disponible pour ces dates');
+    expect(screen.getByText(/Tarif semaine de l’agence appliqué · Vous économisez 629\sDH/)).toBeInTheDocument();
+  });
+});

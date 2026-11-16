@@ -7,6 +7,10 @@ import { bookingStatusLabel } from '@/lib/bookings/status';
 import { CLICKDRIVE_WHATSAPP_NUMBER, SUPPORT_HOURS_SUMMARY } from '@/lib/constants/contact';
 import { isValidBookingReference } from '@/lib/utils/reference';
 import { isUuid } from '@/lib/availability/status';
+import { signedBookingLink } from '@/lib/auth/booking-access-link';
+import { canCustomerCancel } from '@/lib/bookings/customer-cancel';
+import { resolveLocale } from '@/lib/i18n/config';
+import { localizeHref } from '@/lib/i18n/routing';
 
 /**
  * ========================================================================
@@ -101,7 +105,7 @@ export interface InboundActionResult {
 /** Colonnes lues pour répondre à un client (aucune pièce d'identité, aucune donnée financière interne) */
 const INBOUND_BOOKING_COLUMNS =
   'id, reference, booking_ref, customer_name, customer_phone, status, start_date, end_date, pickup_time, ' +
-  'pickup_location, agency_id, vehicle:vehicles(brand, model), agency:agencies(name, phone, whatsapp)';
+  'pickup_location, agency_id, customer_locale, vehicle:vehicles(brand, model), agency:agencies(name, phone, whatsapp)';
 
 type InboundBooking = {
   id: string;
@@ -115,6 +119,8 @@ type InboundBooking = {
   pickup_time: string | null;
   pickup_location: string | null;
   agency_id: string | null;
+  /** Langue du client (20261111000100_customer_locale.sql) : langue du lien de suivi */
+  customer_locale?: string | null;
   vehicle: { brand: string; model: string } | null;
   agency: { name: string; phone: string | null; whatsapp: string | null } | null;
 };
@@ -217,6 +223,16 @@ function appBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma').replace(/\/+$/, '');
 }
 
+/**
+ * Lien de suivi donné au client : la page /suivi signée, qui fonctionne sans compte (la plupart des
+ * clients réservent sans en créer), dans sa langue. À défaut de secret de signature : l'espace client.
+ */
+function customerTrackingUrl(booking: InboundBooking | null): string {
+  const ref = booking ? booking.reference || booking.booking_ref || '' : '';
+  const signed = ref ? signedBookingLink('track', ref) : null;
+  return `${appBaseUrl()}${localizeHref(signed ?? '/account', resolveLocale(booking?.customer_locale))}`;
+}
+
 const INBOUND_MENU =
   `• *AIDE* : rendez-vous et contacts\n` +
   `• *STATUT* : où en est votre demande\n` +
@@ -228,7 +244,7 @@ function buildInboundReply(intent: InboundIntent, booking: InboundBooking | null
   const supportLine = `Assistance ClickDrive (${SUPPORT_HOURS_SUMMARY}) : *+${CLICKDRIVE_WHATSAPP_NUMBER}*`;
   const agencyPhone = booking?.agency?.whatsapp || booking?.agency?.phone || null;
   const agencyLine = booking?.agency?.name && agencyPhone ? `• Agence ${booking.agency.name} : *${agencyPhone}*\n` : '';
-  const trackingUrl = ref ? `${appBaseUrl()}/account/bookings/${encodeURIComponent(ref)}` : `${appBaseUrl()}/account`;
+  const trackingUrl = customerTrackingUrl(booking);
 
   if (intent === 'HELP') {
     const vehicle = booking?.vehicle ? ` (${booking.vehicle.brand} ${booking.vehicle.model})` : '';
@@ -262,10 +278,14 @@ function buildInboundReply(intent: InboundIntent, booking: InboundBooking | null
   }
 
   if (intent === 'CANCEL_REQUEST') {
+    // Demande en attente : le client l'annule lui-même depuis le suivi. Réservation acceptée : l'agence.
+    const trackingLine = booking && canCustomerCancel(booking.status)
+      ? `• Annulez votre demande en ligne, depuis votre suivi : ${trackingUrl}\n`
+      : `• Votre suivi : ${trackingUrl}\n`;
     return (
       `Bonjour *${customerName}*,\n` +
       `Votre réservation n'a pas été modifiée : une annulation ne se fait pas par message WhatsApp.\n` +
-      `• Votre espace client : ${trackingUrl}\n` +
+      trackingLine +
       (agencyLine || '') +
       `• ${supportLine}`
     );
@@ -514,41 +534,6 @@ export class WhatsAppService {
   // ========================================================================
   // NOTIFICATIONS MÉTIER CLICKDRIVE
   // ========================================================================
-
-  /**
-   * Notification 1 : Confirmation de réservation envoyée au client
-   */
-  public async sendBookingConfirmation(
-    booking: Booking,
-    options: WhatsAppSendOptions = {}
-  ): Promise<WhatsAppMessageResult> {
-    const ref = booking.reference || booking.booking_ref || '';
-    const phone = booking.customer_phone;
-    const vehicleName = booking.vehicle
-      ? `${booking.vehicle.brand} ${booking.vehicle.model}`
-      : 'Véhicule sélectionné';
-    const dates = `${booking.start_date} → ${booking.end_date}`;
-
-    const text =
-      `🚗 *CLICKDRIVE — Confirmation de Réservation*\n\n` +
-      `Bonjour *${booking.customer_name}*,\n\n` +
-      `Votre réservation a bien été enregistrée :\n` +
-      `• *Réf. dossier :* ${ref}\n` +
-      `• *Véhicule :* ${vehicleName}\n` +
-      `• *Période :* ${dates} (${booking.total_days} jours)\n` +
-      `• *Lieu de prise en charge :* ${booking.pickup_location || 'Agence'}\n` +
-      `• *Montant total :* ${booking.total_price} MAD\n` +
-      `• *Caution à l'arrivée :* ${booking.deposit_amount ?? 3000} MAD (empreinte)\n\n` +
-      `Un agent vous contactera pour organiser l'accueil et la remise des clés.\n` +
-      `📄 Suivi en direct : https://clickdrive.ma/account/bookings/${encodeURIComponent(ref)}`;
-
-    return this.sendTextMessage(phone, text, {
-      ...options,
-      bookingRef: ref,
-      bookingId: booking.id,
-      agencyId: booking.agency_id,
-    });
-  }
 
   /**
    * Notification 2 : Alerte envoyée à l'agence pour toute nouvelle demande

@@ -19,6 +19,7 @@ import {
   Motorbike,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
+import { heading } from '@/lib/design/tokens';
 import { VehicleFormModal, type EditableVehicle } from './VehicleFormModal';
 import { FleetCapacityCard } from '../subscription/FleetCapacityCard';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
@@ -279,10 +280,8 @@ export function AgencyFleetPanel({
       {/* Top Banner & Action */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold text-ink">
-            <ListIcon className="h-5 w-5 text-slate-500" aria-hidden="true" />
-            {isMotoList ? 'Motos et scooters' : 'Voitures'}
-          </h2>
+          {/* Le titre de page dit déjà « Voitures » ou « Motos » : titre de liste pour les lecteurs d'écran seulement */}
+          <h2 className="sr-only">{isMotoList ? 'Liste des motos et scooters' : 'Liste des voitures'}</h2>
           <p className="text-sm text-slate-500">
             {totalCount} {noun}{totalCount > 1 ? 's' : ''} enregistrée{totalCount > 1 ? 's' : ''} au
             catalogue de votre agence.
@@ -420,9 +419,9 @@ export function AgencyFleetPanel({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
             <ListIcon className="h-7 w-7" aria-hidden="true" />
           </div>
-          <h3 className="text-base font-semibold text-slate-800">
+          <p className="text-base font-semibold text-slate-800">
             {isMotoList ? 'Aucune moto trouvée' : 'Aucune voiture trouvée'}
-          </h3>
+          </p>
           <p className="mt-1 max-w-sm text-sm text-slate-500">
             {search || category !== 'all' || status !== 'all'
               ? 'Essayez de modifier vos filtres ou termes de recherche.'
@@ -547,7 +546,7 @@ export function AgencyFleetPanel({
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-bold text-slate-900">
+                      <h3 className={heading.block}>
                         {v.brand} {v.model}
                       </h3>
                       <p className="text-xs text-slate-500">
@@ -696,9 +695,9 @@ export function AgencyFleetPanel({
       {blockingVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">
+            <h2 className={heading.dialog}>
               Bloquer une période — {blockingVehicle.brand} {blockingVehicle.model}
-            </h3>
+            </h2>
             <p className="mt-1 text-xs text-slate-500">
               Empêche les clients de réserver ce véhicule sur la plage de dates sélectionnée.
             </p>

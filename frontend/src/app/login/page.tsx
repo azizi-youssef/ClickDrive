@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function LoginPage() {
   return (
-    <I18nScope namespaces={['login']}>
+    <I18nScope namespaces={['login', 'tracking']}>
       <UnifiedPortalLogin />
     </I18nScope>
   );

@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { eyebrow, heading } from '@/lib/design/tokens';
 
 export type RentalItem = {
   id: string;
@@ -267,7 +268,7 @@ export function AgencyRentalsPanel({
       ) : filteredRentals.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-xs">
           <KeyRound className="mb-2 h-10 w-10 text-slate-300" />
-          <h3 className="font-semibold text-slate-800">Aucun départ ou retour dans cette catégorie</h3>
+          <p className="font-semibold text-slate-800">Aucun départ ou retour dans cette catégorie</p>
           <p className="mt-1 text-sm text-slate-500">
             Toutes les remises de clés et restitutions sont à jour.
           </p>
@@ -331,9 +332,9 @@ export function AgencyRentalsPanel({
                         </span>
                       )}
                     </div>
-                    <h3 className="mt-1 font-bold text-slate-900">
+                    <h2 className={cn('mt-1', heading.block)}>
                       {item.vehicle ? `${item.vehicle.brand} ${item.vehicle.model}` : 'Véhicule'}
-                    </h3>
+                    </h2>
                     <p className="text-xs text-slate-500">
                       Plaque : {item.vehicle?.licensePlate || item.vehicle?.unitNumber || 'N/A'} •
                       Compteur actuel : {item.vehicle?.currentMileage.toLocaleString()} km
@@ -403,14 +404,14 @@ export function AgencyRentalsPanel({
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-xs font-bold text-accent-text uppercase">
+                <span className={cn(eyebrow, 'text-accent-text')}>
                   {activeHandover.type === 'PICKUP' ? 'Fiche Départ' : 'Fiche Retour'}
                 </span>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h2 className={heading.dialog}>
                   {activeHandover.type === 'PICKUP'
                     ? 'Remise des clés & Contrôle départ'
                     : 'Restitution du véhicule & Caution'}
-                </h3>
+                </h2>
               </div>
               <button
                 type="button"
@@ -595,9 +596,9 @@ export function AgencyRentalsPanel({
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5 text-xs">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-emerald-950">
+                      <h3 className={cn(heading.sub, 'text-emerald-950')}>
                         Caution ({activeHandover.rental.deposit_amount ?? 3000} DH)
-                      </h4>
+                      </h3>
                       <p className="text-emerald-700">
                         Restitution de la préautorisation carte bancaire
                       </p>

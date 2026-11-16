@@ -24,6 +24,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { eyebrowMuted } from '@/lib/design/tokens';
 
 export type AgencySection = {
   id: string;
@@ -59,16 +60,16 @@ export const AGENCY_SECTIONS: readonly {
 }[] = [
   { id: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard },
   { id: 'bookings', label: 'Réservations', icon: ClipboardList },
-  { id: 'rentals', label: 'Départs & Retours', icon: KeyRound },
-  { id: 'calendar', label: 'Calendrier & Dispos', icon: CalendarDays },
+  { id: 'rentals', label: 'Départs et retours', icon: KeyRound },
+  { id: 'calendar', label: 'Calendrier et disponibilités', icon: CalendarDays },
   { id: 'fleet', label: 'Voitures', icon: Car },
   { id: 'fleet_motos', label: 'Motos', icon: Motorbike },
   { id: 'add_vehicle', label: 'Ajouter un véhicule', icon: PlusCircle },
-  { id: 'subscription', label: 'Forfait & Capacité', icon: Sparkles },
+  { id: 'subscription', label: 'Forfait et capacité', icon: Sparkles },
   { id: 'customers', label: 'Clients', icon: Users },
   { id: 'finances', label: 'Revenus locatifs', icon: CircleDollarSign },
   { id: 'analytics', label: 'Statistiques', icon: BarChart3 },
-  { id: 'access', label: 'Équipe & Permissions', icon: ShieldCheck },
+  { id: 'access', label: 'Équipe et permissions', icon: ShieldCheck },
   { id: 'settings', label: 'Paramètres agence', icon: Settings },
 ] as const;
 
@@ -147,7 +148,7 @@ export function Sidebar({
               {collapsed ? (
                 groupIndex > 0 && <div className="mx-3 mb-3 h-px bg-white/10" aria-hidden="true" />
               ) : (
-                <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{group.title}</p>
+                <p className={cn('mb-1.5 px-3', eyebrowMuted)}>{group.title}</p>
               )}
               <ul className="space-y-0.5">
                 {items.map((section) => {

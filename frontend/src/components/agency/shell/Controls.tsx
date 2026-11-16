@@ -3,7 +3,7 @@
 import { useId } from 'react';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { input } from '@/lib/design/tokens';
+import { eyebrowMuted, input } from '@/lib/design/tokens';
 
 export function SearchField({
   value,
@@ -221,7 +221,8 @@ export function Th({
     <th
       scope="col"
       className={cn(
-        'px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500',
+        'px-5 py-3',
+        eyebrowMuted,
         align === 'right' && 'text-right',
         numeric && 'tabular-nums',
         className

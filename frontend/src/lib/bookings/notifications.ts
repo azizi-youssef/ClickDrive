@@ -1,7 +1,9 @@
 import type { Booking } from '@/types';
 import { contactInbox, sendEmail, type EmailResult } from '@/lib/email/send';
+import type { CustomerCancelReason } from './customer-cancel';
 import {
   bookingAgencyReminderEmail,
+  bookingCancelledByCustomerAgencyEmail,
   bookingNewAgencyEmail,
   bookingPendingAlternativesEmail,
   bookingReceivedCustomerEmail,
@@ -197,6 +199,29 @@ export async function notifyBookingStatusByReference(
     return;
   }
   await notifyBookingStatus(booking, status, appUrl, reason);
+}
+
+const CUSTOMER_CANCEL_REASON_LABELS: Record<CustomerCancelReason, string> = {
+  plans_changed: 'Projets modifiés',
+  found_elsewhere: 'Véhicule trouvé ailleurs',
+  dates_changed: 'Dates modifiées',
+  other: 'Autre raison',
+};
+
+/** Le client a annulé sa demande depuis son suivi : l'agence est prévenue (son espace se met à jour seul) */
+export async function notifyCustomerCancelled(reference: string, appUrl: string, reason: CustomerCancelReason | null): Promise<void> {
+  const booking = await bookingsService.getBookingByReference(reference, true);
+  if (!booking) {
+    console.warn(`[BookingNotify] Réservation ${reference} introuvable : agence non prévenue de l’annulation.`);
+    return;
+  }
+  const input = emailInput(booking, 'CANCELLED', appUrl, null, 'fr');
+  const dashboardUrl = `${appUrl}/agency?booking=${encodeURIComponent(input.reference)}`;
+  const email = await sendEmail({
+    to: booking.agency?.email ?? '',
+    ...bookingCancelledByCustomerAgencyEmail({ ...input, dashboardUrl, reasonLabel: reason ? CUSTOMER_CANCEL_REASON_LABELS[reason] : null }),
+  });
+  logOutcome('Annulation client', input.reference, email);
 }
 
 /** Durée d'attente lisible : « 45 min », « 2 h 10 » */

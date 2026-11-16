@@ -8,6 +8,7 @@ import { I18nScope } from '@/components/i18n/I18nScope';
 import { getTranslations } from '@/lib/i18n/server';
 import { localizeHref } from '@/lib/i18n/routing';
 import { parseRentalPeriod } from '@/lib/utils/date-only';
+import { parseSearchLocation } from '@/lib/catalog/search-context';
 
 // Rendu à la requête : prix et statut proviennent de la base au moment de la visite
 export const dynamic = 'force-dynamic';
@@ -65,6 +66,8 @@ export default async function CarDetailsPage({ params, searchParams }: Props) {
   // L'adresse canonique reste celle sans paramètres (layout).
   const query = await searchParams;
   const requestedPeriod = parseRentalPeriod(query.startDate, query.endDate);
+  // Lieu de prise en charge choisi dans la recherche : repris par la demande
+  const requestedLocation = parseSearchLocation(query.location);
 
   const alternativesPool = await getPublicAlternatives(vehicle);
   const moto = isMotorcycle(vehicle);
@@ -92,6 +95,7 @@ export default async function CarDetailsPage({ params, searchParams }: Props) {
           initialVehicle={vehicle}
           alternativesPool={alternativesPool}
           requestedPeriod={requestedPeriod}
+          requestedLocation={requestedLocation}
         />
       </I18nScope>
       {structured.map((data, index) => (

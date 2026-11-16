@@ -16,7 +16,7 @@ import { detectInboundIntent, extractBookingReference, whatsappService } from '.
 const CUSTOMER_PHONE = '0612345678';
 const CUSTOMER_WA = '212612345678';
 
-function booking(status: string, phone = CUSTOMER_PHONE) {
+function booking(status: string, phone = CUSTOMER_PHONE): Record<string, unknown> {
   return {
     id: 'b0000000-0000-4000-8000-000000000001',
     reference: 'CD-2026-123456',
@@ -62,6 +62,7 @@ beforeEach(() => {
   vi.stubEnv('WHATSAPP_API_TOKEN', '');
   vi.stubEnv('META_WHATSAPP_TOKEN', '');
   vi.stubEnv('WHATSAPP_PHONE_NUMBER_ID', '');
+  vi.stubEnv('BOOKING_LINK_SECRET', 'secret-de-test-des-liens-signes');
   withBooking(null);
 });
 
@@ -110,13 +111,36 @@ describe('Aucun message client ne modifie une réservation', () => {
     expect(result.actionTaken).toMatch(/aucune modification/);
   });
 
-  it('« ANNULER » oriente vers l’espace client et l’agence', async () => {
+  it('« ANNULER » sur une réservation acceptée : suivi sans compte et contact de l’agence', async () => {
     withBooking(booking('CONFIRMED'));
     const result = await inbound('ANNULER');
     expect(result.intent).toBe('CANCEL_REQUEST');
     expect(result.replySent).toContain("n'a pas été modifiée");
-    expect(result.replySent).toContain('/account/bookings/CD-2026-123456');
+    expect(result.replySent).toMatch(/Votre suivi : https?:\/\/[^\s]+\/suivi\/CD-2026-123456\?exp=\d+&sig=/);
+    expect(result.replySent).not.toContain('/account/bookings/');
+    expect(result.replySent).not.toContain('Annulez votre demande en ligne');
     expect(result.replySent).toContain('Agence A');
+  });
+
+  it('« ANNULER » sur une demande en attente : annulation en ligne depuis le suivi', async () => {
+    withBooking(booking('PENDING'));
+    const result = await inbound('ANNULER');
+    expect(result.replySent).toMatch(/Annulez votre demande en ligne, depuis votre suivi : \S+\/suivi\/CD-2026-123456\?exp=/);
+    expect(writesTo(calls, 'bookings')).toHaveLength(0);
+  });
+
+  it('« STATUT » : lien de suivi signé dans la langue du client', async () => {
+    withBooking({ ...booking('PENDING'), customer_locale: 'nl' });
+    const result = await inbound('STATUT');
+    expect(result.replySent).toMatch(/Détails : \S+\/nl\/suivi\/CD-2026-123456\?exp=\d+&sig=/);
+  });
+
+  it('sans secret de signature : repli sur l’espace client', async () => {
+    vi.stubEnv('BOOKING_LINK_SECRET', '');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', '');
+    withBooking(booking('PENDING'));
+    const result = await inbound('STATUT');
+    expect(result.replySent).toMatch(/Détails : \S+\/account$/);
   });
 
   it('les seules écritures sont la journalisation (audit, historique des notifications)', async () => {

@@ -10,6 +10,10 @@ import { bookingsService } from '@/lib/services/bookings.service';
 import { getTranslations, localizedPageMetadata } from '@/lib/i18n/server';
 import { formatDate, formatMoney, interpolate } from '@/lib/i18n/format';
 import { locationLabel } from '@/lib/i18n/labels';
+import { I18nScope } from '@/components/i18n/I18nScope';
+import { RecentRequests } from '@/components/booking/RecentRequests';
+import { CancelRequest } from '@/components/booking/CancelRequest';
+import { canCustomerCancel } from '@/lib/bookings/customer-cancel';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +28,8 @@ type Props = {
 
 const CONFIRMED = ['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP', 'ACTIVE', 'COMPLETED'];
 const CLOSED_WITHOUT_RENTAL = ['REJECTED', 'EXPIRED', 'CANCELLED'];
+/** Réservation acceptée, pas encore commencée : l'annulation relève du contrat de l'agence */
+const ACCEPTED_NOT_STARTED = ['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP'];
 
 function single(value: string | string[] | undefined): string | null {
   return typeof value === 'string' ? value : null;
@@ -37,7 +43,9 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
   const { reference: rawReference } = await params;
   const query = await searchParams;
   const reference = decodeURIComponent(rawReference).trim().toUpperCase();
-  const valid = verifyBookingLink('track', reference, single(query.exp), single(query.sig));
+  const exp = single(query.exp);
+  const sig = single(query.sig);
+  const valid = verifyBookingLink('track', reference, exp, sig);
   const booking = valid ? await bookingsService.getBookingByReference(reference, true).catch(() => null) : null;
   const { locale, t } = await getTranslations();
   const c = t.tracking.tracking;
@@ -70,6 +78,10 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
               {c.askSupport}
             </a>
           </div>
+          {/* Demandes envoyées sans compte depuis ce navigateur (liens de suivi valides) */}
+          <I18nScope namespaces={['tracking']}>
+            <RecentRequests className="mt-6" />
+          </I18nScope>
         </div>
       </div>
     );
@@ -156,6 +168,16 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
             </div>
           </dl>
         </section>
+
+        {/* Demande pas encore acceptée : le client peut la retirer lui-même (lien signé vérifié ci-dessus) */}
+        {(canCustomerCancel(booking.status) || booking.status === 'CANCELLED') && exp && sig && (
+          <I18nScope namespaces={['tracking']}>
+            <CancelRequest reference={reference} exp={exp} sig={sig} cancellable={canCustomerCancel(booking.status)} />
+          </I18nScope>
+        )}
+        {ACCEPTED_NOT_STARTED.includes(booking.status) && (
+          <p className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600">{c.cancelAccepted}</p>
+        )}
 
         {(CLOSED_WITHOUT_RENTAL.includes(booking.status) || reviewLink) && (
           <div className="flex flex-col gap-3 sm:flex-row">
