@@ -86,33 +86,49 @@ function resolveStatus(
   }
 }
 
+/**
+ * Squelette calqué sur la carte réelle (mêmes marges et hauteurs de lignes) : quand les résultats
+ * arrivent, la grille garde sa hauteur et rien ne saute (CLS). Reflet animé, figé si l'utilisateur
+ * réduit les animations (voir .skeleton dans globals.css).
+ */
 export function VehicleCardSkeleton() {
   return (
-    <div
-      aria-hidden="true"
-      className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white animate-pulse motion-reduce:animate-none"
-    >
-      <div className="aspect-[16/10] bg-slate-100" />
-      <div className="space-y-3 p-4">
-        <div className="h-3 w-20 rounded bg-slate-100" />
-        <div className="h-5 w-40 rounded bg-slate-100" />
-        <div className="flex gap-3">
-          <div className="h-4 w-16 rounded bg-slate-100" />
-          <div className="h-4 w-14 rounded bg-slate-100" />
-          <div className="h-4 w-12 rounded bg-slate-100" />
+    <div aria-hidden="true" className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
+      <div className="skeleton aspect-[16/10] w-full" />
+      <div className="flex flex-1 flex-col p-4">
+        {/* Marque (11 px) puis modèle (17 px) */}
+        <div className="flex h-4 items-center">
+          <div className="skeleton h-2.5 w-16 rounded-full" />
         </div>
-        <div className="h-8 w-full rounded-lg bg-slate-100" />
-        <div className="flex items-end justify-between pt-1">
-          <div className="h-7 w-28 rounded bg-slate-100" />
+        <div className="mt-0.5 flex h-6 items-center">
+          <div className="skeleton h-4 w-40 rounded-md" />
         </div>
-        <div className="h-11 w-full rounded-xl bg-slate-100" />
+        {/* Caractéristiques */}
+        <div className="mt-3 flex h-5 items-center gap-3.5">
+          <div className="skeleton h-3.5 w-20 rounded-full" />
+          <div className="skeleton h-3.5 w-14 rounded-full" />
+          <div className="skeleton h-3.5 w-16 rounded-full" />
+        </div>
+        {/* Agence */}
+        <div className="mt-3.5 flex h-10 items-center gap-2 rounded-xl bg-[#F5F6F8] px-2.5">
+          <div className="skeleton h-6 w-6 rounded-md" />
+          <div className="skeleton h-3 w-28 rounded-full" />
+        </div>
+        {/* Prix + action */}
+        <div className="mt-auto pt-4">
+          <div className="flex h-[22px] items-end">
+            <div className="skeleton h-5 w-28 rounded-md" />
+          </div>
+          <div className="skeleton mt-3 h-11 w-full rounded-xl" />
+        </div>
       </div>
     </div>
   );
 }
 
+// Écran tactile : flèches de 44 px (zone tactile minimale), 36 px à la souris
 const ARROW_BASE =
-  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-[opacity,transform,background-color] duration-150 hover:bg-white hover:scale-105 active:scale-95 ' +
+  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-[opacity,transform,background-color] duration-150 hover:bg-white hover:scale-105 active:scale-95 ' +
   'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]';
 
@@ -455,7 +471,7 @@ function VehicleCardComponent({
           aria-pressed={isFavorite}
           aria-label={fmt(isFavorite ? card.removeFavorite : card.addFavorite, { name: vehicleName })}
           className={cn(
-            'absolute end-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-sm backdrop-blur-sm transition-[color,scale] duration-200 active:scale-110 motion-reduce:active:scale-100',
+            'absolute end-2.5 top-2.5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-sm backdrop-blur-sm transition-[color,scale] duration-200 active:scale-110 motion-reduce:active:scale-100',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
             isFavorite ? 'text-accent-text' : 'text-slate-500 hover:text-accent-text'
           )}
@@ -521,6 +537,7 @@ function VehicleCardComponent({
                 name={agency.name}
                 logoUrl={agency.logo_url}
                 className="h-full w-full object-cover"
+                size={24}
               />
             </div>
             <span className="min-w-0 truncate text-xs font-bold text-slate-700">{agency.name}</span>

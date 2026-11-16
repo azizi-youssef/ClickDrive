@@ -726,5 +726,33 @@ nav[aria-label="Breadcrumb"] a {
    la fin de la page reste lisible au-dessus d'elle. Même chose pour le bandeau cookies
    (--cd-cookie-banner, 0 une fois fermé) : rien en fin de page ne reste caché dessous. */
 body {
-  padding-bottom: calc(var(--cd-bottom-bar, 0px) + var(--cd-cookie-banner, 0px));
+  padding-bottom: calc(var(--cd-bottom-bar, 0px) + var(--cd-cookie-banner, 0px) + var(--cd-bottom-nav, 0px));
+}
+
+/* ── Navigation inférieure du site public (mobile / tablette) ────────────
+   Hauteur connue d'avance (barre de 4 rem + zone sûre de l'appareil) : la place est réservée
+   dès le HTML serveur, sans mesure en JavaScript, donc sans décalage de mise en page (CLS).
+   Absente (fiche véhicule, connexion, espaces agence/admin) ou masquée (≥ 1024 px) : 0. */
+@media (width < 64rem) {
+  html:has(#cd-bottom-nav) {
+    /* barre de 4 rem + filet supérieur de 1 px + zone sûre */
+    --cd-bottom-nav: calc(4rem + 1px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Panneau inférieur (filtres) et tiroir latéral (menu) : entrées courtes, sans rebond */
+@keyframes cd-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes cd-drawer-in {
+  from { transform: translateX(var(--cd-drawer-from, 100%)); }
+  to   { transform: translateX(0); }
+}
+[dir='rtl'] {
+  --cd-drawer-from: -100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }

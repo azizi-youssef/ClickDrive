@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/shared/Navbar';
 import { Footer } from '@/components/shared/Footer';
 import { CookieBanner } from '@/components/shared/CookieBanner';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import type { Locale } from '@/lib/i18n/config';
 import type { Messages } from '@/lib/i18n/messages';
@@ -32,6 +33,9 @@ export function AppShell({
   // La connexion est une page « focus » plein écran : sans navbar ni footer, avec son propre <main>
   const isFocusedAuth = pathname === '/login';
 
+  // Fiche véhicule : sa barre « Réserver » fixe occupe le bas de l'écran, la navigation inférieure s'efface
+  const hasOwnBottomBar = pathname?.startsWith('/cars/') ?? false;
+
   return (
     <LanguageProvider locale={locale} messages={messages}>
       {isAdminOrAgency ? (
@@ -57,6 +61,9 @@ export function AppShell({
           </main>
 
           <Footer />
+
+          {/* Mobile / tablette : navigation inférieure (4 destinations) */}
+          {!hasOwnBottomBar && <BottomNav />}
 
           {/* Bandeau de consentement cookies — CNDP / RGPD */}
           <CookieBanner />

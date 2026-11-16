@@ -268,7 +268,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS);
     setSortBy('featured');
-  }, []);
+  }, [setSortBy]);
 
   // Carrousel des marques : nombre réel de véhicules du catalogue affiché par marque, sur la période recherchée
   const brandCounts = useMemo(() => {
@@ -302,6 +302,35 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
     },
     [brands, updateFilters]
   );
+
+  // Mobile : la barre « Filtres · Tri » flotte en bas d'écran dès que celle de la liste sort de la vue,
+  // tant que des résultats sont à l'écran (les filtres restent à un pouce, sans remonter la page)
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+  const resultsRef = React.useRef<HTMLElement>(null);
+  const [floatingToolbar, setFloatingToolbar] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const toolbar = toolbarRef.current;
+      const results = resultsRef.current;
+      if (!toolbar || !results) return;
+      setFloatingToolbar(
+        toolbar.getBoundingClientRect().bottom < 64 && results.getBoundingClientRect().bottom > window.innerHeight * 0.6
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const activeFilterCount = countActiveFilters(filters);
   const agencyName = agencies.find((agency) => agency.id === filters.agency)?.name;
@@ -420,8 +449,8 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     aria-current={active ? 'page' : undefined}
                     className={
                       active
-                        ? 'inline-flex min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-extrabold text-[#0B1220] shadow-sm'
-                        : 'inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-bold text-slate-200 transition-colors hover:bg-white/10 hover:text-white'
+                        ? 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-extrabold text-[#0B1220] shadow-sm'
+                        : 'inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-[13px] font-bold text-slate-200 transition-colors hover:bg-white/10 hover:text-white'
                     }
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -498,8 +527,8 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
               </div>
             </aside>
 
-            <section aria-labelledby="results-heading" className="min-w-0">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <section ref={resultsRef} aria-labelledby="results-heading" className="min-w-0">
+              <div ref={toolbarRef} className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <h2
                     id="results-heading"
@@ -604,7 +633,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       key={chip.key}
                       type="button"
                       onClick={() => updateFilters(chip.clear)}
-                      className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white pe-2 ps-3 text-xs font-semibold text-slate-700 transition-colors hover:border-[#E63946]/40 hover:text-accent-text"
+                      className="tap-44 inline-flex h-9 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white pe-2.5 ps-3 text-xs font-semibold text-slate-700 transition-colors hover:border-[#E63946]/40 hover:text-accent-text"
                       aria-label={fmt(catalog.removeFilter, { label: chip.label })}
                     >
                       <span className="truncate">{chip.label}</span>
@@ -614,7 +643,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                   <button
                     type="button"
                     onClick={resetFilters}
-                    className="h-8 px-2 text-xs font-bold text-accent-text hover:underline"
+                    className="tap-44 h-9 px-2 text-xs font-bold text-accent-text hover:underline"
                   >
                     {catalog.clearAll}
                   </button>
@@ -731,6 +760,45 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
           </div>
         </div>
 
+        {/* ── Mobile : « Filtres · Tri » flottant au-dessus de la navigation inférieure ── */}
+        {floatingToolbar && !mobileFilterOpen && !vehiclesLoading && !vehiclesError && typeScopedVehicles.length > 0 && (
+          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--cd-bottom-nav,0px)+var(--cd-cookie-banner,0px)+0.75rem)] z-30 flex justify-center px-4 lg:hidden">
+            <div className="pointer-events-auto flex h-12 max-w-full items-center rounded-full bg-[#0B1220] p-1 text-white shadow-[0_14px_34px_-10px_rgba(11,18,32,0.6)] ring-1 ring-white/10 motion-safe:animate-[cd-slide-up_220ms_cubic-bezier(0.16,1,0.3,1)]">
+              <button
+                type="button"
+                onClick={() => setMobileFilterOpen(true)}
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+              >
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                {catalog.filters}
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 text-[11px]">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+              <span className="h-5 w-px shrink-0 bg-white/20" aria-hidden="true" />
+              {/* Sélecteur natif transparent : la liste du téléphone s'ouvre, le libellé reste lisible */}
+              <div className="relative inline-flex h-10 min-w-0 items-center gap-2 rounded-full pe-4 ps-3 text-[13px] font-bold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#E63946]">
+                <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="truncate" aria-hidden="true">{catalog.sort[sortBy]}</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  aria-label={catalog.sortBy}
+                  className="absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-full opacity-0"
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {catalog.sort[option]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         <MobileFilterDrawer
           open={mobileFilterOpen}
           onClose={() => setMobileFilterOpen(false)}
@@ -785,6 +853,34 @@ function MobileFilterDrawer({
   const { t, plural } = useTranslation();
   const catalog = t.catalog;
 
+  // Panneau inférieur (téléphone) : on le referme en le faisant glisser vers le bas par sa poignée / son titre.
+  // Le déplacement est appliqué directement au style pour rester fluide (aucun nouveau rendu React).
+  const dragRef = React.useRef<{ startY: number; offset: number } | null>(null);
+  const onDragStart = (event: React.TouchEvent) => {
+    if (!window.matchMedia('(max-width: 639.98px)').matches) return;
+    dragRef.current = { startY: event.touches[0].clientY, offset: 0 };
+  };
+  const onDragMove = (event: React.TouchEvent) => {
+    const drag = dragRef.current;
+    const sheet = dialogRef.current;
+    if (!drag || !sheet) return;
+    drag.offset = Math.max(0, event.touches[0].clientY - drag.startY);
+    sheet.style.transition = 'none';
+    sheet.style.transform = `translateY(${drag.offset}px)`;
+  };
+  const onDragEnd = () => {
+    const drag = dragRef.current;
+    const sheet = dialogRef.current;
+    dragRef.current = null;
+    if (!drag || !sheet) return;
+    if (drag.offset > 96) {
+      onClose();
+      return;
+    }
+    sheet.style.transition = 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)';
+    sheet.style.transform = '';
+  };
+
   if (!open) return null;
 
   return (
@@ -803,22 +899,39 @@ function MobileFilterDrawer({
         aria-modal="true"
         aria-labelledby="mobile-filters-title"
         tabIndex={-1}
-        className="absolute inset-x-0 bottom-0 flex outline-none max-h-[88dvh] flex-col rounded-t-3xl bg-white shadow-2xl sm:inset-y-0 sm:end-0 sm:start-auto sm:max-h-none sm:w-[400px] sm:rounded-none"
+        className={cn(
+          'absolute inset-x-0 bottom-0 flex outline-none max-h-[88dvh] flex-col rounded-t-3xl bg-white shadow-2xl sm:inset-y-0 sm:end-0 sm:start-auto sm:max-h-none sm:w-[400px] sm:rounded-none',
+          'max-sm:motion-safe:animate-[cd-sheet-up_280ms_cubic-bezier(0.32,0.72,0,1)] sm:motion-safe:animate-[cd-drawer-in_280ms_cubic-bezier(0.32,0.72,0,1)]'
+        )}
       >
-        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-200 sm:hidden" aria-hidden="true" />
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-          <h2 id="mobile-filters-title" className="text-base font-extrabold text-[#0B1220]">
-            {catalog.filters}
-          </h2>
-          <button
-            data-autofocus
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
-            aria-label={catalog.close}
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
+        {/* Poignée + titre : zone de glissement (le contenu, lui, défile normalement) */}
+        <div
+          onTouchStart={onDragStart}
+          onTouchMove={onDragMove}
+          onTouchEnd={onDragEnd}
+          onTouchCancel={onDragEnd}
+          className="shrink-0 touch-none border-b border-slate-100 sm:touch-auto"
+        >
+          <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-300 sm:hidden" aria-hidden="true" />
+          <div className="flex items-center justify-between px-5 py-3">
+            <h2 id="mobile-filters-title" className="text-base font-extrabold text-[#0B1220]">
+              {catalog.filters}
+              {activeCount > 0 && (
+                <span className="ms-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 align-middle text-[11px] font-bold text-white">
+                  {activeCount}
+                </span>
+              )}
+            </h2>
+            <button
+              data-autofocus
+              type="button"
+              onClick={onClose}
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
+              aria-label={catalog.close}
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto overscroll-contain px-5">{children}</div>
         <div className="flex gap-3 border-t border-slate-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -848,8 +961,17 @@ export function SearchClient({ preload, vehicleType = 'CAR' }: { preload: Search
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F5F6F8] p-8 text-center text-sm text-ink-tertiary">
-          {vehicleType === 'MOTORCYCLE' ? t.catalog.suspenseMoto : t.catalog.suspenseCar}
+        // Squelette de la page (en-tête sombre + cartes) plutôt qu'un texte seul : même gabarit, aucun saut au chargement
+        <div className="min-h-screen bg-[#F5F6F8] pb-20" role="status">
+          <span className="sr-only">{vehicleType === 'MOTORCYCLE' ? t.catalog.suspenseMoto : t.catalog.suspenseCar}</span>
+          <div className="h-64 bg-[#0B1220] sm:h-72" aria-hidden="true" />
+          <div className="mx-auto max-w-[1360px] px-4 pt-8 sm:px-6 lg:px-8" aria-hidden="true">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }, (_, i) => (
+                <VehicleCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
       }
     >

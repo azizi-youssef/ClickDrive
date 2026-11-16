@@ -83,14 +83,14 @@ function FilterSection({
   const contentId = useId();
 
   return (
-    <section className="border-b border-slate-200/80 py-4 last:border-b-0">
+    <section className="border-b border-slate-200/80 py-2.5 last:border-b-0 lg:py-4">
       <h3>
         <button
           type="button"
           aria-expanded={open}
           aria-controls={contentId}
           onClick={() => setOpen((value) => !value)}
-          className="flex min-h-8 w-full items-center justify-between gap-3 rounded-lg text-start focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E63946]"
+          className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-start focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E63946] lg:min-h-8"
         >
           <span className="text-[13px] font-bold text-[#0B1220]">{title}</span>
           <span className="flex min-w-0 items-center gap-2">
@@ -126,7 +126,7 @@ function OptionChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'min-h-10 rounded-xl border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
+        'min-h-11 rounded-xl border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] lg:min-h-10',
         active
           ? 'border-[#0B1220] bg-[#0B1220] text-white'
           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -303,13 +303,13 @@ export function CatalogFilters({
             value={filters.brandQuery}
             onChange={(e) => onChange({ brandQuery: e.target.value })}
             placeholder={f.brandPlaceholder}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white pe-9 ps-9 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pe-11 ps-9 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10"
           />
           {filters.brandQuery && (
             <button
               type="button"
               onClick={() => onChange({ brandQuery: '' })}
-              className="absolute end-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className="absolute end-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
               aria-label={f.clearBrandSearch}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />

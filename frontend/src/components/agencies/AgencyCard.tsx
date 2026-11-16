@@ -44,7 +44,7 @@ export function AgencyCard({ agency, carCount }: AgencyCardProps) {
         )}
 
         <div className="absolute -bottom-7 inset-s-5 h-16 w-16 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-md">
-          <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" />
+          <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" size={64} />
         </div>
       </div>
 

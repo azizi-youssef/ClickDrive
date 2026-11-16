@@ -262,6 +262,8 @@ export function BookingRequestModal({
   // Calculs financiers (moteur existant)
   const totalDays = calculateRentalDays(startDate, endDate);
   const pricing = calculateRentalPrice(vehicle, totalDays);
+  // Période exploitable pour le résumé de l'en-tête (masqué pendant la correction d'une date)
+  const hasValidPeriod = isValidDateOnly(startDate) && isValidDateOnly(endDate) && endDate > startDate;
 
   // Dialogue modal : focus initial (premier champ), piège Tab, Échap (sauf pendant l'envoi),
   // page en arrière-plan inerte, défilement bloqué, focus rendu au bouton d'ouverture
@@ -512,6 +514,21 @@ export function BookingRequestModal({
                   {vehicle.agency.name}
                 </p>
               )}
+              {/* Résumé toujours visible pendant les étapes : période et total estimé, mis à jour en direct */}
+              {currentStep <= 4 && hasValidPeriod && (
+                <p className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-slate-200">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0 text-accent-on-dark" aria-hidden="true" />
+                    {date(startDate, 'dayMonth')} → {date(endDate, 'dayMonth')}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 font-extrabold tabular-nums text-ink">
+                    {fmt(t.booking.card.totalShort, {
+                      amount: formatMad(pricing.total),
+                      days: plural(pricing.number_of_days, m.days),
+                    })}
+                  </span>
+                </p>
+              )}
             </div>
             <button
               type="button"
@@ -628,24 +645,24 @@ export function BookingRequestModal({
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field id={`${uid}-firstName`} label={m.firstName} required error={errors.firstName}>
-                      <input id={`${uid}-firstName`} data-autofocus type="text" autoComplete="given-name" value={firstName}
+                      <input id={`${uid}-firstName`} data-autofocus type="text" autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" value={firstName}
                         onChange={(e) => { setFirstName(e.target.value); clearError('firstName'); }}
                         placeholder="Youssef" className={inputClass} {...invalid('firstName')} />
                     </Field>
                     <Field id={`${uid}-lastName`} label={m.lastName} required error={errors.lastName}>
-                      <input id={`${uid}-lastName`} type="text" autoComplete="family-name" value={lastName}
+                      <input id={`${uid}-lastName`} type="text" autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" value={lastName}
                         onChange={(e) => { setLastName(e.target.value); clearError('lastName'); }}
                         placeholder="Azizi" className={inputClass} {...invalid('lastName')} />
                     </Field>
                     <Field id={`${uid}-phone`} label={m.phone} required error={errors.phone} hint={m.phoneHint}>
-                      <input id={`${uid}-phone`} type="tel" inputMode="tel" autoComplete="tel" value={phone}
+                      <input id={`${uid}-phone`} type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" value={phone}
                         onChange={(e) => { setPhone(e.target.value); clearError('phone'); }}
                         placeholder="+212 6 12 34 56 78" className={inputClass}
                         aria-invalid={Boolean(errors.phone) || undefined}
                         aria-describedby={errors.phone ? `${uid}-phone-error` : `${uid}-phone-hint`} />
                     </Field>
                     <Field id={`${uid}-email`} label={m.email} optional optionalLabel={m.optional} error={errors.email} hint={m.emailHint}>
-                      <input id={`${uid}-email`} type="email" inputMode="email" autoComplete="email" value={email}
+                      <input id={`${uid}-email`} type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" value={email}
                         onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                         placeholder={m.emailPlaceholder} className={inputClass}
                         aria-invalid={Boolean(errors.email) || undefined}
@@ -675,12 +692,12 @@ export function BookingRequestModal({
                     )}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Field id={`${uid}-cin`} label={m.cin} error={errors.cin} className="sm:col-span-2">
-                        <input id={`${uid}-cin`} type="text" autoComplete="off" spellCheck={false} value={cin}
+                        <input id={`${uid}-cin`} type="text" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} value={cin}
                           onChange={(e) => { setCin(e.target.value.toUpperCase()); clearError('cin'); }}
                           placeholder={m.cinPlaceholder} className={cn(inputClass, 'uppercase tracking-wide')} {...invalid('cin')} />
                       </Field>
                       <Field id={`${uid}-licenseNumber`} label={m.licenseNumber} error={errors.licenseNumber}>
-                        <input id={`${uid}-licenseNumber`} type="text" autoComplete="off" spellCheck={false} value={licenseNumber}
+                        <input id={`${uid}-licenseNumber`} type="text" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} value={licenseNumber}
                           onChange={(e) => { setLicenseNumber(e.target.value); clearError('licenseNumber'); }}
                           placeholder={m.licensePlaceholder} className={inputClass} {...invalid('licenseNumber')} />
                       </Field>
@@ -881,7 +898,7 @@ export function BookingRequestModal({
                       </legend>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field id={`${uid}-flight`} label={m.flightNumber} optional optionalLabel={m.optional}>
-                          <input id={`${uid}-flight`} type="text" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)}
+                          <input id={`${uid}-flight`} type="text" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)}
                             placeholder={m.flightPlaceholder} className={inputClass} />
                         </Field>
                         <Field id={`${uid}-arrival`} label={m.landingTime} optional optionalLabel={m.optional}>
@@ -1274,7 +1291,7 @@ function SummaryBlock({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-bold text-accent-text hover:bg-[#FFF4F5]"
+            className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-[13px] font-bold text-accent-text hover:bg-[#FFF4F5]"
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
             {editLabel}

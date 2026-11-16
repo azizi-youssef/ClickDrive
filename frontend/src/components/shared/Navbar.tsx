@@ -28,8 +28,6 @@ import {
   ArrowRight,
   MapPin,
   ShieldCheck,
-  Clock3,
-  Star,
   LogIn,
   LogOut,
   Loader2,
@@ -586,12 +584,9 @@ export function Navbar() {
         )}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div
-            className={cn(
-              'grid grid-cols-[auto_1fr_auto] items-center gap-2 lg:gap-6 xl:gap-8 transition-all duration-300',
-              scrolled ? 'h-14 lg:h-16' : 'h-16 lg:h-20'
-            )}
-          >
+          {/* Hauteur constante : un en-tête collant qui rétrécit au défilement décale toute la page (CLS).
+              Le défilement ne change que l'ombre et l'opacité du fond. */}
+          <div className="grid h-14 grid-cols-[auto_1fr_auto] items-center gap-2 sm:h-16 lg:h-18 lg:gap-6 xl:gap-8">
             {/* -------------------------------------------------------- */}
             {/* BRAND LOGO                                               */}
             {/* -------------------------------------------------------- */}
@@ -601,12 +596,7 @@ export function Navbar() {
               className="group flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-[#E63946]"
             >
               {/* Mobile Compact Emblem (under 640px) */}
-              <div
-                className={cn(
-                  'relative sm:hidden transition-all duration-300',
-                  scrolled ? 'h-8 w-[120px]' : 'h-9 w-[134px]'
-                )}
-              >
+              <div className="relative h-8 w-[128px] sm:hidden">
                 <Image
                   src={brandLogo}
                   alt="ClickDrive"
@@ -618,15 +608,8 @@ export function Navbar() {
               </div>
 
               {/* Tablet & Desktop Full Wordmark (640px and above) */}
-              <div
-                className={cn(
-                  'relative hidden sm:block transition-all duration-300',
-                  // Proportions calées sur le logo (1036×241, ≈ 4,3:1) pour qu'il occupe toute la hauteur
-                  scrolled
-                    ? 'h-9 w-[155px] lg:h-10 lg:w-[172px]'
-                    : 'h-10 w-[172px] lg:h-12 lg:w-[206px]'
-                )}
-              >
+              {/* Proportions calées sur le logo (1036×241, ≈ 4,3:1) pour qu'il occupe toute la hauteur */}
+              <div className="relative hidden h-10 w-[172px] sm:block lg:h-11 lg:w-[189px]">
                 <Image
                   src={brandLogo}
                   alt="ClickDrive — Location de voitures à Nador"
@@ -1078,16 +1061,8 @@ export function Navbar() {
             {/* TABLET CONTROLS (640px to 1023px: sm / md)               */}
             {/* NO HIDDEN-NAVIGATION BREAKPOINT GAPS!                    */}
             {/* -------------------------------------------------------- */}
+            {/* La recherche (Voitures / Motos) est dans la navigation inférieure */}
             <div className="hidden sm:flex lg:hidden items-center gap-2 justify-end">
-              {/* Quick Search Button */}
-              <Link
-                href="/search"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#E63946]/10 px-3 py-2 text-xs font-bold text-accent-text transition-colors hover:bg-[#E63946]/15 focus-visible:outline-2 focus-visible:outline-[#E63946]"
-              >
-                <Search className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{strings.search}</span>
-              </Link>
-
               {/* Tablet Language Selector */}
               <LanguageSelector variant="navbar" />
 
@@ -1142,11 +1117,12 @@ export function Navbar() {
             {/* -------------------------------------------------------- */}
             {/* MOBILE CONTROLS (< 640px: 375px / 430px)                 */}
             {/* -------------------------------------------------------- */}
-            <div className="flex sm:hidden items-center gap-1.5">
-              {/* Account Icon Shortcut */}
+            {/* En-tête compact : logo, profil, menu. Recherche → navigation inférieure ; langue → menu. */}
+            <div className="flex sm:hidden items-center justify-end gap-2">
+              {/* Account Icon Shortcut — même taille dans les trois états : rien ne bouge à la fin du chargement */}
               {authLoading ? (
                 <span
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100"
                   role="status"
                   aria-label={strings.sessionChecking}
                 >
@@ -1156,7 +1132,7 @@ export function Navbar() {
                 <Link
                   href={accountHref(authProfile)}
                   aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
-                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs"
+                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-[#E63946]"
                 >
                   <AccountAvatar profile={authProfile} className="h-7 w-7 text-[10px]" />
                 </Link>
@@ -1164,23 +1140,11 @@ export function Navbar() {
                 <Link
                   href={LOGIN_PATH}
                   aria-label={strings.login}
-                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs"
+                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs focus-visible:outline-2 focus-visible:outline-[#E63946]"
                 >
-                  <User className="h-4 w-4" aria-hidden="true" />
+                  <User className="h-[18px] w-[18px]" aria-hidden="true" />
                 </Link>
               )}
-
-              {/* Search Shortcut */}
-              <Link
-                href="/search"
-                aria-label={strings.findCar}
-                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text transition-colors hover:bg-[#E63946]/15"
-              >
-                <Search className="h-4 w-4" aria-hidden="true" />
-              </Link>
-
-              {/* Language Selector on Mobile Header */}
-              <LanguageSelector variant="navbar" className="shrink-0" />
 
               {/* Hamburger Button */}
               <button
@@ -1188,7 +1152,7 @@ export function Navbar() {
                 aria-label={mobileMenuOpen ? strings.closeMenu : strings.openMenu}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -1208,13 +1172,13 @@ export function Navbar() {
         <div className="lg:hidden">
           {/* Accessible Backdrop Overlay */}
           <div
-            className="fixed inset-0 z-50 bg-[#0B1220]/65 backdrop-blur-sm transition-opacity duration-300"
+            className="fixed inset-0 z-50 bg-[#0B1220]/55 backdrop-blur-[2px] motion-safe:animate-[cd-fade-in_200ms_ease-out]"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
             data-modal-backdrop
           />
 
-          {/* Full-Height Drawer Panel */}
+          {/* Tiroir latéral : une bande de la page reste visible (contexte + fermeture d'un geste) */}
           <div
             ref={mobileDrawerRef}
             role="dialog"
@@ -1222,16 +1186,17 @@ export function Navbar() {
             aria-label={strings.navigation}
             tabIndex={-1}
             className={cn(
-              'fixed inset-y-0 z-50 flex w-full max-w-sm sm:max-w-md flex-col bg-white shadow-2xl outline-none transition-transform duration-300 ease-out',
+              'fixed inset-y-0 z-50 flex w-[min(22rem,calc(100vw-3.5rem))] flex-col bg-white shadow-2xl outline-none',
+              'motion-safe:animate-[cd-drawer-in_280ms_cubic-bezier(0.32,0.72,0,1)]',
               isRTL ? 'left-0 border-r border-slate-200' : 'right-0 border-l border-slate-200'
             )}
           >
             {/* Drawer Top Header */}
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-5">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 ps-5 pe-3 pt-[env(safe-area-inset-top)] box-content">
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center"
+                className="flex min-h-11 items-center"
               >
                 <Image
                   src={brandLogo}
@@ -1252,38 +1217,8 @@ export function Navbar() {
             </div>
 
             {/* Drawer Scrollable Body */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-              {/* Primary Search CTA Banner */}
-              <Link
-                href="/search"
-                onClick={() => setMobileMenuOpen(false)}
-                className="group relative flex items-center justify-between overflow-hidden rounded-2xl bg-linear-to-r from-[#E63946] to-[#C92F3B] p-4 text-white shadow-lg shadow-red-900/20 active:scale-[0.99]"
-              >
-                <span
-                  className="absolute inset-0 bg-linear-to-br from-white/15 to-transparent pointer-events-none"
-                  aria-hidden="true"
-                />
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
-                    <Search className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <span className="block text-sm font-bold">{strings.findCar}</span>
-                    <span className="block text-[11px] text-white/80">
-                      {strings.destinationsSubtitle}
-                    </span>
-                  </div>
-                </div>
-
-                <ArrowRight
-                  className={cn(
-                    'h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1',
-                    isRTL && 'rotate-180 group-hover:-translate-x-1'
-                  )}
-                  aria-hidden="true"
-                />
-              </Link>
-
+            {/* Contenu resserré : la recherche est déjà dans la navigation inférieure */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
               {/* Language Switcher in Drawer */}
               <div>
                 <LanguageSelector variant="mobile" />
@@ -1426,7 +1361,7 @@ export function Navbar() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-white"
+                          className="flex min-h-11 items-center justify-between rounded-lg px-3 text-[13px] font-medium text-slate-700 transition-colors hover:bg-white"
                         >
                           <span>{item.label}</span>
                           <ChevronRight
@@ -1441,7 +1376,7 @@ export function Navbar() {
                       type="button"
                       disabled={signingOut}
                       onClick={() => void handleSignOut()}
-                      className="mt-3 flex w-full items-center gap-2 border-t border-slate-200/80 px-2 pt-3 text-xs font-bold text-red-600 transition-colors hover:text-red-700 disabled:opacity-50"
+                      className="mt-2 flex min-h-11 w-full items-center gap-2 border-t border-slate-200/80 px-3 pt-1 text-[13px] font-bold text-red-600 transition-colors hover:text-red-700 disabled:opacity-50"
                     >
                       {signingOut ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -1457,7 +1392,7 @@ export function Navbar() {
                     <button
                       type="button"
                       onClick={() => void refreshAuthProfile()}
-                      className="mt-2 font-bold underline"
+                      className="mt-1 min-h-11 font-bold underline"
                     >
                       {strings.retry}
                     </button>
@@ -1489,41 +1424,17 @@ export function Navbar() {
                 href="https://wa.me/212634536286?text=Bonjour%2C%20je%20veux%20louer%20une%20voiture%20%C3%A0%20Nador"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold text-emerald-800 transition-colors hover:bg-emerald-100"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-[13px] font-bold text-emerald-800 transition-colors hover:bg-emerald-100"
               >
                 <MessageCircle className="h-4 w-4 text-emerald-600" aria-hidden="true" />
                 <span>{strings.whatsappHelp}</span>
               </a>
 
-              {/* Trust Indicators */}
-              <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
-                <div className="rounded-xl bg-slate-50 p-2.5 text-center">
-                  <ShieldCheck className="mx-auto h-4 w-4 text-emerald-500" aria-hidden="true" />
-                  <p className="mt-1 text-[11px] font-semibold text-slate-600">
-                    {strings.badgeVerified}
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-slate-50 p-2.5 text-center">
-                  <Star className="mx-auto h-4 w-4 text-amber-500" aria-hidden="true" />
-                  <p className="mt-1 text-[11px] font-semibold text-slate-600">
-                    {strings.badgePricing}
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-slate-50 p-2.5 text-center">
-                  <Clock3 className="mx-auto h-4 w-4 text-blue-500" aria-hidden="true" />
-                  <p className="mt-1 text-[11px] font-semibold text-slate-600">
-                    {strings.badgeSupport}
-                  </p>
-                </div>
-              </div>
-
-              {/* Region Label */}
-              <div className="flex items-center justify-center gap-1.5 pb-4 text-[11px] text-slate-400">
+              {/* Région, en une ligne (les badges de réassurance sont sur les pages, pas dans le menu) */}
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
                 <MapPin className="h-3 w-3" aria-hidden="true" />
                 <span>{strings.locationTag}</span>
-              </div>
+              </p>
             </div>
           </div>
         </div>

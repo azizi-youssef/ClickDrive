@@ -340,7 +340,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                     className="group inline-flex min-h-11 items-center gap-2 font-bold text-[#0B1220] transition-colors hover:text-accent-text"
                   >
                     <span className="h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                      <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" />
+                      <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" size={28} />
                     </span>
                     {agency.name}
                   </Link>

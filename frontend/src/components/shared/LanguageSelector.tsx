@@ -104,7 +104,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
         {isOpen && (
           <div
             role="menu"
-            className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-2xl border border-slate-700 bg-[#0F172A] p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
+            className="absolute bottom-full mb-2 w-48 overflow-hidden rounded-2xl border border-slate-700 bg-[#0F172A] p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 max-lg:left-1/2 max-lg:-translate-x-1/2 lg:start-0"
           >
             <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800">
               {t.common.switchLanguage}
@@ -119,7 +119,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
                     role="menuitem"
                     onClick={() => handleSelect(lang.code)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-xs transition-colors text-left',
+                      'flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-2.5 text-sm transition-colors text-start lg:min-h-9 lg:text-xs',
                       isActive
                         ? 'bg-white/10 font-bold text-white'
                         : 'text-slate-300 hover:bg-white/5 hover:text-white'
@@ -186,7 +186,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
                   role="menuitem"
                   onClick={() => handleSelect(lang.code)}
                   className={cn(
-                    'flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-xs transition-colors text-left',
+                    'flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-2.5 text-sm transition-colors text-start lg:min-h-9 lg:text-xs',
                     isActive
                       ? 'bg-slate-100 font-bold text-slate-950'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
