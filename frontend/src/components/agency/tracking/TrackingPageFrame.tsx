@@ -14,13 +14,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function Denied({ title, text }: { title: string; text: string }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-3 bg-[#F5F6F8] px-6 text-center">
+    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-3 bg-canvas px-6 text-center">
       <span aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
         <ShieldX className="h-6 w-6" />
       </span>
-      <h1 className="text-xl font-bold text-[#0B1220]">{title}</h1>
-      <p className="text-sm text-[#64748B]">{text}</p>
-      <Link href="/agency" className="mt-2 inline-flex min-h-10 items-center rounded-xl bg-[#0B1220] px-4 text-sm font-semibold text-white">
+      <h1 className="text-xl font-bold text-ink">{title}</h1>
+      <p className="text-sm text-ink-secondary">{text}</p>
+      <Link href="/agency" className="mt-2 inline-flex min-h-10 items-center rounded-xl bg-ink px-4 text-sm font-semibold text-white">
         Retour à l’espace agence
       </Link>
     </main>

@@ -65,7 +65,7 @@ function Field({
   return (
     <div
       className={cn(
-        'flex h-full min-w-0 flex-col justify-center rounded-xl border border-transparent bg-canvas px-3.5 py-2.5 transition-colors hover:bg-[#EEF0F3] focus-within:border-ink/25 focus-within:bg-white focus-within:ring-2 focus-within:ring-ink/10',
+        'flex h-full min-w-0 flex-col justify-center rounded-xl border border-transparent bg-canvas px-3.5 py-2.5 transition-colors hover:bg-[#EEF0F3] focus-within:border-ink focus-within:bg-white focus-within:ring-4 focus-within:ring-ink/8',
         className
       )}
     >
@@ -83,7 +83,7 @@ function Field({
 
 // text-base on mobile prevents iOS Safari from automatically zooming in when focusing selects/inputs
 const controlClass =
-  'min-h-8 w-full min-w-0 cursor-pointer truncate bg-transparent text-base sm:text-sm font-bold text-[#0B1220] focus:outline-none';
+  'min-h-8 w-full min-w-0 cursor-pointer truncate bg-transparent text-base sm:text-sm font-bold text-ink focus:outline-none';
 
 export function SearchBar({
   initialLocation = 'Aéroport Nador Al-Aroui (NDR)',
@@ -258,7 +258,7 @@ export function SearchBar({
         <button
           type="submit"
           disabled={!today}
-          className="col-span-2 lg:col-span-1 flex min-h-12 lg:h-auto items-center justify-center gap-2 rounded-xl bg-action px-7 py-3.5 text-base lg:text-sm font-bold text-white transition hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
+          className="col-span-2 lg:col-span-1 flex min-h-12 lg:h-auto items-center justify-center gap-2 rounded-xl bg-action px-7 py-3.5 text-base lg:text-sm font-bold text-white transition hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink motion-press disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
         >
           <Search className="h-4 w-4" aria-hidden="true" />
           {t.searchBar.searchBtn}

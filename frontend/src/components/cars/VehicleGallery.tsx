@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { DISTANCE, DURATION, EASE } from '@/lib/design/motion';
 import { CarFront, ChevronLeft, ChevronRight, Expand, Motorbike, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isOptimizableImage } from '@/lib/utils/images';
@@ -25,7 +26,7 @@ function Placeholder({ title, className, isMoto }: { title: string; className?: 
     <div
       role="img"
       aria-label={fmt(t.car.gallery.unavailable, { title })}
-      className={cn('flex h-full w-full items-center justify-center bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8] text-slate-300', className)}
+      className={cn('flex h-full w-full items-center justify-center bg-linear-to-b from-[#EEF0F3] to-canvas text-slate-300', className)}
     >
       {isMoto ? (
         <Motorbike className="h-16 w-16" strokeWidth={1.2} aria-hidden="true" />
@@ -86,17 +87,17 @@ export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGaller
   const slide = reduceMotion
     ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 1 } }
     : {
-        initial: { opacity: 0, x: direction * 24 },
+        initial: { opacity: 0, x: direction * DISTANCE.lg },
         animate: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: direction * -24 },
+        exit: { opacity: 0, x: direction * -DISTANCE.lg },
       };
 
   const arrowClass =
-    'absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#0B1220] shadow-md transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]';
+    'absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-ink shadow-md transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
   return (
-    <section aria-roledescription={g.carousel} aria-label={fmt(g.photosLabel, { title })} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2 shadow-[0_1px_2px_rgba(11,18,32,0.04)] sm:p-2.5">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#F5F6F8]">
+    <section aria-roledescription={g.carousel} aria-label={fmt(g.photosLabel, { title })} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2 shadow-card sm:p-2.5">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-canvas">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={safeIndex}
@@ -104,7 +105,7 @@ export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGaller
             initial={slide.initial}
             animate={slide.animate}
             exit={slide.exit}
-            transition={{ duration: 0.28, ease: [0.33, 1, 0.68, 1] }}
+            transition={{ duration: DURATION.base, ease: EASE.standard }}
           >
             {src ? (
               <Image
@@ -148,7 +149,7 @@ export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGaller
             type="button"
             onClick={() => setLightboxOpen(true)}
             aria-label={g.fullscreenAria}
-            className="absolute bottom-3 end-3 z-10 inline-flex h-10 items-center gap-1.5 rounded-lg bg-white/95 px-3 text-xs font-bold text-[#0B1220] shadow-md transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+            className="absolute bottom-3 end-3 z-10 inline-flex h-10 items-center gap-1.5 rounded-lg bg-white/95 px-3 text-xs font-bold text-ink shadow-md transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             <Expand className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline" aria-hidden="true">{g.fullscreen}</span>
@@ -170,7 +171,7 @@ export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGaller
                 aria-current={i === safeIndex ? 'true' : undefined}
                 className={cn(
                   'relative block aspect-[16/10] w-24 overflow-hidden rounded-lg border-2 transition sm:w-28',
-                  i === safeIndex ? 'border-[#E63946]' : 'border-transparent opacity-70 hover:opacity-100'
+                  i === safeIndex ? 'border-brand' : 'border-transparent opacity-70 hover:opacity-100'
                 )}
               >
                 {failed.has(i) ? (
@@ -200,7 +201,7 @@ export function VehicleGallery({ images, title, overlay, isMoto }: VehicleGaller
           aria-modal="true"
           aria-label={fmt(g.viewer, { title })}
           tabIndex={-1}
-          className="fixed inset-0 z-[70] flex flex-col bg-[#0B1220]/95 outline-none backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex flex-col bg-ink/95 outline-none backdrop-blur-sm motion-safe:animate-cd-fade-in"
         >
           <div className="flex items-center justify-between px-4 py-3 text-white sm:px-6">
             <p className="text-sm font-bold">

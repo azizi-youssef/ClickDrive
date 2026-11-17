@@ -55,10 +55,10 @@ function Plate() {
   return (
     <div
       aria-hidden="true"
-      className="relative inline-flex items-stretch overflow-hidden rounded-2xl bg-white text-[#0B1220] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ring-1 ring-black/10"
+      className="relative inline-flex items-stretch overflow-hidden rounded-2xl bg-white text-ink shadow-[0_18px_50px_rgba(0,0,0,0.35)] ring-1 ring-black/10"
     >
       <span className="absolute left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-slate-300" />
-      <span className="m-1 ml-4 flex items-center rounded-xl border-[3px] border-[#0B1220] px-5 py-1.5 text-6xl font-extrabold leading-none tracking-tighter sm:px-7 sm:text-7xl">
+      <span className="m-1 ml-4 flex items-center rounded-xl border-[3px] border-ink px-5 py-1.5 text-6xl font-extrabold leading-none tracking-tighter sm:px-7 sm:text-7xl">
         404
       </span>
       <span className="flex items-center bg-action px-3 text-xs font-semibold text-white sm:px-4 sm:text-sm">{t.notFound.notFound}</span>
@@ -75,7 +75,7 @@ function VehicleSuggestions({ suggestions }: { suggestions: Suggestions | null }
     <section aria-labelledby="nf-suggestions" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="nf-suggestions" className="text-xl font-extrabold tracking-tight text-[#0B1220] sm:text-2xl">
+          <h2 id="nf-suggestions" className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
             {n.available}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -84,7 +84,7 @@ function VehicleSuggestions({ suggestions }: { suggestions: Suggestions | null }
         </div>
         <Link
           href="/search"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-bold text-accent-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-bold text-accent-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           {n.catalog}
           <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -142,11 +142,11 @@ export function NotFoundView() {
   const showPath = Boolean(pathname && pathname !== '/');
 
   return (
-    <div className="bg-[#F5F6F8] pb-14 sm:pb-16">
+    <div className="bg-canvas pb-14 sm:pb-16">
       <style>{`@keyframes clickdrive-drive{from{transform:translateX(-25vw)}to{transform:translateX(125vw)}}`}</style>
 
       {/* ── En-tête : ce qui s'est passé et comment repartir ── */}
-      <section aria-labelledby="nf-title" className="relative isolate overflow-hidden bg-[#0B1220] text-white">
+      <section aria-labelledby="nf-title" className="relative isolate overflow-hidden bg-ink text-white">
         <Image
           src={carHeroImage}
           alt=""
@@ -155,8 +155,8 @@ export function NotFoundView() {
           sizes="100vw"
           className="-z-20 object-cover object-[70%_45%]"
         />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[#0B1220]/85" />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-t from-[#0B1220] via-transparent to-[#0B1220]/40" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ink/85" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-t from-ink via-transparent to-ink/40" />
 
         <div className="mx-auto max-w-3xl px-4 pb-24 pt-10 text-center sm:px-6 sm:pb-28 sm:pt-16">
           <Plate />
@@ -176,7 +176,7 @@ export function NotFoundView() {
           <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link
               href={variant.primaryHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-6 text-[15px] font-bold text-white transition-colors hover:bg-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1220]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-6 text-[15px] font-bold text-white transition-colors hover:bg-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
             >
               {copy.primary}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -221,12 +221,12 @@ export function NotFoundView() {
                 autoComplete="off"
                 enterKeyHint="search"
                 placeholder={n.searchLabel}
-                className="h-11 w-full rounded-xl bg-transparent pl-9 pr-2 text-[15px] text-slate-900 outline-none placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-[#E63946]/40"
+                className="h-11 w-full rounded-xl bg-transparent pl-9 pr-2 text-[15px] text-slate-900 outline-none placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-brand/40"
               />
             </div>
             <button
               type="submit"
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] px-4 text-sm font-bold text-white transition-colors hover:bg-[#1B2433] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] sm:px-5"
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-ink px-4 text-sm font-bold text-white transition-colors hover:bg-[#1B2433] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:px-5"
             >
               {n.search}
             </button>
@@ -251,7 +251,7 @@ export function NotFoundView() {
 
       {/* ── Rubriques principales ── */}
       <section aria-labelledby="nf-destinations" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">
-        <h2 id="nf-destinations" className="text-xl font-extrabold tracking-tight text-[#0B1220] sm:text-2xl">
+        <h2 id="nf-destinations" className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
           {n.whereTo}
         </h2>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -259,18 +259,18 @@ export function NotFoundView() {
             <li key={destination}>
               <Link
                 href={destination}
-                className="group flex h-full items-start gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-[0_14px_30px_-20px_rgba(11,18,32,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                className="group flex h-full items-start gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-[0_14px_30px_-20px_rgba(11,18,32,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
-                <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white transition-colors group-hover:bg-action">
+                <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-white transition-colors group-hover:bg-action">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-bold text-[#0B1220]">{n.destinations[key].title}</span>
+                  <span className="block font-bold text-ink">{n.destinations[key].title}</span>
                   <span className="mt-0.5 block text-sm leading-5 text-slate-600">{n.destinations[key].text}</span>
                 </span>
                 <ArrowRight
                   aria-hidden="true"
-                  className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-slate-600 rtl:rotate-180"
+                  className="mt-1 h-4 w-4 shrink-0 text-slate-300 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-slate-600 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                 />
               </Link>
             </li>
@@ -278,7 +278,7 @@ export function NotFoundView() {
         </ul>
         <p className="mt-8 text-center text-sm text-slate-600">
           {n.brokenLink}{' '}
-          <Link href="/contact" className="font-semibold text-[#0B1220] underline underline-offset-4 hover:text-accent-text">
+          <Link href="/contact" className="font-semibold text-ink underline underline-offset-4 hover:text-accent-text">
             {n.report}
           </Link>
         </p>

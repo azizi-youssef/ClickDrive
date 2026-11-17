@@ -72,7 +72,7 @@ export function TrackingShell({
 
   return (
     <TrackingAccessProvider value={access}>
-      <div className="flex min-h-screen bg-[#F5F6F8] text-[#0F172A]">
+      <div className="flex min-h-screen bg-canvas text-ink">
         <a href="#tracking-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3">
           Aller au contenu
         </a>
@@ -107,7 +107,7 @@ export function TrackingShell({
           <main id="tracking-content" className="mx-auto max-w-400 space-y-5 px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
             <div>
               <p className="truncate text-xs font-bold uppercase tracking-[0.16em] text-accent-text">{agency.name}</p>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[32px]">Suivi GPS</h1>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-ink sm:text-[32px]">Suivi GPS</h1>
             </div>
 
             {access.supportMode && (
@@ -128,8 +128,8 @@ export function TrackingShell({
                         href={tab.href}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
-                          'inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                          active ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+                          'inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+                          active ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
                         )}
                       >
                         <Icon aria-hidden="true" className="h-4 w-4" />

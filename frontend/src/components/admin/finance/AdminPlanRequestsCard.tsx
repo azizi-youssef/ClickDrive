@@ -80,7 +80,7 @@ export function AdminPlanRequestsCard() {
           {requests.map((request) => (
             <li key={request.id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-[#0B1220]">{request.agency_name ?? 'Agence'}</p>
+                <p className="text-sm font-bold text-ink">{request.agency_name ?? 'Agence'}</p>
                 <p className="mt-0.5 text-sm text-slate-600">
                   {request.current_plan_name ?? 'Sans formule'} → <strong>{request.requested_plan.name}</strong> ·{' '}
                   {formatPrice(request.amount_due)} / mois · demandé le{' '}
@@ -103,7 +103,7 @@ export function AdminPlanRequestsCard() {
                   type="button"
                   disabled={busyId === request.id}
                   onClick={() => void decide(request, 'APPROVED')}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#0B1220] px-3 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
                 >
                   {busyId === request.id && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
                   Paiement reçu : appliquer

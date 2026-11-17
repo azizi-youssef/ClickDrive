@@ -114,8 +114,8 @@ function VehicleUsageCard({ report }: { report: AgencyAnalyticsReport }) {
               aria-pressed={sort === option.value}
               onClick={() => setSort(option.value)}
               className={cn(
-                'min-h-7 rounded-md px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                sort === option.value ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+                'min-h-7 rounded-md px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                sort === option.value ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
               )}
             >
               {option.label}
@@ -166,7 +166,7 @@ function OccupancyBar({ item }: { item: VehicleUsage }) {
   return (
     <span className="flex items-center gap-2">
       <span className="h-2 w-24 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
-        <span className="block h-full rounded-full bg-[#0B1220]" style={{ width: `${Math.min(100, item.occupancyRate ?? 0)}%` }} />
+        <span className="block h-full rounded-full bg-ink" style={{ width: `${Math.min(100, item.occupancyRate ?? 0)}%` }} />
       </span>
       <span className="text-xs font-bold tabular-nums text-slate-900">{formatRate(item.occupancyRate)}</span>
     </span>

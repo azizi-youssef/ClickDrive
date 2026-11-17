@@ -48,7 +48,7 @@ function FleetBadge({ count }: { count: AdminAgency['vehicle_count'] }) {
 function PlanBadge({ subscription }: { subscription?: AgencySubscription }) {
   if (!subscription) return <span className="text-xs text-slate-500">Non abonné</span>;
   return (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#0B1220]">
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-ink">
       <Sparkles className="h-3 w-3 text-amber-500" aria-hidden="true" />
       {subscription.plan.name}
     </span>

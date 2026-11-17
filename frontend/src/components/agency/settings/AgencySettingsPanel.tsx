@@ -207,7 +207,7 @@ function DiscountTiersEditor({
             return (
               <div
                 key={index}
-                className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-[#F5F6F8]/70 px-3 py-2.5 text-sm text-[#0B1220]"
+                className="flex flex-wrap items-center gap-x-2 gap-y-2 rounded-xl border border-slate-200 bg-canvas/70 px-3 py-2.5 text-sm text-ink"
               >
                 <span className="font-semibold">À partir de</span>
                 <input
@@ -219,7 +219,7 @@ function DiscountTiersEditor({
                   aria-label={`${list.title}, palier ${index + 1} : durée minimale en jours`}
                   aria-invalid={invalid || undefined}
                   onChange={(e) => updateRow({ days: e.target.value.replace(/\D/g, '') })}
-                  className={cn(input, 'w-16 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                  className={cn(input, 'w-16 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-brand')}
                 />
                 <span>jours</span>
                 <span aria-hidden="true" className="text-slate-400">→</span>
@@ -234,7 +234,7 @@ function DiscountTiersEditor({
                     aria-label={`${list.title}, palier ${index + 1} : remise en pourcentage`}
                     aria-invalid={invalid || undefined}
                     onChange={(e) => updateRow({ percent: e.target.value.replace(/\D/g, '') })}
-                    className={cn(input, 'w-20 pe-7 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-[#E63946]')}
+                    className={cn(input, 'w-20 pe-7 text-center font-semibold disabled:bg-white aria-[invalid=true]:border-brand')}
                   />
                   <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-3 flex items-center font-semibold text-slate-500">
                     %
@@ -246,7 +246,7 @@ function DiscountTiersEditor({
                     type="button"
                     onClick={() => onChange(rows.filter((_, i) => i !== index))}
                     aria-label={`${list.title} : retirer le palier ${index + 1}`}
-                    className="ms-auto flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-[#B4232F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                    className="ms-auto flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -258,7 +258,7 @@ function DiscountTiersEditor({
       </div>
 
       {error && (
-        <p id={`${id}-error`} className="flex items-start gap-1 text-xs font-semibold text-[#B4232F]">
+        <p id={`${id}-error`} className="flex items-start gap-1 text-xs font-semibold text-action-hover">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
@@ -302,9 +302,9 @@ function DiscountTiersEditor({
 
 function Card({ icon: Icon, title, description, children }: { icon: typeof Building2; title: string; description: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+    <section className="rounded-2xl border border-slate-200/80 bg-white shadow-card">
       <header className="flex items-start gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
-        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
+        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-canvas text-ink">
           <Icon className="h-4.5 w-4.5" />
         </span>
         <div>
@@ -336,13 +336,13 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-1 text-[13px] font-bold text-[#0B1220]">
+      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-1 text-[13px] font-bold text-ink">
         {label}
         {required && <span className="text-accent-text" aria-hidden="true">*</span>}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 flex items-start gap-1 text-xs font-semibold text-[#B4232F]">
+        <p id={`${id}-error`} className="mt-1.5 flex items-start gap-1 text-xs font-semibold text-action-hover">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
@@ -466,7 +466,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
     disabled: !canManage || saving,
     'aria-invalid': errors[key] ? true : undefined,
     'aria-describedby': errors[key] ? `${uid}-${key}-error` : undefined,
-    className: cn(input, 'disabled:bg-[#F5F6F8] aria-[invalid=true]:border-[#E63946] aria-[invalid=true]:bg-[#FFF6F7]'),
+    className: cn(input, 'disabled:bg-canvas aria-[invalid=true]:border-brand aria-[invalid=true]:bg-brand-soft'),
   });
 
   if (loading) {
@@ -569,7 +569,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
               <input type="text" maxLength={300} onChange={(e) => update('opening_hours', e.target.value)} {...fieldProps('opening_hours')} />
             </Field>
             <fieldset>
-              <legend className="mb-1.5 text-[13px] font-bold text-[#0B1220]">Langues parlées à l’agence</legend>
+              <legend className="mb-1.5 text-[13px] font-bold text-ink">Langues parlées à l’agence</legend>
               <div className="flex flex-wrap gap-2">
                 {AGENCY_LANGUAGES.map(({ code, label }) => {
                   const selected = form.languages.split(',').filter(Boolean);
@@ -579,7 +579,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
                       key={code}
                       className={cn(
                         'inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors',
-                        checked ? 'border-[#0B1220] bg-[#0B1220] text-white' : 'border-slate-200 text-slate-700 hover:border-slate-300',
+                        checked ? 'border-ink bg-ink text-white' : 'border-slate-200 text-slate-700 hover:border-slate-300',
                         (!canManage || saving) && 'cursor-not-allowed opacity-60'
                       )}
                     >
@@ -660,7 +660,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
             />
           </Card>
 
-          <section aria-labelledby={`${uid}-preview`} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+          <section aria-labelledby={`${uid}-preview`} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
             <div className="flex items-center justify-between gap-2 px-5 py-3">
               <h2 id={`${uid}-preview`} className={cn('flex items-center gap-2', heading.block)}>
                 <Eye className="h-4 w-4 text-accent-text" aria-hidden="true" />
@@ -673,7 +673,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
                 </Link>
               )}
             </div>
-            <div className="relative h-24 bg-linear-to-br from-[#0B1220] to-slate-700">
+            <div className="relative h-24 bg-linear-to-br from-ink to-slate-700">
               {branding.banner_url && (
                 // eslint-disable-next-line @next/next/no-img-element -- URL publique de la bannière
                 <img src={branding.banner_url} alt="" className="h-full w-full object-cover" />
@@ -688,7 +688,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
               </div>
             </div>
             <div className="space-y-2.5 px-5 pb-5 pt-9">
-              <p className="truncate text-base font-extrabold text-[#0B1220]">{form.name.trim() || 'Nom de l’agence'}</p>
+              <p className="truncate text-base font-extrabold text-ink">{form.name.trim() || 'Nom de l’agence'}</p>
               {(form.city || form.address) && (
                 <p className="flex items-start gap-1.5 text-xs text-slate-500">
                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -700,7 +700,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
               </p>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {form.phone && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F6F8] px-2.5 py-1 text-[11px] font-semibold text-[#0B1220]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink">
                     <Phone className="h-3 w-3" aria-hidden="true" />
                     {form.phone}
                   </span>
@@ -712,7 +712,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
                   </span>
                 )}
                 {form.email && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F6F8] px-2.5 py-1 text-[11px] font-semibold text-[#0B1220]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink">
                     <Mail className="h-3 w-3" aria-hidden="true" />
                     E-mail
                   </span>
@@ -726,7 +726,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
       {/* ── Mon compte (profil personnel, distinct de l'agence) ── */}
       <section aria-labelledby={`${uid}-account`} className="space-y-4 border-t border-slate-200 pt-8">
         <div className="flex items-start gap-3">
-          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white">
+          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
             <UserRound className="h-4.5 w-4.5" />
           </span>
           <div>
@@ -746,7 +746,7 @@ export function AgencySettingsPanel({ agencyId, canManage }: { agencyId: string;
           aria-live="polite"
         >
           <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.45)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:ps-5">
-            <p className={cn('flex items-center gap-2 text-sm font-semibold', saveError ? 'text-[#B4232F]' : dirty ? 'text-[#0B1220]' : 'text-emerald-700')}>
+            <p className={cn('flex items-center gap-2 text-sm font-semibold', saveError ? 'text-action-hover' : dirty ? 'text-ink' : 'text-emerald-700')}>
               {saveError ? (
                 <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
               ) : dirty ? (

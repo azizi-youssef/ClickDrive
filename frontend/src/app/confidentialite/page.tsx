@@ -13,7 +13,7 @@ const LAST_UPDATE = '26 octobre 2026';
 export default function ConfidentialitePage() {
   return (
     <LegalFrenchText>
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -23,7 +23,7 @@ export default function ConfidentialitePage() {
               <span className="text-slate-700 font-medium">Politique de Confidentialité</span>
             </nav>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B1220]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink">
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -86,7 +86,7 @@ export default function ConfidentialitePage() {
                     <ul className="space-y-1">
                       {items.map(item => (
                         <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
-                          <span className="h-1 w-1 rounded-full bg-[#E63946] shrink-0" />
+                          <span className="h-1 w-1 rounded-full bg-brand shrink-0" />
                           {item}
                         </li>
                       ))}
@@ -282,7 +282,7 @@ export default function ConfidentialitePage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-[#E63946] pl-4">{title}</h2>
+      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-brand pl-4">{title}</h2>
       <div className="space-y-3">{children}</div>
     </section>
   );

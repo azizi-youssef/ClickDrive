@@ -263,7 +263,7 @@ export function AdminCustomersClient() {
                       {/* Identité */}
                       <Td>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-[#0B1220] text-xs">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-ink text-xs">
                             {initials}
                           </div>
                           <div>
@@ -379,7 +379,7 @@ export function AdminCustomersClient() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full overflow-hidden">
             {/* Header Modal */}
-            <div className="bg-[#0B1220] text-white p-5 flex items-center justify-between">
+            <div className="bg-ink text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-white text-sm">
                   {selectedCustomer.name.slice(0, 2).toUpperCase()}
@@ -444,7 +444,7 @@ export function AdminCustomersClient() {
                     <div key={b.id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#0B1220]">{b.reference}</span>
+                          <span className="font-mono font-bold text-ink">{b.reference}</span>
                           <span className="font-medium text-slate-800">{b.vehicleName}</span>
                         </div>
                         <span className="text-slate-400 text-[11px]">

@@ -69,7 +69,7 @@ const statuses = [
   'REJECTED', 'ALTERNATIVE_PROPOSED', 'READY_FOR_PICKUP', 'ACTIVE', 'COMPLETED',
   'CANCELLED', 'EXPIRED', 'PENDING', 'CONFIRMED', 'NO_SHOW',
 ] as const;
-const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#0B1220] focus:ring-2 focus:ring-blue-100';
+const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-ink focus:ring-2 focus:ring-blue-100';
 const pageSize = 10;
 
 async function readApi<T>(response: Response): Promise<T> {
@@ -308,8 +308,8 @@ export default function AgencyAccessPanel({
         </div>
       )}
       <div role="tablist" aria-label="Accès agence" className="flex gap-2 overflow-x-auto">
-        <button type="button" role="tab" aria-selected={section === 'members'} onClick={() => setSection('members')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${section === 'members' ? 'bg-[#0B1220] text-white' : 'border border-slate-200 bg-white text-slate-700'}`}><Users className="mr-2 inline h-4 w-4" />Membres</button>
-        <button type="button" role="tab" aria-selected={section === 'customers'} onClick={() => setSection('customers')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${section === 'customers' ? 'bg-[#0B1220] text-white' : 'border border-slate-200 bg-white text-slate-700'}`}><Shield className="mr-2 inline h-4 w-4" />Locataires</button>
+        <button type="button" role="tab" aria-selected={section === 'members'} onClick={() => setSection('members')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${section === 'members' ? 'bg-ink text-white' : 'border border-slate-200 bg-white text-slate-700'}`}><Users className="mr-2 inline h-4 w-4" />Membres</button>
+        <button type="button" role="tab" aria-selected={section === 'customers'} onClick={() => setSection('customers')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${section === 'customers' ? 'bg-ink text-white' : 'border border-slate-200 bg-white text-slate-700'}`}><Shield className="mr-2 inline h-4 w-4" />Locataires</button>
       </div>
 
       {section === 'members' && (
@@ -320,7 +320,7 @@ export default function AgencyAccessPanel({
               <div><label htmlFor="member-role" className="mb-1 block text-sm font-semibold">Rôle autorisé</label><select id="member-role" className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value as AgencyMemberRole)}>
                 {(isSuperAdmin ? Object.keys(roles) as AgencyMemberRole[] : memberRole === 'agency_manager' ? ['agency_agent', 'viewer'] as AgencyMemberRole[] : ['agency_manager', 'agency_agent', 'viewer'] as AgencyMemberRole[]).map((role) => <option key={role} value={role}>{roles[role]}</option>)}
               </select></div>
-              <button type="submit" disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B1220] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><UserPlus className="h-4 w-4" />Inviter</button>
+              <button type="submit" disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><UserPlus className="h-4 w-4" />Inviter</button>
             </form>
           )}
           {!canReadMembers ? <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Votre rôle ne permet pas de consulter les membres de cette agence.</p> : (
@@ -361,7 +361,7 @@ export default function AgencyAccessPanel({
               <div><label htmlFor="customer-status" className="mb-1 block text-xs font-semibold">Statut</label><select id="customer-status" className={inputClass} value={customerStatus} onChange={(event) => { setCustomerStatus(event.target.value); setCustomerPage(1); }}><option value="">Tous</option>{statuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></div>
               <div><label htmlFor="customer-from" className="mb-1 block text-xs font-semibold">À partir du</label><input id="customer-from" type="date" className={inputClass} value={customerFrom} onChange={(event) => { setCustomerFrom(event.target.value); setCustomerPage(1); }} /></div>
               <div><label htmlFor="customer-to" className="mb-1 block text-xs font-semibold">Jusqu’au</label><input id="customer-to" type="date" className={inputClass} value={customerTo} onChange={(event) => { setCustomerTo(event.target.value); setCustomerPage(1); }} /></div>
-              <button type="submit" className="rounded-xl bg-[#0B1220] px-4 py-2.5 text-sm font-semibold text-white sm:col-span-2 lg:col-span-5">Rechercher</button>
+              <button type="submit" className="rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white sm:col-span-2 lg:col-span-5">Rechercher</button>
             </form>
             <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
               {customersLoading ? <p className="p-6 text-sm text-slate-500">Chargement des dossiers…</p> : customerRows.length === 0 ? <p className="p-6 text-sm text-slate-500">Aucun dossier client correspondant.</p> : <table className="w-full min-w-[800px] text-left text-sm">
@@ -369,7 +369,7 @@ export default function AgencyAccessPanel({
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Client</th><th className="px-4 py-3">Contact</th><th className="px-4 py-3">Réservation</th><th className="px-4 py-3">Période</th><th className="px-4 py-3">Statut</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr></thead>
                 <tbody className="divide-y divide-slate-100">{customerRows.map((customer) => {
                   const reference = customer.reference || customer.booking_ref || customer.id;
-                  return <tr key={customer.id}><td className="px-4 py-3"><p className="font-semibold">{customer.customer_name}</p><p className="text-xs text-slate-500">{customer.vehicle ? `${customer.vehicle.brand} ${customer.vehicle.model}` : 'Véhicule'}</p></td><td className="px-4 py-3"><p>{customer.customer_email}</p><p className="text-xs text-slate-500">{customer.customer_phone}</p></td><td className="px-4 py-3 font-mono text-xs">{reference}</td><td className="px-4 py-3">{customer.start_date} – {customer.end_date}</td><td className="px-4 py-3">{customer.status}</td><td className="px-4 py-3"><button type="button" onClick={() => void openDossier(reference)} className="font-semibold text-[#0B1220] underline">Dossier</button></td></tr>;
+                  return <tr key={customer.id}><td className="px-4 py-3"><p className="font-semibold">{customer.customer_name}</p><p className="text-xs text-slate-500">{customer.vehicle ? `${customer.vehicle.brand} ${customer.vehicle.model}` : 'Véhicule'}</p></td><td className="px-4 py-3"><p>{customer.customer_email}</p><p className="text-xs text-slate-500">{customer.customer_phone}</p></td><td className="px-4 py-3 font-mono text-xs">{reference}</td><td className="px-4 py-3">{customer.start_date} – {customer.end_date}</td><td className="px-4 py-3">{customer.status}</td><td className="px-4 py-3"><button type="button" onClick={() => void openDossier(reference)} className="font-semibold text-ink underline">Dossier</button></td></tr>;
                 })}</tbody>
               </table>}
               <div className="p-4"><Pagination meta={customerMeta} onChange={(page) => setCustomerPage(page)} /></div>

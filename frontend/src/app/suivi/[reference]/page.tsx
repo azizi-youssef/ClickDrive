@@ -59,14 +59,14 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
 
   if (!booking) {
     return (
-      <div className="bg-[#F8FAFC] px-4 py-16">
+      <div className="bg-slate-50 px-4 py-16">
         <div className="mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h1 className="text-xl font-extrabold text-[#0B1220]">{c.invalidTitle}</h1>
+          <h1 className="text-xl font-extrabold text-ink">{c.invalidTitle}</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             {c.invalidText}
           </p>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white hover:bg-slate-800">
+            <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-slate-800">
               {c.signIn}
             </Link>
             <a
@@ -99,7 +99,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
   const reviewLink = booking.status === 'COMPLETED' ? signedBookingLink('review', ref) : null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 py-10 pb-20 sm:px-6">
+    <div className="min-h-screen bg-slate-50 px-4 py-10 pb-20 sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -108,7 +108,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
                 <span className="font-mono text-xs font-bold text-slate-600">{ref}</span>
                 <StatusBadge status={booking.status} size="sm" locale={locale} />
               </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-3xl">{vehicleLabel}</h1>
+              <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">{vehicleLabel}</h1>
               <p className="mt-1 text-sm text-slate-600">
                 {firstName ? interpolate(c.introNamed, { name: firstName }) : c.intro} <strong>{booking.agency?.name ?? c.theAgency}</strong>.
               </p>
@@ -127,7 +127,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
                 href={contactUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-4 text-xs font-bold text-white hover:bg-slate-800"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-xs font-bold text-white hover:bg-slate-800"
               >
                 <MessageSquare className="h-4 w-4" aria-hidden="true" />
                 {isConfirmed && agencyDigits.length >= 8 ? c.contactAgency : c.support}
@@ -141,7 +141,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
         </div>
 
         <section aria-labelledby="tracking-details" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 id="tracking-details" className="text-sm font-bold text-[#0B1220]">
+          <h2 id="tracking-details" className="text-sm font-bold text-ink">
             {c.yourRequest}
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -149,7 +149,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
               <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{c.period}</dt>
-                <dd className="mt-1 text-sm font-bold capitalize text-[#0B1220]">
+                <dd className="mt-1 text-sm font-bold capitalize text-ink">
                   {formatDay(booking.start_date)} → {formatDay(booking.end_date)}
                 </dd>
               </div>
@@ -158,12 +158,12 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
               <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{c.pickup}</dt>
-                <dd className="mt-1 text-sm font-bold text-[#0B1220]">{booking.pickup_location ? locationLabel(t, booking.pickup_location) : c.atAgency}</dd>
+                <dd className="mt-1 text-sm font-bold text-ink">{booking.pickup_location ? locationLabel(t, booking.pickup_location) : c.atAgency}</dd>
               </div>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{c.estimatedTotal}</dt>
-              <dd className="mt-1 text-sm font-bold text-[#0B1220]">{formatMoney(booking.total_price, locale)}</dd>
+              <dd className="mt-1 text-sm font-bold text-ink">{formatMoney(booking.total_price, locale)}</dd>
               <dd className="text-xs text-slate-500">{c.payAtHandover}</dd>
             </div>
           </dl>
@@ -193,7 +193,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
             {reviewLink && (
               <Link
                 href={reviewLink}
-                className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white hover:bg-slate-800"
+                className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-slate-800"
               >
                 <Star className="h-4 w-4" aria-hidden="true" />
                 {c.leaveReview}

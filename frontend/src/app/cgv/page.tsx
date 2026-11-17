@@ -13,7 +13,7 @@ const LAST_UPDATE = '26 octobre 2026';
 export default function CGVPage() {
   return (
     <LegalFrenchText>
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -23,7 +23,7 @@ export default function CGVPage() {
               <span className="text-slate-700 font-medium">Conditions Générales de Vente</span>
             </nav>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B1220]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink">
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -70,9 +70,9 @@ export default function CGVPage() {
                 réservation, le Client doit :
               </Paragraph>
               <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#E63946] mt-2" />Fournir des informations exactes et complètes (nom, prénom, email, téléphone)</li>
-                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#E63946] mt-2" />Être âgé d&apos;au moins 21 ans et titulaire d&apos;un permis de conduire valide</li>
-                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#E63946] mt-2" />Disposer d&apos;une pièce d&apos;identité valide (CIN marocaine ou passeport)</li>
+                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand mt-2" />Fournir des informations exactes et complètes (nom, prénom, email, téléphone)</li>
+                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand mt-2" />Être âgé d&apos;au moins 21 ans et titulaire d&apos;un permis de conduire valide</li>
+                <li className="flex items-start gap-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand mt-2" />Disposer d&apos;une pièce d&apos;identité valide (CIN marocaine ou passeport)</li>
               </ul>
               <Paragraph>
                 Le Client est responsable de la confidentialité de ses identifiants. Toute
@@ -92,7 +92,7 @@ export default function CGVPage() {
                   { n: '4', t: 'Confirmation', d: 'L\'agence examine la demande et confirme ou informe le Client de la disponibilité dans les plus brefs délais.' },
                 ].map(step => (
                   <li key={step.n} className="flex items-start gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0B1220] text-[11px] font-bold text-white">{step.n}</span>
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">{step.n}</span>
                     <span><strong>{step.t} :</strong> {step.d}</span>
                   </li>
                 ))}
@@ -146,7 +146,7 @@ export default function CGVPage() {
                   'Signaler tout dommage ou incident à l\'agence dans les plus brefs délais',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E63946]" />
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
                     {item}
                   </li>
                 ))}
@@ -245,7 +245,7 @@ export default function CGVPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-[#E63946] pl-4">
+      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-brand pl-4">
         {title}
       </h2>
       <div className="space-y-3">{children}</div>

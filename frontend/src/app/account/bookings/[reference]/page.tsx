@@ -53,9 +53,9 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="bg-[#F8FAFC] min-h-screen py-16 flex items-center justify-center">
+      <div className="bg-slate-50 min-h-screen py-16 flex items-center justify-center">
         <div className="text-center space-y-3" role="status">
-          <div className="w-10 h-10 border-3 border-[#0B1220] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-10 h-10 border-3 border-ink border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-semibold text-slate-500">{c.loading}</p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
   if (notFound || !booking) {
     return (
-      <div className="bg-[#F8FAFC] min-h-screen py-16 px-4">
+      <div className="bg-slate-50 min-h-screen py-16 px-4">
         <div className="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 p-6 text-center space-y-4 shadow-sm">
           <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
@@ -73,7 +73,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
           <p className="text-xs text-slate-500">{fmt(c.notFoundText, { reference: referenceParam })}</p>
           <Link
             href="/account"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B1220] text-white text-xs font-semibold"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ink text-white text-xs font-semibold"
           >
             <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
             {c.backToAccount}
@@ -96,7 +96,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
   const days = plural(totalDays, c.days);
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-10 pb-20">
+    <div className="bg-slate-50 min-h-screen py-10 pb-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         {/* Navigation retour */}
@@ -109,7 +109,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
             <span>{c.backToBookings}</span>
           </Link>
 
-          <span className="text-xs text-slate-400 font-mono">{reference}</span>
+          <span className="text-xs text-slate-500 font-mono">{reference}</span>
         </div>
 
         {/* Statut */}
@@ -138,7 +138,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 rel="noopener noreferrer"
                 className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-bold text-xs flex items-center gap-2 shadow-sm transition-all"
               >
-                <Download className="w-4 h-4 text-[#0B1220]" />
+                <Download className="w-4 h-4 text-ink" />
                 <span>{isConfirmed ? tracking.voucherConfirmed : tracking.voucherRequest}</span>
               </a>
 
@@ -149,7 +149,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 className={`min-h-11 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm transition-all ${
                   contactAgency
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-[#0B1220] hover:bg-slate-800 text-white'
+                    : 'bg-ink hover:bg-slate-800 text-white'
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
@@ -172,13 +172,13 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
             <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#0B1220]" />
+                <Calendar className="w-4 h-4 text-ink" />
                 <span>{c.terms}</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="p-3 bg-slate-50 rounded-xl">
-                  <span className="text-[11px] font-bold uppercase text-slate-400 block mb-0.5">{c.pickup}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block mb-0.5">{c.pickup}</span>
                   <p className="font-bold text-slate-900">
                     {fmt(c.dateAt, { date: date(booking.start_date, 'medium'), time: booking.pickup_time || '10:00' })}
                   </p>
@@ -186,7 +186,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl">
-                  <span className="text-[11px] font-bold uppercase text-slate-400 block mb-0.5">{c.return}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block mb-0.5">{c.return}</span>
                   <p className="font-bold text-slate-900">
                     {fmt(c.dateAt, { date: date(booking.end_date, 'medium'), time: booking.dropoff_time || '10:00' })}
                   </p>
@@ -196,7 +196,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
 
               {/* Point de rendez-vous avec consignes */}
               <div className="pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-bold uppercase text-slate-400 block mb-1">{c.meetingPoint}</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block mb-1">{c.meetingPoint}</span>
                 <MeetingPointBadge location={booking.pickup_location} showInstructions={true} />
               </div>
 
@@ -213,19 +213,19 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
               </h3>
               <div className="grid grid-cols-2 gap-3 text-slate-700">
                 <div>
-                  <span className="text-[11px] text-slate-400 block">{c.fullName}</span>
+                  <span className="text-[11px] text-slate-500 block">{c.fullName}</span>
                   <span className="font-semibold">{booking.customer_name}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-slate-400 block">{c.phone}</span>
+                  <span className="text-[11px] text-slate-500 block">{c.phone}</span>
                   <span className="font-semibold" dir="ltr">{booking.customer_phone}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-slate-400 block">{c.idNumber}</span>
+                  <span className="text-[11px] text-slate-500 block">{c.idNumber}</span>
                   <span className="font-semibold text-slate-900">{booking.cin || c.onSite}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-slate-400 block">{c.license}</span>
+                  <span className="text-[11px] text-slate-500 block">{c.license}</span>
                   <span className="font-semibold">{booking.license_number || c.onSite}</span>
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                 <span className="font-semibold text-slate-900">{money(Number(booking.total_price) || 0)}</span>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex justify-between text-sm font-extrabold text-[#0B1220]">
+              <div className="pt-2 border-t border-slate-100 flex justify-between text-sm font-extrabold text-ink">
                 <span>{c.total}</span>
                 <span>{money(Number(booking.total_price) || 0)}</span>
               </div>
@@ -268,7 +268,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                   <span>{c.deposit}</span>
                   <span className="font-bold text-slate-800">{money(Number(booking.deposit_amount) || 0)}</span>
                 </div>
-                <div className="flex justify-between gap-3 text-slate-400 text-[11px]">
+                <div className="flex justify-between gap-3 text-slate-500 text-[11px]">
                   <span>{c.payment}</span>
                   <span className="text-end">{c.paymentValue}</span>
                 </div>
@@ -278,7 +278,7 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
             {booking.agency && (
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3 text-xs">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[#0B1220]" />
+                  <Building2 className="w-4 h-4 text-ink" />
                   <span>{c.agency}</span>
                 </h3>
 
@@ -327,9 +327,9 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
                       href={conciergeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-2.5 px-3 rounded-xl bg-[#0B1220] text-white font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                      className="w-full py-2.5 px-3 rounded-xl bg-ink text-white font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
                     >
-                      <MessageSquare className="w-4 h-4 text-[#E63946]" />
+                      <MessageSquare className="w-4 h-4 text-brand" />
                       <span>{c.supportFollowUp}</span>
                     </a>
                   </>

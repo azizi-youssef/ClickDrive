@@ -37,7 +37,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
   while (index !== -1) {
     if (index > from) parts.push(text.slice(from, index));
     parts.push(
-      <mark key={index} className="rounded bg-[#E63946]/15 px-0.5 text-inherit">
+      <mark key={index} className="rounded bg-brand/15 px-0.5 text-inherit">
         {text.slice(index, index + q.length)}
       </mark>
     );
@@ -67,9 +67,9 @@ function FaqAccordionItem({
   return (
     <li
       id={item.id}
-      className={`scroll-mt-28 overflow-hidden rounded-2xl border bg-white transition-[border-color,box-shadow] duration-200 motion-reduce:transition-none ${
+      className={`scroll-mt-28 overflow-hidden rounded-2xl border bg-white transition-[border-color,box-shadow] duration-fast motion-reduce:transition-none ${
         open
-          ? 'border-[#0B1220]/15 shadow-[0_16px_36px_-24px_rgba(11,18,32,0.35)]'
+          ? 'border-ink/15 shadow-[0_16px_36px_-24px_rgba(11,18,32,0.35)]'
           : 'border-slate-200/80 hover:border-slate-300'
       }`}
     >
@@ -80,20 +80,20 @@ function FaqAccordionItem({
           aria-expanded={open}
           aria-controls={panelId}
           onClick={onToggle}
-          className="flex w-full items-center gap-4 px-4 py-4 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E63946] sm:px-6 sm:py-5"
+          className="flex w-full items-center gap-4 px-4 py-4 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:px-6 sm:py-5"
         >
           <span
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors motion-reduce:transition-none ${
-              open ? 'bg-action text-white' : 'bg-[#F5F6F8] text-slate-600'
+              open ? 'bg-action text-white' : 'bg-canvas text-slate-600'
             }`}
           >
             <Icon className="h-4.5 w-4.5" aria-hidden="true" />
           </span>
-          <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#0B1220] sm:text-base">
+          <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-ink sm:text-base">
             <Highlight text={item.question} query={query} />
           </span>
           <ChevronDown
-            className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 motion-reduce:transition-none ${
+            className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-fast motion-reduce:transition-none ${
               open ? 'rotate-180 text-accent-text' : ''
             }`}
             aria-hidden="true"
@@ -107,7 +107,7 @@ function FaqAccordionItem({
           </p>
           <a
             href={`#${item.id}`}
-            className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg text-xs font-semibold text-ink-secondary transition-colors hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+            className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg text-xs font-semibold text-ink-secondary transition-colors hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
             {t.faq.ui.linkToQuestion}
@@ -187,9 +187,9 @@ export function FaqClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] pb-20 text-[#0B1220]">
+    <div className="min-h-screen bg-canvas pb-20 text-ink">
       {/* ── Hero + recherche ─────────────────────────────────────────── */}
-      <section aria-labelledby="faq-title" className="relative overflow-hidden bg-[#0B1220] text-white">
+      <section aria-labelledby="faq-title" className="relative overflow-hidden bg-ink text-white">
         {/* Photo en fond, voile marine pour garder le texte blanc lisible (contraste AA) — comme les catalogues et les agences */}
         <Image
           src={faqHeroImage}
@@ -203,11 +203,11 @@ export function FaqClient() {
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#0B1220]/95 via-[#0B1220]/80 to-[#0B1220]/50 rtl:bg-linear-to-l"
+          className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/95 via-ink/80 to-ink/50 rtl:bg-linear-to-l"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0B1220]/85 via-transparent to-[#0B1220]/45"
+          className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/85 via-transparent to-ink/45"
         />
         <div
           aria-hidden="true"
@@ -215,10 +215,10 @@ export function FaqClient() {
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -end-24 -top-24 h-80 w-80 rounded-full bg-[#E63946]/20 blur-3xl"
+          className="pointer-events-none absolute -end-24 -top-24 h-80 w-80 rounded-full bg-brand/20 blur-3xl"
         />
         <div className="relative mx-auto max-w-[1180px] px-4 pb-24 pt-12 sm:px-6 sm:pt-16 lg:px-8">
-          <p className="inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#FF6B76]">
+          <p className="inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent-on-dark">
             <span className="h-px w-7 bg-current" aria-hidden="true" />
             {ui.eyebrow}
           </p>
@@ -245,7 +245,7 @@ export function FaqClient() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={ui.searchPlaceholder}
-              className="h-14 w-full rounded-xl bg-[#F5F6F8] pe-12 ps-12 text-base font-medium text-[#0B1220] placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10 [&::-webkit-search-cancel-button]:hidden"
+              className="h-14 w-full rounded-xl bg-canvas pe-12 ps-12 text-base font-medium text-ink placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-ink/10 [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
@@ -281,14 +281,14 @@ export function FaqClient() {
                     onClick={() => setCategory(cat.id)}
                     className={`flex min-h-11 w-full items-center justify-between gap-3 whitespace-nowrap rounded-xl px-4 text-sm font-bold transition-colors motion-reduce:transition-none lg:whitespace-normal lg:text-start ${
                       active
-                        ? 'bg-[#0B1220] text-white'
-                        : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-[#0B1220] lg:border-transparent lg:bg-transparent lg:hover:bg-white'
+                        ? 'bg-ink text-white'
+                        : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-ink lg:border-transparent lg:bg-transparent lg:hover:bg-white'
                     }`}
                   >
                     {cat.label}
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] tabular-nums ${
-                        active ? 'bg-white/15 text-white' : 'bg-[#F5F6F8] text-ink-tertiary'
+                        active ? 'bg-white/15 text-white' : 'bg-canvas text-ink-tertiary'
                       }`}
                     >
                       {cat.count}
@@ -300,14 +300,14 @@ export function FaqClient() {
           </ul>
 
           <div className="mt-6 hidden rounded-2xl border border-slate-200/80 bg-white p-5 lg:block">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-accent-text">
               <MessageSquare className="h-5 w-5" aria-hidden="true" />
             </span>
             <p className="mt-4 font-extrabold">{ui.needAnswer}</p>
             <p className="mt-1.5 text-sm leading-6 text-slate-600">{ui.needAnswerText}</p>
             <Link
               href="/contact"
-              className="mt-4 inline-flex min-h-10 items-center gap-1.5 text-sm font-bold text-accent-text hover:text-[#C92F3B]"
+              className="mt-4 inline-flex min-h-10 items-center gap-1.5 text-sm font-bold text-accent-text hover:text-accent-text"
             >
               {ui.contactUs}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -318,7 +318,7 @@ export function FaqClient() {
         <section aria-label={ui.qaAria} className="mt-6 min-w-0 lg:mt-0">
           {results.length === 0 ? (
             <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F6F8] text-accent-text">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-canvas text-accent-text">
                 <FileQuestion className="h-7 w-7" aria-hidden="true" />
               </span>
               <h2 className="mt-4 text-lg font-extrabold">{ui.noMatchTitle}</h2>
@@ -330,13 +330,13 @@ export function FaqClient() {
                     setQuery('');
                     setCategory('all');
                   }}
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-ink px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
                 >
                   {ui.seeAll}
                 </button>
                 <Link
                   href="/contact"
-                  className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-bold text-[#0B1220] transition-colors hover:bg-slate-50"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-bold text-ink transition-colors hover:bg-slate-50"
                 >
                   {ui.contactUs}
                 </Link>
@@ -382,14 +382,14 @@ export function FaqClient() {
           )}
 
           {/* ── Encore une question ? ─────────────────────────────── */}
-          <div className="relative mt-12 overflow-hidden rounded-3xl bg-[#0B1220] p-7 text-white sm:p-10">
+          <div className="relative mt-12 overflow-hidden rounded-3xl bg-ink p-7 text-white sm:p-10">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -end-20 -top-24 h-64 w-64 rounded-full bg-[#E63946]/25 blur-3xl"
+              className="pointer-events-none absolute -end-20 -top-24 h-64 w-64 rounded-full bg-brand/25 blur-3xl"
             />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-[#FF6B76]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-accent-on-dark">
                   <HelpCircle className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <h2 className="mt-4 text-2xl font-extrabold leading-tight">{ui.moreTitle}</h2>

@@ -206,7 +206,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dir}
       data-scroll-behavior="smooth"
-      className={`h-full scroll-smooth ${plusJakartaSans.variable}${dir === 'rtl' ? ' is-rtl' : ''}`}
+      className={`h-full scroll-smooth ${plusJakartaSans.variable}`}
       suppressHydrationWarning
     >
       {/* Nettoyage des attributs d'extensions navigateur avant l'hydratation : voir src/instrumentation-client.ts */}

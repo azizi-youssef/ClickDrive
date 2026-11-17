@@ -148,7 +148,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
             <span className="text-xl font-black text-slate-900">{formatPrice(plan.price_monthly)}</span>
             <span className="text-xs text-slate-500">/ mois</span>
           </div>
-          <p className="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1">
+          <p className="mt-1 text-xs text-emerald-700 font-semibold flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             0 % de commission prélevée
           </p>

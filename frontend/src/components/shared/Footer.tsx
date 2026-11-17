@@ -55,8 +55,8 @@ function NavItem({
         href={href}
         className={cn(
           // Cible tactile ≥ 44 px en mobile, liste plus dense sur desktop
-          'group flex min-h-11 items-center justify-between rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[#E63946] md:min-h-0 md:py-1.5 md:text-[13px]',
-          highlight ? 'font-semibold text-[#FF6B76] hover:text-white' : 'text-slate-300 hover:text-white'
+          'group flex min-h-11 items-center justify-between rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand md:min-h-0 md:py-1.5 md:text-[13px]',
+          highlight ? 'font-semibold text-accent-on-dark hover:text-white' : 'text-slate-300 hover:text-white'
         )}
       >
         <span className="flex items-center gap-2.5">
@@ -64,7 +64,7 @@ function NavItem({
             <span
               className={cn(
                 'text-slate-400 transition-colors',
-                highlight ? 'text-[#FF6B76]' : 'group-hover:text-[#FF6B76]'
+                highlight ? 'text-accent-on-dark' : 'group-hover:text-accent-on-dark'
               )}
             >
               {icon}
@@ -75,8 +75,8 @@ function NavItem({
 
         <ChevronRight
           className={cn(
-            'h-4 w-4 shrink-0 text-slate-500 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100',
-            highlight && 'text-[#FF6B76] md:opacity-100',
+            'h-4 w-4 shrink-0 text-slate-500 transition-all duration-fast md:opacity-0 md:group-hover:opacity-100',
+            highlight && 'text-accent-on-dark md:opacity-100',
             isRTL ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'
           )}
           aria-hidden="true"
@@ -123,7 +123,7 @@ function FooterColumn({
   return (
     <div className={cn('border-b border-white/8 md:border-b-0', className)}>
       <h3 className="mb-4 hidden items-center gap-2 text-xs font-bold uppercase tracking-wider text-white md:flex">
-        <span className="h-1 w-3.5 rounded-full bg-[#E63946]" aria-hidden="true" />
+        <span className="h-1 w-3.5 rounded-full bg-brand" aria-hidden="true" />
         {title}
       </h3>
       <h3 className="md:hidden">
@@ -132,13 +132,13 @@ function FooterColumn({
           onClick={toggle}
           aria-expanded={open}
           aria-controls={listId}
-          className="flex min-h-13 w-full items-center justify-between gap-3 text-start text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E63946]"
+          className="flex min-h-13 w-full items-center justify-between gap-3 text-start text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
         >
           <span className="flex items-center gap-3">
             <span
               className={cn(
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                open ? 'bg-[#E63946]/15 text-[#FF6B76]' : 'bg-white/5 text-slate-400'
+                open ? 'bg-brand/15 text-accent-on-dark' : 'bg-white/5 text-slate-400'
               )}
               aria-hidden="true"
             >
@@ -148,7 +148,7 @@ function FooterColumn({
           </span>
           <ChevronDown
             className={cn(
-              'h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 motion-reduce:transition-none',
+              'h-4 w-4 shrink-0 text-slate-400 transition-transform duration-fast motion-reduce:transition-none',
               open && 'rotate-180 text-white'
             )}
             aria-hidden="true"
@@ -190,12 +190,12 @@ export function Footer() {
   ];
 
   const legalLinkClass =
-    'inline-flex min-h-11 items-center transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-[#E63946] sm:min-h-6';
+    'inline-flex min-h-11 items-center transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-brand sm:min-h-6';
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/6 bg-[#0B1220] text-slate-300" role="contentinfo">
+    <footer className="relative overflow-hidden border-t border-white/6 bg-ink text-slate-300" role="contentinfo">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 right-1/4 h-80 w-80 rounded-full bg-[#E63946]/6 blur-3xl" />
+        <div className="absolute -top-32 right-1/4 h-80 w-80 rounded-full bg-brand/6 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -208,7 +208,7 @@ export function Footer() {
             {trustItems.map(({ icon: Icon, title, desc }) => (
               <li key={title} className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3.5 sm:text-start">
                 <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E63946]/20 bg-[#E63946]/10 text-[#FF6B76]"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand/20 bg-brand/10 text-accent-on-dark"
                   aria-hidden="true"
                 >
                   <Icon className="h-5 w-5" />
@@ -231,7 +231,7 @@ export function Footer() {
             <Link
               href="/"
               aria-label={strings.homeAria}
-              className="inline-flex items-center rounded-xl bg-white px-3.5 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+              className="inline-flex items-center rounded-xl bg-white px-3.5 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               <Image src={brandLogo} alt="ClickDrive" sizes="160px" className="h-9 w-auto" />
             </Link>

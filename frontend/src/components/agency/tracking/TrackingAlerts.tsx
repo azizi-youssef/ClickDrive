@@ -39,13 +39,13 @@ function AlertCard({ alert, now, canAcknowledge, busy, onAcknowledge }: { alert:
               <Icon aria-hidden="true" className="h-3.5 w-3.5" />
               {SEVERITY_LABELS[alert.severity]}
             </span>
-            <span className="text-sm font-bold text-[#0F172A]">{ALERT_TYPE_LABELS[alert.type] ?? alert.title}</span>
+            <span className="text-sm font-bold text-ink">{ALERT_TYPE_LABELS[alert.type] ?? alert.title}</span>
             {alert.ongoing && <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">En cours</span>}
             {alert.resolved_at && !acknowledged && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Résolue</span>}
           </div>
           <p className="mt-1.5 text-sm text-slate-700">{alert.description}</p>
           <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-            <Link href={`/agency/tracking/vehicles/${alert.vehicle.id}`} className="font-medium text-[#0B1220] underline-offset-2 hover:underline">
+            <Link href={`/agency/tracking/vehicles/${alert.vehicle.id}`} className="font-medium text-ink underline-offset-2 hover:underline">
               {alert.vehicle.brand} {alert.vehicle.model}{alert.vehicle.unit_number ? ` · ${alert.vehicle.unit_number}` : ''}
             </Link>
             <time dateTime={alert.occurred_at} title={new Date(alert.occurred_at).toLocaleString('fr-FR')}>{formatAge(alert.occurred_at, now)}</time>
@@ -125,13 +125,13 @@ export function TrackingAlerts({ initialVehicleId = '' }: { initialVehicleId?: s
       <SectionTitle
         title="Alertes de suivi"
         description="Boîtier hors ligne, zones, vitesse, mouvement inattendu et signaux matériels (uniquement si le boîtier les fournit)."
-        action={data ? <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#0F172A]"><BellRing aria-hidden="true" className="h-4 w-4 text-slate-400" />{data.open_total} ouverte{data.open_total > 1 ? 's' : ''}</p> : undefined}
+        action={data ? <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink"><BellRing aria-hidden="true" className="h-4 w-4 text-slate-400" />{data.open_total} ouverte{data.open_total > 1 ? 's' : ''}</p> : undefined}
       />
 
       <Card className="p-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <label htmlFor="alert-status" className="mb-1 block text-xs font-medium text-[#64748B]">Statut</label>
+            <label htmlFor="alert-status" className="mb-1 block text-xs font-medium text-ink-secondary">Statut</label>
             <select id="alert-status" className={selectClass} value={status} onChange={(event) => onFilter(setStatus)(event.target.value as StatusFilter)}>
               <option value="OPEN">Ouvertes</option>
               <option value="ACKNOWLEDGED">Prises en compte</option>
@@ -139,14 +139,14 @@ export function TrackingAlerts({ initialVehicleId = '' }: { initialVehicleId?: s
             </select>
           </div>
           <div>
-            <label htmlFor="alert-type" className="mb-1 block text-xs font-medium text-[#64748B]">Type</label>
+            <label htmlFor="alert-type" className="mb-1 block text-xs font-medium text-ink-secondary">Type</label>
             <select id="alert-type" className={selectClass} value={type} onChange={(event) => onFilter(setType)(event.target.value as AlertType | '')}>
               <option value="">Tous les types</option>
               {ALERT_TYPES.map((value) => <option key={value} value={value}>{ALERT_TYPE_LABELS[value]}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="alert-severity" className="mb-1 block text-xs font-medium text-[#64748B]">Gravité</label>
+            <label htmlFor="alert-severity" className="mb-1 block text-xs font-medium text-ink-secondary">Gravité</label>
             <select id="alert-severity" className={selectClass} value={severity} onChange={(event) => onFilter(setSeverity)(event.target.value as AlertSeverity | '')}>
               <option value="">Toutes</option>
               {ALERT_SEVERITIES.map((value) => <option key={value} value={value}>{SEVERITY_LABELS[value]}</option>)}

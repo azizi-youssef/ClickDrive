@@ -129,9 +129,9 @@ export default function AccountPage() {
   ] as const;
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen pb-16">
+    <div className="bg-slate-50 min-h-screen pb-16">
       {/* Profile Header */}
-      <div className="bg-linear-to-br from-[#0B1220] via-[#0F172A] to-[#1E293B] text-white pt-10 pb-20 border-b border-slate-800">
+      <div className="bg-linear-to-br from-ink via-ink to-slate-800 text-white pt-10 pb-20 border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -160,7 +160,7 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">
                   {displayEmail}
                 </p>
 
@@ -203,7 +203,7 @@ export default function AccountPage() {
         {!user && !loadingUser && (
           <div className="mb-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#E63946]/10 text-accent-text flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand/10 text-accent-text flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
@@ -237,7 +237,7 @@ export default function AccountPage() {
                   className={cn(
                     'flex items-center gap-2 px-5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors',
                     activeTab === tab.id
-                      ? 'border-[#E63946] text-accent-text'
+                      ? 'border-brand text-accent-text'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
                   )}
                 >
@@ -260,7 +260,7 @@ export default function AccountPage() {
                 <h2 className="text-sm font-bold text-slate-900">{c.historyTitle}</h2>
 
                 {loadingBookings ? (
-                  <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
+                  <div className="flex items-center justify-center py-12 text-slate-500 gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-accent-text" />
                     <span className="text-xs">{c.loading}</span>
                   </div>
@@ -274,7 +274,7 @@ export default function AccountPage() {
                           className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center gap-3 justify-between"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 text-[#0B1220] flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 text-ink flex items-center justify-center shrink-0">
                               <Car className="w-5 h-5" />
                             </div>
                             <div>
@@ -296,7 +296,7 @@ export default function AccountPage() {
 
                           <div className="flex items-center gap-3 justify-between sm:justify-end sm:border-s sm:border-slate-200 sm:ps-4">
                             <div className="text-start sm:text-end">
-                              <span className="text-[11px] text-slate-400 block">{c.estimatedTotal}</span>
+                              <span className="text-[11px] text-slate-500 block">{c.estimatedTotal}</span>
                               <span className="text-sm font-extrabold text-slate-900">
                                 {money(Number(booking.total_price) || 0)}
                               </span>
@@ -326,14 +326,14 @@ export default function AccountPage() {
                                 </button>
                               )}
                               {booking.status === 'COMPLETED' && reviewedBookingIds.has(booking.id) && (
-                                <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold">
+                                <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold">
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                   {c.reviewed}
                                 </span>
                               )}
                               <Link
                                 href={`/account/bookings/${encodeURIComponent(reference)}`}
-                                className="px-3 py-1.5 rounded-lg bg-[#0B1220] text-white text-xs font-bold hover:bg-slate-800 transition shadow-2xs"
+                                className="px-3 py-1.5 rounded-lg bg-ink text-white text-xs font-bold hover:bg-slate-800 transition shadow-2xs"
                               >
                                 {c.track}
                               </Link>
@@ -349,7 +349,7 @@ export default function AccountPage() {
                       <Car className="w-6 h-6 text-accent-text" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-[#0B1220]">{c.emptyTitle}</p>
+                      <p className="text-sm font-bold text-ink">{c.emptyTitle}</p>
                       <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">{c.emptyText}</p>
                     </div>
                     <div className="pt-2 flex justify-center">

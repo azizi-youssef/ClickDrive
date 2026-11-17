@@ -38,6 +38,7 @@ import { CATALOG_PATHS, vehicleTypeOf, type VehicleType } from '@/lib/vehicles/k
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 import { BrandMarquee, normalizeBrandKey } from '@/components/shared/BrandMarquee';
 import { useFavoriteIds } from '@/lib/ui/use-favorites';
+import { usePresence } from '@/lib/ui/use-presence';
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -379,9 +380,9 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
 
   return (
     <>
-      <div className="min-h-screen bg-[#F5F6F8] pb-20">
+      <div className="min-h-screen bg-canvas pb-20">
         {/* ── En-tête graphite + recherche ─────────────────────────────── */}
-        <section className="relative overflow-hidden bg-[#0B1220] text-white">
+        <section className="relative overflow-hidden bg-ink text-white">
           {/* Photo en fond (voitures ou motos), voile marine pour garder le texte blanc lisible (contraste AA) */}
           <Image
             key={vehicleType}
@@ -396,11 +397,11 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#0B1220]/95 via-[#0B1220]/80 to-[#0B1220]/45 rtl:bg-linear-to-l"
+            className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/95 via-ink/80 to-ink/45 rtl:bg-linear-to-l"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0B1220]/80 via-transparent to-[#0B1220]/40"
+            className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/80 via-transparent to-ink/40"
           />
           <div
             aria-hidden="true"
@@ -408,7 +409,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -end-24 -top-24 h-72 w-72 rounded-full bg-[#E63946]/20 blur-3xl"
+            className="pointer-events-none absolute -end-24 -top-24 h-72 w-72 rounded-full bg-brand/20 blur-3xl"
           />
           <div className="relative mx-auto max-w-[1360px] px-4 pb-20 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-24">
             <nav aria-label={catalog.breadcrumbAria} className="mb-4 flex items-center gap-1.5 text-xs font-medium text-slate-400">
@@ -418,7 +419,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
             </nav>
 
             <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-on-dark">
-              <span className="h-px w-6 bg-[#E63946]" aria-hidden="true" />
+              <span className="h-px w-6 bg-brand" aria-hidden="true" />
               {catalog.eyebrow}
             </p>
             <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
@@ -449,7 +450,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     aria-current={active ? 'page' : undefined}
                     className={
                       active
-                        ? 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-extrabold text-[#0B1220] shadow-sm'
+                        ? 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-extrabold text-ink shadow-sm'
                         : 'inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-[13px] font-bold text-slate-200 transition-colors hover:bg-white/10 hover:text-white'
                     }
                   >
@@ -475,19 +476,19 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
               onClick={() => setMobileSearchOpen((open) => !open)}
               aria-expanded={mobileSearchOpen}
               aria-controls="catalog-search-form"
-              className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] sm:hidden"
+              className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-brand sm:hidden"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E63946]/10 text-accent-text" aria-hidden="true">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-accent-text" aria-hidden="true">
                 <Search className="h-5 w-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold text-[#0B1220]">{placeLabel}</span>
+                <span className="block truncate text-[15px] font-bold text-ink">{placeLabel}</span>
                 <span className="block truncate text-[13px] text-slate-600">
                   {hasPeriod ? `${shortDate(searchPeriod.startDate)} → ${shortDate(searchPeriod.endDate)}` : catalog.flexibleDates}
                   {filters.category && filters.category !== ALL_CATEGORIES ? ` · ${categoryLabel(t, filters.category)}` : ''}
                 </span>
               </span>
-              <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-[#0B1220]">
+              <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-ink">
                 {mobileSearchOpen ? catalog.close : catalog.edit}
                 <ChevronDown
                   className={cn('h-4 w-4 transition-transform motion-reduce:transition-none', mobileSearchOpen && 'rotate-180')}
@@ -515,7 +516,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
           <div className="lg:grid lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-8">
             {/* Sidebar filtres (desktop) */}
             <aside className="hidden lg:block" aria-label={catalog.filtersAria}>
-              <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+              <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-slate-200/80 bg-white px-5 py-4 shadow-card">
                 <CatalogFilters
                   filters={filters}
                   onChange={updateFilters}
@@ -533,7 +534,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                   <h2
                     id="results-heading"
                     tabIndex={-1}
-                    className="scroll-mt-32 text-lg font-extrabold text-[#0B1220] outline-none sm:text-xl"
+                    className="scroll-mt-32 text-lg font-extrabold text-ink outline-none sm:text-xl"
                   >
                     {vehiclesLoading
                       ? isMotoView
@@ -570,7 +571,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                   <button
                     type="button"
                     onClick={() => setMobileFilterOpen(true)}
-                    className="inline-flex h-11 flex-none items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 sm:flex-none lg:hidden"
+                    className="inline-flex h-11 flex-none items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-bold text-ink shadow-card transition-colors hover:border-slate-300 sm:flex-none lg:hidden"
                   >
                     <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                     {catalog.filters}
@@ -588,10 +589,10 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       onClick={() => updateFilters({ favoritesOnly: !filters.favoritesOnly })}
                       aria-pressed={filters.favoritesOnly}
                       className={cn(
-                        'inline-flex h-11 flex-none items-center justify-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors',
+                        'inline-flex h-11 flex-none items-center justify-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold shadow-card transition-colors',
                         filters.favoritesOnly
-                          ? 'border-[#F8C9CD] bg-[#FFF6F7] text-accent-text'
-                          : 'border-slate-200 bg-white text-[#0B1220] hover:border-slate-300'
+                          ? 'border-brand-line bg-brand-soft text-accent-text'
+                          : 'border-slate-200 bg-white text-ink hover:border-slate-300'
                       )}
                     >
                       <Heart className={cn('h-4 w-4', filters.favoritesOnly && 'fill-current')} aria-hidden="true" />
@@ -610,7 +611,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       id="sort-select"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortOption)}
-                      className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white pe-9 ps-3.5 text-[13px] font-bold text-[#0B1220] shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-colors hover:border-slate-300 focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10 sm:w-56 sm:ps-9"
+                      className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white pe-9 ps-3.5 text-[13px] font-bold text-ink shadow-card transition-colors hover:border-slate-300 focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10 sm:w-56 sm:ps-9"
                     >
                       {SORT_OPTIONS.map((option) => (
                         <option key={option} value={option}>
@@ -633,7 +634,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       key={chip.key}
                       type="button"
                       onClick={() => updateFilters(chip.clear)}
-                      className="tap-44 inline-flex h-9 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white pe-2.5 ps-3 text-xs font-semibold text-slate-700 transition-colors hover:border-[#E63946]/40 hover:text-accent-text"
+                      className="tap-44 inline-flex h-9 max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white pe-2.5 ps-3 text-xs font-semibold text-slate-700 transition-colors hover:border-brand/40 hover:text-accent-text"
                       aria-label={fmt(catalog.removeFilter, { label: chip.label })}
                     >
                       <span className="truncate">{chip.label}</span>
@@ -661,13 +662,13 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       <AlertTriangle className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-[#0B1220]">{catalog.loadErrorTitle}</p>
+                      <p className="font-bold text-ink">{catalog.loadErrorTitle}</p>
                       <p className="mt-0.5 text-sm text-slate-600">{catalog.loadError}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => void loadData(true)}
-                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-4 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-ink px-4 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
                     >
                       <RefreshCw className="h-4 w-4" aria-hidden="true" />
                       {catalog.retry}
@@ -711,10 +712,10 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                   </>
                 ) : (
                   <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F6F8] text-[#0B1220]">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-canvas text-ink">
                       {isMotoView ? <Motorbike className="h-7 w-7" aria-hidden="true" /> : <Car className="h-7 w-7" aria-hidden="true" />}
                     </div>
-                    <h3 className="mt-4 text-lg font-extrabold text-[#0B1220]">
+                    <h3 className="mt-4 text-lg font-extrabold text-ink">
                       {typeScopedVehicles.length === 0 && !hasPeriod
                         ? isMotoView
                           ? catalog.emptyMotoNone
@@ -737,7 +738,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                     {typeScopedVehicles.length === 0 && typeCounts[isMotoView ? 'CAR' : 'MOTORCYCLE'] > 0 && (
                       <Link
                         href={`${CATALOG_PATHS[isMotoView ? 'CAR' : 'MOTORCYCLE']}${switchQuery}`}
-                        className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-[13px] font-bold text-[#0B1220] transition-colors hover:bg-slate-50"
+                        className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-[13px] font-bold text-ink transition-colors hover:bg-slate-50"
                       >
                         {isMotoView ? <Car className="h-4 w-4" aria-hidden="true" /> : <Motorbike className="h-4 w-4" aria-hidden="true" />}
                         {isMotoView ? catalog.seeCars : catalog.seeMotos}
@@ -747,7 +748,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
                       <button
                         type="button"
                         onClick={resetFilters}
-                        className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-5 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
+                        className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-ink px-5 text-[13px] font-bold text-white transition-colors hover:bg-slate-800"
                       >
                         <RefreshCw className="h-4 w-4" aria-hidden="true" />
                         {catalog.resetFilters}
@@ -763,11 +764,11 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
         {/* ── Mobile : « Filtres · Tri » flottant au-dessus de la navigation inférieure ── */}
         {floatingToolbar && !mobileFilterOpen && !vehiclesLoading && !vehiclesError && typeScopedVehicles.length > 0 && (
           <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--cd-bottom-nav,0px)+var(--cd-cookie-banner,0px)+0.75rem)] z-30 flex justify-center px-4 lg:hidden">
-            <div className="pointer-events-auto flex h-12 max-w-full items-center rounded-full bg-[#0B1220] p-1 text-white shadow-[0_14px_34px_-10px_rgba(11,18,32,0.6)] ring-1 ring-white/10 motion-safe:animate-[cd-slide-up_220ms_cubic-bezier(0.16,1,0.3,1)]">
+            <div className="pointer-events-auto flex h-12 max-w-full items-center rounded-full bg-ink p-1 text-white shadow-[0_14px_34px_-10px_rgba(11,18,32,0.6)] ring-1 ring-white/10 motion-safe:animate-cd-slide-up">
               <button
                 type="button"
                 onClick={() => setMobileFilterOpen(true)}
-                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[13px] font-bold transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                 {catalog.filters}
@@ -779,7 +780,7 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
               </button>
               <span className="h-5 w-px shrink-0 bg-white/20" aria-hidden="true" />
               {/* Sélecteur natif transparent : la liste du téléphone s'ouvre, le libellé reste lisible */}
-              <div className="relative inline-flex h-10 min-w-0 items-center gap-2 rounded-full pe-4 ps-3 text-[13px] font-bold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#E63946]">
+              <div className="relative inline-flex h-10 min-w-0 items-center gap-2 rounded-full pe-4 ps-3 text-[13px] font-bold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
                 <ArrowUpDown className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="truncate" aria-hidden="true">{catalog.sort[sortBy]}</span>
                 <select
@@ -877,21 +878,28 @@ function MobileFilterDrawer({
       onClose();
       return;
     }
-    sheet.style.transition = 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)';
+    sheet.style.transition = 'transform var(--transition-duration-fast) var(--ease-sheet)';
     sheet.style.transform = '';
   };
 
-  if (!open) return null;
+  // Sortie animée : le panneau redescend (téléphone) ou ressort par le côté (tablette) avant d'être retiré.
+  // Une feuille déjà tirée vers le bas termine sa course depuis sa position (image clé sans « from »).
+  const presence = usePresence(open);
+
+  if (!presence.mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] lg:hidden">
+    <div className="fixed inset-0 z-[60] lg:hidden" inert={presence.closing || undefined}>
       <button
         type="button"
         aria-label={catalog.closeFilters}
         tabIndex={-1}
         data-modal-backdrop
         onClick={onClose}
-        className="absolute inset-0 bg-[#0B1220]/55 backdrop-blur-[2px] motion-safe:animate-[cd-fade-in_150ms_ease-out]"
+        className={cn(
+          'absolute inset-0 bg-ink/55 backdrop-blur-[2px]',
+          presence.closing ? 'motion-safe:animate-cd-fade-out' : 'motion-safe:animate-cd-fade-in'
+        )}
       />
       <div
         ref={dialogRef}
@@ -899,9 +907,12 @@ function MobileFilterDrawer({
         aria-modal="true"
         aria-labelledby="mobile-filters-title"
         tabIndex={-1}
+        onAnimationEnd={presence.onAnimationEnd}
         className={cn(
           'absolute inset-x-0 bottom-0 flex outline-none max-h-[88dvh] flex-col rounded-t-3xl bg-white shadow-2xl sm:inset-y-0 sm:end-0 sm:start-auto sm:max-h-none sm:w-[400px] sm:rounded-none',
-          'max-sm:motion-safe:animate-[cd-sheet-up_280ms_cubic-bezier(0.32,0.72,0,1)] sm:motion-safe:animate-[cd-drawer-in_280ms_cubic-bezier(0.32,0.72,0,1)]'
+          presence.closing
+            ? 'max-sm:motion-safe:animate-cd-sheet-down sm:motion-safe:animate-cd-drawer-out'
+            : 'max-sm:motion-safe:animate-cd-sheet-up sm:motion-safe:animate-cd-drawer-in'
         )}
       >
         {/* Poignée + titre : zone de glissement (le contenu, lui, défile normalement) */}
@@ -914,7 +925,7 @@ function MobileFilterDrawer({
         >
           <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-slate-300 sm:hidden" aria-hidden="true" />
           <div className="flex items-center justify-between px-5 py-3">
-            <h2 id="mobile-filters-title" className="text-base font-extrabold text-[#0B1220]">
+            <h2 id="mobile-filters-title" className="text-base font-extrabold text-ink">
               {catalog.filters}
               {activeCount > 0 && (
                 <span className="ms-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 align-middle text-[11px] font-bold text-white">
@@ -962,9 +973,9 @@ export function SearchClient({ preload, vehicleType = 'CAR' }: { preload: Search
     <Suspense
       fallback={
         // Squelette de la page (en-tête sombre + cartes) plutôt qu'un texte seul : même gabarit, aucun saut au chargement
-        <div className="min-h-screen bg-[#F5F6F8] pb-20" role="status">
+        <div className="min-h-screen bg-canvas pb-20" role="status">
           <span className="sr-only">{vehicleType === 'MOTORCYCLE' ? t.catalog.suspenseMoto : t.catalog.suspenseCar}</span>
-          <div className="h-64 bg-[#0B1220] sm:h-72" aria-hidden="true" />
+          <div className="h-64 bg-ink sm:h-72" aria-hidden="true" />
           <div className="mx-auto max-w-[1360px] px-4 pt-8 sm:px-6 lg:px-8" aria-hidden="true">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 3 }, (_, i) => (

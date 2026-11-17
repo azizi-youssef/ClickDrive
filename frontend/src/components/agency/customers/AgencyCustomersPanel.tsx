@@ -95,7 +95,7 @@ export function AgencyCustomersPanel({ agencyId }: { agencyId: string }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-3 text-sm focus:border-[#E63946] focus:bg-white focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-3 text-sm focus:border-brand focus:bg-white focus:outline-none"
           />
         </div>
       </div>

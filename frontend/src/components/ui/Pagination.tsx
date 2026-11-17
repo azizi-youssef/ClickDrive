@@ -82,12 +82,12 @@ function NavButton({ onClick, disabled, ariaLabel, children }: NavButtonProps) {
       aria-label={ariaLabel}
       className={cn(
         'inline-flex h-9 w-9 items-center justify-center rounded-xl',
-        'border border-slate-200 bg-white text-[#0B1220]',
-        'transition-colors duration-150 motion-reduce:transition-none',
-        'hover:border-slate-300 hover:bg-[#F5F6F8]',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220] focus-visible:ring-offset-1',
+        'border border-slate-200 bg-white text-ink',
+        'transition-colors duration-fast motion-reduce:transition-none',
+        'hover:border-slate-300 hover:bg-canvas',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-1',
         'disabled:pointer-events-none disabled:opacity-35',
-        'active:scale-[0.96] motion-reduce:active:scale-100'
+        'motion-press'
       )}
     >
       {children}
@@ -112,12 +112,12 @@ function PageButton({ page, isActive, onClick, pageLabel }: PageButtonProps) {
       className={cn(
         'inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-1',
         'text-sm font-semibold',
-        'transition-colors duration-150 motion-reduce:transition-none',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220] focus-visible:ring-offset-1',
-        'active:scale-[0.96] motion-reduce:active:scale-100',
+        'transition-colors duration-fast motion-reduce:transition-none',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-1',
+        'motion-press',
         isActive
-          ? 'bg-[#E63946] text-white shadow-[0_4px_12px_-4px_rgba(230,57,70,0.6)]'
-          : 'border border-slate-200 bg-white text-[#0B1220] hover:border-slate-300 hover:bg-[#F5F6F8]'
+          ? 'bg-action text-white shadow-action'
+          : 'border border-slate-200 bg-white text-ink hover:border-slate-300 hover:bg-canvas'
       )}
     >
       {page}

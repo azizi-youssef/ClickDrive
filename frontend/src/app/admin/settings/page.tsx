@@ -37,7 +37,7 @@ const SETTING_SECTIONS: SettingSection[] = [
     label: 'Abonnements & Monétisation',
     description:
       'Gérez les forfaits mensuels basés sur la capacité en véhicules et les règles de monétisation ClickDrive.',
-    accent: 'text-[#0B1220]',
+    accent: 'text-ink',
     iconBackground: 'bg-blue-50',
     category: 'Finance',
     access: 'SUPER_ADMIN',
@@ -48,7 +48,7 @@ const SETTING_SECTIONS: SettingSection[] = [
     label: 'Permissions & accès',
     description:
       'Gérez les rôles, les autorisations et les accès aux fonctionnalités de votre espace administrateur.',
-    accent: 'text-[#0B1220]',
+    accent: 'text-ink',
     iconBackground: 'bg-blue-50',
     category: 'Sécurité',
   },
@@ -82,13 +82,13 @@ export default function AdminSettingsPage() {
 
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B1220] text-white shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-ink text-white shadow-sm">
                 <Settings2 className="h-6 w-6" aria-hidden="true" />
               </div>
 
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#0B1220]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ink">
                     Administration
                   </span>
                   <span className="h-1 w-1 rounded-full bg-slate-300" />
@@ -150,12 +150,12 @@ export default function AdminSettingsPage() {
                 <Link
                   key={section.href}
                   href={section.href}
-                  className="group flex min-h-62.5 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220] focus-visible:ring-offset-2 sm:p-6"
+                  className="group flex min-h-62.5 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm motion-lift hover:border-slate-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 sm:p-6"
                 >
                   {/* Card header */}
                   <div className="flex items-start justify-between gap-3">
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${section.iconBackground} transition-transform duration-200 group-hover:scale-105`}
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${section.iconBackground}`}
                     >
                       <Icon
                         className={`h-6 w-6 ${section.accent}`}
@@ -170,7 +170,7 @@ export default function AdminSettingsPage() {
 
                   {/* Card content */}
                   <div className="mt-5 flex-1">
-                    <h3 className="text-base font-bold text-slate-900 transition-colors group-hover:text-[#0B1220]">
+                    <h3 className="text-base font-bold text-slate-900 transition-colors group-hover:text-ink">
                       {section.label}
                     </h3>
 
@@ -187,12 +187,12 @@ export default function AdminSettingsPage() {
                         Accès {section.access}
                       </span>
                     ) : (
-                      <span className="text-xs font-medium text-slate-400">
+                      <span className="text-xs font-medium text-slate-500">
                         Configuration
                       </span>
                     )}
 
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all group-hover:bg-[#0B1220] group-hover:text-white">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all group-hover:bg-ink group-hover:text-white">
                       <ArrowRight
                         className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                         aria-hidden="true"
@@ -208,7 +208,7 @@ export default function AdminSettingsPage() {
         {/* Security note */}
         <section className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
           <SlidersHorizontal
-            className="mt-0.5 h-5 w-5 shrink-0 text-[#0B1220]"
+            className="mt-0.5 h-5 w-5 shrink-0 text-ink"
             aria-hidden="true"
           />
 

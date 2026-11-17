@@ -90,15 +90,15 @@ function FilterSection({
           aria-expanded={open}
           aria-controls={contentId}
           onClick={() => setOpen((value) => !value)}
-          className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-start focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E63946] lg:min-h-8"
+          className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg text-start focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand lg:min-h-8"
         >
-          <span className="text-[13px] font-bold text-[#0B1220]">{title}</span>
+          <span className="text-[13px] font-bold text-ink">{title}</span>
           <span className="flex min-w-0 items-center gap-2">
             {summary && (
               <span className="truncate text-xs font-semibold text-accent-text">{summary}</span>
             )}
             <ChevronDown
-              className={cn('h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200', open && 'rotate-180')}
+              className={cn('h-4 w-4 shrink-0 text-slate-400 transition-transform duration-fast', open && 'rotate-180')}
               aria-hidden="true"
             />
           </span>
@@ -126,9 +126,9 @@ function OptionChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'min-h-11 rounded-xl border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] lg:min-h-10',
+        'min-h-11 rounded-xl border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:min-h-10',
         active
-          ? 'border-[#0B1220] bg-[#0B1220] text-white'
+          ? 'border-ink bg-ink text-white'
           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
       )}
     >
@@ -138,7 +138,7 @@ function OptionChip({
 }
 
 const selectClass =
-  'h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-800 transition focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10';
+  'h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-800 transition focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10';
 
 interface CatalogFiltersProps {
   filters: CatalogFilterState;
@@ -172,7 +172,7 @@ export function CatalogFilters({
     <div>
       {!hideHeader && (
         <div className="flex items-center justify-between gap-3 pb-1">
-          <h2 className="text-base font-extrabold text-[#0B1220]">
+          <h2 className="text-base font-extrabold text-ink">
             {copy.filters}
             {activeCount > 0 && (
               <span className="ms-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-action px-1.5 text-[11px] font-bold text-white">
@@ -210,11 +210,11 @@ export function CatalogFilters({
           aria-valuetext={
             filters.maxPrice >= PRICE_CEILING ? f.allPrices : fmt(f.maxValue, { amount: formatNumber(filters.maxPrice, locale) })
           }
-          className="w-full cursor-pointer accent-[#E63946]"
+          className="w-full cursor-pointer accent-brand"
         />
         <div className="mt-2 flex items-center justify-between text-xs font-medium text-slate-500">
           <span>{money(PRICE_FLOOR)}</span>
-          <span className="font-bold text-[#0B1220]">
+          <span className="font-bold text-ink">
             {filters.maxPrice >= PRICE_CEILING ? f.allPrices : money(filters.maxPrice)}
           </span>
         </div>
@@ -303,7 +303,7 @@ export function CatalogFilters({
             value={filters.brandQuery}
             onChange={(e) => onChange({ brandQuery: e.target.value })}
             placeholder={f.brandPlaceholder}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white pe-11 ps-9 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pe-11 ps-9 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
           />
           {filters.brandQuery && (
             <button

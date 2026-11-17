@@ -135,7 +135,7 @@ export default async function SeoLandingPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
 
-      <div className="bg-[#F8FAFC] min-h-screen">
+      <div className="bg-slate-50 min-h-screen">
         {/* Breadcrumb Navigation */}
         <div className="bg-white border-b border-slate-200 py-3">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -150,7 +150,7 @@ export default async function SeoLandingPage({ params }: PageProps) {
         </div>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-b from-[#0B1220] via-slate-900 to-[#0B1220] text-white py-12 lg:py-16 relative overflow-hidden">
+        <section className="bg-gradient-to-b from-ink via-slate-900 to-ink text-white py-12 lg:py-16 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

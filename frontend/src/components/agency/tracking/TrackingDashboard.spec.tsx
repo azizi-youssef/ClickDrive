@@ -118,7 +118,7 @@ describe('TrackingDashboard — états de chargement, vide, erreur', () => {
     mocks.api.mockReturnValue(new Promise((r) => (resolve = r)));
     renderDashboard();
     expect(screen.queryByText('Véhicules suivis')).not.toBeInTheDocument();
-    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(3);
+    expect(document.querySelectorAll('.skeleton').length).toBeGreaterThan(3);
     await act(async () => resolve(overview([vehicle('1')])));
     expect(await screen.findByText('Véhicules suivis')).toBeInTheDocument();
   });

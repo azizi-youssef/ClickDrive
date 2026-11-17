@@ -110,7 +110,7 @@ export function Sidebar({
     <aside
       aria-label="Navigation du portail agence"
       className={cn(
-        'hidden shrink-0 flex-col border-r border-white/10 bg-[#0B1220] transition-[width] duration-200 lg:sticky lg:top-0 lg:flex lg:h-screen',
+        'hidden shrink-0 flex-col border-r border-white/10 bg-ink transition-[width] duration-fast lg:sticky lg:top-0 lg:flex lg:h-screen',
         collapsed ? 'w-19' : 'w-64'
       )}
     >
@@ -162,8 +162,8 @@ export function Sidebar({
                         aria-current={isActive ? 'page' : undefined}
                         title={collapsed ? section.label : undefined}
                         className={cn(
-                          'relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                          isActive ? 'bg-white font-bold text-[#0B1220] shadow-sm' : 'font-medium text-slate-400 hover:bg-white/5 hover:text-white',
+                          'relative flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+                          isActive ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-slate-400 hover:bg-white/5 hover:text-white',
                           collapsed && 'justify-center px-0'
                         )}
                       >
@@ -186,12 +186,12 @@ export function Sidebar({
                               </span>
                             )}
                             {section.badge === 'alert' && typeof section.count !== 'number' && (
-                              <span aria-label="Action requise" className="h-2 w-2 shrink-0 rounded-full bg-[#E63946]" />
+                              <span aria-label="Action requise" className="h-2 w-2 shrink-0 rounded-full bg-brand" />
                             )}
                           </>
                         )}
                         {collapsed && section.badge === 'alert' && (
-                          <span aria-label="Action requise" className="absolute end-2.5 top-2 h-2 w-2 rounded-full bg-[#E63946]" />
+                          <span aria-label="Action requise" className="absolute end-2.5 top-2 h-2 w-2 rounded-full bg-brand" />
                         )}
                       </button>
                     </li>
@@ -207,7 +207,7 @@ export function Sidebar({
         <Link
           href="/"
           className={cn(
-            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]',
+            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand',
             collapsed && 'justify-center px-0'
           )}
           title={collapsed ? "Retour à l'accueil" : undefined}
@@ -221,7 +221,7 @@ export function Sidebar({
             onClick={onSignOut}
             disabled={signingOut}
             className={cn(
-              'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:cursor-wait disabled:opacity-50',
+              'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-wait disabled:opacity-50',
               collapsed && 'justify-center px-0'
             )}
             title={collapsed ? 'Déconnexion' : undefined}
@@ -237,7 +237,7 @@ export function Sidebar({
           aria-label={collapsed ? 'Déplier le menu' : undefined}
           title={collapsed ? 'Déplier le menu' : undefined}
           className={cn(
-            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]',
+            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand',
             collapsed && 'justify-center px-0'
           )}
         >

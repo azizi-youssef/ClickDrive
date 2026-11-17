@@ -104,7 +104,7 @@ export function AdminHealthClient() {
                   <StatusIcon status={value} />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-slate-900">{cfg?.label ?? key}</p>
-                    <p className={`text-xs mt-0.5 ${isOk ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <p className={`text-xs mt-0.5 ${isOk ? 'text-emerald-700' : 'text-red-600'}`}>
                       {value === 'ok' ? 'Opérationnel' :
                         value === 'configured' ? 'Configuré' :
                         value === 'skipped' ? 'Non configuré' :

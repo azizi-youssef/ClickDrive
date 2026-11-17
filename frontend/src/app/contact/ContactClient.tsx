@@ -122,7 +122,7 @@ export function ContactClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
@@ -170,7 +170,7 @@ export function ContactClient() {
                 <button
                   type="button"
                   onClick={() => { setState('idle'); setReceipt(null); setForm({ name: '', email: '', phone: '', subject: '', category: '', message: '' }); }}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
                   {c.sendAnother}
                 </button>
@@ -406,15 +406,15 @@ export function ContactClient() {
             {/* For agencies */}
             <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs">
               <div className="mb-3 flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[#0B1220]" />
-                <p className="text-sm font-bold text-[#0B1220]">{c.agencyTitle}</p>
+                <Building2 className="h-4 w-4 text-ink" />
+                <p className="text-sm font-bold text-ink">{c.agencyTitle}</p>
               </div>
               <p className="text-xs text-slate-600 mb-4">{c.agencyText}</p>
               <Link
                 href="/agency/join"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B1220] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 shadow-2xs"
               >
-                <Building2 className="h-3.5 w-3.5 text-[#E63946]" />
+                <Building2 className="h-3.5 w-3.5 text-brand" />
                 {c.becomePartner}
               </Link>
             </div>
@@ -444,7 +444,7 @@ export function ContactClient() {
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
 function inputClass(hasError: boolean) {
-  return `w-full rounded-xl border ${hasError ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500' : 'border-slate-200 bg-slate-50 focus:border-[#E63946] focus:ring-[#E63946]'} px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-1 focus:bg-white`;
+  return `w-full rounded-xl border ${hasError ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500' : 'border-slate-200 bg-slate-50 focus:border-brand focus:ring-brand'} px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-1 focus:bg-white`;
 }
 
 function Field({

@@ -122,7 +122,7 @@ export function Topbar({
           <ol className="flex min-w-0 items-center gap-1.5 text-sm">
             {/* Mobile : le nom de l'agence (la section est le titre de la page, juste en dessous) */}
             <li className="min-w-0 sm:shrink-0">
-              <Link href="/agency" className="block truncate font-semibold text-ink transition-colors hover:text-[#0F172A] sm:font-normal sm:text-[#64748B]">
+              <Link href="/agency" className="block truncate font-semibold text-ink transition-colors hover:text-ink sm:font-normal sm:text-ink-secondary">
                 {agencyName}
               </Link>
             </li>
@@ -132,11 +132,11 @@ export function Topbar({
                 <li key={crumb.label} className="hidden min-w-0 items-center gap-1.5 sm:flex">
                   <span aria-hidden="true" className="hidden shrink-0 text-slate-300 sm:inline">/</span>
                   {crumb.href && !isLast ? (
-                    <Link href={crumb.href} className="truncate text-[#64748B] transition-colors hover:text-[#0F172A]">
+                    <Link href={crumb.href} className="truncate text-ink-secondary transition-colors hover:text-ink">
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span aria-current={isLast ? 'page' : undefined} className="truncate font-semibold text-[#0F172A]">
+                    <span aria-current={isLast ? 'page' : undefined} className="truncate font-semibold text-ink">
                       {crumb.label}
                     </span>
                   )}
@@ -152,7 +152,7 @@ export function Topbar({
           disabled={refreshing}
           aria-label="Actualiser les données"
           aria-busy={refreshing}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
         >
           <RefreshCw aria-hidden="true" className={cn('h-4 w-4', refreshing && 'animate-spin')} />
         </button>
@@ -168,7 +168,7 @@ export function Topbar({
               type="button"
               {...props}
               aria-label={`Notifications${alertCount ? ` (${alertCount})` : ''}`}
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 sm:h-9 sm:w-9 outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand"
             >
               <Bell aria-hidden="true" className="h-4 w-4" />
               {alertCount > 0 && (
@@ -183,7 +183,7 @@ export function Topbar({
             Notifications
           </p>
           {notifications.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-[#64748B]">Aucune action en attente.</p>
+            <p className="px-4 py-6 text-center text-sm text-ink-secondary">Aucune action en attente.</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {notifications.map((notification) => (
@@ -202,10 +202,10 @@ export function Topbar({
                       aria-hidden="true"
                       className={cn(
                         'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                        notification.tone === 'alert' ? 'bg-[#E63946]' : 'bg-slate-300'
+                        notification.tone === 'alert' ? 'bg-brand' : 'bg-slate-300'
                       )}
                     />
-                    <span className="min-w-0 flex-1 text-sm text-[#0F172A]">{notification.label}</span>
+                    <span className="min-w-0 flex-1 text-sm text-ink">{notification.label}</span>
                   </button>
                 </li>
               ))}
@@ -223,7 +223,7 @@ export function Topbar({
             <button
               type="button"
               {...props}
-              className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-2.5 outline-none sm:min-h-0 transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+              className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-2.5 outline-none sm:min-h-0 transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand"
             >
               <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-white border border-slate-200 shrink-0 flex items-center justify-center">
                 {avatarUrl ? (
@@ -240,7 +240,7 @@ export function Topbar({
               <ChevronDown
                 aria-hidden="true"
                 className={cn(
-                  'h-3.5 w-3.5 text-slate-400 transition-transform duration-200',
+                  'h-3.5 w-3.5 text-slate-400 transition-transform duration-fast',
                   menuOpen && 'rotate-180 text-slate-700'
                 )}
               />
@@ -258,8 +258,8 @@ export function Topbar({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#0F172A]">{userLabel}</p>
-              <p className="truncate text-xs text-[#64748B]">{agencyName}</p>
+              <p className="truncate text-sm font-semibold text-ink">{userLabel}</p>
+              <p className="truncate text-xs text-ink-secondary">{agencyName}</p>
             </div>
           </div>
 

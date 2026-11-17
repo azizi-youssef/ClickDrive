@@ -15,8 +15,8 @@ export const BADGE_TONES: Record<BadgeTone, string> = {
   warning: 'border-warning-line bg-warning-soft text-warning',
   danger: 'border-danger-line bg-danger-soft text-danger',
   info: 'border-info-line bg-info-soft text-info',
-  neutral: 'border-line bg-neutral-soft text-[#344054]',
-  brand: 'border-[#FECDCA] bg-[#FFF1F2] text-accent-text',
+  neutral: 'border-line bg-neutral-soft text-slate-700',
+  brand: 'border-brand-line bg-brand-soft text-accent-text',
 };
 
 const LEGACY: Record<LegacyVariant, BadgeTone> = {

@@ -224,7 +224,7 @@ function BrandCard({
       {/* Logo aux couleurs officielles, 60 px, proportions du tracé conservées ; léger agrandissement au survol */}
       <span
         className={cn(
-          'flex h-16 w-16 items-center justify-center transition-[scale,filter,opacity] duration-[250ms] ease-out',
+          'flex h-16 w-16 items-center justify-center transition-[scale,filter,opacity] duration-base ease-out',
           'group-hover/card:scale-[1.06] group-focus-visible/card:scale-[1.06]',
           'motion-reduce:transition-none motion-reduce:group-hover/card:scale-100 motion-reduce:group-focus-visible/card:scale-100',
           // Marque sans véhicule : couleurs officielles conservées, légèrement estompées (pleines au survol)
@@ -246,7 +246,7 @@ function BrandCard({
         )}
         {/* Marque active : fin soulignement rouge (place réservée : aucun décalage quand il apparaît) */}
         <span
-          className={cn('mt-2.5 h-0.5 w-8 rounded-full transition-colors duration-[250ms]', active ? 'bg-[#E63946]' : 'bg-transparent')}
+          className={cn('mt-2.5 h-0.5 w-8 rounded-full transition-colors duration-base', active ? 'bg-brand' : 'bg-transparent')}
           aria-hidden="true"
         />
       </span>
@@ -574,7 +574,7 @@ export function BrandMarquee({
   };
 
   const circleButton =
-    'flex h-11 w-11 items-center justify-center rounded-full border border-[#E9EBEF] bg-white text-[#17191D] outline-none transition-colors duration-[250ms] hover:border-[#17191D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17191D] disabled:cursor-not-allowed disabled:text-[#C3C8D0] disabled:hover:border-[#E9EBEF]';
+    'flex h-11 w-11 items-center justify-center rounded-full border border-[#E9EBEF] bg-white text-[#17191D] outline-none transition-colors duration-base hover:border-[#17191D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#17191D] disabled:cursor-not-allowed disabled:text-[#C3C8D0] disabled:hover:border-[#E9EBEF]';
 
   const pauseButton = (extraClass: string) =>
     loop ? (
@@ -603,7 +603,7 @@ export function BrandMarquee({
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
         <div className="min-w-0 max-w-xl">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#17191D]">
-            <span className="h-px w-6 bg-[#E63946]" aria-hidden="true" />
+            <span className="h-px w-6 bg-brand" aria-hidden="true" />
             {texts.eyebrow}
           </p>
           <h2 id={titleId} className="mt-3 text-[28px] font-semibold leading-tight tracking-[-0.02em] text-[#17191D] sm:text-[34px]">
@@ -618,7 +618,7 @@ export function BrandMarquee({
           >
             {texts.catalog}
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-[250ms] group-hover/link:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180"
+              className="h-4 w-4 transition-transform duration-base group-hover/link:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover/link:-translate-x-0.5"
               aria-hidden="true"
             />
           </Link>
@@ -695,9 +695,10 @@ export function BrandMarquee({
                 className={cn(
                   // Espacement généreux : mobile ~2,5 marques visibles ; tablette ~5 ; portable ~7 ; grand écran 8+
                   'w-[36vw] max-w-[168px] shrink-0 snap-start sm:w-[152px] lg:w-[168px]',
-                  reveal && 'animate-[cd-brand-rise_560ms_cubic-bezier(0.16,1,0.3,1)_both]'
+                  reveal && 'motion-safe:animate-cd-brand-rise'
                 )}
-                style={reveal ? { animationDelay: `${Math.min(index, 7) * 60}ms` } : undefined}
+                // Cascade plafonnée à 8 cartes, au pas du jeton --motion-stagger (60 ms)
+                style={reveal ? { animationDelay: `calc(var(--motion-stagger) * ${Math.min(index, 7)})` } : undefined}
               >
                 <BrandCard
                   brand={brand}
@@ -716,14 +717,14 @@ export function BrandMarquee({
         <div
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-white to-transparent transition-opacity duration-[250ms] sm:w-14',
+            'pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-white to-transparent transition-opacity duration-base sm:w-14',
             state.canPrev ? 'opacity-100' : 'opacity-0'
           )}
         />
         <div
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-white to-transparent transition-opacity duration-[250ms] sm:w-14',
+            'pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-white to-transparent transition-opacity duration-base sm:w-14',
             state.canNext ? 'opacity-100' : 'opacity-0'
           )}
         />
@@ -735,7 +736,7 @@ export function BrandMarquee({
           {pauseButton('sm:hidden')}
           <div aria-hidden="true" className="relative h-0.5 flex-1 overflow-hidden rounded-full bg-[#E9EBEF]">
             <div
-              className="absolute inset-y-0 rounded-full bg-[#17191D] transition-[left] duration-150 motion-reduce:transition-none"
+              className="absolute inset-y-0 rounded-full bg-[#17191D] transition-[left] duration-fast motion-reduce:transition-none"
               style={{ width: `${state.thumb}%`, left: `${state.offset}%` }}
             />
           </div>

@@ -61,7 +61,7 @@ export function GoogleSignInButton({
       type="button"
       onClick={handleGoogleLogin}
       disabled={loading}
-      className={`group relative flex w-full items-center justify-center gap-3 rounded-xl border py-3 px-4 text-sm font-semibold transition-all duration-200 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed ${
+      className={`group relative flex w-full items-center justify-center gap-3 rounded-xl border py-3 px-4 text-sm font-semibold transition-all duration-fast motion-press disabled:opacity-60 disabled:cursor-not-allowed ${
         isDark
           ? 'border-slate-800 bg-slate-950/80 text-white hover:bg-slate-900 hover:border-slate-700 shadow-sm'
           : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm'

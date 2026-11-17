@@ -214,7 +214,7 @@ export function TrackerManagement() {
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate text-sm font-bold text-[#0F172A]">{tracker.label || tracker.external_device_id}</h3>
+                      <h3 className="truncate text-sm font-bold text-ink">{tracker.label || tracker.external_device_id}</h3>
                       <TrackerStatusBadge state={tracker.state} />
                       {tracker.status === 'PENDING' && <span className="text-xs text-amber-800">En attente de première position</span>}
                     </div>
@@ -222,7 +222,7 @@ export function TrackerManagement() {
                       {tracker.provider} · <span className="tabular-nums">{tracker.external_device_id}</span>{tracker.device_model ? ` · ${tracker.device_model}` : ''}
                     </p>
                     <p className="mt-1 text-xs text-slate-600">
-                      Véhicule : <span className="font-semibold text-[#0F172A]">{tracker.vehicle ? vehicleLabel(tracker.vehicle) : 'non affecté'}</span>
+                      Véhicule : <span className="font-semibold text-ink">{tracker.vehicle ? vehicleLabel(tracker.vehicle) : 'non affecté'}</span>
                       {' · '}Dernière communication : {formatAge(tracker.last_seen_at, now)}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">

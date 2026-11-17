@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { bookingStatusLabel, bookingStatusTone } from '@/lib/bookings/status';
 import type { BadgeTone } from '@/components/ui/Badge';
+import { EmptyState as BaseEmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
 import { formatTrend, trendFigures } from '@/lib/admin/trend';
 import { TrendingUp, TrendingDown, Minus, AlertCircle, RotateCcw, ChevronLeft, ChevronRight, Search, type LucideIcon } from 'lucide-react';
@@ -10,10 +11,10 @@ import { TrendingUp, TrendingDown, Minus, AlertCircle, RotateCcw, ChevronLeft, C
 export type KpiTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 
 const KPI_TONE: Record<KpiTone, { tile: string; bar: string }> = {
-  neutral: { tile: 'bg-[#F5F6F8] text-[#0B1220]', bar: 'bg-[#0B1220]' },
+  neutral: { tile: 'bg-canvas text-ink', bar: 'bg-ink' },
   success: { tile: 'bg-emerald-50 text-emerald-600', bar: 'bg-emerald-500' },
   warning: { tile: 'bg-amber-50 text-amber-600', bar: 'bg-amber-400' },
-  danger: { tile: 'bg-red-50 text-[#E63946]', bar: 'bg-[#E63946]' },
+  danger: { tile: 'bg-red-50 text-brand', bar: 'bg-brand' },
   info: { tile: 'bg-sky-50 text-sky-600', bar: 'bg-sky-500' },
 };
 
@@ -52,7 +53,7 @@ export function KpiCard({
 }: KpiCardProps) {
   const toneStyle = KPI_TONE[tone];
   const base = cn(
-    'group relative flex flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(11,18,32,0.04)]',
+    'group relative flex flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card',
     className
   );
 
@@ -82,7 +83,7 @@ export function KpiCard({
         )}
       </div>
       {/* Valeur jamais tronquée : l'unité passe à la ligne si la carte est étroite (mobile) */}
-      <p className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-2xl font-extrabold sm:text-[28px] leading-tight tracking-tight tabular-nums text-[#0B1220]">
+      <p className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-2xl font-extrabold sm:text-[28px] leading-tight tracking-tight tabular-nums text-ink">
         <span className="min-w-0 break-words">{value}</span>
         {unit && <span className="text-sm font-bold text-slate-500">{unit}</span>}
       </p>
@@ -95,7 +96,7 @@ export function KpiCard({
           aria-valuemax={100}
           aria-label={label}
         >
-          <div className={cn('h-full rounded-full transition-[width] duration-500', toneStyle.bar)} style={{ width: `${pct}%` }} />
+          <div className={cn('h-full rounded-full transition-[width] duration-slower', toneStyle.bar)} style={{ width: `${pct}%` }} />
         </div>
       )}
       {(sub || trend) && (
@@ -113,7 +114,7 @@ export function KpiCard({
         href={href}
         className={cn(
           base,
-          'outline-none transition-[translate,scale,box-shadow,border-color] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_12px_30px_-18px_rgba(11,18,32,0.35)] focus-visible:ring-2 focus-visible:ring-[#E63946] motion-reduce:transition-none motion-reduce:hover:translate-y-0'
+          'outline-none transition-[translate,scale,box-shadow,border-color] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_12px_30px_-18px_rgba(11,18,32,0.35)] focus-visible:ring-2 focus-visible:ring-brand motion-reduce:transition-none motion-reduce:hover:translate-y-0'
         )}
       >
         {content}
@@ -134,7 +135,7 @@ function TrendBadge({ current, previous, label, invert }: { current: number; pre
       title={`${current} contre ${previous} ${label}`}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
-        good ? 'bg-emerald-50 text-emerald-700' : bad ? 'bg-red-50 text-[#B4232F]' : 'bg-slate-100 text-slate-500'
+        good ? 'bg-emerald-50 text-emerald-700' : bad ? 'bg-red-50 text-action-hover' : 'bg-slate-100 text-slate-500'
       )}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
@@ -221,7 +222,7 @@ export function SectionHeader({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-lg font-extrabold tracking-tight text-[#0B1220]">{title}</h2>
+        <h2 className="text-lg font-extrabold tracking-tight text-ink">{title}</h2>
         {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -244,14 +245,14 @@ export function AdminCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]',
+        'overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card',
         !noPadding && 'p-5 sm:p-6',
         className
       )}
     >
       {title && (
         <div className="border-b border-slate-100 pb-3 mb-4">
-          <h3 className="text-[15px] font-extrabold text-[#0B1220]">{title}</h3>
+          <h3 className="text-[15px] font-extrabold text-ink">{title}</h3>
         </div>
       )}
       {children}
@@ -281,7 +282,7 @@ export function Th({ children, className }: { children: React.ReactNode; classNa
     <th
       scope="col"
       className={cn(
-        'bg-[#F8F9FA] px-4 py-3 text-start text-[11px] font-bold uppercase tracking-wider text-slate-500 first:ps-5 sm:first:ps-6 last:pe-5 sm:last:pe-6',
+        'bg-slate-50 px-4 py-3 text-start text-[11px] font-bold uppercase tracking-wider text-slate-500 first:ps-5 sm:first:ps-6 last:pe-5 sm:last:pe-6',
         className
       )}
     >
@@ -341,18 +342,8 @@ export function EmptyState({
   description?: string;
   action?: React.ReactNode;
 }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      {Icon && (
-        <div className="mb-4 rounded-2xl bg-[#F5F6F8] p-4">
-          <Icon className="h-6 w-6 text-slate-400" aria-hidden="true" />
-        </div>
-      )}
-      <h3 className="text-base font-bold text-[#0B1220]">{title}</h3>
-      {description && <p className="mt-1 text-sm text-slate-500 max-w-sm">{description}</p>}
-      {action && <div className="mt-5">{action}</div>}
-    </div>
-  );
+  // État vide du design system ; les listes de l'administration gardent leur titre h3
+  return <BaseEmptyState icon={Icon} title={title} description={description} action={action} titleAs="h3" className="py-16" />;
 }
 
 /* ── Error banner ──────────────────────────────────────────────────── */
@@ -367,7 +358,7 @@ export function ErrorBanner({
 }) {
   return (
     <div role="alert" className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-      <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[#B4232F]" aria-hidden="true" />
+      <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0 text-action-hover" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-red-900">{message}</p>
       </div>
@@ -449,7 +440,7 @@ export function Pagination({
           type="button"
           onClick={onPrev}
           disabled={page === 0}
-          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-[#F5F6F8] disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           Précédent
@@ -461,7 +452,7 @@ export function Pagination({
           type="button"
           onClick={onNext}
           disabled={page >= pageCount - 1}
-          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-[#F5F6F8] disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
         >
           Suivant
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -489,9 +480,9 @@ export function Btn({
     'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50';
   const variants = {
     primary:
-      'bg-action font-bold text-white shadow-[0_10px_20px_-12px_rgba(230,57,70,0.8)] hover:bg-action-hover focus-visible:ring-[#0B1220]',
+      'bg-action font-bold text-white shadow-[0_10px_20px_-12px_rgba(230,57,70,0.8)] hover:bg-action-hover focus-visible:ring-ink',
     secondary:
-      'border border-slate-200 bg-white text-[#0B1220] hover:border-slate-300 hover:bg-[#F8F9FA] focus-visible:ring-[#0B1220]/30',
+      'border border-slate-200 bg-white text-ink hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-ink/30',
     outline:
       'bg-transparent border border-slate-300 text-slate-700 hover:bg-slate-50 focus-visible:ring-slate-400/50',
     danger:
@@ -559,7 +550,7 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? 'Rechercher…'}
         aria-label={placeholder ?? 'Rechercher'}
-        className="h-10 w-full rounded-xl border border-slate-200 bg-white ps-9 pe-4 text-sm text-[#0B1220] outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8"
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white ps-9 pe-4 text-sm text-ink outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-ink focus:ring-4 focus:ring-ink/8"
       />
     </div>
   );
@@ -586,7 +577,7 @@ export function SelectFilter({
       onChange={(e) => onChange(e.target.value)}
       aria-label={label ?? options[0]?.label}
       className={cn(
-        'h-10 cursor-pointer rounded-xl border border-slate-200 bg-white ps-3 pe-8 text-sm font-medium text-[#0B1220] outline-none transition-colors hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8',
+        'h-10 cursor-pointer rounded-xl border border-slate-200 bg-white ps-3 pe-8 text-sm font-medium text-ink outline-none transition-colors hover:border-slate-300 focus:border-ink focus:ring-4 focus:ring-ink/8',
         className
       )}
     >

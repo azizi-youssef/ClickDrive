@@ -458,7 +458,7 @@ export function AgencyFleetPanel({
                       src={mainImg}
                       alt={`${v.brand} ${v.model}`}
                       fill
-                      className="object-cover transition duration-300 group-hover:scale-105"
+                      className="object-cover motion-zoom"
                       unoptimized
                     />
                   ) : (

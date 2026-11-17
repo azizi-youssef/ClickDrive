@@ -197,7 +197,7 @@ export function TrackingSettingsPanel() {
       )}
 
       <Card className="space-y-4 p-5">
-        <h3 className="text-sm font-bold text-[#0F172A]">Conservation des données</h3>
+        <h3 className="text-sm font-bold text-ink">Conservation des données</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           {numberField('retention_days', 'Positions (jours)', 'Au-delà, les positions sont supprimées automatiquement.')}
           {numberField('trip_retention_days', 'Trajets et alertes (jours)')}
@@ -205,7 +205,7 @@ export function TrackingSettingsPanel() {
       </Card>
 
       <Card className="space-y-4 p-5">
-        <h3 className="text-sm font-bold text-[#0F172A]">Détection</h3>
+        <h3 className="text-sm font-bold text-ink">Détection</h3>
         <div className="grid gap-4 sm:grid-cols-3">
           {numberField('offline_after_minutes', 'Hors ligne après (min)', 'Sans communication du boîtier.')}
           {numberField('moving_speed_kmh', 'Mouvement dès (km/h)')}
@@ -214,7 +214,7 @@ export function TrackingSettingsPanel() {
       </Card>
 
       <Card className="space-y-4 p-5">
-        <h3 className="text-sm font-bold text-[#0F172A]">Alertes</h3>
+        <h3 className="text-sm font-bold text-ink">Alertes</h3>
         <Switch id="st-speed" label="Alerte de vitesse excessive" description="Une alerte est créée au dépassement de la limite, puis résolue au retour sous la limite." checked={draft.speed_alerts_enabled} onChange={(value) => set('speed_alerts_enabled', value)} disabled={!canEdit} />
         {numberField('speed_limit_kmh', 'Limite de vitesse (km/h)')}
         <Switch id="st-unexpected" label="Mouvement inattendu" description="Départ d’un véhicule hors réservation pendant les heures calmes." checked={draft.unexpected_movement_enabled} onChange={(value) => set('unexpected_movement_enabled', value)} disabled={!canEdit} />
@@ -229,7 +229,7 @@ export function TrackingSettingsPanel() {
       </Card>
 
       <Card className="space-y-4 p-5">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#0F172A]"><ShieldCheck aria-hidden="true" className="h-4 w-4 text-slate-400" />Vie privée et conformité</h3>
+        <h3 className="flex items-center gap-2 text-sm font-bold text-ink"><ShieldCheck aria-hidden="true" className="h-4 w-4 text-slate-400" />Vie privée et conformité</h3>
         <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
           La localisation de véhicules loués est un traitement de données personnelles dont l’agence est responsable. ClickDrive fournit les outils (accès restreint, journal d’audit, durée de conservation) mais ne certifie aucune conformité :
           vérifiez les formalités applicables (notamment auprès de la CNDP) et l’information de vos clients.
@@ -254,7 +254,7 @@ export function TrackingSettingsPanel() {
           disabled={!canEdit}
         />
         <div>
-          <p className="text-sm font-medium text-[#0F172A]">Modèle d’information des locataires (à adapter)</p>
+          <p className="text-sm font-medium text-ink">Modèle d’information des locataires (à adapter)</p>
           <p className="mt-1.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">{template}</p>
           <button
             type="button"
@@ -277,8 +277,8 @@ export function TrackingSettingsPanel() {
 
       {canEdit && (
         <Card className="p-5">
-          <h3 className="text-sm font-bold text-[#0F172A]">Accès de support plateforme</h3>
-          <p className="mt-1 text-sm text-[#64748B]">Un administrateur de ClickDrive n’a aucun accès à vos positions, sauf autorisation motivée, limitée dans le temps et journalisée. Vous pouvez y mettre fin à tout moment.</p>
+          <h3 className="text-sm font-bold text-ink">Accès de support plateforme</h3>
+          <p className="mt-1 text-sm text-ink-secondary">Un administrateur de ClickDrive n’a aucun accès à vos positions, sauf autorisation motivée, limitée dans le temps et journalisée. Vous pouvez y mettre fin à tout moment.</p>
           {grants.loading && !grants.data ? (
             <Skeleton className="mt-3 h-10 w-full" />
           ) : grants.data && grants.data.grants.length === 0 ? (
@@ -290,7 +290,7 @@ export function TrackingSettingsPanel() {
                 return (
                   <li key={grant.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm">
                     <span className="min-w-0">
-                      <span className="block truncate font-medium text-[#0F172A]">{grant.reason}</span>
+                      <span className="block truncate font-medium text-ink">{grant.reason}</span>
                       <span className="text-xs text-slate-500">{new Date(grant.starts_at).toLocaleString('fr-FR')} → {new Date(grant.expires_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}{grant.revoked_at ? ' · révoqué' : active ? ' · actif' : ' · expiré'}</span>
                     </span>
                     {active && <button type="button" className={button.danger} onClick={() => setRevoking(grant)}>Révoquer</button>}

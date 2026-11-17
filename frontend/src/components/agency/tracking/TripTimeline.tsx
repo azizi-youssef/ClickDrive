@@ -54,15 +54,15 @@ export function TripTimeline({
                     onClick={() => onSelect(trip.id)}
                     aria-pressed={selected}
                     className={cn(
-                      'w-full rounded-xl border px-3.5 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                      selected ? 'border-[#0B1220] bg-slate-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                      'w-full rounded-xl border px-3.5 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+                      selected ? 'border-ink bg-slate-50' : 'border-slate-200 bg-white hover:border-slate-300'
                     )}
                   >
                     <span className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-sm font-semibold tabular-nums text-[#0F172A]">
+                      <span className="text-sm font-semibold tabular-nums text-ink">
                         {time(trip.started_at)} → {trip.status === 'IN_PROGRESS' ? 'en cours' : time(trip.ended_at)}
                       </span>
-                      <span className="text-sm font-bold tabular-nums text-[#0F172A]">{formatDistanceKm(trip.distance_km)}</span>
+                      <span className="text-sm font-bold tabular-nums text-ink">{formatDistanceKm(trip.distance_km)}</span>
                     </span>
                     {showVehicle && (
                       <span className="mt-0.5 block text-xs font-medium text-slate-600">

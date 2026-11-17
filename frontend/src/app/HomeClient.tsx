@@ -40,7 +40,7 @@ export function HomeClient({
   initialVehicles: Vehicle[] | null;
   initialAgencies: Agency[] | null;
 }) {
-  const { t, locale, isRTL, plural, fmt } = useTranslation();
+  const { t, locale, plural, fmt } = useTranslation();
   const home = t.home;
   const preloaded = initialVehicles !== null && initialAgencies !== null;
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles ?? []);
@@ -179,7 +179,7 @@ export function HomeClient({
   ];
 
   return (
-    <div className={`min-h-screen bg-[#F8FAFC] text-slate-900${isRTL ? ' is-rtl' : ''}`}>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
 
       {/* ================================================================
           HERO — Contenu affiché dès le premier rendu (aucun fondu bloquant),
@@ -200,7 +200,7 @@ export function HomeClient({
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-t from-[#05080D] via-transparent to-transparent" />
 
         <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-20">
-          <h1 className="max-w-3xl text-[28px] font-black leading-[1.1] tracking-tight text-white text-crisp sm:text-5xl lg:text-[56px]">
+          <h1 className="max-w-3xl text-[28px] font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[56px]">
             {t.hero.titleLead}{' '}
             <span className="text-accent-text">{t.hero.titleAccent}</span>
           </h1>
@@ -250,15 +250,15 @@ export function HomeClient({
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <GsapReveal
-            stagger={0.1}
+            stagger
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-slate-100"
           >
             {unifiedTrustItems.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <div key={item.title} className={`flex items-start gap-3.5 ${idx > 0 ? 'lg:pl-6' : ''}`}>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white shadow-sm">
-                    <Icon className="h-5 w-5 text-[#E63946]" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white shadow-sm">
+                    <Icon className="h-5 w-5 text-brand" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-900 leading-snug">
@@ -287,7 +287,7 @@ export function HomeClient({
           <div className="mb-6 flex items-end justify-between">
             <div>
               <p className="section-header-eyebrow">
-                <span className="h-3 w-3 rounded-full bg-[#E63946]" />
+                <span className="h-3 w-3 rounded-full bg-brand" />
                 {home.featured.eyebrow}
               </p>
               <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -299,7 +299,7 @@ export function HomeClient({
             </div>
             <Link
               href="/search"
-              className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text hover:shadow-md sm:flex"
+              className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-accent-text hover:shadow-md sm:flex"
             >
               {home.featured.exploreAll} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -315,7 +315,7 @@ export function HomeClient({
                 aria-pressed={vehicleFilter === filter}
                 className={
                   vehicleFilter === filter
-                    ? 'rounded-full px-4 py-2 text-xs font-bold bg-[#0B1220] text-white shadow-sm transition min-h-11'
+                    ? 'rounded-full px-4 py-2 text-xs font-bold bg-ink text-white shadow-sm transition min-h-11'
                     : 'rounded-full px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition min-h-11'
                 }
               >
@@ -339,7 +339,7 @@ export function HomeClient({
                 aria-pressed={f.active}
                 className={
                   f.active
-                    ? 'rounded-full px-4 py-2 text-xs font-bold bg-[#0B1220] text-white shadow-sm transition min-h-11'
+                    ? 'rounded-full px-4 py-2 text-xs font-bold bg-ink text-white shadow-sm transition min-h-11'
                     : 'rounded-full px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition min-h-11'
                 }
               >
@@ -354,7 +354,7 @@ export function HomeClient({
                 id="budget-max"
                 value={budgetMax}
                 onChange={(e) => setBudgetMax(Number(e.target.value))}
-                className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0B1220] transition min-h-11 cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-ink transition min-h-11 cursor-pointer"
                 aria-label={home.featured.budgetAria}
               >
                 <option value={0}>{home.featured.allBudgets}</option>
@@ -380,7 +380,7 @@ export function HomeClient({
               <button
                 type="button"
                 onClick={() => { setDataLoaded(false); void load(); }}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 {home.featured.retry}
@@ -403,7 +403,7 @@ export function HomeClient({
               <p className="mt-1.5 max-w-md text-xs leading-5 text-slate-500">
                 {home.featured.emptyText}
               </p>
-              <Link href="/search" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0B1220] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800">
+              <Link href="/search" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800">
                 <Search className="h-3.5 w-3.5" />
                 {home.featured.emptyCta}
               </Link>
@@ -435,7 +435,7 @@ export function HomeClient({
           MOTOS — Section distincte, affichée seulement si des motos sont publiées
       ================================================================= */}
       {dataLoaded && !hasError && featuredMotos.length > 0 && (
-        <section aria-labelledby="home-motos-title" className="border-t border-slate-200 bg-[#F5F6F8] py-16 sm:py-20">
+        <section aria-labelledby="home-motos-title" className="border-t border-slate-200 bg-canvas py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
@@ -452,7 +452,7 @@ export function HomeClient({
               </div>
               <Link
                 href="/motos"
-                className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-[#E63946]/30 hover:text-accent-text hover:shadow-md sm:flex"
+                className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-accent-text hover:shadow-md sm:flex"
               >
                 {home.motos.allMotos} <ArrowRight className="h-4 w-4" />
               </Link>
@@ -482,7 +482,7 @@ export function HomeClient({
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="mb-10">
           <p className="section-header-eyebrow">
-            <span className="h-3 w-3 rounded-full bg-[#E63946]" />
+            <span className="h-3 w-3 rounded-full bg-brand" />
             {home.destinations.eyebrow}
           </p>
           <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -507,10 +507,10 @@ export function HomeClient({
                   alt={destination.name}
                   fill
                   sizes="(max-width: 768px) 50vw, 25vw"
-                  className="image-zoom-subtle object-cover"
+                  className="object-cover motion-zoom"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent" />
-                <div className="absolute inset-0 bg-[#E63946]/0 transition-all duration-500 group-hover:bg-[#E63946]/12" />
+                <div className="absolute inset-0 bg-brand/0 transition-colors duration-slower group-hover:bg-brand/12" />
 
                 {destination.tag && (
                   <div className="absolute right-3 top-3">
@@ -519,13 +519,13 @@ export function HomeClient({
                 )}
 
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition group-hover:bg-[#E63946]">
+                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition group-hover:bg-brand">
                     <Icon className="h-4 w-4 text-white" />
                   </div>
                   <p className="text-sm font-bold text-white sm:text-base">{destination.name}</p>
                   <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-white/85 transition group-hover:text-white">
                     {home.destinations.explore}
-                    <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                    <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" aria-hidden="true" />
                   </div>
                 </div>
               </Link>

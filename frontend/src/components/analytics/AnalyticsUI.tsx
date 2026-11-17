@@ -31,7 +31,7 @@ import type { AnalyticsTotals, BreakdownRow, MonthlyPoint, MrrMonth } from '@/li
  * à porter l'information.
  */
 
-const INK = 'bg-[#0B1220]';
+const INK = 'bg-ink';
 
 /** Info-bulle d'une colonne : alignée sur les bords pour les colonnes extrêmes (la carte rogne ce qui dépasse) */
 function tooltipAlign(index: number, count: number): string {
@@ -114,7 +114,7 @@ export function ChartCard({
   return (
     <section
       aria-labelledby={headingId}
-      className={cn('flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]', className)}
+      className={cn('flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card', className)}
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
@@ -131,7 +131,7 @@ export function ChartCard({
               type="button"
               onClick={() => setShowTable((value) => !value)}
               aria-pressed={showTable}
-              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
               {showTable ? <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" /> : <Table2 className="h-3.5 w-3.5" aria-hidden="true" />}
               {showTable ? 'Graphique' : 'Tableau'}
@@ -188,7 +188,7 @@ export function ComparisonPill({ metric, suffix = 'vs période préc.' }: { metr
       title={`${formatMetric(metric.unit, metric.current)} contre ${formatMetric(metric.unit, metric.previous)} sur la période précédente`}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
-        badge.tone === 'good' ? 'bg-emerald-50 text-emerald-700' : badge.tone === 'bad' ? 'bg-red-50 text-[#B4232F]' : 'bg-slate-100 text-slate-500'
+        badge.tone === 'good' ? 'bg-emerald-50 text-emerald-700' : badge.tone === 'bad' ? 'bg-red-50 text-action-hover' : 'bg-slate-100 text-slate-500'
       )}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
@@ -212,16 +212,16 @@ export function StatTile({
   icon?: LucideIcon;
 }) {
   return (
-    <article className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(11,18,32,0.04)] sm:p-5">
+    <article className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="pt-0.5 text-[13px] font-semibold leading-snug text-slate-500">{label}</p>
         {Icon && (
-          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
+          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-canvas text-ink">
             <Icon className="h-4 w-4" />
           </span>
         )}
       </div>
-      <p className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#0B1220] sm:text-[28px]">
+      <p className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-[28px]">
         {value ?? (metric ? formatMetric(metric.unit, metric.current) : '—')}
       </p>
       <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-2.5">
@@ -321,7 +321,7 @@ export function MonthlyTrendChart({ points, metric }: { points: readonly Monthly
               <div
                 role="tooltip"
                 className={cn(
-                  'pointer-events-none absolute bottom-full z-10 mb-1 hidden w-max max-w-48 rounded-lg bg-[#0B1220] px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block',
+                  'pointer-events-none absolute bottom-full z-10 mb-1 hidden w-max max-w-48 rounded-lg bg-ink px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block',
                   tooltipAlign(index, points.length)
                 )}
               >
@@ -380,8 +380,8 @@ export function MetricSwitch({ value, onChange }: { value: MonthlyMetric; onChan
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            'min-h-7 rounded-md px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
-            value === option.value ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+            'min-h-7 rounded-md px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+            value === option.value ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
           {option.label}
@@ -405,7 +405,7 @@ export function FunnelChart({ totals }: { totals: AnalyticsTotals }) {
             <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
               <span className="font-semibold text-slate-800">{step.label}</span>
               <span className="shrink-0 tabular-nums">
-                <strong className="text-[#0B1220]">{formatCount(step.value)}</strong>
+                <strong className="text-ink">{formatCount(step.value)}</strong>
                 {index > 0 && (
                   <span className="ml-1.5 text-xs text-slate-500">
                     {step.conversion === null ? '—' : `${step.conversion} %`} de l’étape précédente
@@ -428,7 +428,7 @@ export function FunnelChart({ totals }: { totals: AnalyticsTotals }) {
                 <span className="flex items-center gap-2 text-slate-600">
                   <span
                     aria-hidden="true"
-                    className={cn('h-2 w-2 rounded-full', outcome.tone === 'loss' ? 'bg-[#B4232F]' : 'bg-slate-400')}
+                    className={cn('h-2 w-2 rounded-full', outcome.tone === 'loss' ? 'bg-action-hover' : 'bg-slate-400')}
                   />
                   {outcome.label}
                 </span>
@@ -549,7 +549,7 @@ export function MrrChart({ months }: { months: readonly MrrMonth[] }) {
             <div
               role="tooltip"
               className={cn(
-                'pointer-events-none absolute bottom-full z-10 mb-1 hidden w-max max-w-52 rounded-lg bg-[#0B1220] px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block',
+                'pointer-events-none absolute bottom-full z-10 mb-1 hidden w-max max-w-52 rounded-lg bg-ink px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block',
                 tooltipAlign(index, months.length)
               )}
             >
@@ -627,8 +627,8 @@ export function PeriodPicker({ value, onChange }: { value: PeriodValue; onChange
               onChange(initialPeriod(preset.value));
             }}
             className={cn(
-              'min-h-9 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-              value.preset === preset.value ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+              'min-h-9 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+              value.preset === preset.value ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {preset.label}
@@ -643,8 +643,8 @@ export function PeriodPicker({ value, onChange }: { value: PeriodValue; onChange
             setCustomOpen((open) => !open);
           }}
           className={cn(
-            'min-h-9 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-            value.preset === 'custom' ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+            'min-h-9 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+            value.preset === 'custom' ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
           Personnalisée
@@ -689,12 +689,12 @@ export function PeriodPicker({ value, onChange }: { value: PeriodValue; onChange
           <button
             type="submit"
             disabled={Boolean(error)}
-            className="min-h-9 rounded-lg bg-[#0B1220] px-3 text-sm font-semibold text-white disabled:opacity-40"
+            className="min-h-9 rounded-lg bg-ink px-3 text-sm font-semibold text-white disabled:opacity-40"
           >
             Appliquer
           </button>
           {error && (
-            <p role="alert" className="w-full text-xs font-medium text-[#B4232F]">
+            <p role="alert" className="w-full text-xs font-medium text-action-hover">
               {error}
             </p>
           )}

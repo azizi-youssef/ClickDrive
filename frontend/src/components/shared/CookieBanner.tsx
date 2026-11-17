@@ -79,7 +79,7 @@ export function CookieBanner() {
             {t.cookie.desc}{' '}
             <Link
               href="/confidentialite"
-              className="whitespace-nowrap font-semibold text-[#0B1220] underline underline-offset-2 hover:text-accent-text"
+              className="whitespace-nowrap font-semibold text-ink underline underline-offset-2 hover:text-accent-text"
             >
               {t.cookie.privacy}
             </Link>
@@ -89,7 +89,7 @@ export function CookieBanner() {
           type="button"
           id="cookie-ok"
           onClick={dismiss}
-          className="min-h-11 shrink-0 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946] sm:min-h-10"
+          className="min-h-11 shrink-0 rounded-xl bg-ink px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:min-h-10"
         >
           {t.cookie.ok}
         </button>

@@ -83,7 +83,7 @@ function CategoryCard({ category, kind, priority }: { category: CategorySummary;
     <Link
       href={href}
       // Nom lu = texte visible de la carte (WCAG 2.5.3 : la commande vocale « Économique » doit la trouver)
-      className="group relative flex h-full min-h-72 flex-col justify-end overflow-hidden rounded-3xl bg-[#0B1220] text-white outline-none ring-offset-2 transition-shadow duration-300 hover:shadow-[0_24px_48px_-24px_rgba(11,18,32,0.55)] focus-visible:ring-2 focus-visible:ring-[#E63946] sm:min-h-80"
+      className="group relative flex h-full min-h-72 flex-col justify-end overflow-hidden rounded-3xl bg-ink text-white outline-none ring-offset-2 transition-shadow duration-base hover:shadow-[0_24px_48px_-24px_rgba(11,18,32,0.55)] focus-visible:ring-2 focus-visible:ring-brand sm:min-h-80"
     >
       {category.image ? (
         <Image
@@ -93,20 +93,20 @@ function CategoryCard({ category, kind, priority }: { category: CategorySummary;
           priority={priority}
           sizes="(max-width: 640px) 78vw, (max-width: 1024px) 45vw, 30vw"
           unoptimized={!isOptimizableImage(category.image)}
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          className="object-cover motion-zoom"
         />
       ) : (
-        <span className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-slate-800 to-[#0B1220]" aria-hidden="true">
+        <span className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-slate-800 to-ink" aria-hidden="true">
           <Icon className="h-16 w-16 text-white/15" />
         </span>
       )}
 
       {/* Lisibilité du texte sur toutes les photos (contraste AA garanti par le dégradé) */}
-      <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0B1220]/95 via-[#0B1220]/45 to-transparent" aria-hidden="true" />
+      <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/95 via-ink/45 to-transparent" aria-hidden="true" />
 
       {/* Nombre réel de véhicules */}
-      <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#0B1220] shadow-sm">
-        <Icon className="h-3.5 w-3.5 text-[#C92F3B]" aria-hidden="true" />
+      <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink shadow-sm">
+        <Icon className="h-3.5 w-3.5 text-accent-text" aria-hidden="true" />
         {countLabel}
       </span>{' '}
 
@@ -120,7 +120,7 @@ function CategoryCard({ category, kind, priority }: { category: CategorySummary;
           </span>
         </span>
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-colors duration-200 group-hover:bg-[#E63946] group-focus-visible:bg-[#E63946] motion-reduce:transition-none"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-colors duration-fast group-hover:bg-brand group-focus-visible:bg-brand motion-reduce:transition-none"
           aria-hidden="true"
         >
           <ArrowUpRight className="h-5 w-5 rtl:-scale-x-100" />
@@ -129,7 +129,7 @@ function CategoryCard({ category, kind, priority }: { category: CategorySummary;
 
       {/* Accent de marque au survol */}
       <span
-        className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-[#E63946] transition-transform duration-300 group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none rtl:origin-right"
+        className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-brand transition-transform duration-base group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none rtl:origin-right"
         aria-hidden="true"
       />
     </Link>
@@ -168,7 +168,7 @@ export function StyleExplorer({ vehicles, loading }: { vehicles: readonly Vehicl
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-xl">
           <p className="section-header-eyebrow">
-            <span className="h-3 w-3 rounded-full bg-[#E63946]" aria-hidden="true" />
+            <span className="h-3 w-3 rounded-full bg-brand" aria-hidden="true" />
             {styles.eyebrow}
           </p>
           <h2 id={headingId} className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -190,14 +190,14 @@ export function StyleExplorer({ vehicles, loading }: { vehicles: readonly Vehicl
                   aria-pressed={active}
                   onClick={() => setKind(type)}
                   className={cn(
-                    'inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                    active ? 'bg-white text-[#0B1220] shadow-sm' : 'text-slate-600 hover:text-[#0B1220]'
+                    'inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+                    active ? 'bg-white text-ink shadow-sm' : 'text-slate-600 hover:text-ink'
                   )}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                   {type === 'MOTORCYCLE' ? styles.motoLabel : styles.carLabel}
                   {!loading && (
-                    <span className={cn('tabular-nums', active ? 'text-slate-500' : 'text-slate-400')}>
+                    <span className="tabular-nums text-slate-500">
                       {summaries[type].total}
                     </span>
                   )}
@@ -207,7 +207,7 @@ export function StyleExplorer({ vehicles, loading }: { vehicles: readonly Vehicl
           </div>
           <Link
             href={CATALOG_PATHS[kind]}
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm outline-none transition hover:border-[#E63946]/30 hover:text-accent-text focus-visible:ring-2 focus-visible:ring-[#E63946] sm:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm outline-none transition hover:border-brand/30 hover:text-accent-text focus-visible:ring-2 focus-visible:ring-brand sm:inline-flex"
           >
             {copy.all}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />

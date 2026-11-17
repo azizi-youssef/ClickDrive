@@ -1103,7 +1103,7 @@ export function VehicleFormModal({
                 <button
                   type="button"
                   onClick={() => setStep((s) => (s + 1) as 2 | 3)}
-                  className="rounded-xl bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-[#1E293B]"
+                  className="rounded-xl bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
                 >
                   Suivant
                 </button>

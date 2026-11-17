@@ -1,16 +1,11 @@
 /**
- * Jetons de design du portail agence ClickDrive.
- * Palette de marque unique — evite la derive visuelle entre les dashboards.
+ * Recettes de classes du portail agence ClickDrive.
+ * Les couleurs, ombres et tailles viennent toutes des jetons de src/app/globals.css (@theme) :
+ * aucune valeur hexadécimale ici, pour qu'un réglage de la marque se fasse à un seul endroit.
  */
 
-export const BRAND = {
-  navy: '#0B1220',
-  red: '#E63946',
-  white: '#FFFFFF',
-  surface: '#F5F6F8',
-  text: '#0F172A',
-  textMuted: '#64748B',
-} as const;
+/** Indicateur de focus clavier commun : contour rouge de marque décalé de 2 px (visible aussi en contraste élevé). */
+export const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 
 /**
  * Échelle des titres (espace agence et écrans Statistiques) : un style par rôle, une seule couleur.
@@ -35,28 +30,26 @@ export const eyebrowMuted = `${eyebrow} text-slate-500`;
 
 /** Classes Tailwind reutilisables (bordures, etats, focus). */
 export const shell = {
-  page: 'min-h-screen bg-[#F5F6F8] text-[#0F172A]',
-  sidebar: 'bg-[#0B1220] text-white',
-  card: 'rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]',
+  page: 'min-h-screen bg-canvas text-ink',
+  sidebar: 'bg-ink text-white',
+  card: 'rounded-2xl border border-slate-200/80 bg-white shadow-card',
   cardPad: 'p-5 sm:p-6',
-  heading: 'text-lg font-bold tracking-tight text-[#0F172A]',
-  subtle: 'text-sm text-[#64748B]',
-  focusRing: 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] focus-visible:ring-offset-2',
+  heading: 'text-lg font-bold tracking-tight text-ink',
+  subtle: 'text-sm text-ink-secondary',
+  focusRing,
 } as const;
 
+/** Mêmes variantes que <Button> (components/ui/Button.tsx), aux hauteurs compactes du portail. */
 export const button = {
-  primary:
-    'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-action px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_20px_-12px_rgba(230,57,70,0.8)] transition-colors hover:bg-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none',
-  secondary:
-    'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#0B1220] transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:cursor-not-allowed disabled:opacity-50',
-  ghost:
-    'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50',
-  danger:
-    'inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50',
+  primary: `inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-action px-4 py-2.5 text-sm font-bold text-white shadow-action transition-colors hover:bg-action-hover ${focusRing} disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none`,
+  secondary: `inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-slate-300 hover:bg-slate-50 ${focusRing} disabled:cursor-not-allowed disabled:opacity-50`,
+  ghost: `inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-ink ${focusRing} disabled:opacity-50`,
+  danger: `inline-flex items-center justify-center gap-2 rounded-xl border border-danger-line bg-white px-3 py-2 text-sm font-medium text-danger transition-colors hover:bg-danger-soft ${focusRing} disabled:opacity-50`,
 } as const;
 
+/** Champ de saisie. Texte indicatif en slate-500 (4,97:1) : slate-400 ne faisait que 2,58:1. */
 export const input =
-  'min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-[#0F172A] outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8 disabled:bg-slate-100 disabled:text-slate-500';
+  'min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-slate-500 hover:border-slate-300 focus:border-ink focus:ring-4 focus:ring-ink/8 disabled:bg-slate-100 disabled:text-slate-500';
 
 /** Presets de periode pour les filtres du dashboard. */
 export type RangePreset = 'today' | '7d' | '30d' | '90d' | 'ytd' | 'all';

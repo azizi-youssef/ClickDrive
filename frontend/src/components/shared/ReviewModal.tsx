@@ -43,7 +43,7 @@ function StarRating({
           onClick={() => onChange(n)}
           onMouseEnter={() => setHovered(n)}
           onMouseLeave={() => setHovered(0)}
-          className="transition-transform hover:scale-110"
+          className="rounded-md transition-[scale] duration-instant motion-press"
           aria-label={plural(n, c.starAria)}
           aria-pressed={value === n}
         >
@@ -129,7 +129,7 @@ export function ReviewModal({
       >
 
         {/* Header */}
-        <div className="relative bg-[#0B1220] px-6 py-5">
+        <div className="relative bg-ink px-6 py-5">
           <button
             onClick={onClose}
             type="button"
@@ -174,7 +174,7 @@ export function ReviewModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-5 rounded-xl bg-[#0B1220] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="mt-5 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 {c.close}
               </button>
@@ -199,7 +199,7 @@ export function ReviewModal({
                   placeholder={c.placeholder}
                   value={comment}
                   onChange={(e) => { setComment(e.target.value); setError(null); }}
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-[#E63946] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#E63946]"
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
                 />
                 <p className="mt-1 text-end text-xs text-slate-400">{comment.length} / 500</p>
               </div>

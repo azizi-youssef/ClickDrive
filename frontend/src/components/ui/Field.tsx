@@ -4,9 +4,10 @@ import React, { useId } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/* Contrôles du design system : hauteur 44 px, bordure #D0D5DD, focus graphite, état invalide explicite */
+/* Contrôles du design system : hauteur 44 px, bordure line-strong, focus graphite, état invalide explicite,
+   texte indicatif slate-500 (4,97:1 ; slate-400 ne faisait que 2,58:1) */
 const CONTROL =
-  'w-full min-h-11 rounded-xl border bg-surface px-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#98A2B3] hover:border-[#98A2B3] focus:border-ink focus:ring-4 focus:ring-ink/8 disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-disabled sm:text-sm motion-reduce:transition-none';
+  'w-full min-h-11 rounded-xl border bg-surface px-3.5 text-body text-ink outline-none transition-[border-color,box-shadow] duration-fast placeholder:text-slate-500 hover:border-slate-400 focus:border-ink focus:ring-4 focus:ring-ink/8 disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-disabled sm:text-sm motion-reduce:transition-none';
 
 function controlClasses(invalid: boolean | undefined, className?: string) {
   return cn(
@@ -90,7 +91,7 @@ export function Field({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-1 text-[13px] font-semibold text-ink">
+      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-1 text-label text-ink">
         {label}
         {required && (
           <span className="text-accent-text" aria-hidden="true">
@@ -106,12 +107,12 @@ export function Field({
         required,
       })}
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 flex items-start gap-1.5 text-[13px] font-medium text-danger">
+        <p id={`${id}-error`} className="mt-1.5 flex items-start gap-1.5 text-label font-medium text-danger">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-ink-secondary">
+        <p id={`${id}-hint`} className="mt-1.5 text-label font-normal text-ink-secondary">
           {hint}
         </p>
       ) : null}

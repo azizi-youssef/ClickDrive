@@ -68,7 +68,7 @@ export function PendingPlanChangeBanner({
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#0B1220] px-4 text-xs font-bold text-white hover:bg-slate-800"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-ink px-4 text-xs font-bold text-white hover:bg-slate-800"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
             Régler avec l’équipe

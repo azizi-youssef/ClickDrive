@@ -654,7 +654,7 @@ export function AgencyWorkspace({
   const canBookings = canActOnBookings(profile?.role);
 
   return (
-    <div className="flex min-h-screen bg-[#F5F6F8] text-[#0F172A]">
+    <div className="flex min-h-screen bg-canvas text-ink">
       <a
         href="#agency-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3"

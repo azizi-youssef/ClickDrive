@@ -106,7 +106,7 @@ export function AdminFleetClient({ vehicleType = 'CAR' }: { vehicleType?: Vehicl
               aria-current={active ? 'page' : undefined}
               className={
                 active
-                  ? 'inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#0B1220] px-3.5 text-sm font-semibold text-white'
+                  ? 'inline-flex min-h-9 items-center gap-2 rounded-lg bg-ink px-3.5 text-sm font-semibold text-white'
                   : 'inline-flex min-h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }
             >
@@ -173,7 +173,7 @@ export function AdminFleetClient({ vehicleType = 'CAR' }: { vehicleType?: Vehicl
                   <Td className="hidden xl:table-cell"><span className="font-mono text-xs text-slate-500">{v.license_plate ?? '—'}</span></Td>
                   <Td><StatusBadge variant={vehicleStatusVariant(v.status) as any}>{vehicleStatusLabel(v.status)}</StatusBadge></Td>
                   <Td className="hidden sm:table-cell">
-                    <span className={`text-xs font-medium ${v.published ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-medium ${v.published ? 'text-emerald-700' : 'text-slate-500'}`}>
                       {v.published ? '✓ Oui' : '— Non'}
                     </span>
                   </Td>

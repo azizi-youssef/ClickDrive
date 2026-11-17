@@ -121,8 +121,8 @@ export function MobileNav({
   const itemClass = (active: boolean) =>
     cn(
       // Pleine largeur de la colonne : toute la case réagit au toucher, pas seulement l'icône et le libellé
-      'relative flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-xl text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
-      active ? 'text-[#0B1220]' : 'text-slate-500 hover:text-[#0B1220]'
+      'relative flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-xl text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+      active ? 'text-ink' : 'text-slate-500 hover:text-ink'
     );
 
   return (
@@ -146,7 +146,7 @@ export function MobileNav({
                   aria-label={badge ? `${section.label} (${pendingCount} à traiter)` : section.label}
                   className={itemClass(active)}
                 >
-                  {active && <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-[#E63946]" aria-hidden="true" />}
+                  {active && <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-brand" aria-hidden="true" />}
                   <span className="relative">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                     {badge && (
@@ -169,7 +169,7 @@ export function MobileNav({
               aria-expanded={sheetOpen}
               className={itemClass(activeInMore)}
             >
-              {activeInMore && <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-[#E63946]" aria-hidden="true" />}
+              {activeInMore && <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-brand" aria-hidden="true" />}
               <LayoutGrid className="h-5 w-5" aria-hidden="true" />
               Plus
             </button>
@@ -180,7 +180,7 @@ export function MobileNav({
       {sheetOpen &&
         createPortal(
           <div className="fixed inset-0 z-[60] lg:hidden">
-            <button type="button" tabIndex={-1} aria-label="Fermer" onClick={() => closeSheet()} className="absolute inset-0 bg-[#0B1220]/50 backdrop-blur-[2px]" />
+            <button type="button" tabIndex={-1} aria-label="Fermer" onClick={() => closeSheet()} className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]" />
             <div
               ref={sheetRef}
               role="dialog"
@@ -214,10 +214,10 @@ export function MobileNav({
                         aria-current={active ? 'page' : undefined}
                         className={cn(
                           'flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 text-start text-sm font-semibold transition-colors',
-                          active ? 'border-[#0B1220] bg-[#0B1220] text-white' : 'border-slate-200 text-[#0B1220] hover:bg-slate-50'
+                          active ? 'border-ink bg-ink text-white' : 'border-slate-200 text-ink hover:bg-slate-50'
                         )}
                       >
-                        <Icon className={cn('h-5 w-5 shrink-0', active ? 'text-white' : 'text-[#E63946]')} aria-hidden="true" />
+                        <Icon className={cn('h-5 w-5 shrink-0', active ? 'text-white' : 'text-brand')} aria-hidden="true" />
                         <span className="min-w-0">{section.label}</span>
                       </button>
                     </li>
@@ -235,11 +235,11 @@ export function MobileNav({
                     historyEntryRef.current = false;
                     setSheetOpen(false);
                   }}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200 px-3 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                  className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200 px-3 text-start transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   <Home className="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-[#0B1220]">Retour au site</span>
+                    <span className="block text-sm font-semibold text-ink">Retour au site</span>
                     <span className="block text-xs text-slate-500">Quitter l’espace agence</span>
                   </span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />

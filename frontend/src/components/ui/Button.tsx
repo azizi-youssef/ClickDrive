@@ -15,9 +15,9 @@ export type ButtonVariant = 'primary' | 'dark' | 'secondary' | 'ghost' | 'danger
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-action text-white shadow-[0_10px_20px_-12px_rgba(201,47,59,0.75)] hover:bg-action-hover',
-  dark: 'bg-ink text-white hover:bg-[#1A2333]',
-  secondary: 'border border-line-strong bg-surface text-ink hover:border-[#98A2B3] hover:bg-canvas',
+  primary: 'bg-action text-white shadow-action hover:bg-action-hover',
+  dark: 'bg-ink text-white hover:bg-ink-hover',
+  secondary: 'border border-line-strong bg-surface text-ink hover:border-slate-400 hover:bg-canvas',
   ghost: 'text-ink-tertiary hover:bg-neutral-soft hover:text-ink',
   danger: 'border border-danger-line bg-surface text-danger hover:bg-danger-soft',
 };
@@ -41,9 +41,10 @@ export function buttonClasses({
   className?: string;
 } = {}) {
   return cn(
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-bold outline-none transition-[background-color,border-color,color,box-shadow,scale] duration-200',
-    'focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2',
-    'active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-bold transition-[background-color,border-color,color,box-shadow,scale] duration-fast',
+    // Focus commun du design system (contour, visible aussi en mode contraste élevé)
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+    'motion-press',
     'disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none aria-disabled:pointer-events-none aria-disabled:opacity-50',
     VARIANTS[variant],
     SIZES[size],

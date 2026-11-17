@@ -110,7 +110,7 @@ export function VehicleCardSkeleton() {
           <div className="skeleton h-3.5 w-16 rounded-full" />
         </div>
         {/* Agence */}
-        <div className="mt-3.5 flex h-10 items-center gap-2 rounded-xl bg-[#F5F6F8] px-2.5">
+        <div className="mt-3.5 flex h-10 items-center gap-2 rounded-xl bg-canvas px-2.5">
           <div className="skeleton h-6 w-6 rounded-md" />
           <div className="skeleton h-3 w-28 rounded-full" />
         </div>
@@ -128,9 +128,9 @@ export function VehicleCardSkeleton() {
 
 // Écran tactile : flèches de 44 px (zone tactile minimale), 36 px à la souris
 const ARROW_BASE =
-  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-[opacity,transform,background-color] duration-150 hover:bg-white hover:scale-105 active:scale-95 ' +
+  'absolute top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-full bg-white/95 shadow-md transition-[opacity,scale,background-color] duration-fast hover:bg-white motion-press ' +
   'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
 function VehicleGallery({
   images,
@@ -229,7 +229,7 @@ function VehicleGallery({
 
   if (images.length === 0) {
     return (
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8]">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-canvas">
         <div
           role="img"
           aria-label={fmt(card.photoUnavailable, { name: `${brand} ${model}` })}
@@ -247,7 +247,7 @@ function VehicleGallery({
 
   return (
     <div
-      className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-[#F5F6F8]"
+      className="relative aspect-[16/10] w-full overflow-hidden bg-linear-to-b from-[#EEF0F3] to-canvas"
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -255,13 +255,13 @@ function VehicleGallery({
     >
       <div
         className={cn(
-          'absolute inset-0 transition-transform duration-500 ease-out motion-reduce:transition-none group-hover:scale-[1.03]',
+          'absolute inset-0 motion-zoom',
           unavailable && 'opacity-60 saturate-[0.35]'
         )}
       >
         <div
           dir="ltr"
-          className="flex h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
+          className="flex h-full w-full transition-transform duration-slow ease-standard"
           style={{
             transform: `translateX(-${currentIndex * 100}%)`,
           }}
@@ -342,7 +342,7 @@ function VehicleGallery({
               <span
                 key={i}
                 className={cn(
-                  'h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none',
+                  'h-1.5 rounded-full transition-[width,background-color] duration-base',
                   i === currentIndex ? 'w-4 bg-white shadow-xs' : 'w-1.5 bg-white/60'
                 )}
               />
@@ -401,14 +401,19 @@ function VehicleCardComponent({
   const isMoto = isMotorcycle(vehicle);
   const engineCc = formatEngineCc(vehicle.engine_cc);
 
+  // Retour visuel de l'ajout aux favoris : le cœur se gonfle une fois, seulement après un clic
+  // (pas au chargement d'une liste où des véhicules sont déjà favoris)
+  const [heartPop, setHeartPop] = useState(0);
+
   const handleFavorite = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (!isFavorite) setHeartPop((n) => n + 1);
       if (onFavorite) onFavorite(vehicle.id);
       else toggleFavorite(vehicle.id);
     },
-    [onFavorite, vehicle.id]
+    [isFavorite, onFavorite, vehicle.id]
   );
 
   const handleNotify = useCallback(
@@ -423,10 +428,11 @@ function VehicleCardComponent({
   return (
     <article
       className={cn(
-        // Apparition en CSS (framer-motion retiré des pages de liste)
-        'animate-cd-fade-in motion-reduce:animate-none group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-white transition-[box-shadow,border-color,transform] duration-300 motion-reduce:transition-none',
-        'border-slate-200/80 shadow-[0_1px_2px_rgba(11,18,32,0.05)]',
-        'hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_40px_-18px_rgba(11,18,32,0.28)] focus-within:border-[#0B1220] motion-reduce:hover:translate-y-0'
+        // Apparition en CSS (framer-motion retiré des pages de liste) ; soulèvement, ombre et
+        // bordure au survol : utilitaire motion-lift (jetons --motion-lift, duration-slow)
+        'animate-cd-fade-in group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-white motion-lift',
+        'border-slate-200/80 shadow-card',
+        'hover:border-slate-300 hover:shadow-card-hover focus-within:border-ink'
       )}
     >
       {/* ── Photo ─────────────────────────────────────────────────────── */}
@@ -444,7 +450,8 @@ function VehicleCardComponent({
         {/* Statut — pastille + texte (jamais la couleur seule) */}
         <span
           className={cn(
-            'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm backdrop-blur-sm',
+            // Fond opaque à 95 % : le flou d'arrière-plan n'y changeait rien et coûtait un calque GPU par carte
+            'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition-colors duration-fast',
             status.text
           )}
         >
@@ -456,8 +463,8 @@ function VehicleCardComponent({
         {promoLabel && (
           <span
             className={cn(
-              'pointer-events-none absolute start-3 top-12 z-10 inline-flex max-w-[calc(100%-4.5rem)] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums shadow-sm',
-              reduction ? 'bg-emerald-700 text-white' : 'bg-white/95 text-emerald-800 backdrop-blur-sm'
+              'pointer-events-none absolute start-3 top-12 z-10 inline-flex max-w-[calc(100%-4.5rem)] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums shadow-sm transition-colors duration-fast',
+              reduction ? 'bg-emerald-700 text-white' : 'bg-white/95 text-emerald-800'
             )}
           >
             <BadgePercent className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -471,15 +478,19 @@ function VehicleCardComponent({
           aria-pressed={isFavorite}
           aria-label={fmt(isFavorite ? card.removeFavorite : card.addFavorite, { name: vehicleName })}
           className={cn(
-            'absolute end-2.5 top-2.5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-sm backdrop-blur-sm transition-[color,scale] duration-200 active:scale-110 motion-reduce:active:scale-100',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
+            'absolute end-2.5 top-2.5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-sm transition-[color,scale] duration-instant motion-press',
+            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
             isFavorite ? 'text-accent-text' : 'text-slate-500 hover:text-accent-text'
           )}
         >
-          <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} aria-hidden="true" />
+          <Heart
+            key={heartPop}
+            className={cn('h-4 w-4', isFavorite && 'fill-current', isFavorite && heartPop > 0 && 'animate-cd-heart-pop')}
+            aria-hidden="true"
+          />
         </button>
 
-        <span className="pointer-events-none absolute bottom-3 start-3 z-10 inline-flex items-center gap-1 rounded-md bg-[#0B1220]/75 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm">
+        <span className="pointer-events-none absolute bottom-3 start-3 z-10 inline-flex items-center gap-1 rounded-md bg-ink/75 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm">
           {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
           {isMoto
             ? fmt(card.motoCategory, { category: categoryLabel(t, vehicle.category) })
@@ -492,7 +503,7 @@ function VehicleCardComponent({
         <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
           {vehicle.brand}
         </p>
-        <h3 className="mt-0.5 truncate text-[17px] font-extrabold leading-snug text-[#0B1220]">
+        <h3 className="mt-0.5 truncate text-title text-ink">
           {vehicle.model}{' '}
           <span className="font-semibold text-slate-500">{vehicle.year}</span>
         </h3>
@@ -530,7 +541,7 @@ function VehicleCardComponent({
         </ul>
 
         {agency && (
-          <div className="mt-3.5 flex min-w-0 items-center gap-2 rounded-xl bg-[#F5F6F8] px-2.5 py-2">
+          <div className="mt-3.5 flex min-w-0 items-center gap-2 rounded-xl bg-canvas px-2.5 py-2">
             <div className="h-6 w-6 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
               <AgencyLogo
                 slug={agency.slug}
@@ -568,10 +579,10 @@ function VehicleCardComponent({
           {/* flex-wrap : sur une carte étroite, le total passe sous le prix au lieu de se couper (« 7 / j ») */}
           <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1.5">
             <p className="whitespace-nowrap leading-none">
-              <span className="text-[22px] font-extrabold tabular-nums tracking-tight text-[#0B1220]">
+              <span className="text-[22px] font-extrabold tabular-nums tracking-tight text-ink">
                 {formatNumber(vehicle.daily_price, locale)}
               </span>
-              <span className="ms-1 text-xs font-bold text-[#0B1220]">{t.common.currency}</span>
+              <span className="ms-1 text-xs font-bold text-ink">{t.common.currency}</span>
               <span className="ms-1 text-xs font-medium text-slate-500">{card.perDay}</span>
             </p>
             {totalPrice !== null && !reduction ? (
@@ -613,11 +624,11 @@ function VehicleCardComponent({
             <Link
               href={detailsHref}
               className={cn(
-                'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold transition-colors duration-200',
-                'outline-none after:absolute after:inset-0 after:z-10 after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-[#E63946]',
+                'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold transition-colors duration-fast',
+                'outline-none after:absolute after:inset-0 after:z-10 after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand',
                 isBookable
-                  ? 'bg-[#0B1220] text-white group-hover:bg-action'
-                  : 'border border-slate-200 bg-white text-[#0B1220] group-hover:border-slate-300'
+                  ? 'bg-ink text-white group-hover:bg-action'
+                  : 'border border-slate-200 bg-white text-ink group-hover:border-slate-300'
               )}
             >
               {card.viewDetails}
@@ -625,7 +636,7 @@ function VehicleCardComponent({
                 {fmt(card.viewDetailsSr, { name: vehicleName, year: vehicle.year, price: mad(vehicle.daily_price) })}
               </span>
               <ArrowRight
-                className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+                className="h-4 w-4 transition-transform duration-fast group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                 aria-hidden="true"
               />
             </Link>
@@ -633,7 +644,7 @@ function VehicleCardComponent({
               <button
                 type="button"
                 onClick={handleNotify}
-                className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
+                className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                 aria-label={fmt(card.notifyMe, { name: vehicleName })}
               >
                 <BellRing className="h-4 w-4" aria-hidden="true" />

@@ -45,6 +45,7 @@ import { delocalizeHref, localizeHref } from '@/lib/i18n/routing';
 import type { NavbarMessages } from '@/lib/i18n/messages/navbar';
 import { LanguageSelector } from '@/components/shared/LanguageSelector';
 import { Magnet } from '@/components/ui/react-bits';
+import { usePresence } from '@/lib/ui/use-presence';
 
 /* ====================================================================== */
 /* ACCOUNT HELPERS                                                        */
@@ -125,7 +126,7 @@ function AccountAvatar({
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#0B1220] to-[#1E293B] font-bold text-white shadow-xs',
+        'flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-ink to-slate-800 font-bold text-white shadow-xs',
         className
       )}
       aria-hidden="true"
@@ -179,6 +180,11 @@ export function Navbar() {
   const [destinationsOpen, setDestinationsOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Sorties animées : chaque surface reste montée (et inerte) le temps de sa sortie
+  const destinationsMenu = usePresence(destinationsOpen);
+  const accountMenu = usePresence(accountMenuOpen);
+  const mobileDrawer = usePresence(mobileMenuOpen);
 
   // Authentication state
   const [authProfile, setAuthProfile] = useState<ClientAuthProfile | null>(null);
@@ -458,13 +464,14 @@ export function Navbar() {
       {/* ============================================================== */}
       {/* 1. TOP UTILITY BAR (Industrial Deep Navy #0B1220)              */}
       {/* ============================================================== */}
-      <div className="hidden border-b border-white/6 bg-[#0B1220] text-[11px] font-medium text-slate-400 sm:block">
+      <div className="hidden border-b border-white/6 bg-ink text-[11px] font-medium text-slate-400 sm:block">
         <div className="mx-auto flex h-8.5 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 [&_a]:min-h-6 [&_button]:min-h-6">
           {/* Left: Verified Fleet Status & Quick Transits */}
           <div className="flex min-w-0 items-center gap-4">
             <div className="flex items-center gap-2 font-semibold text-emerald-400">
               <span className="relative flex h-2 w-2" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                {/* Trois pulsations puis arrêt : une animation infinie distrait sur chaque page (WCAG 2.2.2) */}
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60 [animation-iteration-count:3]" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
               <span>{strings.verifiedAgencies}</span>
@@ -577,7 +584,8 @@ export function Navbar() {
       {/* ============================================================== */}
       <div
         className={cn(
-          'w-full border-b transition-all duration-300',
+          // Seules les couleurs et l'ombre changent au défilement (ni hauteur ni flou animés : pas de décalage)
+          'w-full border-b transition-[background-color,border-color,box-shadow] duration-base',
           scrolled
             ? 'border-slate-200/80 bg-white/98 shadow-[0_4px_24px_rgba(11,18,32,0.06)] backdrop-blur-xl'
             : 'border-slate-200/60 bg-white/94 backdrop-blur-lg'
@@ -593,7 +601,7 @@ export function Navbar() {
             <Link
               href="/"
               aria-label={strings.homeAria}
-              className="group flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-[#E63946]"
+              className="group flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-brand"
             >
               {/* Mobile Compact Emblem (under 640px) */}
               <div className="relative h-8 w-[128px] sm:hidden">
@@ -602,7 +610,7 @@ export function Navbar() {
                   alt="ClickDrive"
                   fill
                   sizes="128px"
-                  className="object-contain transition-transform duration-300 group-hover:scale-105"
+                  className="object-contain"
                   priority
                 />
               </div>
@@ -616,7 +624,7 @@ export function Navbar() {
                   fill
                   sizes="(max-width: 1024px) 208px, 224px"
                   className={cn(
-                    'object-contain transition-transform duration-300 group-hover:scale-[1.01]',
+                    'object-contain',
                     isRTL ? 'object-right' : 'object-left'
                   )}
                   priority
@@ -636,15 +644,15 @@ export function Navbar() {
                 href="/"
                 aria-current={isNavActive('/') ? 'page' : undefined}
                 className={cn(
-                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-3',
+                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand xl:px-3',
                   isNavActive('/')
-                    ? 'font-bold text-[#0B1220]'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                    ? 'font-bold text-ink'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 )}
               >
                 {strings.home}
                 {isNavActive('/') && (
-                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                 )}
               </Link>
 
@@ -653,15 +661,15 @@ export function Navbar() {
                 href="/search"
                 aria-current={isNavActive('/search') ? 'page' : undefined}
                 className={cn(
-                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-3',
+                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand xl:px-3',
                   isNavActive('/search')
-                    ? 'font-bold text-[#0B1220]'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                    ? 'font-bold text-ink'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 )}
               >
                 {strings.cars}
                 {isNavActive('/search') && (
-                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                 )}
               </Link>
 
@@ -670,15 +678,15 @@ export function Navbar() {
                 href="/motos"
                 aria-current={isNavActive('/motos') ? 'page' : undefined}
                 className={cn(
-                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-3',
+                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand xl:px-3',
                   isNavActive('/motos')
-                    ? 'font-bold text-[#0B1220]'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                    ? 'font-bold text-ink'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 )}
               >
                 {strings.motos}
                 {isNavActive('/motos') && (
-                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                 )}
               </Link>
 
@@ -687,15 +695,15 @@ export function Navbar() {
                 href="/agencies"
                 aria-current={isNavActive('/agencies') ? 'page' : undefined}
                 className={cn(
-                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-3',
+                  'relative whitespace-nowrap rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand xl:px-3',
                   isNavActive('/agencies')
-                    ? 'font-bold text-[#0B1220]'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                    ? 'font-bold text-ink'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 )}
               >
                 {strings.agencies}
                 {isNavActive('/agencies') && (
-                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                 )}
               </Link>
 
@@ -716,34 +724,37 @@ export function Navbar() {
                   onClick={() => setDestinationsOpen((prev) => !prev)}
                   onKeyDown={handleDestinationsTriggerKeyDown}
                   className={cn(
-                    'relative flex whitespace-nowrap items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946]',
+                    'relative flex whitespace-nowrap items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand',
                     destinationsOpen || isDestinationsActive
-                      ? 'bg-slate-100/80 font-bold text-[#0B1220]'
-                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                      ? 'bg-slate-100/80 font-bold text-ink'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                   )}
                 >
                   <span>{strings.destinations}</span>
                   <ChevronDown
                     className={cn(
-                      'h-3.5 w-3.5 text-slate-400 transition-transform duration-200',
+                      'h-3.5 w-3.5 text-slate-400 transition-transform duration-fast',
                       destinationsOpen && 'rotate-180'
                     )}
                     aria-hidden="true"
                   />
                   {isDestinationsActive && (
-                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                   )}
                 </button>
 
                 {/* Dropdown Panel */}
-                {destinationsOpen && (
+                {destinationsMenu.mounted && (
                   <div
                     id={destinationsMenuId}
                     role="menu"
                     aria-labelledby="destinations-menu-button"
                     onKeyDown={handleDestinationsMenuKeyDown}
+                    inert={destinationsMenu.closing || undefined}
+                    onAnimationEnd={destinationsMenu.onAnimationEnd}
                     className={cn(
-                      'absolute top-full z-50 mt-3 w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_32px_80px_-24px_rgba(11,18,32,0.35),0_4px_16px_rgba(11,18,32,0.06)] animate-cd-dropdown',
+                      'absolute top-full z-50 mt-3 w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-overlay',
+                      destinationsMenu.closing ? 'animate-cd-dropdown-out' : 'animate-cd-dropdown',
                       isRTL ? 'right-0' : 'left-1/2 -translate-x-1/2'
                     )}
                   >
@@ -770,27 +781,27 @@ export function Navbar() {
                                 aria-current={active ? 'page' : undefined}
                                 onClick={() => setDestinationsOpen(false)}
                                 className={cn(
-                                  'group flex items-start gap-3 rounded-2xl p-2.5 outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                                  active ? 'bg-[#F5F6F8]' : 'hover:bg-[#F5F6F8]'
+                                  'group flex items-start gap-3 rounded-2xl p-2.5 outline-none transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-brand',
+                                  active ? 'bg-canvas' : 'hover:bg-canvas'
                                 )}
                               >
                                 <span
                                   className={cn(
-                                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-200',
+                                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-fast',
                                     active
                                       ? 'bg-action text-white'
-                                      : 'bg-[#F5F6F8] text-[#0B1220] group-hover:bg-[#0B1220] group-hover:text-white'
+                                      : 'bg-canvas text-ink group-hover:bg-ink group-hover:text-white'
                                   )}
                                 >
                                   <Icon className="h-4.5 w-4.5" aria-hidden="true" />
                                 </span>
                                 <span className="min-w-0 flex-1 pt-0.5">
                                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <span className="text-[13px] font-bold leading-snug text-[#0B1220]">
+                                    <span className="text-[13px] font-bold leading-snug text-ink">
                                       {strings.destinationItems[item.key].title}
                                     </span>
                                     {tag && (
-                                      <span className="rounded-full bg-[#E63946]/10 px-2 py-0.5 text-[11px] font-bold text-[#C92F3B]">
+                                      <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-bold text-accent-text">
                                         {tag}
                                       </span>
                                     )}
@@ -826,22 +837,22 @@ export function Navbar() {
                                 aria-current={active ? 'page' : undefined}
                                 onClick={() => setDestinationsOpen(false)}
                                 className={cn(
-                                  'group flex items-center gap-3 rounded-2xl p-2.5 outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-[#E63946]',
+                                  'group flex items-center gap-3 rounded-2xl p-2.5 outline-none transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-brand',
                                   active ? 'bg-white shadow-sm' : 'hover:bg-white hover:shadow-sm'
                                 )}
                               >
                                 <span
                                   className={cn(
-                                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors duration-200',
+                                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors duration-fast',
                                     active
-                                      ? 'border-[#E63946] bg-action text-white'
-                                      : 'border-slate-200 bg-white text-[#0B1220] group-hover:border-[#0B1220] group-hover:bg-[#0B1220] group-hover:text-white'
+                                      ? 'border-brand bg-action text-white'
+                                      : 'border-slate-200 bg-white text-ink group-hover:border-ink group-hover:bg-ink group-hover:text-white'
                                   )}
                                 >
                                   <Icon className="h-4.5 w-4.5" aria-hidden="true" />
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block text-[13px] font-bold leading-snug text-[#0B1220]">
+                                  <span className="block text-[13px] font-bold leading-snug text-ink">
                                     {strings.destinationItems[item.key].title}
                                   </span>
                                   <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
@@ -849,7 +860,7 @@ export function Navbar() {
                                   </span>
                                 </span>
                                 <ArrowRight
-                                  className="h-4 w-4 shrink-0 text-slate-300 transition-[color,transform] duration-200 group-hover:translate-x-0.5 group-hover:text-accent-text rtl:rotate-180 rtl:group-hover:-translate-x-0.5 motion-reduce:transition-none"
+                                  className="h-4 w-4 shrink-0 text-slate-300 transition-[color,transform] duration-fast group-hover:translate-x-0.5 group-hover:text-accent-text rtl:rotate-180 rtl:group-hover:-translate-x-0.5 motion-reduce:transition-none"
                                   aria-hidden="true"
                                 />
                               </Link>
@@ -865,11 +876,11 @@ export function Navbar() {
                             destinationLinkRefs.current[5] = el;
                           }}
                           onClick={() => setDestinationsOpen(false)}
-                          className="group relative mt-auto block overflow-hidden rounded-2xl bg-[#0B1220] p-4 text-white outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] focus-visible:ring-offset-2"
+                          className="group relative mt-auto block overflow-hidden rounded-2xl bg-ink p-4 text-white outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                         >
                           <span
                             aria-hidden="true"
-                            className="pointer-events-none absolute -end-8 -top-10 h-28 w-28 rounded-full bg-[#E63946]/25 blur-2xl"
+                            className="pointer-events-none absolute -end-8 -top-10 h-28 w-28 rounded-full bg-brand/25 blur-2xl"
                           />
                           <span className="relative block text-[13px] font-bold">{strings.partnerFleetNotice}</span>
                           <span className="relative mt-1 block text-xs leading-relaxed text-slate-400">
@@ -900,15 +911,15 @@ export function Navbar() {
                 href="/faq"
                 aria-current={isNavActive('/faq') ? 'page' : undefined}
                 className={cn(
-                  'relative hidden xl:block whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-[#E63946]',
+                  'relative hidden xl:block whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-semibold transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-brand',
                   isNavActive('/faq')
-                    ? 'font-bold text-[#0B1220]'
-                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-[#0B1220]'
+                    ? 'font-bold text-ink'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 )}
               >
                 {strings.faqHelp}
                 {isNavActive('/faq') && (
-                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-[#E63946]" />
+                  <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand" />
                 )}
               </Link>
             </nav>
@@ -934,7 +945,7 @@ export function Navbar() {
                     aria-controls={accountMenuId}
                     onClick={() => setAccountMenuOpen((open) => !open)}
                     aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
-                    className="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 py-1.5 text-left shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-2.5"
+                    className="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 py-1.5 text-left shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand xl:px-2.5"
                   >
                     <AccountAvatar profile={authProfile} className="h-7 w-7 text-xs" />
                     {/* Nom et rôle affichés à partir de 1280 px ; avatar seul en dessous */}
@@ -948,20 +959,23 @@ export function Navbar() {
                     </span>
                     <ChevronDown
                       className={cn(
-                        'h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200',
+                        'h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-fast',
                         accountMenuOpen && 'rotate-180'
                       )}
                       aria-hidden="true"
                     />
                   </button>
 
-                  {accountMenuOpen && (
+                  {accountMenu.mounted && (
                     <div
                       id={accountMenuId}
                       role="menu"
                       aria-labelledby="account-menu-button"
+                      inert={accountMenu.closing || undefined}
+                      onAnimationEnd={accountMenu.onAnimationEnd}
                       className={cn(
-                        'absolute top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_40px_rgba(11,18,32,0.12)] animate-cd-dropdown',
+                        'absolute top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_40px_rgba(11,18,32,0.12)]',
+                        accountMenu.closing ? 'animate-cd-dropdown-out' : 'animate-cd-dropdown',
                         isRTL ? 'left-0' : 'right-0'
                       )}
                     >
@@ -971,7 +985,7 @@ export function Navbar() {
                         </p>
                         <p className="truncate text-[11px] text-slate-500">{authProfile.email}</p>
                         {authProfile.canAccessAgency && authProfile.agencyName && (
-                          <p className="mt-0.5 truncate text-[11px] font-semibold text-[#0B1220]">
+                          <p className="mt-0.5 truncate text-[11px] font-semibold text-ink">
                             {authProfile.agencyName}
                           </p>
                         )}
@@ -1023,7 +1037,7 @@ export function Navbar() {
                   href={LOGIN_PATH}
                   aria-label={strings.login}
                   title={strings.login}
-                  className="inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-xs transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-[#0B1220] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#E63946] xl:px-3"
+                  className="inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-xs transition-[background-color,border-color,color,scale] duration-fast hover:border-slate-300 hover:bg-slate-50 hover:text-ink motion-press focus-visible:outline-2 focus-visible:outline-brand xl:px-3"
                 >
                   <User className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
                   {/* Texte à partir de 1280 px ; icône seule en dessous */}
@@ -1038,7 +1052,7 @@ export function Navbar() {
               <Magnet strength={0.25}>
                 <Link
                   href="/search"
-                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-action px-4 py-2.5 text-xs font-bold text-white shadow-xs shadow-red-900/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-action-hover hover:shadow-[0_6px_22px_rgba(230,57,70,0.35)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#0B1220]"
+                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-action px-4 py-2.5 text-xs font-bold text-white shadow-xs shadow-red-900/20 transition-[background-color,box-shadow,scale] duration-fast hover:bg-action-hover hover:shadow-[0_6px_22px_rgba(230,57,70,0.35)] motion-press focus-visible:outline-2 focus-visible:outline-ink"
                 >
                   <span
                     className="absolute inset-0 bg-linear-to-br from-white/15 to-transparent pointer-events-none"
@@ -1048,7 +1062,7 @@ export function Navbar() {
                   <span>{strings.search}</span>
                   <ArrowRight
                     className={cn(
-                      'h-3 w-3 opacity-90 transition-transform duration-200',
+                      'h-3 w-3 opacity-90 transition-transform duration-fast',
                       isRTL ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'
                     )}
                     aria-hidden="true"
@@ -1080,7 +1094,7 @@ export function Navbar() {
                   href={accountHref(authProfile)}
                   aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
                   title={accountIdentity(authProfile, strings).name}
-                  className="flex h-9 max-w-36 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                  className="flex h-9 max-w-36 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2 text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   <AccountAvatar profile={authProfile} className="h-6 w-6 text-[10px]" />
                   <span className="truncate text-xs font-bold">
@@ -1091,7 +1105,7 @@ export function Navbar() {
                 <Link
                   href={LOGIN_PATH}
                   aria-label={strings.login}
-                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                  className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   <User className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -1104,7 +1118,7 @@ export function Navbar() {
                 aria-label={mobileMenuOpen ? strings.closeMenu : strings.openMenu}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="tap-44 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -1132,7 +1146,7 @@ export function Navbar() {
                 <Link
                   href={accountHref(authProfile)}
                   aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
-                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   <AccountAvatar profile={authProfile} className="h-7 w-7 text-[10px]" />
                 </Link>
@@ -1140,7 +1154,7 @@ export function Navbar() {
                 <Link
                   href={LOGIN_PATH}
                   aria-label={strings.login}
-                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                  className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   <User className="h-[18px] w-[18px]" aria-hidden="true" />
                 </Link>
@@ -1152,7 +1166,7 @@ export function Navbar() {
                 aria-label={mobileMenuOpen ? strings.closeMenu : strings.openMenu}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen((open) => !open)}
-                className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="tap-44 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand"
               >
                 {mobileMenuOpen ? (
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -1168,11 +1182,14 @@ export function Navbar() {
       {/* ============================================================== */}
       {/* 3. MOBILE & TABLET NAVIGATION DRAWER                           */}
       {/* ============================================================== */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden">
+      {mobileDrawer.mounted && (
+        <div className="lg:hidden" inert={mobileDrawer.closing || undefined}>
           {/* Accessible Backdrop Overlay */}
           <div
-            className="fixed inset-0 z-50 bg-[#0B1220]/55 backdrop-blur-[2px] motion-safe:animate-[cd-fade-in_200ms_ease-out]"
+            className={cn(
+              'fixed inset-0 z-50 bg-ink/55 backdrop-blur-[2px]',
+              mobileDrawer.closing ? 'motion-safe:animate-cd-fade-out' : 'motion-safe:animate-cd-fade-in'
+            )}
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
             data-modal-backdrop
@@ -1185,9 +1202,10 @@ export function Navbar() {
             aria-modal="true"
             aria-label={strings.navigation}
             tabIndex={-1}
+            onAnimationEnd={mobileDrawer.onAnimationEnd}
             className={cn(
               'fixed inset-y-0 z-50 flex w-[min(22rem,calc(100vw-3.5rem))] flex-col bg-white shadow-2xl outline-none',
-              'motion-safe:animate-[cd-drawer-in_280ms_cubic-bezier(0.32,0.72,0,1)]',
+              mobileDrawer.closing ? 'motion-safe:animate-cd-drawer-out' : 'motion-safe:animate-cd-drawer-in',
               isRTL ? 'left-0 border-r border-slate-200' : 'right-0 border-l border-slate-200'
             )}
           >
@@ -1210,7 +1228,7 @@ export function Navbar() {
                 type="button"
                 aria-label={strings.closeMenu}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#E63946]"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -1241,7 +1259,7 @@ export function Navbar() {
                         className={cn(
                           'flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-colors',
                           active
-                            ? 'bg-slate-100 font-bold text-[#0B1220] border-s-4 border-[#E63946]'
+                            ? 'bg-slate-100 font-bold text-ink border-s-4 border-brand'
                             : 'text-slate-700 hover:bg-slate-50'
                         )}
                       >
@@ -1263,7 +1281,7 @@ export function Navbar() {
                       className={cn(
                         'flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-colors',
                         destAccordionOpen || isDestinationsActive
-                          ? 'bg-slate-100 font-bold text-[#0B1220]'
+                          ? 'bg-slate-100 font-bold text-ink'
                           : 'text-slate-700 hover:bg-slate-50'
                       )}
                     >
@@ -1273,7 +1291,7 @@ export function Navbar() {
                       </span>
                       <ChevronDown
                         className={cn(
-                          'h-4 w-4 text-slate-400 transition-transform duration-200',
+                          'h-4 w-4 text-slate-400 transition-transform duration-fast',
                           destAccordionOpen && 'rotate-180'
                         )}
                         aria-hidden="true"
@@ -1296,7 +1314,7 @@ export function Navbar() {
                               className={cn(
                                 'flex items-center justify-between rounded-xl p-2.5 transition-colors',
                                 active
-                                  ? 'bg-slate-100 font-bold text-[#0B1220]'
+                                  ? 'bg-slate-100 font-bold text-ink'
                                   : 'hover:bg-slate-50 text-slate-700'
                               )}
                             >
@@ -1348,7 +1366,7 @@ export function Navbar() {
                         <p className="truncate text-xs font-bold text-slate-900">
                           {accountIdentity(authProfile, strings).name}
                         </p>
-                        <p className="text-[11px] font-semibold text-[#0B1220]">
+                        <p className="text-[11px] font-semibold text-ink">
                           {accountIdentity(authProfile, strings).badge}
                         </p>
                         <p className="truncate text-[11px] text-slate-500">{authProfile.email}</p>
@@ -1405,7 +1423,7 @@ export function Navbar() {
                       className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-xs font-bold text-slate-800 shadow-xs transition-colors hover:bg-slate-50"
                     >
                       <span className="flex items-center gap-2.5">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E63946]/10 text-accent-text">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-accent-text">
                           <User className="h-4 w-4" aria-hidden="true" />
                         </span>
                         <span>{strings.login}</span>

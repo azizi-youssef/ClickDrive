@@ -138,12 +138,12 @@ export function GeofenceEditor({
           </fieldset>
 
           <fieldset>
-            <legend className="text-sm font-medium text-[#0F172A]">Véhicules concernés ({selected.size})</legend>
+            <legend className="text-sm font-medium text-ink">Véhicules concernés ({selected.size})</legend>
             <div className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-xl border border-slate-200 p-2">
               {vehicles.length === 0 && <p className="px-2 py-1.5 text-sm text-slate-500">Aucun véhicule.</p>}
               {vehicles.map((vehicle) => (
                 <label key={vehicle.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50">
-                  <input type="checkbox" checked={selected.has(vehicle.id)} onChange={() => toggleVehicle(vehicle.id)} className="h-4 w-4 rounded border-slate-300 accent-[#0B1220]" />
+                  <input type="checkbox" checked={selected.has(vehicle.id)} onChange={() => toggleVehicle(vehicle.id)} className="h-4 w-4 rounded border-slate-300 accent-ink" />
                   <span className="truncate">{vehicle.label}</span>
                 </label>
               ))}

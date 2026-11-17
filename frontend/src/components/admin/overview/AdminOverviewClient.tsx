@@ -52,8 +52,8 @@ const HEALTH_NAME: Record<string, string> = {
   database: 'Base de données',
   supabase: 'Supabase',
 };
-const TONE_DOT = { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-[#E63946]' } as const;
-const TONE_TEXT = { ok: 'text-emerald-700', warn: 'text-amber-700', error: 'text-[#B4232F]' } as const;
+const TONE_DOT = { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-brand' } as const;
+const TONE_TEXT = { ok: 'text-emerald-700', warn: 'text-amber-700', error: 'text-action-hover' } as const;
 
 const nf = new Intl.NumberFormat('fr-MA', { maximumFractionDigits: 0 });
 const shortDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
@@ -69,12 +69,12 @@ function CardHeader({ title, href, linkLabel, badge }: { title: string; href: st
   return (
     <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
       <div className="flex items-center gap-2">
-        <h2 className="text-[15px] font-extrabold text-[#0B1220]">{title}</h2>
+        <h2 className="text-[15px] font-extrabold text-ink">{title}</h2>
         {badge}
       </div>
       <Link
         href={href}
-        className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-bold text-accent-text outline-none hover:bg-[#E63946]/5 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+        className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-bold text-accent-text outline-none hover:bg-brand/5 focus-visible:ring-2 focus-visible:ring-brand"
       >
         {linkLabel}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -89,7 +89,7 @@ function Initial({ name, dark }: { name: string; dark?: boolean }) {
       aria-hidden="true"
       className={cn(
         'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold',
-        dark ? 'bg-[#0B1220] text-white' : 'bg-[#F5F6F8] text-slate-600'
+        dark ? 'bg-ink text-white' : 'bg-canvas text-slate-600'
       )}
     >
       {(name || '?').charAt(0).toUpperCase()}
@@ -211,7 +211,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
   const distribution = [
     { label: 'En attente', value: pendingBookings, color: 'bg-amber-400' },
     { label: 'Confirmées / en cours', value: confirmedBookings, color: 'bg-emerald-500' },
-    { label: 'Terminées', value: completedBookings, color: 'bg-[#0B1220]' },
+    { label: 'Terminées', value: completedBookings, color: 'bg-ink' },
     { label: 'Annulées / refusées', value: closedBookings, color: 'bg-slate-300' },
   ];
 
@@ -228,8 +228,8 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
 
   const todoTone: Record<TodoTone, string> = {
     amber: 'bg-amber-50 text-amber-700',
-    slate: 'bg-[#F5F6F8] text-[#0B1220]',
-    red: 'bg-red-50 text-[#B4232F]',
+    slate: 'bg-canvas text-ink',
+    red: 'bg-red-50 text-action-hover',
     blue: 'bg-blue-50 text-blue-700',
   };
 
@@ -244,7 +244,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
               'pointer-events-auto flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg',
               toast.type === 'success'
                 ? 'border-emerald-200 bg-white text-emerald-800'
-                : 'border-red-200 bg-white text-[#B4232F]'
+                : 'border-red-200 bg-white text-action-hover'
             )}
           >
             {toast.type === 'success' ? (
@@ -300,13 +300,13 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                   <li key={todo.key}>
                     <Link
                       href={todo.href}
-                      className="group flex h-full items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 outline-none transition-colors hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                      className="group flex h-full items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 outline-none transition-colors hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand"
                     >
                       <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', todoTone[todo.tone])}>
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-extrabold text-[#0B1220]">{todo.title}</span>
+                        <span className="block text-sm font-extrabold text-ink">{todo.title}</span>
                         <span className="mt-0.5 line-clamp-2 block text-xs text-slate-500">{todo.text}</span>
                       </span>
                       <ArrowRight
@@ -374,9 +374,9 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
       {/* ── MRR ──────────────────────────────────────────────────────── */}
       <section
         aria-labelledby="admin-mrr"
-        className="relative overflow-hidden rounded-2xl bg-[#0B1220] px-6 py-6 text-white sm:px-8"
+        className="relative overflow-hidden rounded-2xl bg-ink px-6 py-6 text-white sm:px-8"
       >
-        <div className="pointer-events-none absolute -top-16 end-0 h-48 w-72 rounded-full bg-[#E63946]/15 blur-3xl" aria-hidden="true" />
+        <div className="pointer-events-none absolute -top-16 end-0 h-48 w-72 rounded-full bg-brand/15 blur-3xl" aria-hidden="true" />
         <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
@@ -405,7 +405,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
             </p>
             <Link
               href="/admin/finance"
-              className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#0B1220] outline-none transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-[#E63946] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1220]"
+              className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-ink outline-none transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
             >
               Gérer les forfaits
               <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -426,7 +426,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                   {plans.map((plan, i) => (
                     <div
                       key={plan.slug}
-                      className={cn('h-full', ['bg-[#E63946]', 'bg-amber-300', 'bg-white', 'bg-slate-400'][i % 4])}
+                      className={cn('h-full', ['bg-brand', 'bg-amber-300', 'bg-white', 'bg-slate-400'][i % 4])}
                       style={{ width: `${(plan.count / planTotal) * 100}%` }}
                     />
                   ))}
@@ -434,7 +434,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                 <ul className="mt-4 space-y-2">
                   {plans.map((plan, i) => (
                     <li key={plan.slug} className="flex items-center gap-2.5 text-sm">
-                      <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', ['bg-[#E63946]', 'bg-amber-300', 'bg-white', 'bg-slate-400'][i % 4])} aria-hidden="true" />
+                      <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', ['bg-brand', 'bg-amber-300', 'bg-white', 'bg-slate-400'][i % 4])} aria-hidden="true" />
                       <span className="flex-1 truncate font-semibold text-slate-200">{plan.planName}</span>
                       <span className="tabular-nums text-slate-400">
                         {plan.count} agence{plan.count > 1 ? 's' : ''}
@@ -459,7 +459,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
             <div className="flex h-2.5 overflow-hidden rounded-full bg-slate-100" role="img" aria-label={distribution.map((d) => `${d.label} : ${d.value}`).join(', ')}>
               {total > 0 &&
                 distribution.map((d) => (
-                  <div key={d.label} className={cn('h-full transition-[width] duration-500', d.color)} style={{ width: `${(d.value / total) * 100}%` }} />
+                  <div key={d.label} className={cn('h-full transition-[width] duration-slower', d.color)} style={{ width: `${(d.value / total) * 100}%` }} />
                 ))}
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
@@ -467,7 +467,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                 <div key={d.label} className="flex items-center gap-2">
                   <span className={cn('h-2 w-2 shrink-0 rounded-full', d.color)} aria-hidden="true" />
                   <dt className="truncate text-xs text-slate-500">{d.label}</dt>
-                  <dd className="ms-auto text-sm font-extrabold tabular-nums text-[#0B1220]">{loading || !counts ? '—' : d.value}</dd>
+                  <dd className="ms-auto text-sm font-extrabold tabular-nums text-ink">{loading || !counts ? '—' : d.value}</dd>
                 </div>
               ))}
             </dl>
@@ -493,11 +493,11 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           ) : (
             <ul className="divide-y divide-slate-100">
               {bookings.map((b) => (
-                <li key={b.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[#F8F9FA] sm:px-6">
+                <li key={b.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-slate-50 sm:px-6">
                   <Initial name={b.customer_name ?? ''} />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-baseline gap-2">
-                      <span className="truncate text-sm font-bold text-[#0B1220]">{b.customer_name}</span>
+                      <span className="truncate text-sm font-bold text-ink">{b.customer_name}</span>
                       {(b.booking_ref || b.reference) && (
                         <span className="hidden shrink-0 font-mono text-[11px] text-slate-400 sm:inline">{b.booking_ref ?? b.reference}</span>
                       )}
@@ -554,7 +554,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                   <li key={a.id} className="flex items-center gap-3 px-5 py-3 sm:px-6">
                     <Initial name={a.name} dark />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-[#0B1220]">{a.name}</p>
+                      <p className="truncate text-sm font-bold text-ink">{a.name}</p>
                       <p className="truncate text-xs text-slate-500">{[a.city, a.email].filter(Boolean).join(' · ')}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -566,7 +566,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
                         disabled={verifyingId === a.id}
                         onClick={() => void handleVerify(a, true)}
                         aria-label={`Vérifier ${a.name}`}
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#0B1220] px-3 text-xs font-bold text-white outline-none transition-colors hover:bg-[#1a2333] focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-50"
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-bold text-white outline-none transition-colors hover:bg-ink-hover focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
                       >
                         {verifyingId === a.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />

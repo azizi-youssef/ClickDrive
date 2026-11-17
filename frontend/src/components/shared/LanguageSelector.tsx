@@ -97,14 +97,14 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
           <Globe className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{currentLanguage.nativeName}</span>
           <ChevronDown
-            className={cn('h-3.5 w-3.5 text-slate-400 transition-transform duration-200', isOpen && 'rotate-180')}
+            className={cn('h-3.5 w-3.5 text-slate-400 transition-transform duration-fast', isOpen && 'rotate-180')}
           />
         </button>
 
         {isOpen && (
           <div
             role="menu"
-            className="absolute bottom-full mb-2 w-48 overflow-hidden rounded-2xl border border-slate-700 bg-[#0F172A] p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 max-lg:left-1/2 max-lg:-translate-x-1/2 lg:start-0"
+            className="absolute bottom-full mb-2 w-48 overflow-hidden rounded-2xl border border-slate-700 bg-ink p-1.5 shadow-2xl z-50 motion-safe:animate-cd-dropdown [--cd-dropdown-y:var(--motion-distance-xs)] max-lg:left-1/2 max-lg:-translate-x-1/2 lg:start-0"
           >
             <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800">
               {t.common.switchLanguage}
@@ -150,9 +150,9 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
         aria-expanded={isOpen}
         aria-label={`${currentLanguage.code.toUpperCase()} (${currentLanguage.nativeName}) — ${t.common.switchLanguage}`}
         className={cn(
-          'tap-44 inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all duration-200',
+          'tap-44 inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all duration-fast',
           isOpen
-            ? 'border-[#0B1220] bg-slate-100 text-slate-900 shadow-xs'
+            ? 'border-ink bg-slate-100 text-slate-900 shadow-xs'
             : 'border-slate-200/80 bg-white/80 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
         )}
       >
@@ -162,7 +162,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
         </span>
         <ChevronDown
           className={cn(
-            'h-3 w-3 text-slate-400 transition-transform duration-200',
+            'h-3 w-3 text-slate-400 transition-transform duration-fast',
             isOpen && 'rotate-180'
           )}
         />
@@ -171,9 +171,9 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(15,23,42,0.12)] z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(15,23,42,0.12)] z-50 motion-safe:animate-cd-dropdown"
         >
-          <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+          <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100">
             Langue / Language
           </div>
           <div className="mt-1 space-y-0.5">
@@ -194,7 +194,7 @@ export function LanguageSelector({ variant = 'navbar', className }: LanguageSele
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="font-medium text-slate-900">{lang.nativeName}</span>
-                    <span className="text-[11px] text-slate-400 uppercase font-semibold">
+                    <span className="text-[11px] text-slate-500 uppercase font-semibold">
                       ({lang.code})
                     </span>
                   </div>

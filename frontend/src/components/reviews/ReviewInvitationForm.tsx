@@ -60,7 +60,7 @@ export function ReviewInvitationForm({
     return (
       <div role="status" className="text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" aria-hidden="true" />
-        <p className="mt-3 text-lg font-extrabold text-[#0B1220]">{r.doneTitle}</p>
+        <p className="mt-3 text-lg font-extrabold text-ink">{r.doneTitle}</p>
         <p className="mt-1 text-sm text-slate-600">{r.doneText}</p>
         {googleReviewUrl && (
           <a
@@ -79,10 +79,10 @@ export function ReviewInvitationForm({
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
       <fieldset>
-        <legend className="text-sm font-bold text-[#0B1220]">{r.yourRating}</legend>
+        <legend className="text-sm font-bold text-ink">{r.yourRating}</legend>
         <div className="mt-2 flex items-center gap-1" role="radiogroup" aria-label={r.ratingAria}>
           {[1, 2, 3, 4, 5].map((value) => (
-            <label key={value} className="cursor-pointer rounded-lg p-1 focus-within:ring-2 focus-within:ring-[#E63946]">
+            <label key={value} className="cursor-pointer rounded-lg p-1 focus-within:ring-2 focus-within:ring-brand">
               <input
                 type="radio"
                 name={`${uid}-rating`}
@@ -108,7 +108,7 @@ export function ReviewInvitationForm({
       </fieldset>
 
       <div>
-        <label htmlFor={`${uid}-comment`} className="text-sm font-bold text-[#0B1220]">
+        <label htmlFor={`${uid}-comment`} className="text-sm font-bold text-ink">
           {r.yourReview}
         </label>
         <textarea
@@ -121,7 +121,7 @@ export function ReviewInvitationForm({
             setError(null);
           }}
           placeholder={r.placeholder}
-          className="mt-2 w-full resize-none rounded-xl border border-slate-300 px-3.5 py-3 text-[15px] focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/15"
+          className="mt-2 w-full resize-none rounded-xl border border-slate-300 px-3.5 py-3 text-[15px] focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/15"
         />
         <p className="mt-1 text-end text-xs text-slate-500">{comment.length} / 1000</p>
       </div>

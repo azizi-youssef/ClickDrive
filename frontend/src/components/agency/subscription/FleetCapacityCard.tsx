@@ -58,7 +58,7 @@ export function FleetCapacityCard({ subscription, loading, error, onRetry, onOpe
         {/* Left info */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0B1220] px-3 py-1 text-xs font-bold text-white shadow-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white shadow-xs">
               <Sparkles className="h-3 w-3 text-amber-300" />
               Forfait {plan.name}
             </span>
@@ -103,7 +103,7 @@ export function FleetCapacityCard({ subscription, loading, error, onRetry, onOpe
               'flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer sm:min-h-0',
               is_at_capacity
                 ? 'bg-action hover:bg-red-700 text-white'
-                : 'bg-white hover:bg-slate-50 text-[#0B1220] border border-blue-200'
+                : 'bg-white hover:bg-slate-50 text-ink border border-blue-200'
             )}
           >
             <span>{is_at_capacity ? 'Augmenter ma capacité' : "Changer de forfait"}</span>

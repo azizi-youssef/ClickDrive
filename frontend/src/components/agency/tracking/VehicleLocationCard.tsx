@@ -22,7 +22,7 @@ function Row({ icon, label, children }: { icon: React.ReactNode; label: string; 
         <span aria-hidden="true">{icon}</span>
         {label}
       </dt>
-      <dd className="min-w-0 truncate text-right font-medium text-[#0F172A]">{children}</dd>
+      <dd className="min-w-0 truncate text-right font-medium text-ink">{children}</dd>
     </div>
   );
 }
@@ -61,15 +61,15 @@ export function VehicleLocationCard({
     <section aria-label={`Position de ${vehicle.brand} ${vehicle.model}`} className={cn(shell.card, 'p-4', className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-bold text-[#0F172A]">
+          <h3 className="truncate text-base font-bold text-ink">
             {vehicle.brand} {vehicle.model}
           </h3>
-          <p className="truncate text-xs text-[#64748B]">{[vehicle.unit_number, vehicle.license_plate].filter(Boolean).join(' · ')}</p>
+          <p className="truncate text-xs text-ink-secondary">{[vehicle.unit_number, vehicle.license_plate].filter(Boolean).join(' · ')}</p>
         </div>
         <div className="flex items-center gap-2">
           <VehicleStatusBadge state={vehicle.state} />
           {onClose && (
-            <button type="button" onClick={onClose} aria-label="Fermer le détail" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]">
+            <button type="button" onClick={onClose} aria-label="Fermer le détail" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
               <X aria-hidden="true" className="h-4 w-4" />
             </button>
           )}
@@ -107,7 +107,7 @@ export function VehicleLocationCard({
       )}
       {vehicle.booking_reference && (
         <p className="mt-3 text-xs text-slate-600">
-          Location en cours : <span className="font-semibold text-[#0F172A]">{vehicle.booking_reference}</span>
+          Location en cours : <span className="font-semibold text-ink">{vehicle.booking_reference}</span>
         </p>
       )}
 

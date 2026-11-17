@@ -92,7 +92,7 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
     <Link
       href="/admin"
       aria-label="ClickDrive Admin — vue d'ensemble"
-      className="flex items-center gap-2.5 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[#E63946]/60"
+      className="flex items-center gap-2.5 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-brand/60"
     >
       <div
         className={cn(
@@ -154,10 +154,10 @@ function NavGroups({
                     aria-label={collapsed || badge > 0 ? label : undefined}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
+                      'relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
                       collapsed && 'justify-center px-0',
                       active
-                        ? 'bg-white font-bold text-[#0B1220] shadow-sm'
+                        ? 'bg-white font-bold text-ink shadow-sm'
                         : 'font-medium text-slate-400 hover:bg-white/5 hover:text-white'
                     )}
                   >
@@ -165,11 +165,11 @@ function NavGroups({
                     {!collapsed && <span className="truncate">{item.label}</span>}
                     {badge > 0 &&
                       (collapsed ? (
-                        <span aria-hidden="true" className="absolute end-3 top-2 h-2.5 w-2.5 rounded-full bg-[#E63946] ring-2 ring-[#0B1220]" />
+                        <span aria-hidden="true" className="absolute end-3 top-2 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-ink" />
                       ) : (
                         <span
                           aria-hidden="true"
-                          className="ms-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#E63946] px-1.5 text-[11px] font-bold leading-none text-white"
+                          className="ms-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-action px-1.5 text-[11px] font-bold leading-none text-white"
                         >
                           {contactBadgeLabel(badge)}
                         </span>
@@ -186,7 +186,7 @@ function NavGroups({
 }
 
 const footerLink =
-  'flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]/60 disabled:opacity-50';
+  'flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand/60 disabled:opacity-50';
 
 /* ── Sidebar ───────────────────────────────────────────────────────── */
 export function AdminSidebar({
@@ -205,7 +205,7 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        'sticky top-0 hidden h-screen shrink-0 flex-col bg-[#0B1220] text-white transition-[width] duration-300 ease-in-out motion-reduce:transition-none lg:flex',
+        'sticky top-0 hidden h-screen shrink-0 flex-col bg-ink text-white transition-[width] duration-base ease-in-out motion-reduce:transition-none lg:flex',
         collapsed ? 'w-18' : 'w-64'
       )}
     >
@@ -217,7 +217,7 @@ export function AdminSidebar({
             onClick={onToggle}
             aria-label="Réduire la barre latérale"
             title="Réduire"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]/60"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand/60"
           >
             <PanelLeftClose className="h-4.5 w-4.5" aria-hidden="true" />
           </button>
@@ -280,14 +280,14 @@ export function AdminMobileDrawer({
 
   return (
     <div className="lg:hidden">
-      <div data-modal-backdrop className="fixed inset-0 z-40 bg-[#0B1220]/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div data-modal-backdrop className="fixed inset-0 z-40 bg-ink/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <aside
         ref={panelRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Menu administration"
-        className="fixed inset-y-0 start-0 z-50 flex w-[min(20rem,86vw)] flex-col bg-[#0B1220] text-white shadow-2xl"
+        className="fixed inset-y-0 start-0 z-50 flex w-[min(20rem,86vw)] flex-col bg-ink text-white shadow-2xl"
       >
         <div className="flex h-16 items-center justify-between border-b border-white/10 ps-5 pe-3">
           <SidebarLogo collapsed={false} />
@@ -296,7 +296,7 @@ export function AdminMobileDrawer({
             type="button"
             onClick={onClose}
             aria-label="Fermer le menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#E63946]/60"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand/60"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -331,7 +331,7 @@ function Avatar({ profile, size }: { profile: ClientAuthProfile | null; size: 's
     <span
       aria-hidden="true"
       className={cn(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#0B1220] font-bold text-white',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ink font-bold text-white',
         size === 'sm' ? 'h-9 w-9 text-xs' : 'h-11 w-11 text-sm'
       )}
     >
@@ -407,7 +407,7 @@ export function AdminTopBar({
   const roleLabel = userProfile ? ROLE_LABEL[userProfile.role] ?? userProfile.role : '';
 
   const menuLink =
-    'flex min-h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-slate-700 outline-none transition-colors hover:bg-[#F5F6F8] focus-visible:bg-[#F5F6F8]';
+    'flex min-h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-slate-700 outline-none transition-colors hover:bg-canvas focus-visible:bg-canvas';
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:h-18 lg:px-8">
@@ -415,17 +415,17 @@ export function AdminTopBar({
         type="button"
         onClick={onMobileMenu}
         aria-label={messageCount > 0 ? `Ouvrir le menu (${contactBadgeDescription(messageCount)})` : 'Ouvrir le menu'}
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 outline-none transition-colors hover:bg-[#F5F6F8] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30 lg:hidden"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 outline-none transition-colors hover:bg-canvas focus-visible:ring-2 focus-visible:ring-ink/30 lg:hidden"
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
         {/* Le menu latéral est replié sur mobile : le point signale les messages non traités */}
         {messageCount > 0 && (
-          <span aria-hidden="true" className="absolute -end-1 -top-1 h-3 w-3 rounded-full bg-[#E63946] ring-2 ring-white" />
+          <span aria-hidden="true" className="absolute -end-1 -top-1 h-3 w-3 rounded-full bg-brand ring-2 ring-white" />
         )}
       </button>
 
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-extrabold tracking-tight text-[#0B1220] sm:text-lg">{title}</h1>
+        <h1 className="truncate text-base font-extrabold tracking-tight text-ink sm:text-lg">{title}</h1>
         {subtitle && <p className="hidden truncate text-xs text-slate-500 sm:block">{subtitle}</p>}
       </div>
 
@@ -435,7 +435,7 @@ export function AdminTopBar({
         href="/admin/notifications"
         aria-label="Notifications"
         title="Notifications"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 outline-none transition-colors hover:bg-[#F5F6F8] hover:text-[#0B1220] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 outline-none transition-colors hover:bg-canvas hover:text-ink focus-visible:ring-2 focus-visible:ring-ink/30"
       >
         <Bell className="h-4.5 w-4.5" aria-hidden="true" />
       </Link>
@@ -444,14 +444,14 @@ export function AdminTopBar({
         <button
           type="button"
           onClick={() => setProfileMenuOpen((prev) => !prev)}
-          className="flex items-center gap-2.5 rounded-xl p-1 outline-none transition-colors hover:bg-[#F5F6F8] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30 sm:pe-2.5"
+          className="flex items-center gap-2.5 rounded-xl p-1 outline-none transition-colors hover:bg-canvas focus-visible:ring-2 focus-visible:ring-ink/30 sm:pe-2.5"
           aria-expanded={profileMenuOpen}
           aria-haspopup="menu"
           aria-label={`Compte : ${displayName}`}
         >
           <Avatar profile={userProfile} size="sm" />
           <span className="hidden min-w-0 text-start md:block">
-            <span className="block max-w-36 truncate text-[13px] font-bold leading-tight text-[#0B1220]">{displayName}</span>
+            <span className="block max-w-36 truncate text-[13px] font-bold leading-tight text-ink">{displayName}</span>
             <span className="block max-w-36 truncate text-[11px] text-slate-500">{roleLabel || ' '}</span>
           </span>
           <ChevronDown
@@ -462,13 +462,13 @@ export function AdminTopBar({
 
         {profileMenuOpen && (
           <div role="menu" className="absolute end-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_-20px_rgba(11,18,32,0.35)]">
-            <div className="mb-1.5 flex items-center gap-3 rounded-xl bg-[#F5F6F8] px-3 py-3">
+            <div className="mb-1.5 flex items-center gap-3 rounded-xl bg-canvas px-3 py-3">
               <Avatar profile={userProfile} size="md" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-[#0B1220]">{displayName}</p>
+                <p className="truncate text-sm font-bold text-ink">{displayName}</p>
                 {email && <p className="truncate text-xs text-slate-500">{email}</p>}
                 {roleLabel && (
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#E63946]/10 px-1.5 py-0.5 text-[11px] font-bold text-[#B4232F]">
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-brand/10 px-1.5 py-0.5 text-[11px] font-bold text-action-hover">
                     <ShieldCheck className="h-3 w-3" aria-hidden="true" />
                     {roleLabel}
                   </span>
@@ -496,7 +496,7 @@ export function AdminTopBar({
                 onLogout();
               }}
               disabled={loggingOut}
-              className={cn(menuLink, 'w-full font-semibold text-[#B4232F] hover:bg-red-50 disabled:opacity-50')}
+              className={cn(menuLink, 'w-full font-semibold text-action-hover hover:bg-red-50 disabled:opacity-50')}
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
               {loggingOut ? 'Déconnexion en cours…' : 'Se déconnecter'}
@@ -539,10 +539,10 @@ export function AdminShell({
   // Cadre d'application à la hauteur de l'écran visible (dvh : barres du navigateur mobile exclues) ;
   // seul <main> défile.
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F5F6F8]">
+    <div className="flex h-dvh overflow-hidden bg-canvas">
       <a
         href="#admin-main"
-        className="sr-only z-60 rounded-lg bg-[#0B1220] px-4 py-2 text-sm font-bold text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
+        className="sr-only z-60 rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
       >
         Aller au contenu
       </a>

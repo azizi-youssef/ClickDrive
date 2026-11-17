@@ -49,7 +49,7 @@ export default function AcceptAgencyInvitationPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         {state.kind === 'loading' ? (
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#0B1220]" aria-hidden="true" />
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-ink" aria-hidden="true" />
         ) : success ? (
           <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" aria-hidden="true" />
         ) : (
@@ -62,7 +62,7 @@ export default function AcceptAgencyInvitationPage() {
         {success && (
           <Link
             href="/agency"
-            className="mt-6 inline-flex rounded-xl bg-[#0B1220] px-5 py-3 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
+            className="mt-6 inline-flex rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Accéder au tableau de bord
           </Link>

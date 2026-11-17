@@ -65,8 +65,8 @@ export function FilterChips<T extends string>({
             onClick={() => onChange(option.value)}
             aria-pressed={isActive}
             className={cn(
-              'min-h-11 rounded-lg px-3.5 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946] sm:min-h-0',
-              isActive ? 'bg-[#0B1220] text-white' : 'text-slate-600 hover:bg-slate-100'
+              'min-h-11 rounded-lg px-3.5 py-1.5 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand sm:min-h-0',
+              isActive ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {option.label}
@@ -119,7 +119,7 @@ export function DateRangeInputs({
   return (
     <div className="flex flex-wrap items-end gap-2">
       <div>
-        <label htmlFor="range-from" className="mb-1 block text-xs font-medium text-[#64748B]">
+        <label htmlFor="range-from" className="mb-1 block text-xs font-medium text-ink-secondary">
           Du
         </label>
         <input
@@ -132,7 +132,7 @@ export function DateRangeInputs({
         />
       </div>
       <div>
-        <label htmlFor="range-to" className="mb-1 block text-xs font-medium text-[#64748B]">
+        <label htmlFor="range-to" className="mb-1 block text-xs font-medium text-ink-secondary">
           Au
         </label>
         <input
@@ -171,15 +171,15 @@ export function Pagination({
       aria-label={`Pagination ${label}`}
       className="flex flex-col-reverse gap-3 border-t border-slate-200 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
     >
-      <p className="text-sm text-[#64748B]">
-        <span className="tabular-nums font-semibold text-[#0F172A]">{first}</span>
+      <p className="text-sm text-ink-secondary">
+        <span className="tabular-nums font-semibold text-ink">{first}</span>
         {' – '}
-        <span className="tabular-nums font-semibold text-[#0F172A]">{last}</span>
+        <span className="tabular-nums font-semibold text-ink">{last}</span>
         {' sur '}
-        <span className="tabular-nums font-semibold text-[#0F172A]">{total}</span>
+        <span className="tabular-nums font-semibold text-ink">{total}</span>
       </p>
       <div className="flex items-center gap-2">
-        <span className="text-sm text-[#64748B]">
+        <span className="text-sm text-ink-secondary">
           Page <span className="tabular-nums">{page}</span> /{' '}
           <span className="tabular-nums">{pageCount}</span>
         </span>
@@ -188,7 +188,7 @@ export function Pagination({
           onClick={() => onPage(page - 1)}
           disabled={page <= 1}
           aria-label="Page précédente"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-40"
         >
           <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -197,7 +197,7 @@ export function Pagination({
           onClick={() => onPage(page + 1)}
           disabled={page >= pageCount}
           aria-label="Page suivante"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-40"
         >
           <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </button>

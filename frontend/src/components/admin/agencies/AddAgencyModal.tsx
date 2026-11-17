@@ -192,9 +192,9 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
       aria-modal="true"
       aria-labelledby="add-agency-title"
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto motion-safe:animate-cd-fade-in"
     >
-      <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-200 motion-safe:animate-cd-slide-up overflow-hidden my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/80 shrink-0">
           <div className="flex items-center gap-3">

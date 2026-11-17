@@ -61,7 +61,7 @@ const fleetOptions = [
 ];
 
 const inputClass =
-  'w-full min-h-[48px] rounded-xl border border-slate-200 bg-white px-4 text-sm text-[#0B1220] placeholder:text-slate-400 outline-none transition-all hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/[0.07]';
+  'w-full min-h-[48px] rounded-xl border border-slate-200 bg-white px-4 text-sm text-ink placeholder:text-slate-400 outline-none transition-all hover:border-slate-300 focus:border-ink focus:ring-4 focus:ring-ink/[0.07]';
 
 export default function AgencyJoinPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -108,9 +108,9 @@ export default function AgencyJoinPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F6F8] text-[#0B1220]">
+    <main className="min-h-screen bg-canvas text-ink">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-[#0B1220]">
+      <section className="relative overflow-hidden bg-ink">
         {/* Background photo */}
         <Image
           src="/join.jpg"
@@ -123,7 +123,7 @@ export default function AgencyJoinPage() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0B1220]/60 via-[#0B1220]/50 to-[#0B1220]/80"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink/60 via-ink/50 to-ink/80"
         />
 
         <div
@@ -138,19 +138,19 @@ export default function AgencyJoinPage() {
 
         <div
           aria-hidden="true"
-          className="absolute -right-32 -top-40 h-[420px] w-[420px] rounded-full bg-[#E63946]/20 blur-[110px]"
+          className="absolute -right-32 -top-40 h-[420px] w-[420px] rounded-full bg-brand/20 blur-[110px]"
         />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/90">
-              <Sparkles className="h-4 w-4 text-[#E63946]" />
+              <Sparkles className="h-4 w-4 text-brand" />
               Programme partenaires ClickDrive
             </div>
 
             <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
               Faites grandir votre agence avec{' '}
-              <span className="text-[#E63946]">ClickDrive.</span>
+              <span className="text-brand">ClickDrive.</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
@@ -162,7 +162,7 @@ export default function AgencyJoinPage() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
                 href="#agency-form"
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#E63946] px-6 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition-colors hover:bg-[#C92F3B] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 sm:w-auto"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-action px-6 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition-colors hover:bg-action-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 sm:w-auto"
               >
                 Devenir partenaire
                 <ArrowRight className="h-4 w-4" />
@@ -178,22 +178,22 @@ export default function AgencyJoinPage() {
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs text-slate-300">
               <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[#E63946]" />
+                <CheckCircle2 className="h-4 w-4 text-brand" />
                 Inscription gratuite
               </span>
               <span className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[#E63946]" />
+                <ShieldCheck className="h-4 w-4 text-brand" />
                 Vérification des agences
               </span>
               <span className="flex items-center gap-2">
-                <Headset className="h-4 w-4 text-[#E63946]" />
+                <Headset className="h-4 w-4 text-brand" />
                 Accompagnement partenaire
               </span>
             </div>
           </div>
         </div>
 
-        <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#E63946] to-transparent opacity-80" />
+        <div className="h-1 w-full bg-gradient-to-r from-transparent via-brand to-transparent opacity-80" />
       </section>
 
       {/* MAIN CONTENT */}
@@ -201,7 +201,7 @@ export default function AgencyJoinPage() {
         {submitted ? (
           <div className="mx-auto max-w-2xl">
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/[0.04]">
-              <div className="bg-[#0B1220] px-6 py-10 text-center sm:px-10">
+              <div className="bg-ink px-6 py-10 text-center sm:px-10">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-400/20">
                   <CheckCircle2 className="h-9 w-9" />
                 </div>
@@ -216,7 +216,7 @@ export default function AgencyJoinPage() {
               </div>
 
               <div className="space-y-5 p-6 sm:p-10">
-                <h3 className="text-sm font-bold text-[#0B1220]">
+                <h3 className="text-sm font-bold text-ink">
                   Récapitulatif de votre demande
                 </h3>
 
@@ -234,7 +234,7 @@ export default function AgencyJoinPage() {
                       className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <span className="text-xs text-slate-500">{label}</span>
-                      <span className="text-sm font-semibold text-[#0B1220]">
+                      <span className="text-sm font-semibold text-ink">
                         {value}
                       </span>
                     </div>
@@ -244,7 +244,7 @@ export default function AgencyJoinPage() {
                 <button
                   type="button"
                   onClick={() => setSubmitted(false)}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-[#0B1220] transition-colors hover:bg-slate-50"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-ink transition-colors hover:bg-slate-50"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Retour au formulaire
@@ -281,12 +281,12 @@ export default function AgencyJoinPage() {
                       key={benefit.title}
                       className="group flex gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-md hover:shadow-slate-900/[0.03] sm:p-5"
                     >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white transition-colors group-hover:bg-[#E63946]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white transition-colors group-hover:bg-brand">
                         <Icon className="h-5 w-5" />
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-bold text-[#0B1220]">
+                        <h3 className="text-sm font-bold text-ink">
                           {benefit.title}
                         </h3>
                         <p className="mt-1.5 text-xs leading-6 text-slate-600">
@@ -299,9 +299,9 @@ export default function AgencyJoinPage() {
               </div>
 
               {/* TRUST PANEL */}
-              <div className="mt-6 rounded-2xl border border-[#0B1220]/10 bg-[#0B1220] p-5 text-white sm:p-6">
+              <div className="mt-6 rounded-2xl border border-ink/10 bg-ink p-5 text-white sm:p-6">
                 <div className="flex items-center gap-2">
-                  <BadgeCheck className="h-5 w-5 text-[#E63946]" />
+                  <BadgeCheck className="h-5 w-5 text-brand" />
                   <h3 className="text-sm font-bold">
                     Un partenariat transparent
                   </h3>
@@ -314,7 +314,7 @@ export default function AgencyJoinPage() {
                 </p>
 
                 <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-xs font-medium text-slate-300">
-                  <Clock3 className="h-4 w-4 text-[#E63946]" />
+                  <Clock3 className="h-4 w-4 text-brand" />
                   Inscription sans frais
                 </div>
               </div>
@@ -325,12 +325,12 @@ export default function AgencyJoinPage() {
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/[0.04]">
                 <div className="border-b border-slate-100 px-6 py-6 sm:px-8">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
                       <Building2 className="h-6 w-6" />
                     </div>
 
                     <div>
-                      <h2 className="text-lg font-extrabold tracking-tight text-[#0B1220]">
+                      <h2 className="text-lg font-extrabold tracking-tight text-ink">
                         Rejoindre notre réseau
                       </h2>
                       <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -341,11 +341,11 @@ export default function AgencyJoinPage() {
                   </div>
 
                   <div className="mt-6 flex items-center gap-2">
-                    <div className="h-1 flex-1 rounded-full bg-[#E63946]" />
+                    <div className="h-1 flex-1 rounded-full bg-brand" />
                     <div className="h-1 flex-1 rounded-full bg-slate-100" />
                     <div className="h-1 flex-1 rounded-full bg-slate-100" />
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-slate-500">
                     Informations de votre agence
                   </p>
                 </div>
@@ -495,7 +495,7 @@ export default function AgencyJoinPage() {
                         className={`${inputClass} pl-11`}
                       />
                     </div>
-                    <p className="mt-1.5 text-[11px] text-slate-400">
+                    <p className="mt-1.5 text-[11px] text-slate-500">
                       Nador et communes environnantes.
                     </p>
                   </div>
@@ -538,7 +538,7 @@ export default function AgencyJoinPage() {
                     <button
                       type="submit"
                       disabled={sending}
-                      className="disabled:cursor-wait disabled:opacity-70 group inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-[#E63946] px-5 text-sm font-bold text-white shadow-lg shadow-[#E63946]/15 transition-all hover:-translate-y-0.5 hover:bg-[#C92F3B] hover:shadow-xl hover:shadow-[#E63946]/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E63946]/20 active:translate-y-0"
+                      className="disabled:cursor-wait disabled:opacity-70 group inline-flex min-h-[52px] w-full items-center justify-center gap-3 rounded-xl bg-action px-5 text-sm font-bold text-white shadow-lg shadow-brand/15 transition-[background-color,box-shadow] hover:bg-action-hover hover:shadow-xl hover:shadow-brand/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20"
                     >
                       {sending ? 'Envoi en cours…' : 'Envoyer ma demande'}
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -556,9 +556,9 @@ export default function AgencyJoinPage() {
               </div>
 
               <div className="mt-5 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-[#E63946]" />
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
                 <div>
-                  <p className="text-xs font-bold text-[#0B1220]">
+                  <p className="text-xs font-bold text-ink">
                     Une question avant de vous inscrire ?
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -579,7 +579,7 @@ export default function AgencyJoinPage() {
         <section className="border-t border-slate-200 bg-white">
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
             <div>
-              <h2 className="text-sm font-bold text-[#0B1220]">
+              <h2 className="text-sm font-bold text-ink">
                 Prêt à développer votre activité ?
               </h2>
               <p className="mt-1 text-xs text-slate-500">

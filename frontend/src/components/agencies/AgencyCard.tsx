@@ -28,10 +28,11 @@ export function AgencyCard({ agency, carCount }: AgencyCardProps) {
   const hasWhatsApp = (agency.whatsapp ?? '').replace(/\D/g, '').length >= 8;
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)] transition-[translate,scale,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_24px_48px_-28px_rgba(11,18,32,0.45)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    // Même comportement que la carte véhicule : motion-lift (soulèvement, ombre, bordure) et motion-zoom (photo)
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card motion-lift hover:border-slate-300 hover:shadow-card-hover">
       {/* Bannière + logo */}
       <div className="relative h-36 w-full overflow-hidden bg-ink">
-        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100">
+        <div className="absolute inset-0 motion-zoom">
           <AgencyBanner name={agency.name} bannerUrl={agency.banner_url} />
         </div>
         <div className="absolute inset-0 bg-linear-to-t from-ink/70 via-ink/10 to-transparent" aria-hidden="true" />
@@ -51,7 +52,7 @@ export function AgencyCard({ agency, carCount }: AgencyCardProps) {
       {/* Contenu */}
       <div className="flex flex-1 flex-col px-5 pb-5 pt-10">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="min-w-0 text-lg font-extrabold leading-tight tracking-tight text-ink">
+          <h3 className="min-w-0 text-title text-ink">
             {/* Lien étiré : toute la carte est cliquable */}
             <Link
               href={`/agencies/${agency.slug}`}
@@ -109,7 +110,7 @@ export function AgencyCard({ agency, carCount }: AgencyCardProps) {
             className="flex min-h-11 items-center justify-between rounded-xl bg-ink px-4 text-sm font-bold text-white transition-colors group-hover:bg-action"
           >
             {c.seeFleet}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
           </span>
         </div>
       </div>

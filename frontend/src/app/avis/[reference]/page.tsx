@@ -28,9 +28,9 @@ type BookingRow = {
 function Notice({ title, text, cta }: { title: string; text: string; cta: string }) {
   return (
     <div className="text-center">
-      <h1 className="text-xl font-extrabold text-[#0B1220]">{title}</h1>
+      <h1 className="text-xl font-extrabold text-ink">{title}</h1>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-      <Link href="/search" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white hover:bg-slate-800">
+      <Link href="/search" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-slate-800">
         {cta}
       </Link>
     </div>
@@ -69,7 +69,7 @@ export default async function ReviewInvitationPage({ params, searchParams }: Pro
   const vehicle = booking?.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model}` : r.yourVehicle;
 
   return (
-    <div className="bg-[#F8FAFC] px-4 py-12 sm:py-16">
+    <div className="bg-slate-50 px-4 py-12 sm:py-16">
       <div className="mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         {!valid || !booking ? (
           <Notice title={r.invalidTitle} text={r.invalidText} cta={r.seeVehicles} />
@@ -80,7 +80,7 @@ export default async function ReviewInvitationPage({ params, searchParams }: Pro
         ) : (
           <>
             <p className="font-mono text-xs font-bold text-slate-500">{reference}</p>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1220]">{r.title}</h1>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-ink">{r.title}</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {interpolate(r.intro, { vehicle, agency: booking.agency?.name ?? r.partnerAgency })}
             </p>

@@ -124,7 +124,7 @@ function Fact({ label, value, metric, hint }: { label: string; value: ReactNode;
         {label}
         {hint && <span className="block text-[11px] text-slate-400">{hint}</span>}
       </dt>
-      <dd className="flex flex-wrap items-center gap-2 text-sm font-bold text-[#0B1220]">
+      <dd className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink">
         {value}
         {metric && <ComparisonPill metric={metric} suffix="" />}
       </dd>

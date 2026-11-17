@@ -292,7 +292,7 @@ export function AdminNotificationsClient() {
           onClick={() => setActiveTab('feed')}
           className={`py-3 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'feed'
-              ? 'border-[#0B1220] text-[#0B1220]'
+              ? 'border-ink text-ink'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -303,7 +303,7 @@ export function AdminNotificationsClient() {
           onClick={() => setActiveTab('broadcast')}
           className={`py-3 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'broadcast'
-              ? 'border-[#0B1220] text-[#0B1220]'
+              ? 'border-ink text-ink'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -314,7 +314,7 @@ export function AdminNotificationsClient() {
           onClick={() => setActiveTab('templates')}
           className={`py-3 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'templates'
-              ? 'border-[#0B1220] text-[#0B1220]'
+              ? 'border-ink text-ink'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -325,7 +325,7 @@ export function AdminNotificationsClient() {
           onClick={() => setActiveTab('webhook')}
           className={`py-3 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'webhook'
-              ? 'border-[#0B1220] text-[#0B1220]'
+              ? 'border-ink text-ink'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -709,7 +709,7 @@ export function AdminNotificationsClient() {
                           {intent.description}
                         </p>
                       </div>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 shrink-0">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 shrink-0">
                         <Zap className="h-3.5 w-3.5" />
                         Actif en temps réel
                       </span>

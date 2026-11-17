@@ -21,7 +21,7 @@ export function agencyInitials(name: string): string {
     .toUpperCase();
 }
 
-const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-[#E63946] focus-visible:ring-offset-1';
+const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1';
 
 /**
  * Actions d'une agence, en deux présentations d'un même ensemble de gestes :

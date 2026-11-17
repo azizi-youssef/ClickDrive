@@ -3,7 +3,6 @@
 import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from '@/components/i18n/LocalizedLink';
-import { motion, useReducedMotion } from 'framer-motion';
 import { findSameModelAlternatives } from '@/lib/availability/engine';
 import { BookingCard, type BookingAvailability } from '@/components/booking/BookingCard';
 import { VehicleGallery } from '@/components/cars/VehicleGallery';
@@ -64,8 +63,9 @@ interface CarDetailsClientProps {
 }
 
 export function CarDetailsClient({ slug, initialVehicle, alternativesPool, requestedPeriod, requestedLocation }: CarDetailsClientProps) {
-  const reduceMotion = useReducedMotion();
   const { t, locale, fmt, plural, date, money } = useTranslation();
+  // Ajout aux favoris : le cœur se gonfle une fois après le clic (même retour que sur les cartes)
+  const [heartPop, setHeartPop] = useState(0);
   const c = t.car;
   const num = (value: number) => formatNumber(value, locale);
 
@@ -282,23 +282,23 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
   conditions.push({ icon: Wallet, label: c.cond.payment, value: c.cond.atAgency });
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] pb-28 lg:pb-16">
+    <div className="min-h-screen bg-canvas pb-28 lg:pb-16">
       {/* ── Fil d'Ariane ─────────────────────────────────────────── */}
       <div className="border-b border-slate-200/80 bg-white">
         <nav
           aria-label={c.breadcrumbAria}
           className="mx-auto flex h-11 max-w-[1360px] items-center gap-1.5 overflow-hidden px-4 text-xs font-medium text-ink-secondary sm:px-6 lg:px-8"
         >
-          <Link href="/" className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]">{c.home}</Link>
+          <Link href="/" className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-ink">{c.home}</Link>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
           <Link
             href={isMoto ? '/motos' : '/search'}
-            className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-[#0B1220]"
+            className="inline-flex h-11 shrink-0 items-center transition-colors hover:text-ink"
           >
             {isMoto ? c.motos : c.cars}
           </Link>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300 rtl:rotate-180" aria-hidden="true" />
-          <span aria-current="page" className="truncate font-semibold text-[#0B1220]">
+          <span aria-current="page" className="truncate font-semibold text-ink">
             {vehicle.brand} {vehicle.model}
           </span>
         </nav>
@@ -313,22 +313,22 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
           <header className="order-2 flex min-w-0 flex-col gap-4 md:flex-row md:items-end md:justify-between lg:order-none lg:col-span-2 lg:row-start-1 lg:mb-2">
             <div className="min-w-0">
               <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-[#0B1220] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
+                <span className="inline-flex items-center gap-1 rounded-md bg-ink px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
                   {isMoto && <Motorbike className="h-3.5 w-3.5" aria-hidden="true" />}
                   {category}
                 </span>
                 <span
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-bold',
-                    isAvailableForDates ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-[#F8C9CD] bg-[#FFF4F5] text-[#B4232F]'
+                    isAvailableForDates ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-brand-line bg-brand-soft text-action-hover'
                   )}
                 >
-                  <span className={cn('h-1.5 w-1.5 rounded-full', isAvailableForDates ? 'bg-emerald-500' : 'bg-[#E63946]')} aria-hidden="true" />
+                  <span className={cn('h-1.5 w-1.5 rounded-full', isAvailableForDates ? 'bg-emerald-500' : 'bg-brand')} aria-hidden="true" />
                   {vehicleStatusLabel}
                 </span>
               </div>
   
-              <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-[#0B1220] sm:text-4xl lg:text-[42px]">
+              <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[42px]">
                 {vehicle.brand} {vehicle.model}{' '}
                 <span className="font-semibold text-ink-secondary">{vehicle.year}</span>
               </h1>
@@ -337,7 +337,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                 {agency && (
                   <Link
                     href={`/agencies/${agency.slug}`}
-                    className="group inline-flex min-h-11 items-center gap-2 font-bold text-[#0B1220] transition-colors hover:text-accent-text"
+                    className="group inline-flex min-h-11 items-center gap-2 font-bold text-ink transition-colors hover:text-accent-text"
                   >
                     <span className="h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
                       <AgencyLogo slug={agency.slug} name={agency.name} logoUrl={agency.logo_url} className="h-full w-full object-cover" size={28} />
@@ -353,7 +353,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                 )}
                 <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
                 {averageRating !== null ? (
-                  <a href="#avis" className="inline-flex min-h-9 items-center gap-1.5 font-bold text-[#0B1220] hover:underline">
+                  <a href="#avis" className="inline-flex min-h-9 items-center gap-1.5 font-bold text-ink hover:underline">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
                     {formatDecimal(averageRating, locale)}
                     <span className="font-medium text-ink-secondary">{plural(reviewCount, c.reviewsCount)}</span>
@@ -365,19 +365,27 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
             </div>
   
             <div className="flex items-center gap-2">
-              <motion.button
+              {/* Pression en CSS (motion-press) : plus de Framer Motion sur ce bouton, donc plus de
+                  transform JavaScript mêlé aux transitions CSS du même élément */}
+              <button
                 type="button"
-                whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                onClick={() => toggleFavorite(vehicle.id)}
+                onClick={() => {
+                  if (!favorite) setHeartPop((n) => n + 1);
+                  toggleFavorite(vehicle.id);
+                }}
                 aria-pressed={favorite}
                 aria-label={favorite ? c.removeFavorite : c.addFavorite}
                 className={cn(
-                  'flex h-11 w-11 items-center justify-center rounded-xl border bg-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]',
-                  favorite ? 'border-[#F8C9CD] text-accent-text' : 'border-slate-200 text-ink-secondary hover:border-slate-300 hover:text-[#0B1220]'
+                  'flex h-11 w-11 items-center justify-center rounded-xl border bg-white transition-[color,border-color,scale] duration-instant motion-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+                  favorite ? 'border-brand-line text-accent-text' : 'border-slate-200 text-ink-secondary hover:border-slate-300 hover:text-ink'
                 )}
               >
-                <Heart className={cn('h-5 w-5', favorite && 'fill-current')} aria-hidden="true" />
-              </motion.button>
+                <Heart
+                  key={heartPop}
+                  className={cn('h-5 w-5', favorite && 'fill-current', favorite && heartPop > 0 && 'animate-cd-heart-pop')}
+                  aria-hidden="true"
+                />
+              </button>
               <button
                 type="button"
                 onClick={() => void handleShare()}
@@ -390,7 +398,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                       ? c.shareMoto
                       : c.shareCar
                 }
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-[#0B1220] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E63946]"
+                className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 {shareState === 'copied' ? (
                   <Link2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
@@ -420,7 +428,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
             ].map(({ icon: Icon, value }) => (
               <li key={value} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-2.5">
                 <Icon className="h-5 w-5 text-accent-text" aria-hidden="true" />
-                <span className="text-[13px] font-bold text-[#0B1220] sm:text-sm">{value}</span>
+                <span className="text-[13px] font-bold text-ink sm:text-sm">{value}</span>
               </li>
             ))}
           </ul>
@@ -444,14 +452,14 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-[#0B1220]">{isMoto ? c.questionMoto : c.questionCar}</p>
+                  <p className="text-sm font-bold text-ink">{isMoto ? c.questionMoto : c.questionCar}</p>
                   <p className="truncate text-xs text-ink-secondary">{fmt(c.writeTo, { agency: agency?.name ?? c.theAgency })}</p>
                 </div>
                 <a
                   href={whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#0B1220] px-3.5 text-xs font-bold text-white transition-colors hover:bg-slate-800"
+                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-ink px-3.5 text-xs font-bold text-white transition-colors hover:bg-slate-800"
                 >
                   {c.write}
                 </a>
@@ -467,7 +475,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {specs.map(({ icon: Icon, label, value }) => (
                   // dl > div > dt + dd : seule structure valide (l'icône, décorative, est placée dans le dt)
-                  <div key={label} className="relative min-w-0 rounded-xl bg-[#F5F6F8] p-3.5 ps-[3.875rem]">
+                  <div key={label} className="relative min-w-0 rounded-xl bg-canvas p-3.5 ps-[3.875rem]">
                     <dt className="text-xs font-medium text-ink-secondary">
                       <span
                         className="absolute start-3.5 top-3.5 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-accent-text shadow-[0_1px_2px_rgba(11,18,32,0.06)]"
@@ -477,7 +485,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                       </span>
                       {label}
                     </dt>
-                    <dd className="mt-0.5 text-sm font-bold text-[#0B1220] break-words">{value}</dd>
+                    <dd className="mt-0.5 text-sm font-bold text-ink break-words">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -513,7 +521,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                   <li key={label} className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 px-3.5 py-3 text-sm text-slate-700">
                     <Icon className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
                     <span className="flex-1">{label}</span>
-                    <span className="rounded-full bg-[#F5F6F8] px-2 py-0.5 text-[11px] font-bold text-ink-tertiary">{c.agencyRate}</span>
+                    <span className="rounded-full bg-canvas px-2 py-0.5 text-[11px] font-bold text-ink-tertiary">{c.agencyRate}</span>
                   </li>
                 ))}
               </ul>
@@ -544,7 +552,7 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                       <Icon className="absolute start-4 top-[1.125rem] h-5 w-5 text-accent-text" aria-hidden="true" />
                       {label}
                     </dt>
-                    <dd className="mt-0.5 text-[15px] font-bold text-[#0B1220]">{value}</dd>
+                    <dd className="mt-0.5 text-[15px] font-bold text-ink">{value}</dd>
                     {note && <dd className="mt-1 text-[13px] leading-relaxed text-ink-secondary">{note}</dd>}
                   </div>
                 ))}
@@ -569,9 +577,9 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
               <SectionTitle id="reviews-title" eyebrow={c.reviewsEyebrow} title={c.reviewsTitle} />
               {reviewCount > 0 && averageRating !== null ? (
                 <>
-                  <div className="flex flex-col gap-5 rounded-xl bg-[#F5F6F8] p-4 sm:flex-row sm:items-center sm:p-5">
+                  <div className="flex flex-col gap-5 rounded-xl bg-canvas p-4 sm:flex-row sm:items-center sm:p-5">
                     <div className="text-center sm:w-36 sm:shrink-0">
-                      <p className="text-4xl font-extrabold text-[#0B1220] tabular-nums">{formatDecimal(averageRating, locale)}</p>
+                      <p className="text-4xl font-extrabold text-ink tabular-nums">{formatDecimal(averageRating, locale)}</p>
                       <Stars rating={averageRating} className="mt-1 justify-center" />
                       <p className="mt-1 text-xs text-ink-secondary">{plural(reviewCount, c.reviewsShort)}</p>
                     </div>
@@ -595,11 +603,11 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                     {reviews.map((review) => (
                       <li key={review.id} className="py-5 last:pb-0">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B1220] text-sm font-bold text-white">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">
                             {review.author_name.slice(0, 1).toUpperCase()}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-bold text-[#0B1220]">{review.author_name}</p>
+                            <p className="truncate text-sm font-bold text-ink">{review.author_name}</p>
                             <div className="mt-0.5 flex items-center gap-2">
                               <Stars rating={review.rating} />
                               <time dateTime={review.created_at} className="text-xs text-ink-secondary">
@@ -615,10 +623,10 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                 </>
               ) : (
                 <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center">
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F6F8] text-slate-400">
+                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-canvas text-slate-400">
                     <Star className="h-6 w-6" aria-hidden="true" />
                   </span>
-                  <p className="mt-3 text-sm font-bold text-[#0B1220]">{c.noReviews}</p>
+                  <p className="mt-3 text-sm font-bold text-ink">{c.noReviews}</p>
                   <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-ink-secondary">
                     {c.noReviewsText}
                   </p>
@@ -637,12 +645,12 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
                   <span className="h-px w-7 bg-current" aria-hidden="true" />
                   {c.similarEyebrow}
                 </p>
-                <h2 id="similar-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220]">
+                <h2 id="similar-title" className="mt-2 text-2xl font-extrabold tracking-tight text-ink">
                   {c.similarTitle}
                 </h2>
                 <p className="mt-1 text-sm text-ink-secondary">{checkedFree ? c.similarTextFree : c.similarText}</p>
               </div>
-              <Link href={`${isMoto ? '/motos' : '/search'}${searchContext}`} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#0B1220] hover:text-accent-text">
+              <Link href={`${isMoto ? '/motos' : '/search'}${searchContext}`} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-ink hover:text-accent-text">
                 {c.fullCatalog}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
@@ -676,7 +684,7 @@ function SectionTitle({ id, eyebrow, title, subtitle }: { id: string; eyebrow: s
   return (
     <div className="mb-5">
       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-secondary">{eyebrow}</p>
-      <h2 id={id} className="mt-1 text-lg font-extrabold text-[#0B1220] sm:text-xl">
+      <h2 id={id} className="mt-1 text-lg font-extrabold text-ink sm:text-xl">
         {title}
       </h2>
       {subtitle && <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">{subtitle}</p>}
@@ -706,7 +714,7 @@ function Disclosure({ icon: Icon, title, children }: { icon: React.ElementType; 
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-13 w-full items-center gap-3 px-4 text-start text-sm font-bold text-[#0B1220] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#E63946]"
+        className="flex min-h-13 w-full items-center gap-3 px-4 text-start text-sm font-bold text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
       >
         <Icon className="h-4.5 w-4.5 shrink-0 text-slate-400" aria-hidden="true" />
         <span className="flex-1">{title}</span>
@@ -722,7 +730,7 @@ function Disclosure({ icon: Icon, title, children }: { icon: React.ElementType; 
 export function DetailSkeleton() {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-[#F5F6F8]" role="status" aria-label={t.car.loadingVehicle}>
+    <div className="min-h-screen bg-canvas" role="status" aria-label={t.car.loadingVehicle}>
       <div className="h-11 border-b border-slate-200/80 bg-white" />
       <div className="mx-auto max-w-[1360px] animate-pulse px-4 pt-8 sm:px-6 lg:px-8 motion-reduce:animate-none">
         <div className="h-5 w-32 rounded bg-slate-200" />

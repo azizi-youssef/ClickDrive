@@ -29,13 +29,13 @@ export function ContactAlertToast() {
     // Région annoncée par les lecteurs d'écran ; vide, elle ne gêne aucun clic
     <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex justify-end sm:inset-x-auto sm:bottom-6 sm:end-6">
       {text && latest && pending && (
-        <div className="pointer-events-auto w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_24px_60px_-20px_rgba(11,18,32,0.45)] sm:w-96">
+        <div className="pointer-events-auto w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_24px_60px_-20px_rgba(11,18,32,0.45)] motion-safe:animate-cd-slide-up sm:w-96">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E63946]/10 text-[#B4232F]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-action-hover">
               <Inbox className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-extrabold text-[#0B1220]">{text.title}</p>
+              <p className="text-sm font-extrabold text-ink">{text.title}</p>
               <p className="mt-0.5 line-clamp-2 text-sm text-slate-600">{text.body}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {pending.length === 1 && <span className="font-mono">{latest.reference} · </span>}
@@ -46,7 +46,7 @@ export function ContactAlertToast() {
               type="button"
               onClick={dismissContactAlert}
               aria-label="Fermer l’alerte"
-              className="-me-1.5 -mt-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 outline-none transition-colors hover:bg-[#F5F6F8] hover:text-[#0B1220] focus-visible:ring-2 focus-visible:ring-[#0B1220]/30"
+              className="-me-1.5 -mt-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 outline-none transition-colors hover:bg-canvas hover:text-ink focus-visible:ring-2 focus-visible:ring-ink/30"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -55,7 +55,7 @@ export function ContactAlertToast() {
             <Link
               href="/admin/messages"
               onClick={dismissContactAlert}
-              className="inline-flex min-h-9 items-center rounded-lg bg-[#0B1220] px-3 text-xs font-bold text-white outline-none transition-colors hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-[#E63946]/60"
+              className="inline-flex min-h-9 items-center rounded-lg bg-ink px-3 text-xs font-bold text-white outline-none transition-colors hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-brand/60"
             >
               {pending.length > 1 ? 'Voir les messages' : 'Voir le message'}
             </Link>

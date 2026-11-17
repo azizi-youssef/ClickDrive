@@ -127,7 +127,7 @@ function OpenButton({ booking, onOpen, className }: { booking: AgencyBookingRow;
       onClick={onOpen}
       aria-label={`Ouvrir la réservation ${bookingReference(booking)}`}
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]',
+        'inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
         className
       )}
     >
@@ -232,7 +232,7 @@ export function BookingsPanel({
                 <button
                   type="button"
                   onClick={() => onQueryChange({ ...query, status: '' })}
-                  className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                  className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   Voir toutes les réservations
                 </button>
@@ -263,7 +263,7 @@ export function BookingsPanel({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-mono text-[13px] font-semibold text-[#0F172A]">{bookingReference(booking)}</p>
+                      <p className="font-mono text-[13px] font-semibold text-ink">{bookingReference(booking)}</p>
                       <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{booking.customer_name}</p>
                     </div>
                     <StatusBadge status={booking.status} audience="business" size="sm" className="shrink-0" />
@@ -322,7 +322,7 @@ export function BookingsPanel({
                       >
                         <td
                           className={cn(
-                            'whitespace-nowrap px-4 py-3.5 font-mono text-[13px] font-semibold text-[#0F172A]',
+                            'whitespace-nowrap px-4 py-3.5 font-mono text-[13px] font-semibold text-ink',
                             isWaiting(booking) && 'shadow-[inset_3px_0_0_0_var(--color-amber-400)]'
                           )}
                         >
@@ -345,7 +345,7 @@ export function BookingsPanel({
                           {formatBookingPeriod(booking.start_date, booking.end_date)}
                           {duration && <p className="mt-0.5 text-xs text-slate-500">{duration}</p>}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3.5 text-right font-semibold tabular-nums text-[#0F172A]">
+                        <td className="whitespace-nowrap px-4 py-3.5 text-right font-semibold tabular-nums text-ink">
                           {money(booking.total_price)}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3.5">
@@ -374,19 +374,19 @@ export function BookingsPanel({
       )}
 
       {loading && page && (
-        <p role="status" className="flex items-center justify-center gap-2 text-sm text-[#64748B]">
+        <p role="status" className="flex items-center justify-center gap-2 text-sm text-ink-secondary">
           <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />
           Chargement…
         </p>
       )}
 
       {!canAct && (
-        <p className="text-xs text-[#64748B]">
+        <p className="text-xs text-ink-secondary">
           Votre rôle ne permet pas de traiter les demandes de réservation.
         </p>
       )}
 
-      {busy && <p role="status" className="text-xs text-[#64748B]">Opération en cours…</p>}
+      {busy && <p role="status" className="text-xs text-ink-secondary">Opération en cours…</p>}
     </div>
   );
 }

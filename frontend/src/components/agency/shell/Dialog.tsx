@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 import { button, heading } from '@/lib/design/tokens';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
 
+/** Entrée des fenêtres : feuille par le bas sur téléphone, léger glissement au-dessus de 640 px. */
+const PANEL_MOTION = 'max-sm:motion-safe:animate-cd-sheet-up sm:motion-safe:animate-cd-slide-up';
+
 /**
  * Boîtes de dialogue de l'espace agence et de l'administration.
  * Focus, Échap, page inerte et restauration du focus : voir `useModalDialog`.
@@ -22,7 +25,7 @@ function Backdrop({
   alert?: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/50 p-0 backdrop-blur-sm motion-safe:animate-cd-fade-in sm:items-center sm:p-6">
       <div
         role={alert ? 'alertdialog' : 'dialog'}
         aria-modal="true"
@@ -62,6 +65,7 @@ export function Modal({
         tabIndex={-1}
         className={cn(
           'mx-auto max-h-[92vh] overflow-y-auto rounded-t-2xl border border-slate-200 bg-white shadow-2xl outline-none sm:rounded-2xl',
+          PANEL_MOTION,
           wide ? 'sm:max-w-3xl' : 'sm:max-w-xl'
         )}
       >
@@ -71,7 +75,7 @@ export function Modal({
               {title}
             </h2>
             {description && (
-              <p id={`${titleId}-description`} className="mt-1 text-sm text-[#64748B]">
+              <p id={`${titleId}-description`} className="mt-1 text-sm text-ink-secondary">
                 {description}
               </p>
             )}
@@ -80,7 +84,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="-me-2 -mt-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 sm:m-0 sm:h-8 sm:w-8 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+            className="-me-2 -mt-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 sm:m-0 sm:h-8 sm:w-8 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -132,7 +136,7 @@ export function ConfirmDialog({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="mx-auto max-w-md rounded-t-2xl border border-slate-200 bg-white p-5 shadow-2xl outline-none sm:rounded-2xl sm:p-6"
+        className={cn('mx-auto max-w-md rounded-t-2xl border border-slate-200 bg-white p-5 shadow-2xl outline-none sm:rounded-2xl sm:p-6', PANEL_MOTION)}
       >
         <div className="flex items-start gap-3">
           {destructive && (
@@ -147,7 +151,7 @@ export function ConfirmDialog({
             <h2 id={titleId} className={heading.dialog}>
               {title}
             </h2>
-            <p id={`${titleId}-message`} className="mt-1.5 text-sm text-[#64748B]">
+            <p id={`${titleId}-message`} className="mt-1.5 text-sm text-ink-secondary">
               {message}
             </p>
           </div>
@@ -157,7 +161,7 @@ export function ConfirmDialog({
           <div className="mt-4">
             <label
               htmlFor={`${titleId}-reason`}
-              className="block text-sm font-medium text-[#0F172A]"
+              className="block text-sm font-medium text-ink"
             >
               {reasonLabel ?? 'Motif'}
             </label>
@@ -166,7 +170,7 @@ export function ConfirmDialog({
               value={reason ?? ''}
               onChange={(event) => onReasonChange(event.target.value)}
               rows={3}
-              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-[#0F172A] outline-none transition-colors focus:border-[#E63946] focus:ring-2 focus:ring-[#E63946]/25"
+              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/25"
             />
           </div>
         )}

@@ -316,9 +316,9 @@ export function AdminAuditClient() {
           aria-modal="true"
           aria-labelledby="audit-log-title"
           tabIndex={-1}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm motion-safe:animate-cd-fade-in"
         >
-          <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 motion-safe:animate-cd-slide-up overflow-hidden flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
               <div className="flex items-center gap-2">
                 <Code className="h-5 w-5 text-indigo-600" />

@@ -84,7 +84,7 @@ export function TripHistory({ initialVehicleId = '' }: { initialVehicleId?: stri
             {preset === 'custom' && <DateRangeInputs value={custom} onChange={(value) => { setCustom(value); resetSelection(); }} />}
           </div>
           <div className="w-full lg:max-w-64">
-            <label htmlFor="trip-vehicle" className="mb-1 block text-xs font-medium text-[#64748B]">Véhicule</label>
+            <label htmlFor="trip-vehicle" className="mb-1 block text-xs font-medium text-ink-secondary">Véhicule</label>
             <select id="trip-vehicle" value={vehicleId} onChange={(event) => { setVehicleId(event.target.value); resetSelection(); }} className={selectClass}>
               <option value="">Tous les véhicules</option>
               {(fleet.data?.vehicles ?? []).map((vehicle) => (
@@ -103,7 +103,7 @@ export function TripHistory({ initialVehicleId = '' }: { initialVehicleId?: stri
       <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <p className="text-sm font-semibold text-[#0F172A]">
+            <p className="text-sm font-semibold text-ink">
               {data ? `${data.total} trajet${data.total > 1 ? 's' : ''}` : 'Trajets'}
             </p>
             {data && data.trips.length > 0 && <p className="text-xs text-slate-500">Cette page : {formatDistanceKm(pageDistance)}</p>}

@@ -112,17 +112,18 @@ const PRO_PORTAL_FEATURES: Record<
 
 const loginStyles = `
   .cd-login {
-    --cd-graphite: #0B1220;
-    --cd-red: #E63946;
-    --cd-red-hover: #B4232F;
-    --cd-bg: #F5F6F8;
-    --cd-surface: #FFFFFF;
-    --cd-text: #0B1220;
+    /* Alias locaux des jetons du design system (src/app/globals.css) */
+    --cd-graphite: var(--color-ink);
+    --cd-red: var(--color-brand);
+    --cd-red-hover: var(--color-action-hover);
+    --cd-bg: var(--color-canvas);
+    --cd-surface: var(--color-surface);
+    --cd-text: var(--color-ink);
     --cd-muted: #5B6474;
-    --cd-subtle: #667085;
-    --cd-action: #C92F3B;
-    --cd-line: #E3E6EB;
-    --cd-field: #F5F6F8;
+    --cd-subtle: var(--color-ink-secondary);
+    --cd-action: var(--color-action);
+    --cd-line: var(--color-line);
+    --cd-field: var(--color-canvas);
     color-scheme: light;
     display: grid;
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);

@@ -50,7 +50,7 @@ function getInitialDates(requested?: RentalPeriod) {
 }
 
 const fieldClass =
-  'h-12 w-full rounded-xl border border-slate-200 bg-[#F5F6F8] px-3 text-[15px] font-semibold text-[#0B1220] transition focus:border-[#0B1220] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10 aria-[invalid=true]:border-[#E63946] aria-[invalid=true]:bg-[#FFF6F7] sm:text-sm';
+  'h-12 w-full rounded-xl border border-slate-200 bg-canvas px-3 text-[15px] font-semibold text-ink transition focus:border-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-ink/10 aria-[invalid=true]:border-brand aria-[invalid=true]:bg-brand-soft sm:text-sm';
 
 const labelClass = 'mb-1.5 block text-xs font-bold text-slate-600';
 
@@ -198,7 +198,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
         {c.checking}
       </span>
     ) : availability === 'unavailable' ? (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF1F2] px-2.5 py-1 text-xs font-bold text-[#B4232F]">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-action-hover">
         <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
         {c.unavailableDates}
       </span>
@@ -220,10 +220,10 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
       <div className="border-b border-slate-100 p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <p className="leading-none">
-            <span className="text-[32px] font-extrabold tracking-tight text-[#0B1220] tabular-nums">
+            <span className="text-[32px] font-extrabold tracking-tight text-ink tabular-nums">
               {formatNumber(vehicle.daily_price, locale)}
             </span>
-            <span className="ms-1.5 text-sm font-bold text-[#0B1220]">{currency}</span>
+            <span className="ms-1.5 text-sm font-bold text-ink">{currency}</span>
             <span className="ms-1 text-sm font-medium text-ink-secondary">{c.perDay}</span>
           </p>
           <div aria-live="polite">{statusPill}</div>
@@ -309,12 +309,12 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
             </div>
           </div>
           {datesError ? (
-            <p id={`${uid}-dates-error`} role="alert" className="mt-2 flex items-start gap-1.5 text-[13px] font-semibold text-[#B4232F]">
+            <p id={`${uid}-dates-error`} role="alert" className="mt-2 flex items-start gap-1.5 text-[13px] font-semibold text-action-hover">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {datesError}
             </p>
           ) : availability === 'unavailable' ? (
-            <p className="mt-2 text-[13px] text-[#B4232F]">
+            <p className="mt-2 text-[13px] text-action-hover">
               {c.alreadyBooked}
             </p>
           ) : availability === 'error' ? (
@@ -337,7 +337,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
           ref={submitRef}
           type="submit"
           disabled={availability === 'checking' && !datesError}
-          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-action px-5 text-[15px] font-bold text-white shadow-[0_14px_28px_-14px_rgba(230,57,70,0.8)] transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none aria-disabled:bg-ink aria-disabled:shadow-none aria-disabled:hover:bg-slate-800"
+          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-action px-5 text-[15px] font-bold text-white shadow-[0_14px_28px_-14px_rgba(230,57,70,0.8)] transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none aria-disabled:bg-ink aria-disabled:shadow-none aria-disabled:hover:bg-slate-800"
           // Pendant la vérification, le bouton est réellement désactivé (gris lisible) : pas d'aria-disabled,
           // dont le style sombre s'ajoutait au gris et rendait « Vérification… » illisible (2,5:1)
           aria-disabled={(!canBook && !(availability === 'checking' && !datesError)) || undefined}
@@ -356,7 +356,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
         </button>
 
         {/* ── Récapitulatif tarifaire ─────────────────────────────── */}
-        <div className="rounded-xl bg-[#F5F6F8] p-4 text-sm" aria-live="polite">
+        <div className="rounded-xl bg-canvas p-4 text-sm" aria-live="polite">
           <dl className="space-y-2">
             {durationShown ? (
               <>
@@ -365,7 +365,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
                   <dt>
                     {formatMad(Number(vehicle.daily_price))} × {plural(pricing.number_of_days, c.days)}
                   </dt>
-                  <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.full_price)}</dd>
+                  <dd className="font-semibold text-ink tabular-nums">{formatMad(pricing.full_price)}</dd>
                 </div>
                 <div className="flex justify-between gap-3 font-semibold text-emerald-800">
                   <dt>{fmt(c.durationLine, { percent: formatNumber(pricing.duration_discount?.percent ?? 0, locale) })}</dt>
@@ -383,14 +383,14 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
                     </span>
                   )}
                 </dt>
-                <dd className="font-semibold text-[#0B1220] tabular-nums">{formatMad(pricing.subtotal)}</dd>
+                <dd className="font-semibold text-ink tabular-nums">{formatMad(pricing.subtotal)}</dd>
               </div>
             )}
             <div className="flex justify-between gap-3 text-slate-600">
               <dt>{c.serviceFee}</dt>
               <dd className="font-semibold text-emerald-700">{c.free}</dd>
             </div>
-            <div className="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-extrabold text-[#0B1220]">
+            <div className="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-extrabold text-ink">
               <dt>{c.estimatedTotal}</dt>
               <dd className="tabular-nums">{datesError ? '—' : formatMad(pricing.total)}</dd>
             </div>
@@ -419,7 +419,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
           href={`https://wa.me/${CLICKDRIVE_WHATSAPP_NUMBER}?text=${encodeURIComponent(fmt(c.whatsappQuestion, { vehicle: `${vehicle.brand} ${vehicle.model} (${vehicle.year})` }))}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl text-[13px] font-semibold text-slate-600 transition-colors hover:text-[#0B1220]"
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl text-[13px] font-semibold text-slate-600 transition-colors hover:text-ink"
         >
           <MessageSquare className="h-4 w-4 text-emerald-600" aria-hidden="true" />
           {c.question}
@@ -444,14 +444,14 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
         ref={mobileBarRef}
         inert={submitInView}
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl transition-transform duration-200 motion-reduce:transition-none lg:hidden',
+          'fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(11,18,32,0.1)] backdrop-blur-xl transition-transform duration-fast motion-reduce:transition-none lg:hidden',
           submitInView && 'translate-y-full shadow-none'
         )}
       >
         <div className="min-w-0">
           <p className="leading-none">
-            <span className="text-lg font-extrabold text-[#0B1220] tabular-nums">{formatNumber(vehicle.daily_price, locale)}</span>
-            <span className="ms-1 text-xs font-bold text-[#0B1220]">{currency}</span>
+            <span className="text-lg font-extrabold text-ink tabular-nums">{formatNumber(vehicle.daily_price, locale)}</span>
+            <span className="ms-1 text-xs font-bold text-ink">{currency}</span>
             <span className="ms-1 text-xs text-ink-secondary">{c.perDay}</span>
           </p>
           <p className="mt-1 truncate text-xs text-ink-secondary">
@@ -469,7 +469,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
           onClick={openBooking}
           disabled={availability === 'checking' && !datesError}
           className={cn(
-            'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white transition-colors active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-600 sm:max-w-xs',
+            'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white transition-colors motion-press disabled:bg-slate-200 disabled:text-slate-600 sm:max-w-xs',
             canBook ? 'bg-action hover:bg-action-hover' : 'bg-ink hover:bg-slate-800'
           )}
         >

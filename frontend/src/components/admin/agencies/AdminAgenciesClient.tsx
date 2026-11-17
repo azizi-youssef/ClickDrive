@@ -233,7 +233,7 @@ export function AdminAgenciesClient({ initialStatus = 'ALL' }: { initialStatus?:
       {toast && (
         <div
           role="status"
-          className={`fixed bottom-6 right-6 z-50 rounded-xl border px-5 py-3.5 shadow-xl text-xs font-semibold flex items-center gap-2.5 animate-slide-up ${
+          className={`fixed bottom-6 right-6 z-50 rounded-xl border px-5 py-3.5 shadow-xl text-xs font-semibold flex items-center gap-2.5 motion-safe:animate-cd-slide-up ${
             toast.type === 'error'
               ? 'border-red-200 bg-red-50 text-red-900'
               : toast.type === 'info'

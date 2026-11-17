@@ -54,7 +54,7 @@ const LEGEND: TrackingState[] = ['MOVING', 'STATIONARY', 'OFFLINE', 'AWAITING'];
 
 /** Boutons posés sur la carte, sous les boutons de zoom de MapLibre */
 const MAP_BUTTON =
-  'flex h-8.5 w-8.5 items-center justify-center rounded-md bg-white text-slate-700 shadow transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]';
+  'flex h-8.5 w-8.5 items-center justify-center rounded-md bg-white text-slate-700 shadow transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand';
 
 /** Écran principal : indicateurs de flotte, carte centrale, liste filtrable et détail du véhicule sélectionné. */
 export function TrackingDashboard() {
@@ -119,7 +119,7 @@ export function TrackingDashboard() {
             <StatTile label="En mouvement" value={summary.moving} tone={summary.moving > 0 ? 'good' : 'neutral'} />
             <StatTile label="À l’arrêt" value={summary.stationary} />
             <StatTile label="Hors ligne" value={summary.offline} tone={summary.offline > 0 ? 'alert' : 'neutral'} hint={summary.awaiting > 0 ? `${summary.awaiting} en attente de position` : undefined} />
-            <Link href="/agency/tracking/alerts" className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]">
+            <Link href="/agency/tracking/alerts" className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-brand">
               <StatTile label="Alertes ouvertes" value={summary.open_alerts} tone={summary.open_alerts > 0 ? 'warn' : 'neutral'} icon={<Bell className="h-4 w-4" />} hint="Voir les alertes" />
             </Link>
             <StatTile label="Mise à jour" value={fleet.lastLoadedAt ? formatAge(new Date(fleet.lastLoadedAt).toISOString(), now) : '—'} hint={fleet.realtime === 'live' ? 'Positions en direct' : 'Actualisation périodique'} />
@@ -139,8 +139,8 @@ export function TrackingDashboard() {
         <Card className="p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#0F172A]">Aucun boîtier GPS n’est encore enregistré</p>
-              <p className="mt-0.5 text-sm text-[#64748B]">Enregistrez un boîtier et affectez-le à un véhicule : sa position apparaît ici dès la première transmission.</p>
+              <p className="text-sm font-semibold text-ink">Aucun boîtier GPS n’est encore enregistré</p>
+              <p className="mt-0.5 text-sm text-ink-secondary">Enregistrez un boîtier et affectez-le à un véhicule : sa position apparaît ici dès la première transmission.</p>
             </div>
             {access.permissions.manage && (
               <Link href="/agency/tracking/devices" className={button.primary}>
@@ -201,7 +201,7 @@ export function TrackingDashboard() {
             className={cn(
               'order-1 lg:order-2',
               expanded
-                ? 'fixed inset-0 z-[70] bg-[#F5F6F8] p-2 sm:p-3'
+                ? 'fixed inset-0 z-[70] bg-canvas p-2 sm:p-3'
                 : 'h-[58vh] min-h-[22rem] lg:h-[calc(100vh-15rem)] lg:min-h-[34rem]'
             )}
           >

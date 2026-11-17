@@ -74,11 +74,11 @@ export function AgencySubscriptionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm motion-safe:animate-cd-fade-in">
+      <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl motion-safe:animate-cd-slide-up">
         
         {/* Header */}
-        <div className="relative bg-linear-to-r from-[#0B1220] to-[#0A4B9C] px-6 py-6 text-white sm:px-8">
+        <div className="relative bg-linear-to-r from-ink to-[#0A4B9C] px-6 py-6 text-white sm:px-8">
           <button
             type="button"
             onClick={onClose}
@@ -136,7 +136,7 @@ export function AgencySubscriptionModal({
                   className={cn(
                     'relative flex flex-col justify-between rounded-2xl border p-5 transition-all cursor-pointer',
                     isSelected
-                      ? 'border-[#0B1220] bg-blue-50/40 ring-2 ring-[#0B1220] shadow-md'
+                      ? 'border-ink bg-blue-50/40 ring-2 ring-ink shadow-md'
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs',
                     isTooSmall && 'opacity-50 cursor-not-allowed bg-slate-50'
                   )}
@@ -198,7 +198,7 @@ export function AgencySubscriptionModal({
                         className={cn(
                           'w-full py-2 rounded-xl text-xs font-bold transition',
                           isSelected
-                            ? 'bg-[#0B1220] text-white shadow-xs'
+                            ? 'bg-ink text-white shadow-xs'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         )}
                       >
@@ -234,7 +234,7 @@ export function AgencySubscriptionModal({
               type="button"
               onClick={handleUpgrade}
               disabled={busy || selectedPlanSlug === currentSlug || Boolean(pendingChange)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B1220] hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-white shadow-md shadow-blue-900/15 transition cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-ink hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-white shadow-md shadow-blue-900/15 transition cursor-pointer"
             >
               {busy ? (
                 <>

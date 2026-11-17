@@ -69,7 +69,7 @@ export function CancelRequest({ reference, exp, sig, cancellable }: { reference:
 
   return (
     <section aria-labelledby={`${uid}-title`} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h2 id={`${uid}-title`} className="text-sm font-bold text-[#0B1220]">
+      <h2 id={`${uid}-title`} className="text-sm font-bold text-ink">
         {c.title}
       </h2>
       <p className="mt-1 text-sm text-slate-600">{c.text}</p>
@@ -84,8 +84,8 @@ export function CancelRequest({ reference, exp, sig, cancellable }: { reference:
           {c.open}
         </button>
       ) : (
-        <div className="mt-4 rounded-2xl border border-[#F8C9CD] bg-[#FFF6F7] p-4">
-          <p className="text-sm font-bold text-[#0B1220]">{fmt(c.confirmTitle, { reference })}</p>
+        <div className="mt-4 rounded-2xl border border-brand-line bg-brand-soft p-4">
+          <p className="text-sm font-bold text-ink">{fmt(c.confirmTitle, { reference })}</p>
           <label htmlFor={`${uid}-reason`} className="mt-3 block text-xs font-bold text-slate-600">
             {c.reasonLabel}
           </label>
@@ -95,7 +95,7 @@ export function CancelRequest({ reference, exp, sig, cancellable }: { reference:
             value={reason}
             onChange={(event) => setReason(event.target.value as CustomerCancelReason | '')}
             disabled={state === 'sending'}
-            className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-[#0B1220] focus:border-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#0B1220]/10 sm:max-w-xs"
+            className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-ink focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10 sm:max-w-xs"
           >
             <option value="">{c.reasonNone}</option>
             {CUSTOMER_CANCEL_REASONS.map((key) => (

@@ -65,9 +65,9 @@ export function ResetPasswordModal({
       aria-modal="true"
       aria-labelledby="reset-password-title"
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm motion-safe:animate-cd-fade-in"
     >
-      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 motion-safe:animate-cd-slide-up overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/80">
           <div className="flex items-center gap-3">

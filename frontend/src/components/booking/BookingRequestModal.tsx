@@ -7,6 +7,7 @@ import Link from '@/components/i18n/LocalizedLink';
 import Image from 'next/image';
 import { brandLogo } from '@/lib/brand/logo';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { DISTANCE, DURATION, EASE } from '@/lib/design/motion';
 import { Vehicle } from '@/types';
 import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
 import { cn } from '@/lib/utils';
@@ -124,7 +125,7 @@ function ageOn(birthDate: string, onDate: string): number {
 }
 
 const inputClass =
-  'h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-[15px] font-medium text-ink placeholder:text-slate-400 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-[#0B1220]/8 aria-[invalid=true]:border-brand aria-[invalid=true]:bg-[#FFF6F7] disabled:opacity-60 sm:text-sm';
+  'h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-[15px] font-medium text-ink placeholder:text-slate-400 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-ink/8 aria-[invalid=true]:border-brand aria-[invalid=true]:bg-brand-soft disabled:opacity-60 sm:text-sm';
 
 function Field({
   id,
@@ -156,7 +157,7 @@ function Field({
             *
           </span>
         )}
-        {optional && <span className="text-xs font-medium text-slate-400">{optionalLabel}</span>}
+        {optional && <span className="text-xs font-medium text-slate-500">{optionalLabel}</span>}
       </label>
       {children}
       {error ? (
@@ -460,10 +461,10 @@ export function BookingRequestModal({
   const motionProps = reduceMotion
     ? {}
     : {
-        initial: { opacity: 0, x: direction * 28 },
+        initial: { opacity: 0, x: direction * DISTANCE.md },
         animate: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: direction * -28 },
-        transition: { duration: 0.22, ease: [0.33, 1, 0.68, 1] as const },
+        exit: { opacity: 0, x: direction * -DISTANCE.md, transition: { duration: DURATION.fast, ease: EASE.exit } },
+        transition: { duration: DURATION.base, ease: EASE.standard },
       };
 
   const invalid = (key: keyof FieldErrors) => ({
@@ -480,6 +481,7 @@ export function BookingRequestModal({
         data-modal-backdrop
         className="absolute inset-0 bg-ink/65 backdrop-blur-[3px]"
         initial={reduceMotion ? false : { opacity: 0 }}
+        transition={{ duration: DURATION.base, ease: 'easeOut' }}
         animate={{ opacity: 1 }}
         onClick={requestClose}
       />
@@ -490,9 +492,9 @@ export function BookingRequestModal({
         aria-modal="true"
         aria-labelledby={`${uid}-title`}
         tabIndex={-1}
-        initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+        initial={reduceMotion ? false : { opacity: 0, y: DISTANCE.md }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: [0.33, 1, 0.68, 1] }}
+        transition={{ duration: DURATION.base, ease: EASE.standard }}
         className="relative flex h-dvh w-full flex-col overflow-hidden bg-white shadow-2xl outline-none sm:h-auto sm:max-h-[min(92dvh,880px)] sm:max-w-190 sm:rounded-3xl"
       >
         {/* ── En-tête ───────────────────────────────────────────── */}
@@ -558,7 +560,7 @@ export function BookingRequestModal({
                   className="h-full rounded-full bg-brand"
                   initial={false}
                   animate={{ width: `${progress}%` }}
-                  transition={{ duration: reduceMotion ? 0 : 0.3 }}
+                  transition={{ duration: reduceMotion ? 0 : DURATION.base, ease: EASE.standard }}
                 />
               </div>
             </div>
@@ -576,13 +578,13 @@ export function BookingRequestModal({
                       aria-current={current ? 'step' : undefined}
                       className={cn(
                         'flex shrink-0 items-center gap-2 rounded-full py-1 pe-2 text-[13px] font-bold transition-colors disabled:cursor-default',
-                        current ? 'text-ink' : done ? 'text-emerald-700 hover:text-emerald-800' : 'text-slate-400'
+                        current ? 'text-ink' : done ? 'text-emerald-700 hover:text-emerald-800' : 'text-slate-500'
                       )}
                     >
                       <span
                         className={cn(
                           'flex h-8 w-8 items-center justify-center rounded-full text-[13px] transition-colors',
-                          current ? 'bg-ink text-white' : done ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-white text-slate-400'
+                          current ? 'bg-ink text-white' : done ? 'bg-emerald-700 text-white' : 'border border-slate-300 bg-white text-slate-500'
                         )}
                       >
                         {done ? <Check className="h-4 w-4" aria-hidden="true" /> : step.num}
@@ -598,7 +600,7 @@ export function BookingRequestModal({
                           className="block h-full bg-emerald-500"
                           initial={false}
                           animate={{ width: done ? '100%' : '0%' }}
-                          transition={{ duration: reduceMotion ? 0 : 0.35 }}
+                          transition={{ duration: reduceMotion ? 0 : DURATION.slow, ease: EASE.standard }}
                         />
                       </span>
                     )}
@@ -617,7 +619,7 @@ export function BookingRequestModal({
         {/* ── Contenu ───────────────────────────────────────────── */}
         <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6">
           {submissionError && (
-            <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-[#F8C9CD] bg-[#FFF4F5] p-3.5 text-sm text-[#9B1C26]">
+            <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-brand-line bg-brand-soft p-3.5 text-sm text-action-hover">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <div>
                 <p className="font-bold">{m.sendFailed}</p>
@@ -626,7 +628,7 @@ export function BookingRequestModal({
             </div>
           )}
           {errorCount > 0 && !errors.consent && (
-            <p role="alert" className="mb-4 flex items-center gap-2 rounded-xl bg-[#FFF4F5] px-3.5 py-2.5 text-[13px] font-semibold text-[#9B1C26]">
+            <p role="alert" className="mb-4 flex items-center gap-2 rounded-xl bg-brand-soft px-3.5 py-2.5 text-[13px] font-semibold text-action-hover">
               <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
               {plural(errorCount, m.fieldsToFix)}
             </p>
@@ -1069,7 +1071,7 @@ export function BookingRequestModal({
                         </div>
                       )}
                     </dl>
-                    <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                    <p className="mt-3 text-xs leading-relaxed text-slate-500">
                       {m.paymentNote}
                     </p>
                   </div>
@@ -1083,7 +1085,7 @@ export function BookingRequestModal({
                   </div>
 
                   <div>
-                    <label className={cn('flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors', errors.consent ? 'border-brand bg-[#FFF6F7]' : 'border-slate-200')}>
+                    <label className={cn('flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors', errors.consent ? 'border-brand bg-brand-soft' : 'border-slate-200')}>
                       <input
                         id={`${uid}-consent`}
                         type="checkbox"
@@ -1114,9 +1116,9 @@ export function BookingRequestModal({
               {currentStep === 5 && (
                 <section aria-labelledby={`${uid}-done`} className="mx-auto max-w-md py-2 text-center">
                   <motion.span
-                    initial={reduceMotion ? false : { scale: 0.6, opacity: 0 }}
+                    initial={reduceMotion ? false : { scale: 0.85, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                    transition={{ duration: DURATION.slow, ease: EASE.standard }}
                     className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"
                   >
                     <CheckCircle2 className="h-9 w-9" aria-hidden="true" />
@@ -1291,7 +1293,7 @@ function SummaryBlock({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-[13px] font-bold text-accent-text hover:bg-[#FFF4F5]"
+            className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-[13px] font-bold text-accent-text hover:bg-brand-soft"
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
             {editLabel}

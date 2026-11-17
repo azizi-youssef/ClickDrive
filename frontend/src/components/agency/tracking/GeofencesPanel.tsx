@@ -96,7 +96,7 @@ export function GeofencesPanel() {
                 <li key={zone.id} className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="flex items-center gap-2 text-sm font-bold text-[#0F172A]"><MapPinned aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-400" /><span className="truncate">{zone.name}</span></p>
+                      <p className="flex items-center gap-2 text-sm font-bold text-ink"><MapPinned aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-400" /><span className="truncate">{zone.name}</span></p>
                       <p className="mt-1 text-xs text-slate-500">
                         Rayon {formatDistanceKm(zone.radius_m / 1000)} · {zone.vehicle_ids.length} véhicule{zone.vehicle_ids.length > 1 ? 's' : ''} ·{' '}
                         {[zone.alert_on_enter && 'entrée', zone.alert_on_exit && 'sortie'].filter(Boolean).join(' + ') || 'aucune alerte'}
@@ -107,8 +107,8 @@ export function GeofencesPanel() {
                     </div>
                     {canManage && (
                       <div className="flex shrink-0 items-center gap-1">
-                        <button type="button" onClick={() => setEditing(zone)} aria-label={`Modifier la zone ${zone.name}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"><Pencil aria-hidden="true" className="h-4 w-4" /></button>
-                        <button type="button" onClick={() => setDeleting(zone)} aria-label={`Supprimer la zone ${zone.name}`} className="rounded-lg p-2 text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"><Trash2 aria-hidden="true" className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => setEditing(zone)} aria-label={`Modifier la zone ${zone.name}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"><Pencil aria-hidden="true" className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => setDeleting(zone)} aria-label={`Supprimer la zone ${zone.name}`} className="rounded-lg p-2 text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"><Trash2 aria-hidden="true" className="h-4 w-4" /></button>
                       </div>
                     )}
                   </div>

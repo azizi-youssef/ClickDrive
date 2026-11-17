@@ -248,7 +248,7 @@ export function AgencyRentalsPanel({
             placeholder="Rechercher dossier, client, plaque..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-1.5 pl-9 pr-3 text-sm focus:border-[#E63946] focus:bg-white focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-1.5 pl-9 pr-3 text-sm focus:border-brand focus:bg-white focus:outline-none"
           />
         </div>
       </div>
@@ -443,7 +443,7 @@ export function AgencyRentalsPanel({
                     onChange={(e) =>
                       setHandoverForm({ ...handoverForm, mileage: Number(e.target.value) })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#E63946]"
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                   <p className="mt-0.5 text-[11px] text-slate-500">
                     Dernier relevé : {activeHandover.rental.vehicle?.currentMileage} km
@@ -665,7 +665,7 @@ export function AgencyRentalsPanel({
                 <button
                   type="submit"
                   disabled={handoverBusy}
-                  className="flex items-center gap-2 rounded-xl bg-[#0B1220] px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                 >
                   {handoverBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {activeHandover.type === 'PICKUP'

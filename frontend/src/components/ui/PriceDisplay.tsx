@@ -23,7 +23,7 @@ export function PriceDisplay({
 
   return (
     <div className={cn('inline-flex items-baseline gap-1', className)}>
-      <span className={cn('text-[#0B1220]', sizeClasses[size])}>
+      <span className={cn('text-ink', sizeClasses[size])}>
         {formatNumber(price)} DH
       </span>
       {period && (

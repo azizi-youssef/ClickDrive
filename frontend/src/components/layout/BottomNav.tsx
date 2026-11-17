@@ -74,7 +74,7 @@ export function BottomNav() {
       data-hidden={typing || undefined}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-14px_rgba(11,18,32,0.22)] backdrop-blur-xl lg:hidden',
-        'transition-transform duration-200 ease-out motion-reduce:transition-none data-hidden:translate-y-full'
+        'transition-transform duration-fast ease-out motion-reduce:transition-none data-hidden:translate-y-full'
       )}
     >
       <ul className="mx-auto grid h-16 max-w-lg grid-cols-4 px-1">
@@ -88,16 +88,16 @@ export function BottomNav() {
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'group flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-semibold outline-none transition-colors',
-                  'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E63946]',
-                  active ? 'text-[#0B1220]' : 'text-slate-500 active:text-[#0B1220]'
+                  'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand',
+                  active ? 'text-ink' : 'text-slate-500 active:text-ink'
                 )}
               >
                 {/* Pastille de l'onglet actif : forme + couleur + graisse (jamais la couleur seule) */}
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'flex h-8 w-14 items-center justify-center rounded-full transition-[background-color,transform] duration-200 motion-reduce:transition-none',
-                    active ? 'bg-[#E63946]/12 text-accent-text' : 'group-active:scale-95 group-active:bg-slate-100'
+                    'flex h-8 w-14 items-center justify-center rounded-full transition-[background-color,transform] duration-fast motion-reduce:transition-none',
+                    active ? 'bg-brand/12 text-accent-text' : 'group-active:scale-(--motion-press) group-active:bg-slate-100'
                   )}
                 >
                   <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />

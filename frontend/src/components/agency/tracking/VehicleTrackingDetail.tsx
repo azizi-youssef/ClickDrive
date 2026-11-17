@@ -131,13 +131,13 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/agency/tracking" aria-label="Retour à la carte" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]">
+          <Link href="/agency/tracking" aria-label="Retour à la carte" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
             <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           </Link>
           {vehicle ? (
             <div className="min-w-0">
-              <h2 className="truncate text-xl font-extrabold tracking-tight text-[#0B1220]">{vehicle.brand} {vehicle.model}</h2>
-              <p className="truncate text-sm text-[#64748B]">{[vehicle.unit_number, vehicle.license_plate].filter(Boolean).join(' · ')}</p>
+              <h2 className="truncate text-xl font-extrabold tracking-tight text-ink">{vehicle.brand} {vehicle.model}</h2>
+              <p className="truncate text-sm text-ink-secondary">{[vehicle.unit_number, vehicle.license_plate].filter(Boolean).join(' · ')}</p>
             </div>
           ) : (
             <Skeleton className="h-9 w-56" />
@@ -161,7 +161,7 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
               </section>
 
               <Card className="p-4">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-[#0F172A]"><ShieldCheck aria-hidden="true" className="h-4 w-4 text-slate-400" />Boîtier GPS</h3>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-ink"><ShieldCheck aria-hidden="true" className="h-4 w-4 text-slate-400" />Boîtier GPS</h3>
                 {d.tracker ? (
                   <dl className="mt-2 divide-y divide-slate-100 text-sm">
                     <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">Fournisseur</dt><dd className="font-medium">{d.tracker.provider}</dd></div>
@@ -176,13 +176,13 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
                     </div>
                   </dl>
                 ) : (
-                  <p className="mt-2 text-sm text-[#64748B]">Aucun boîtier affecté. {access.permissions.manage && <Link href="/agency/tracking/devices" className="font-semibold text-[#0B1220] underline">Affecter un boîtier</Link>}</p>
+                  <p className="mt-2 text-sm text-ink-secondary">Aucun boîtier affecté. {access.permissions.manage && <Link href="/agency/tracking/devices" className="font-semibold text-ink underline">Affecter un boîtier</Link>}</p>
                 )}
               </Card>
 
               {d.geofences.length > 0 && (
                 <Card className="p-4">
-                  <h3 className="flex items-center gap-2 text-sm font-bold text-[#0F172A]"><MapPinned aria-hidden="true" className="h-4 w-4 text-slate-400" />Zones</h3>
+                  <h3 className="flex items-center gap-2 text-sm font-bold text-ink"><MapPinned aria-hidden="true" className="h-4 w-4 text-slate-400" />Zones</h3>
                   <ul className="mt-2 divide-y divide-slate-100 text-sm">
                     {d.geofences.map((zone) => (
                       <li key={zone.id} className="flex items-center justify-between gap-3 py-2">
@@ -195,7 +195,7 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
               )}
 
               {d.open_alerts > 0 && (
-                <Link href={`/agency/tracking/alerts?vehicle_id=${vehicleId}`} className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]">
+                <Link href={`/agency/tracking/alerts?vehicle_id=${vehicleId}`} className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
                   <Bell aria-hidden="true" className="h-4 w-4" />
                   {d.open_alerts} alerte{d.open_alerts > 1 ? 's' : ''} ouverte{d.open_alerts > 1 ? 's' : ''} sur ce véhicule
                 </Link>
@@ -216,7 +216,7 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
 
           <Card className="p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h3 className="text-sm font-bold text-[#0F172A]">Positions enregistrées</h3>
+              <h3 className="text-sm font-bold text-ink">Positions enregistrées</h3>
               <FilterChips
                 options={[{ value: 'off', label: 'Masquées' }, { value: '1', label: '1 h' }, { value: '6', label: '6 h' }, { value: '24', label: '24 h' }] as const}
                 value={historyWindow}
@@ -242,10 +242,10 @@ export function VehicleTrackingDetail({ vehicleId }: { vehicleId: string }) {
 
           <Card className="p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h3 className="text-sm font-bold text-[#0F172A]">Trajets du jour</h3>
+              <h3 className="text-sm font-bold text-ink">Trajets du jour</h3>
               <div>
                 <label htmlFor="trip-day" className="sr-only">Jour</label>
-                <input id="trip-day" type="date" value={day} max={isoDay(new Date())} onChange={(event) => { setDay(event.target.value); setSelectedTripId(null); }} className="min-h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8" />
+                <input id="trip-day" type="date" value={day} max={isoDay(new Date())} onChange={(event) => { setDay(event.target.value); setSelectedTripId(null); }} className="min-h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-ink focus:ring-4 focus:ring-ink/8" />
               </div>
             </div>
             <div className="mt-3">

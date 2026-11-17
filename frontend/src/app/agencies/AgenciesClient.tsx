@@ -181,7 +181,7 @@ export function AgenciesClient() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative isolate overflow-hidden bg-[#0B1220] text-white">
+      <section className="relative isolate overflow-hidden bg-ink text-white">
         {/* Photo en fond, voile marine pour garder le texte blanc lisible (contraste AA) — comme /search et /motos */}
         <Image
           src={agenciesHeroImage}
@@ -195,16 +195,16 @@ export function AgenciesClient() {
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-[#0B1220]/95 via-[#0B1220]/82 to-[#0B1220]/50 rtl:bg-linear-to-l"
+          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-ink/95 via-ink/82 to-ink/50 rtl:bg-linear-to-l"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-t from-[#0B1220]/85 via-transparent to-[#0B1220]/45"
+          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-t from-ink/85 via-transparent to-ink/45"
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -end-40 -top-40 h-125 w-125 rounded-full border border-white/4" />
           <div className="absolute -end-20 -top-20 h-87.5 w-87.5 rounded-full border border-white/5" />
-          <div className="absolute end-0 top-0 h-full w-1/2 bg-linear-to-l from-[#E63946]/10 to-transparent" />
+          <div className="absolute end-0 top-0 h-full w-1/2 bg-linear-to-l from-brand/10 to-transparent" />
         </div>
 
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-12 sm:px-6 sm:pb-14 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end lg:px-8 lg:pb-16">
@@ -232,7 +232,7 @@ export function AgenciesClient() {
               <label htmlFor="agency-search" className="sr-only">
                 {l.searchLabel}
               </label>
-              <div className="flex min-h-12 min-w-0 flex-1 items-center gap-3 px-3">
+              <div className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 focus-within:ring-2 focus-within:ring-focus">
                 <Search className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
                 <input
                   id="agency-search"
@@ -242,14 +242,14 @@ export function AgenciesClient() {
                   placeholder={l.searchPlaceholder}
                   autoComplete="off"
                   enterKeyHint="search"
-                  className="w-full min-w-0 bg-transparent text-[15px] text-[#0B1220] outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
+                  className="w-full min-w-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
                     aria-label={l.clearSearch}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#0B1220]"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-ink"
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -257,7 +257,7 @@ export function AgenciesClient() {
               </div>
               <button
                 type="submit"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-6 text-sm font-bold text-white outline-none transition-colors hover:bg-action-hover focus-visible:ring-2 focus-visible:ring-[#0B1220] focus-visible:ring-offset-2"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-6 text-sm font-bold text-white outline-none transition-colors hover:bg-action-hover focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
               >
                 {l.search}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -288,7 +288,7 @@ export function AgenciesClient() {
           {/* Chiffres réels du réseau */}
           <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 lg:grid-cols-1">
             {stats.map((stat) => (
-              <div key={stat.label} className="bg-[#0B1220]/90 px-4 py-4 sm:px-5 lg:flex lg:items-center lg:justify-between lg:gap-4">
+              <div key={stat.label} className="bg-ink/90 px-4 py-4 sm:px-5 lg:flex lg:items-center lg:justify-between lg:gap-4">
                 <dt className="order-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 lg:order-1 lg:text-xs">
                   {stat.label}
                 </dt>
@@ -310,7 +310,7 @@ export function AgenciesClient() {
       >
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="annuaire-title" className="text-2xl font-black tracking-tight text-[#0B1220] sm:text-3xl">
+            <h2 id="annuaire-title" className="text-2xl font-black tracking-tight text-ink sm:text-3xl">
               {l.directoryTitle}
             </h2>
             <p className="mt-1 text-sm text-ink-secondary" aria-live="polite">
@@ -327,7 +327,7 @@ export function AgenciesClient() {
 
         {/* Barre de filtres */}
         {!loading && !error && allAgencies.length > 0 && (
-          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-[0_1px_2px_rgba(11,18,32,0.04)] lg:flex-row lg:items-center">
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-card lg:flex-row lg:items-center">
             <div
               role="group"
               aria-label={l.cityFilterAria}
@@ -344,8 +344,8 @@ export function AgenciesClient() {
                       aria-pressed={active}
                       className={
                         active
-                          ? 'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-[#0B1220] px-3.5 text-sm font-bold text-white'
-                          : 'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F5F6F8] hover:text-[#0B1220]'
+                          ? 'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-ink px-3.5 text-sm font-bold text-white'
+                          : 'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-canvas hover:text-ink'
                       }
                     >
                       {city.label}
@@ -353,7 +353,7 @@ export function AgenciesClient() {
                         className={
                           active
                             ? 'rounded-md bg-white/15 px-1.5 text-[11px] tabular-nums'
-                            : 'rounded-md bg-[#F5F6F8] px-1.5 text-[11px] tabular-nums text-ink-tertiary'
+                            : 'rounded-md bg-canvas px-1.5 text-[11px] tabular-nums text-ink-tertiary'
                         }
                       >
                         {city.count}
@@ -373,7 +373,7 @@ export function AgenciesClient() {
                 id="agency-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="min-h-10 flex-1 cursor-pointer rounded-xl border border-slate-200 bg-white ps-3 pe-8 text-sm font-semibold text-[#0B1220] outline-none transition-colors hover:border-slate-300 focus:border-[#0B1220] focus:ring-4 focus:ring-[#0B1220]/8 lg:flex-none"
+                className="min-h-10 flex-1 cursor-pointer rounded-xl border border-slate-200 bg-white ps-3 pe-8 text-sm font-semibold text-ink outline-none transition-colors hover:border-slate-300 focus:border-ink focus:ring-4 focus:ring-ink/8 lg:flex-none"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -399,13 +399,13 @@ export function AgenciesClient() {
         {!loading && !error && searchQuery.trim() && (
           <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
             {l.resultsFor}
-            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 font-semibold text-[#0B1220] ring-1 ring-slate-200">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 font-semibold text-ink ring-1 ring-slate-200">
               « {searchQuery.trim()} »
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
                 aria-label={l.removeSearch}
-                className="-me-1 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-[#0B1220]"
+                className="-me-1 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-ink"
               >
                 <X className="h-3 w-3" aria-hidden="true" />
               </button>
@@ -437,14 +437,14 @@ export function AgenciesClient() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50">
                 <AlertCircle className="h-6 w-6 text-accent-text" aria-hidden="true" />
               </div>
-              <h3 className="mt-5 text-lg font-bold text-[#0B1220]">{l.errorTitle}</h3>
+              <h3 className="mt-5 text-lg font-bold text-ink">{l.errorTitle}</h3>
               <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
                 {l.errorText}
               </p>
               <button
                 type="button"
                 onClick={() => void fetchAgencies()}
-                className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
+                className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 {l.retry}
@@ -455,10 +455,10 @@ export function AgenciesClient() {
           {/* Plateforme sans agence */}
           {!loading && !error && allAgencies.length === 0 && (
             <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-16 text-center sm:py-20">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0B1220]">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ink">
                 <Building2 className="h-7 w-7 text-white" aria-hidden="true" />
               </div>
-              <h3 className="mt-6 text-xl font-black text-[#0B1220] sm:text-2xl">{l.emptyTitle}</h3>
+              <h3 className="mt-6 text-xl font-black text-ink sm:text-2xl">{l.emptyTitle}</h3>
               <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-500">
                 {l.emptyText}
               </p>
@@ -472,7 +472,7 @@ export function AgenciesClient() {
                 </Link>
                 <Link
                   href="/agency/join"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-6 text-sm font-bold text-[#0B1220] transition-colors hover:bg-slate-50"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-6 text-sm font-bold text-ink transition-colors hover:bg-slate-50"
                 >
                   {l.registerAgency}
                   <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -484,15 +484,15 @@ export function AgenciesClient() {
           {/* Aucun résultat */}
           {!loading && !error && allAgencies.length > 0 && filteredAgencies.length === 0 && (
             <div className="rounded-3xl border border-slate-200/80 bg-white px-6 py-14 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F6F8]">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-canvas">
                 <Search className="h-6 w-6 text-slate-400" aria-hidden="true" />
               </div>
-              <h3 className="mt-5 text-lg font-bold text-[#0B1220]">{l.noMatchTitle}</h3>
+              <h3 className="mt-5 text-lg font-bold text-ink">{l.noMatchTitle}</h3>
               <p className="mt-2 text-sm text-slate-500">{l.noMatchText}</p>
               <button
                 type="button"
                 onClick={clearFilters}
-                className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-sm font-bold text-[#0B1220] transition-colors hover:bg-slate-50"
+                className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-sm font-bold text-ink transition-colors hover:bg-slate-50"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
                 {l.clearFilters}
@@ -503,7 +503,7 @@ export function AgenciesClient() {
           {/* Grille */}
           {!loading && !error && filteredAgencies.length > 0 && (
             <>
-              <GsapReveal stagger={0.06} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <GsapReveal stagger className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {pagedAgencies.map((agency) => (
                   <AgencyCard key={agency.id} agency={agency} carCount={agency.vehicle_count ?? 0} />
                 ))}
@@ -529,7 +529,7 @@ export function AgenciesClient() {
         {!loading && !error && (
           <section
             aria-labelledby="partner-title"
-            className="relative mt-14 overflow-hidden rounded-3xl bg-[#0B1220] p-7 text-white sm:p-10 lg:p-12"
+            className="relative mt-14 overflow-hidden rounded-3xl bg-ink p-7 text-white sm:p-10 lg:p-12"
           >
             <div
               aria-hidden="true"
@@ -574,7 +574,7 @@ export function AgenciesClient() {
             className="group inline-flex min-h-10 items-center gap-2 text-sm font-bold text-ink-tertiary transition-colors hover:text-accent-text"
           >
             {l.allVehicles}
-            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none rtl:rotate-180" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover:-translate-x-1" aria-hidden="true" />
           </Link>
         </div>
       </section>

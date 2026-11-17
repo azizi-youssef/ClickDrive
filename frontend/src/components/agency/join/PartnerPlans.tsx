@@ -33,7 +33,7 @@ export function PartnerPlans() {
     <section aria-labelledby="partner-plans" className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">Tarifs</span>
-        <h2 id="partner-plans" className="mt-2 text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-3xl">
+        <h2 id="partner-plans" className="mt-2 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
           Un abonnement mensuel selon la taille de votre flotte, 0 % de commission
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
@@ -50,9 +50,9 @@ export function PartnerPlans() {
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => (
               <li key={plan.id} className="flex flex-col rounded-2xl border border-slate-200 p-5">
-                <p className="text-sm font-bold text-[#0B1220]">{plan.name}</p>
+                <p className="text-sm font-bold text-ink">{plan.name}</p>
                 <p className="mt-2">
-                  <span className="text-2xl font-black text-[#0B1220]">{formatPrice(plan.price_monthly)}</span>
+                  <span className="text-2xl font-black text-ink">{formatPrice(plan.price_monthly)}</span>
                   <span className="text-xs font-semibold text-slate-500"> / mois</span>
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
@@ -73,13 +73,13 @@ export function PartnerPlans() {
           <p className="mt-6 text-sm text-slate-600">Les tarifs vous sont communiqués par notre équipe après votre demande.</p>
         )}
 
-        <h3 className="mt-12 text-lg font-extrabold text-[#0B1220]">Votre mise en ligne, étape par étape</h3>
+        <h3 className="mt-12 text-lg font-extrabold text-ink">Votre mise en ligne, étape par étape</h3>
         <ol className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {ONBOARDING.map((step, index) => (
             <li key={step.title} className="flex gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B1220] text-sm font-bold text-white">{index + 1}</span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">{index + 1}</span>
               <span>
-                <span className="block text-sm font-bold text-[#0B1220]">{step.title}</span>
+                <span className="block text-sm font-bold text-ink">{step.title}</span>
                 <span className="mt-0.5 block text-xs leading-5 text-slate-600">{step.text}</span>
               </span>
             </li>

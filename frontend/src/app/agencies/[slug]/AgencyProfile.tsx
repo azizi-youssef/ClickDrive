@@ -142,22 +142,22 @@ export function AgencyProfile({
       : plural(cars.length, p.cars);
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] pb-20">
+    <div className="min-h-screen bg-canvas pb-20">
       {/* Fil d'Ariane */}
       <div className="border-b border-slate-200 bg-white">
         <nav aria-label={t.agencies.list.breadcrumbAria} className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-4 py-3 text-xs font-medium text-slate-500 sm:px-6 lg:px-8">
-          <Link href="/" className="rounded hover:text-[#0B1220]">{t.agencies.list.home}</Link>
+          <Link href="/" className="rounded hover:text-ink">{t.agencies.list.home}</Link>
           <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-400 rtl:rotate-180" />
-          <Link href="/agencies" className="rounded hover:text-[#0B1220]">{t.agencies.list.agencies}</Link>
+          <Link href="/agencies" className="rounded hover:text-ink">{t.agencies.list.agencies}</Link>
           <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-400 rtl:rotate-180" />
-          <span aria-current="page" className="min-w-0 truncate font-semibold text-[#0B1220]">{agency.name}</span>
+          <span aria-current="page" className="min-w-0 truncate font-semibold text-ink">{agency.name}</span>
         </nav>
       </div>
 
       {/* Bannière */}
-      <div className="relative h-40 w-full bg-[#0B1220] sm:h-56 lg:h-64">
+      <div className="relative h-40 w-full bg-ink sm:h-56 lg:h-64">
         <AgencyBanner name={agency.name} bannerUrl={agency.banner_url} priority sizes="100vw" className="object-cover opacity-60" />
-        <div className="absolute inset-0 bg-linear-to-t from-[#0B1220] via-[#0B1220]/40 to-transparent" aria-hidden="true" />
+        <div className="absolute inset-0 bg-linear-to-t from-ink via-ink/40 to-transparent" aria-hidden="true" />
       </div>
 
       <div className="relative mx-auto -mt-20 max-w-7xl px-4 sm:-mt-24 sm:px-6 lg:px-8">
@@ -170,7 +170,7 @@ export function AgencyProfile({
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 id={nameId} className="break-words text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[32px]">
+                  <h1 id={nameId} className="break-words text-2xl font-extrabold tracking-tight text-ink sm:text-[32px]">
                     {agency.name}
                   </h1>
                   {agency.verified && (
@@ -181,7 +181,7 @@ export function AgencyProfile({
                 </div>
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
                   <span className="inline-flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 shrink-0 text-[#E63946]" aria-hidden="true" />
+                    <MapPin className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
                     {location}
                   </span>
                   {mapsUrl && (
@@ -189,7 +189,7 @@ export function AgencyProfile({
                       href={mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="tap-44 inline-flex min-h-8 items-center gap-1 font-semibold text-[#0B1220] underline-offset-4 hover:underline"
+                      className="tap-44 inline-flex min-h-8 items-center gap-1 font-semibold text-ink underline-offset-4 hover:underline"
                     >
                       {p.seeOnMap}
                       <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -214,7 +214,7 @@ export function AgencyProfile({
             <div className="flex flex-col gap-2.5 sm:flex-row">
               <a
                 href="#agency-fleet"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#E63946] px-5 text-sm font-bold text-white shadow-[0_12px_24px_-14px_rgba(230,57,70,0.8)] transition-colors hover:bg-[#C92F3B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-action px-5 text-sm font-bold text-white shadow-action transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 {fleetLabel}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
@@ -223,7 +223,7 @@ export function AgencyProfile({
                 href={clickdriveWhatsAppUrl(fmt(p.whatsappQuestion, { agency: agency.name, city: agency.city }))}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-[#0B1220] transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1220]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-ink transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 <MessageSquare className="h-4 w-4 text-emerald-600" aria-hidden="true" />
                 {p.askQuestion}
@@ -236,14 +236,14 @@ export function AgencyProfile({
           <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-100 pt-6 sm:grid-cols-3 lg:grid-cols-5">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.fleet}</dt>
-              <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">
+              <dd className="mt-1 text-lg font-extrabold text-ink">
                 {fleetLoading ? '…' : plural(vehicles.length, p.vehicles)}
               </dd>
               {!fleetLoading && vehicles.length > 0 && <dd className="text-xs text-slate-500">{fleetBreakdown}</dd>}
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.from}</dt>
-              <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">
+              <dd className="mt-1 text-lg font-extrabold text-ink">
                 {minPrice !== null ? (
                   <>
                     <span className="tabular-nums">{formatNumber(minPrice, locale)}</span> DH
@@ -257,13 +257,13 @@ export function AgencyProfile({
             {memberSince && (
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.memberSince}</dt>
-                <dd className="mt-1 text-lg font-extrabold capitalize text-[#0B1220]">{memberSince}</dd>
+                <dd className="mt-1 text-lg font-extrabold capitalize text-ink">{memberSince}</dd>
               </div>
             )}
             {responseTime && (
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.answers}</dt>
-                <dd className="mt-1 text-lg font-extrabold first-letter:uppercase text-[#0B1220]">
+                <dd className="mt-1 text-lg font-extrabold first-letter:uppercase text-ink">
                   {t.agencies.responseTime[responseBucket(responseTime.medianMinutes)]}
                 </dd>
                 <dd className="text-xs text-slate-500">{plural(responseTime.responses, p.responseMedian)}</dd>
@@ -271,20 +271,20 @@ export function AgencyProfile({
             )}
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{p.payment}</dt>
-              <dd className="mt-1 text-lg font-extrabold text-[#0B1220]">{p.atAgency}</dd>
+              <dd className="mt-1 text-lg font-extrabold text-ink">{p.atAgency}</dd>
             </div>
           </dl>
         </section>
 
         {practical.length > 0 && (
           <section aria-labelledby="agency-practical" className="mt-6 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7">
-            <h2 id="agency-practical" className="text-lg font-extrabold text-[#0B1220]">
+            <h2 id="agency-practical" className="text-lg font-extrabold text-ink">
               {p.practical}
             </h2>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
               {practical.map(({ key, icon: Icon, label, value }) => (
                 <div key={key} className="flex gap-3">
-                  <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F5F6F8] text-[#0B1220]">
+                  <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-canvas text-ink">
                     <Icon className="h-4.5 w-4.5" />
                   </span>
                   <div className="min-w-0">
@@ -301,7 +301,7 @@ export function AgencyProfile({
           {/* À propos : uniquement si l'agence a rédigé une présentation */}
           {agency.description.trim() && (
             <section aria-labelledby="agency-about" className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7">
-              <h2 id="agency-about" className="flex items-center gap-2 text-lg font-extrabold text-[#0B1220]">
+              <h2 id="agency-about" className="flex items-center gap-2 text-lg font-extrabold text-ink">
                 <Building2 className="h-5 w-5 text-slate-400" aria-hidden="true" />
                 {fmt(p.about, { agency: agency.name })}
               </h2>
@@ -315,7 +315,7 @@ export function AgencyProfile({
             aria-labelledby="agency-how"
             className={cn('rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7', !agency.description.trim() && 'lg:col-span-2')}
           >
-            <h2 id="agency-how" className="text-lg font-extrabold text-[#0B1220]">
+            <h2 id="agency-how" className="text-lg font-extrabold text-ink">
               {fmt(p.bookWith, { agency: agency.name })}
             </h2>
             <ol className={cn('mt-4 grid gap-4', !agency.description.trim() && 'sm:grid-cols-3')}>
@@ -325,14 +325,14 @@ export function AgencyProfile({
                 { icon: CalendarCheck, title: p.step3Title, text: p.step3Text },
               ].map(({ icon: Icon, title, text }, index) => (
                 <li key={title} className="flex gap-3">
-                  <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B1220] text-white">
+                  <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
                     <Icon className="h-4.5 w-4.5" aria-hidden="true" />
-                    <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E63946] text-[10px] font-bold">
+                    <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-action text-[10px] font-bold">
                       {index + 1}
                     </span>
                   </span>
                   <span>
-                    <span className="block text-sm font-bold text-[#0B1220]">{title}</span>
+                    <span className="block text-sm font-bold text-ink">{title}</span>
                     <span className="block text-sm text-slate-600">{text}</span>
                   </span>
                 </li>
@@ -351,7 +351,7 @@ export function AgencyProfile({
         <section id="agency-fleet" aria-labelledby={fleetTitleId} className="mt-12 scroll-mt-28">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 id={fleetTitleId} className="text-2xl font-extrabold tracking-tight text-[#0B1220] sm:text-[28px]">
+              <h2 id={fleetTitleId} className="text-2xl font-extrabold tracking-tight text-ink sm:text-[28px]">
                 {fmt(p.fleetTitle, { agency: agency.name })}
               </h2>
               <p className="mt-1 text-sm text-slate-600" aria-live="polite">
@@ -380,13 +380,13 @@ export function AgencyProfile({
                         aria-pressed={fleetType === value}
                         onClick={() => setFleetType(value)}
                         className={cn(
-                          'inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#E63946]',
-                          fleetType === value ? 'bg-white text-[#0B1220] shadow-sm' : 'text-slate-600 hover:text-[#0B1220]'
+                          'inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand',
+                          fleetType === value ? 'bg-white text-ink shadow-sm' : 'text-slate-600 hover:text-ink'
                         )}
                       >
                         {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
                         {label}
-                        <span className="tabular-nums text-slate-400">{count}</span>
+                        <span className="tabular-nums text-slate-600">{count}</span>
                       </button>
                     ))}
                   </div>
@@ -398,7 +398,7 @@ export function AgencyProfile({
                   id="agency-fleet-sort"
                   value={sort}
                   onChange={(event) => setSort(event.target.value as FleetSort)}
-                  className="min-h-11 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-[#0B1220] outline-none focus-visible:ring-2 focus-visible:ring-[#E63946]"
+                  className="min-h-11 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {SORT_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -424,7 +424,7 @@ export function AgencyProfile({
               </p>
               <Link
                 href="/search"
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0B1220] px-5 text-sm font-bold text-white hover:bg-slate-800"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-slate-800"
               >
                 {p.fullCatalog}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />

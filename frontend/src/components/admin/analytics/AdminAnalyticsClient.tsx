@@ -184,7 +184,7 @@ function PlansCard({ report }: { report: AdminAnalyticsReport }) {
                   </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-[#0B1220]" style={{ width: `${share}%` }} />
+                  <div className="h-full rounded-full bg-ink" style={{ width: `${share}%` }} />
                 </div>
               </li>
             );
@@ -198,7 +198,7 @@ function PlansCard({ report }: { report: AdminAnalyticsReport }) {
 function AgencyRanking({ report }: { report: AdminAnalyticsReport }) {
   const { agencies, network } = report;
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(11,18,32,0.04)]">
+    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
         <div>
           <h2 className={heading.block}>Agences les plus sollicitées</h2>

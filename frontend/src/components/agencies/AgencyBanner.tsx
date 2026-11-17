@@ -24,7 +24,7 @@ export function AgencyBanner({
     return (
       <div
         aria-label={`Bannière indisponible pour ${name}`}
-        className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#0B1220] via-[#0B1220] to-[#0B1220]"
+        className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink via-ink to-ink"
       >
         <span className="select-none text-3xl font-extrabold tracking-tight text-white/90">
           {name.trim().charAt(0).toLocaleUpperCase('fr-FR') || '?'}

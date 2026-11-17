@@ -285,8 +285,8 @@ export function TrackingMap({ vehicles = [], selectedId = null, onSelect, geofen
       {failed && (
         <div role="status" className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-slate-50/95 p-6 text-center">
           <MapPinOff aria-hidden="true" className="h-8 w-8 text-slate-400" />
-          <p className="text-sm font-semibold text-[#0F172A]">La carte ne peut pas s’afficher</p>
-          <p className="max-w-xs text-sm text-[#64748B]">Votre navigateur ne permet pas l’affichage de la carte (WebGL). La liste des véhicules reste disponible.</p>
+          <p className="text-sm font-semibold text-ink">La carte ne peut pas s’afficher</p>
+          <p className="max-w-xs text-sm text-ink-secondary">Votre navigateur ne permet pas l’affichage de la carte (WebGL). La liste des véhicules reste disponible.</p>
         </div>
       )}
       {!failed && !ready && (

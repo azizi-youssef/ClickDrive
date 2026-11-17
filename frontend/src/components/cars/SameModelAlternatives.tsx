@@ -22,7 +22,7 @@ export function SameModelAlternatives({
   return (
     <div className="bg-slate-50/70 rounded-2xl border border-slate-200 p-5 sm:p-6 my-8 shadow-sm">
       <div className="flex items-start gap-3 mb-5">
-        <div className="w-10 h-10 rounded-xl bg-[#0B1220] text-white flex items-center justify-center shrink-0 shadow-sm">
+        <div className="w-10 h-10 rounded-xl bg-ink text-white flex items-center justify-center shrink-0 shadow-sm">
           <Sparkles className="w-5 h-5" />
         </div>
         <div>
@@ -54,7 +54,7 @@ export function SameModelAlternatives({
                 {/* Agency Header */}
                 <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100 text-xs">
                   <div className="flex items-center gap-1.5 truncate">
-                    <Building2 className="w-3.5 h-3.5 text-[#0B1220]" />
+                    <Building2 className="w-3.5 h-3.5 text-ink" />
                     <span className="font-semibold text-slate-800 truncate">
                       {alt.agency?.name}
                     </span>
@@ -82,7 +82,7 @@ export function SameModelAlternatives({
                     <p className="text-[11px] text-slate-500">
                       Année {alt.year} • {alt.transmission === 'AUTOMATIC' ? 'Automatique' : 'Manuelle'}
                     </p>
-                    <div className="flex items-center gap-1 text-[11px] text-amber-600 font-bold mt-0.5">
+                    <div className="flex items-center gap-1 text-[11px] text-amber-700 font-bold mt-0.5">
                       <Star className="w-3 h-3 fill-current" />
                       <span>{alt.agency?.rating.toFixed(1)}</span>
                     </div>
@@ -97,7 +97,7 @@ export function SameModelAlternatives({
                   {diff !== 0 && (
                     <span
                       className={`block text-[11px] font-semibold ${
-                        isCheaper ? 'text-emerald-600' : 'text-slate-500'
+                        isCheaper ? 'text-emerald-700' : 'text-slate-500'
                       }`}
                     >
                       {isCheaper ? `${Math.abs(diff)} DH moins cher` : `+${diff} DH`}
@@ -107,7 +107,7 @@ export function SameModelAlternatives({
 
                 <Link
                   href={`/cars/${alt.slug}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0B1220] hover:bg-slate-800 text-white shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-ink hover:bg-slate-800 text-white shadow-sm transition-colors"
                 >
                   <span>Voir cette offre</span>
                   <ArrowRight className="w-3.5 h-3.5" />

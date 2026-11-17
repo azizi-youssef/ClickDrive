@@ -1,42 +1,74 @@
 @import "tailwindcss";
 
 /* ================================================================
-   ClickDrive — Design system (source unique des couleurs et arrondis)
+   ClickDrive — Design system : source unique des jetons
    ================================================================
-   Les jetons ci-dessous sont exposés à Tailwind (@theme) :
-   bg-action, text-ink-secondary, border-line, bg-success-soft…
+   Tout passe par Tailwind (@theme) : une couleur, une taille de texte,
+   une ombre ou une courbe se règle ICI et nulle part ailleurs.
+   N'écrivez pas de valeur hexadécimale dans les composants : utilisez
+   bg-ink, text-ink-secondary, border-line, bg-action, text-accent-text…
+
    Contrastes vérifiés (WCAG 2.2 AA) :
-   - texte blanc sur action #C92F3B : 5,31:1 (le rouge de marque
-     #E63946 ne fait que 4,17:1 → réservé aux accents graphiques)
-   - texte rouge : #C92F3B sur clair (4,91:1 sur #F5F6F8),
-     #FF6B76 sur graphite (6,79:1)
+   - texte blanc sur action #C92F3B : 5,31:1 — le rouge de marque
+     #E63946 ne fait que 4,17:1 → réservé aux accents graphiques
+     (points, filets, anneaux de focus, pictogrammes : seuil 3:1)
+   - texte rouge : accent-text #C92F3B sur clair (5,31:1 sur blanc,
+     4,91:1 sur canvas), accent-on-dark #FF6B76 sur graphite (6,79:1)
    - texte secondaire #667085 : 4,97:1 sur blanc, 4,60:1 sur canvas
+   - slate-400 (#98A2B3) : 2,58:1 sur blanc → pictogrammes et textes
+     désactivés uniquement, jamais une information à lire
    ================================================================ */
 
-@theme {
+/* ── 1. Palette neutre de la marque ───────────────────────────────
+   Remplace l'échelle « slate » de Tailwind par les gris ClickDrive
+   (#667085, #E4E7EC, #D0D5DD…). Les composants qui écrivent
+   text-slate-500 ou border-slate-200 suivent donc la marque.
+   Écart avec le slate d'origine : ΔE2000 ≤ 2,6 (à peine perceptible). */
+@theme static {
+  --color-slate-50: #F9FAFB;
+  --color-slate-100: #F2F4F7;
+  --color-slate-200: #E4E7EC;
+  --color-slate-300: #D0D5DD;
+  --color-slate-400: #98A2B3;
+  --color-slate-500: #667085;
+  --color-slate-600: #475467;
+  --color-slate-700: #344054;
+  --color-slate-800: #1D2939;
+  --color-slate-900: #101828;
+  --color-slate-950: #0C111D;
+}
+
+/* ── 2. Jetons sémantiques ────────────────────────────────────────
+   « static » : variables CSS toujours émises, utilisables aussi dans
+   les styles en ligne et les <style> (var(--color-ink)…). */
+@theme static {
   /* Marque */
-  --color-ink: #0B1220;
-  --color-brand: #E63946;
+  --color-ink: #0B1220;            /* graphite : texte principal, fonds sombres */
+  --color-ink-hover: #1A2333;      /* survol d'un bouton graphite */
+  --color-brand: #E63946;          /* rouge de marque : accents graphiques */
+  --color-brand-soft: #FFF4F5;     /* fond teinté rouge (alerte, sélection) */
+  --color-brand-line: #F8C9CD;     /* bordure teintée rouge */
 
   /* Actions */
-  --color-action: #C92F3B;
+  --color-action: #C92F3B;         /* fond des boutons principaux (texte blanc 5,31:1) */
   --color-action-hover: #B4232F;
-  --color-accent-text: #C92F3B;
-  --color-accent-on-dark: #FF6B76;
+  --color-accent-text: #C92F3B;    /* texte rouge sur fond clair */
+  --color-accent-on-dark: #FF6B76; /* texte rouge sur graphite */
+  --color-focus: #E63946;          /* anneau de focus (≥ 3:1 sur blanc, canvas et graphite) */
 
   /* Texte */
-  --color-ink-secondary: #667085;
-  --color-ink-tertiary: #475467;
-  --color-disabled: #98A2B3;
+  --color-ink-secondary: var(--color-slate-500); /* #667085 */
+  --color-ink-tertiary: var(--color-slate-600);  /* #475467 */
+  --color-disabled: var(--color-slate-400);      /* #98A2B3 */
 
   /* Surfaces et bordures */
   --color-canvas: #F5F6F8;
   --color-surface: #FFFFFF;
-  --color-line: #E4E7EC;
-  --color-line-strong: #D0D5DD;
-  --color-neutral-soft: #F2F4F7;
+  --color-line: var(--color-slate-200);          /* #E4E7EC */
+  --color-line-strong: var(--color-slate-300);   /* #D0D5DD */
+  --color-neutral-soft: var(--color-slate-100);  /* #F2F4F7 */
 
-  /* États */
+  /* États (texte ≥ 5:1 sur leur fond « soft ») */
   --color-success: #067647;
   --color-success-soft: #ECFDF3;
   --color-success-line: #ABEFC6;
@@ -51,869 +83,521 @@
   --color-info-line: #B2DDFF;
 }
 
-:root {
-  --primary: #0B1220;
-  --primary-2: #111827;
-  --primary-hover: #1E293B;
-  --accent: #E63946;
-  --accent-hover: #C92F3B;
-  --action: #C92F3B;
-  --action-hover: #B4232F;
-  --accent-light: #FFF1F2;
-  --accent-glow: rgba(230, 57, 70, 0.25);
-  --background: #F5F6F8;
-  --surface: #FFFFFF;
-  --text: #0B1220;
-  --muted: #667085;
-  --muted-light: #F1F5F9;
-  --border: #E4E7EC;
-  --border-focus: #D0D5DD;
-  --success: #16A34A;
-  --success-light: #DCFCE7;
-  --warning: #F59E0B;
-  --warning-light: #FEF3C7;
-  --error: #DC2626;
-  --error-light: #FEE2E2;
+/* ── 3. Typographie, ombres, courbes, animations ──────────────────
+   Police : Plus Jakarta Sans auto-hébergée (layout.tsx → --font-sans,
+   graisses 200 à 800 : font-black s'affiche en 800).
+   Tailles fluides (rem + vw) : elles suivent le zoom du navigateur.
+     text-display   32 → 56 px   accroche du hero
+     text-h1        28 → 44 px   titre de page
+     text-h2        24 → 36 px   titre de section
+     text-h3        20 → 24 px   sous-section
+     text-title     17 px        titre de carte (véhicule, agence)
+     text-body-lg   17 px        chapô
+     text-body      15 px        texte courant
+     text-support   14 px        texte d'appui
+     text-label     13 px        libellé de champ, bouton compact
+     text-meta      12 px        métadonnées, mentions
+     text-overline  11 px        surtitre (à combiner avec « uppercase »)
+   Arrondis : échelle standard de Tailwind (lg 8 px, xl 12 px, 2xl 16 px,
+   3xl 24 px). Ne pas redéfinir --radius-* : ils pilotent rounded-*. */
+@theme {
+  --text-display: clamp(2rem, 1.35rem + 2.8vw, 3.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 800;
 
-  /* Typography Scale */
-  /* Police du site : Plus Jakarta Sans auto-hébergée (layout.tsx) — « Inter » n'était chargée nulle part */
-  --font-display: var(--font-sans, system-ui), system-ui, -apple-system, sans-serif;
+  --text-h1: clamp(1.75rem, 1.4rem + 1.5vw, 2.75rem);
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.03em;
+  --text-h1--font-weight: 800;
 
-  /* Arrondis : échelle standard de Tailwind (md 6px, lg 8px, xl 12px, 2xl 16px, 3xl 24px).
-     Ne pas redéfinir --radius-* ici : ces variables pilotent les classes rounded-*. */
+  --text-h2: clamp(1.5rem, 1.25rem + 1.1vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.025em;
+  --text-h2--font-weight: 800;
 
-  /* Shadows — Automotive precision */
-  --shadow-card: 0 2px 12px rgba(11, 18, 32, 0.06), 0 1px 3px rgba(11, 18, 32, 0.04);
-  --shadow-card-hover: 0 16px 40px rgba(11, 18, 32, 0.12), 0 4px 12px rgba(11, 18, 32, 0.06);
-  --shadow-accent: 0 8px 32px rgba(230, 57, 70, 0.28);
-  --shadow-nav: 0 4px 24px rgba(15, 23, 42, 0.08);
+  --text-h3: clamp(1.25rem, 1.15rem + 0.45vw, 1.5rem);
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.015em;
+  --text-h3--font-weight: 700;
+
+  --text-title: 1.0625rem;
+  --text-title--line-height: 1.35;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 800;
+
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.65;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+
+  --text-support: 0.875rem;
+  --text-support--line-height: 1.5;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-label--font-weight: 600;
+
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.4;
+
+  --text-overline: 0.6875rem;
+  --text-overline--line-height: 1.3;
+  --text-overline--letter-spacing: 0.14em;
+  --text-overline--font-weight: 700;
+
+  /* Élévation : carte posée → carte survolée → menu/popover → fenêtre */
+  --shadow-card: 0 1px 2px rgb(11 18 32 / 0.04);
+  --shadow-card-hover: 0 18px 40px -18px rgb(11 18 32 / 0.28);
+  --shadow-raised: 0 18px 50px -20px rgb(11 18 32 / 0.35);
+  --shadow-overlay: 0 32px 80px -24px rgb(11 18 32 / 0.35), 0 4px 16px rgb(11 18 32 / 0.06);
+  --shadow-action: 0 10px 20px -12px rgb(201 47 59 / 0.75);
+  --shadow-nav: 0 4px 24px rgb(11 18 32 / 0.06);
 }
 
-/* ── Base Reset & Typography ─────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* ── 4. Mouvement ─────────────────────────────────────────────────
+   Durées : une seule échelle (utilitaires duration-instant … duration-slowest).
+     instant  120 ms  pression d'un bouton, sortie d'un menu
+     fast     180 ms  survol, couleurs, entrée d'un menu, sortie d'un voile
+     base     240 ms  fenêtre, notification, sortie d'un panneau
+     slow     350 ms  entrée d'un panneau (tiroir, feuille), carte survolée
+     slower   500 ms  zoom d'image, apparition en cascade
+     slowest  650 ms  révélation d'une section
+   Les boucles (squelette, indicateur de chargement) restent hors échelle.
+   Courbes : standard (entrée, décélère), sheet (panneaux), exit (sortie, accélère).
+   Règles : n'animer que transform / translate / scale / opacity ; une sortie est
+   toujours plus courte que l'entrée ; jamais de rebond ni de lueur.
+   Les mêmes valeurs existent pour Framer Motion dans src/lib/design/motion.ts. */
+@theme static {
+  --transition-duration-instant: 120ms;
+  --transition-duration-fast: 180ms;
+  --transition-duration-base: 240ms;
+  --transition-duration-slow: 350ms;
+  --transition-duration-slower: 500ms;
+  --transition-duration-slowest: 650ms;
+  --default-transition-duration: 180ms;
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Distances d'entrée */
+  --motion-distance-xs: 4px;   /* menu déroulant */
+  --motion-distance-sm: 8px;   /* notification */
+  --motion-distance-md: 16px;  /* fenêtre, carte, contenu d'étape */
+  --motion-distance-lg: 24px;  /* section révélée au défilement */
+
+  /* Cascade : décalage entre deux éléments d'une liste */
+  --motion-stagger: 60ms;
+
+  /* Survol et pression */
+  --motion-lift: 2px;      /* soulèvement d'une carte (3 px au plus) */
+  --motion-zoom: 1.03;     /* zoom d'une photo (1,035 au plus) */
+  --motion-press: 0.97;    /* bouton enfoncé */
+  --motion-pop: 1.15;      /* pictogramme qui s'active (favori) */
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  background-color: var(--background);
-  color: var(--text);
-  font-family: var(--font-display);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-}
-
-/* ── Selection ───────────────────────────────────────────────────── */
-::selection {
-  background-color: rgba(230, 57, 70, 0.15);
-  color: #0B1220;
-}
-
-/* ── Focus Visible ───────────────────────────────────────────────── */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* ── Custom Scrollbar ────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #F1F5F9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 99px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
-}
-
-/* ================================================================
-   TYPOGRAPHY UTILITIES
-   ================================================================ */
-
-.display-xl {
-  font-size: clamp(3rem, 7vw, 5.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.045em;
-  font-weight: 900;
-}
-
-.display-lg {
-  font-size: clamp(2.25rem, 5vw, 4rem);
-  line-height: 1.0;
-  letter-spacing: -0.035em;
-  font-weight: 900;
-}
-
-.eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-/* ================================================================
-   BUTTON SYSTEM
-   ================================================================ */
-
-/* Primary accent CTA */
-.btn-accent {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--action);
-  color: #fff;
-  font-weight: 700;
-  border-radius: 0.75rem;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-accent::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.btn-accent:hover {
-  background-color: var(--action-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-accent);
-}
-
-.btn-accent:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: none;
-}
-
-/* Dark primary button */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--primary);
-  color: #fff;
-  font-weight: 700;
-  border-radius: 0.75rem;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(11, 18, 32, 0.22);
-}
-
-.btn-primary:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Ghost button */
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: transparent;
-  color: var(--primary);
-  font-weight: 600;
-  border: 1.5px solid var(--border);
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
-}
-
-.btn-ghost:hover {
-  background-color: var(--muted-light);
-  border-color: var(--border-focus);
+/* Animations (utilitaires animate-cd-*). Entrées et sorties vont par paires. */
+@theme {
+  --animate-cd-dropdown: cd-dropdown var(--transition-duration-fast) var(--ease-standard) both;
+  --animate-cd-dropdown-out: cd-dropdown-out var(--transition-duration-instant) var(--ease-exit) both;
+  --animate-cd-fade-in: cd-fade-in var(--transition-duration-base) ease-out both;
+  --animate-cd-fade-out: cd-fade-out var(--transition-duration-fast) var(--ease-exit) both;
+  --animate-cd-slide-up: cd-slide-up var(--transition-duration-base) var(--ease-standard) both;
+  --animate-cd-sheet-up: cd-sheet-up var(--transition-duration-slow) var(--ease-sheet) both;
+  --animate-cd-sheet-down: cd-sheet-down var(--transition-duration-base) var(--ease-exit) both;
+  --animate-cd-drawer-in: cd-drawer-in var(--transition-duration-slow) var(--ease-sheet) both;
+  --animate-cd-drawer-out: cd-drawer-out var(--transition-duration-base) var(--ease-exit) both;
+  --animate-cd-brand-rise: cd-brand-rise var(--transition-duration-slower) var(--ease-standard) both;
+  --animate-cd-heart-pop: cd-heart-pop var(--transition-duration-slow) var(--ease-standard);
 }
 
 /* ================================================================
-   CARD SYSTEM
+   BASE — styles par défaut, que les utilitaires peuvent surcharger
    ================================================================ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-card);
-}
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans, system-ui), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    /* Barres fixes en bas d'écran : --cd-bottom-bar (fiche véhicule), --cd-cookie-banner
+       (bandeau cookies) et --cd-bottom-nav (navigation mobile) valent 0 quand elles sont
+       absentes ; la fin de la page reste lisible au-dessus d'elles. */
+    padding-bottom: calc(var(--cd-bottom-bar, 0px) + var(--cd-cookie-banner, 0px) + var(--cd-bottom-nav, 0px));
+  }
 
-.card-hover {
-  transition:
-    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.2s ease;
-}
+  ::selection {
+    background-color: rgb(230 57 70 / 0.15);
+    color: var(--color-ink);
+  }
 
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card-hover);
-  border-color: #D1D5DB;
+  /* Focus clavier par défaut. Dans la couche « base » : un composant qui dessine son
+     propre indicateur (outline-none + ring) n'en affiche plus deux à la fois. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-slate-100);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-slate-300);
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-slate-400);
+  }
+
+  /* Fils d'Ariane : cible tactile de 24 px minimum (WCAG 2.5.8) sans changer la mise en page */
+  nav[aria-label*="Ariane"] a,
+  nav[aria-label="Breadcrumb"] a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+
+  /* Tiroir latéral : il entre par le bord de fin de ligne (droite en LTR, gauche en RTL) */
+  [dir='rtl'] {
+    --cd-drawer-from: -100%;
+  }
 }
 
 /* ================================================================
-   GLASSMORPHISM
+   COMPOSANTS — classes partagées (les utilitaires restent prioritaires)
    ================================================================ */
-
-.glass-panel {
-  background-color: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.glass-dark {
-  background-color: rgba(11, 18, 32, 0.88);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(30, 41, 59, 0.7);
-}
-
-.glass-nav {
-  background-color: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
-}
-
-/* ================================================================
-   IMAGE EFFECTS
-   ================================================================ */
-
-.image-zoom {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-
-.group:hover .image-zoom {
-  transform: scale(1.06);
-}
-
-.image-zoom-subtle {
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-
-.group:hover .image-zoom-subtle {
-  transform: scale(1.04);
-}
-
-/* ================================================================
-   BADGE SYSTEM
-   ================================================================ */
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.25rem 0.625rem;
-  border-radius: 99px;
-}
-
-.badge-available {
-  background-color: var(--color-success-soft);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-line);
-}
-
-.badge-rented {
-  background-color: var(--color-danger-soft);
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger-line);
-}
-
-.badge-accent {
-  background-color: #FDEDEE;
-  color: #A61E2A;
-  border: 1px solid rgba(230, 57, 70, 0.22);
-}
-
-.badge-navy {
-  background-color: rgba(11, 18, 32, 0.08);
-  color: var(--primary);
-  border: 1px solid rgba(11, 18, 32, 0.12);
-}
-
-.badge-verified {
-  background-color: #F1F5F9;
-  color: #0B1220;
-  border: 1px solid #E2E8F0;
-}
-
-/* ================================================================
-   SECTION DIVIDERS / DECORATORS
-   ================================================================ */
-
-/* Diagonal cut top for dark sections */
-.section-clip-top {
-  clip-path: polygon(0 32px, 100% 0, 100% 100%, 0 100%);
-}
-
-/* Diagonal cut bottom */
-.section-clip-bottom {
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 32px), 0 100%);
-}
-
-/* ================================================================
-   ANIMATIONS
-   ================================================================ */
-
-/* Navbar dropdown entrance */
-/* Pas de translateX ici : le centrage reste à la charge de l'élément (sinon décalage appliqué deux fois) */
-@keyframes cd-dropdown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.97);
+@layer components {
+  /* Bouton graphite (équivalent de <Button variant="dark">) */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-xl);
+    background-color: var(--color-ink);
+    color: #fff;
+    font-weight: 700;
+    transition-property: background-color, box-shadow, scale;
+    transition-duration: var(--transition-duration-fast);
+    transition-timing-function: ease-out;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Slide-up fade for cards / sections */
-@keyframes cd-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  .btn-primary:hover {
+    background-color: var(--color-ink-hover);
+    box-shadow: 0 8px 24px rgb(11 18 32 / 0.22);
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Fade in */
-@keyframes cd-fade-in {
-  from {
-    opacity: 0;
+  .btn-primary:active {
+    scale: var(--motion-press);
+    transition-duration: var(--transition-duration-instant);
   }
 
-  to {
-    opacity: 1;
-  }
-}
-
-/* Shimmer for skeletons */
-@keyframes cd-shimmer {
-  from {
-    background-position: -400px 0;
-  }
-
-  to {
-    background-position: 400px 0;
-  }
-}
-
-/* Subtle pulsing glow */
-@keyframes cd-pulse-glow {
-
-  0%,
-  100% {
-    opacity: 0.7;
+  /* Pastille (voir aussi <Badge> dans components/ui) */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 99px;
+    padding: 0.25rem 0.625rem;
+    font-size: var(--text-overline);
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
-  50% {
-    opacity: 1;
-  }
-}
-
-/* Slow drift for hero decorative elements */
-@keyframes cd-drift {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
+  .badge-accent {
+    border: 1px solid var(--color-brand-line);
+    background-color: var(--color-brand-soft);
+    color: var(--color-action-hover);
   }
 
-  50% {
-    transform: translateY(-12px) rotate(1deg);
-  }
-}
-
-/* Scroll indicator bounce */
-@keyframes cd-bounce-y {
-
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  50% {
-    transform: translateX(-50%) translateY(6px);
-  }
-}
-
-/* Ping for live indicator */
-@keyframes cd-ping {
-
-  75%,
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* Fils d'Ariane : cible tactile de 24 px minimum (WCAG 2.5.8) sans changer la mise en page */
-nav[aria-label*="Ariane"] a,
-nav[aria-label="Breadcrumb"] a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-}
-
-/* Révélation d'entrée (ex-GSAP) : CSS pur, cascade sur les 12 premiers enfants */
-@keyframes cd-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(var(--cd-reveal-y, 24px));
+  /* Surtitre de section (« Les grandes marques », « Destinations »…) */
+  .section-header-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-accent-text);
+    font-size: var(--text-overline);
+    font-weight: var(--text-overline--font-weight);
+    line-height: var(--text-overline--line-height);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
 
-  to {
-    opacity: 1;
-    transform: none;
+  /* Squelette de chargement. Le reflet est un pseudo-élément déplacé par transform
+     (composité par le GPU) : animer background-position repeignait chaque bloc à
+     chaque image, coûteux quand une grille entière de cartes charge sur mobile. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-slate-100);
   }
-}
 
-.cd-reveal,
-.cd-reveal-stagger>* {
-  animation: cd-reveal var(--cd-reveal-duration, 0.7s) cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--cd-reveal-delay, 0s) + var(--cd-reveal-index, 0) * var(--cd-reveal-stagger, 0s));
-}
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--color-line), transparent);
+    animation: cd-shimmer 1.5s ease-in-out infinite;
+  }
 
-.cd-reveal-stagger> :nth-child(1) {
-  --cd-reveal-index: 0;
-}
+  /* Zone tactile de 44 × 44 px sans changer l'apparence : pour les boutons d'icône
+     compacts (en-tête mobile), un pseudo-élément centré agrandit la zone cliquable. */
+  .tap-44 {
+    position: relative;
+  }
 
-.cd-reveal-stagger> :nth-child(2) {
-  --cd-reveal-index: 1;
-}
+  .tap-44::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 
-.cd-reveal-stagger> :nth-child(3) {
-  --cd-reveal-index: 2;
-}
+  [dir='rtl'] .tap-44::after {
+    transform: translate(50%, -50%);
+  }
 
-.cd-reveal-stagger> :nth-child(4) {
-  --cd-reveal-index: 3;
-}
-
-.cd-reveal-stagger> :nth-child(5) {
-  --cd-reveal-index: 4;
-}
-
-.cd-reveal-stagger> :nth-child(6) {
-  --cd-reveal-index: 5;
-}
-
-.cd-reveal-stagger> :nth-child(7) {
-  --cd-reveal-index: 6;
-}
-
-.cd-reveal-stagger> :nth-child(8) {
-  --cd-reveal-index: 7;
-}
-
-.cd-reveal-stagger> :nth-child(9) {
-  --cd-reveal-index: 8;
-}
-
-.cd-reveal-stagger> :nth-child(10) {
-  --cd-reveal-index: 9;
-}
-
-.cd-reveal-stagger> :nth-child(11) {
-  --cd-reveal-index: 10;
-}
-
-.cd-reveal-stagger> :nth-child(12) {
-  --cd-reveal-index: 11;
-}
-
-.cd-reveal-stagger> :nth-child(n + 13) {
-  --cd-reveal-index: 12;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
+  /* Révélation d'entrée (ex-GSAP) : CSS pur, cascade sur les 12 premiers enfants.
+     Valeurs par défaut = jetons ; <Reveal> ne les surcharge que si on le lui demande. */
   .cd-reveal,
-  .cd-reveal-stagger>* {
-    animation: none;
+  .cd-reveal-stagger > * {
+    animation: cd-reveal var(--cd-reveal-duration, var(--transition-duration-slowest)) var(--ease-standard) both;
+    animation-delay: calc(var(--cd-reveal-delay, 0ms) + var(--cd-reveal-index, 0) * var(--cd-reveal-stagger, var(--motion-stagger)));
+  }
+
+  .cd-reveal-stagger > :nth-child(1) { --cd-reveal-index: 0; }
+  .cd-reveal-stagger > :nth-child(2) { --cd-reveal-index: 1; }
+  .cd-reveal-stagger > :nth-child(3) { --cd-reveal-index: 2; }
+  .cd-reveal-stagger > :nth-child(4) { --cd-reveal-index: 3; }
+  .cd-reveal-stagger > :nth-child(5) { --cd-reveal-index: 4; }
+  .cd-reveal-stagger > :nth-child(6) { --cd-reveal-index: 5; }
+  .cd-reveal-stagger > :nth-child(7) { --cd-reveal-index: 6; }
+  .cd-reveal-stagger > :nth-child(8) { --cd-reveal-index: 7; }
+  .cd-reveal-stagger > :nth-child(9) { --cd-reveal-index: 8; }
+  .cd-reveal-stagger > :nth-child(10) { --cd-reveal-index: 9; }
+  .cd-reveal-stagger > :nth-child(11) { --cd-reveal-index: 10; }
+  .cd-reveal-stagger > :nth-child(12) { --cd-reveal-index: 11; }
+  .cd-reveal-stagger > :nth-child(n + 13) { --cd-reveal-index: 12; }
+}
+
+/* Carrousels mobiles sans barre de défilement */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
-/* Apparition en cascade des cartes « Les grandes marques » */
-@keyframes cd-brand-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.98);
+/* ── Interactions partagées (valeurs : jetons --motion-*) ─────────── */
+
+/* Carte cliquable : soulèvement au survol (souris uniquement). Les couleurs d'ombre et
+   de bordure au survol restent dans la carte (hover:shadow-card-hover…). */
+@utility motion-lift {
+  transition-property: translate, box-shadow, border-color;
+  transition-duration: var(--transition-duration-slow);
+  transition-timing-function: var(--ease-standard);
+
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 calc(var(--motion-lift) * -1);
+    }
   }
 
-  to {
-    opacity: 1;
-    transform: none;
+  @media (prefers-reduced-motion: reduce) {
+    &:hover {
+      translate: none;
+    }
   }
+}
+
+/* Photo d'une carte : zoom léger quand la carte (.group) est survolée */
+@utility motion-zoom {
+  transition: scale var(--transition-duration-slower) var(--ease-standard);
+
+  @media (hover: hover) {
+    :where(.group):hover & {
+      scale: var(--motion-zoom);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(.group):hover & {
+      scale: none;
+    }
+  }
+}
+
+/* Bouton enfoncé : léger rétrécissement (ajouter « scale » aux propriétés de transition) */
+@utility motion-press {
+  &:active {
+    scale: var(--motion-press);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      scale: none;
+    }
+  }
+}
+
+/* ================================================================
+   ANIMATIONS (images clés) — entrées et sorties par paires
+   Une image clé qui ne déclare que « from » (ou que « to ») part de l'état réel de
+   l'élément : une feuille déjà tirée vers le bas finit sa sortie sans sauter.
+   ================================================================ */
+
+/* Menu déroulant. Pas de translateX : le centrage reste à la charge de l'élément
+   (propriété translate, indépendante de transform). Un menu qui s'ouvre vers le haut
+   inverse le sens avec [--cd-dropdown-y:var(--motion-distance-xs)]. */
+@keyframes cd-dropdown {
+  from { opacity: 0; transform: translateY(var(--cd-dropdown-y, calc(var(--motion-distance-xs) * -1))) scale(0.98); }
+}
+
+@keyframes cd-dropdown-out {
+  to { opacity: 0; transform: translateY(var(--cd-dropdown-y, calc(var(--motion-distance-xs) * -1))) scale(0.98); }
+}
+
+@keyframes cd-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes cd-fade-out {
+  to { opacity: 0; }
+}
+
+/* Fenêtre, notification, contenu qui arrive */
+@keyframes cd-slide-up {
+  from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
+}
+
+@keyframes cd-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@keyframes cd-reveal {
+  from { opacity: 0; transform: translateY(var(--cd-reveal-y, var(--motion-distance-lg))); }
+}
+
+/* Apparition en cascade des cartes « Les grandes marques » (sans mise à l'échelle) */
+@keyframes cd-brand-rise {
+  from { opacity: 0; transform: translateY(var(--motion-distance-md)); }
 }
 
 @keyframes cdShinyText {
-  0% {
-    background-position: 120% 0;
-  }
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
 
-  100% {
-    background-position: -120% 0;
-  }
+/* Panneau inférieur (filtres) : entrée et sortie par le bas */
+@keyframes cd-sheet-up {
+  from { transform: translateY(100%); }
+}
+
+@keyframes cd-sheet-down {
+  to { transform: translateY(100%); }
+}
+
+/* Tiroir latéral (menu) : par le bord de fin de ligne, inversé en RTL */
+@keyframes cd-drawer-in {
+  from { transform: translateX(var(--cd-drawer-from, 100%)); }
+}
+
+@keyframes cd-drawer-out {
+  to { transform: translateX(var(--cd-drawer-from, 100%)); }
+}
+
+/* Favori ajouté : le cœur se gonfle une fois (propriété scale, sans rebond répété) */
+@keyframes cd-heart-pop {
+  0% { scale: 0.85; }
+  55% { scale: var(--motion-pop); }
+  100% { scale: 1; }
 }
 
 /* ================================================================
-   ANIMATION UTILITIES
+   RÈGLES HORS COUCHE — elles priment volontairement sur les utilitaires
    ================================================================ */
 
-.animate-cd-dropdown {
-  animation: cd-dropdown 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-cd-slide-up {
-  animation: cd-slide-up 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-cd-fade-in {
-  animation: cd-fade-in 300ms ease forwards;
-}
-
-.animate-cd-pulse-glow {
-  animation: cd-pulse-glow 2.5s ease-in-out infinite;
-}
-
-.animate-cd-drift {
-  animation: cd-drift 6s ease-in-out infinite;
-}
-
-.animate-cd-bounce-y {
-  animation: cd-bounce-y 1.6s ease-in-out infinite;
-}
-
-.animate-cd-ping {
-  animation: cd-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Skeleton loader */
-.skeleton {
-  background: linear-gradient(90deg,
-      #F1F5F9 25%,
-      #E9EEF4 50%,
-      #F1F5F9 75%);
-  background-size: 800px 100%;
-  animation: cd-shimmer 1.5s infinite linear;
-}
-
-/* ================================================================
-   GRID PATTERNS / TEXTURES
-   ================================================================ */
-
-/* Subtle dot grid for hero sections */
-.bg-dot-grid {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-.bg-dot-grid-dark {
-  background-image: radial-gradient(circle, rgba(11, 18, 32, 0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* Line grid */
-.bg-line-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* ================================================================
-   DIAGONAL ACCENT LINE — automotive design motif
-   ================================================================ */
-.accent-line {
-  position: relative;
-}
-
-.accent-line::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 3px;
-  height: 70%;
-  transform: translateY(-50%);
-  background: linear-gradient(to bottom, var(--accent), transparent);
-  border-radius: 99px;
-}
-
-/* ================================================================
-   SECTION HEADER COMPONENT
-   ================================================================ */
-
-.section-header-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-accent-text);
-  margin-bottom: 0.75rem;
-}
-
-/* ================================================================
-   GRADIENT TEXT
-   ================================================================ */
-
-.gradient-text-fire {
-  background: linear-gradient(135deg, #E63946 0%, #FF6B75 50%, #E63946 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gradient-text-navy {
-  background: linear-gradient(135deg, #0B1220 0%, #1E3A5F 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ================================================================
-   STATS COUNTER
-   ================================================================ */
-.stat-number {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--primary);
-}
-
-/* ================================================================
-   INTERACTIVE CARD GLOW ON HOVER
-   ================================================================ */
-.card-glow {
-  position: relative;
-  overflow: hidden;
-}
-
-.card-glow::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(230, 57, 70, 0.06), transparent 50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.card-glow:hover::before {
-  opacity: 1;
-}
-
-/* ================================================================
-   RTL SUPPORT
-   ================================================================ */
-.is-rtl {
-  direction: rtl;
-}
-
-.is-rtl .hover\:translate-x-0\.5:hover {
-  --tw-translate-x: -0.125rem;
-}
-
-[dir="rtl"],
-.is-rtl {
-  text-align: right;
-}
-
-[dir="rtl"] .rtl-flip,
-.is-rtl .rtl-flip {
-  transform: scaleX(-1);
-}
-
+/* RTL : numéros de téléphone et e-mails restent saisis de gauche à droite */
 [dir="rtl"] input[type="tel"],
-[dir="rtl"] input[type="email"],
-.is-rtl input[type="tel"],
-.is-rtl input[type="email"] {
+[dir="rtl"] input[type="email"] {
   direction: ltr;
   text-align: left;
 }
 
-/* ================================================================
-   UTILITY: ANTIALIASED TEXT ON DARK BACKGROUNDS
-   ================================================================ */
-.text-crisp {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ================================================================
-   HERO SCROLL INDICATOR
-   ================================================================ */
-.scroll-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.375rem;
-  animation: cd-bounce-y 1.6s ease-in-out infinite;
-}
-
-/* ================================================================
-   LIVE BADGE
-   ================================================================ */
-.live-dot {
-  position: relative;
-  display: inline-flex;
-  height: 0.5rem;
-  width: 0.5rem;
-}
-
-.live-dot::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background-color: #34d399;
-  animation: cd-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-  opacity: 0.6;
-}
-
-.live-dot::after {
-  content: '';
-  position: relative;
-  display: inline-flex;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: #34d399;
-}
-
-/* ── No Scrollbar Utility for Mobile Carousels ─────────────────── */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* ── Mobile : champs de saisie à 16 px minimum ─────────────────────────────
-   En dessous de 16 px, Safari iOS agrandit la page au focus d'un champ et ne la
-   rétablit pas ensuite. Les champs déjà plus grands (text-base, text-lg…) gardent
-   leur taille. Règle hors couche : elle prime sur les utilitaires Tailwind. */
-@media (max-width: 767px),
-(pointer: coarse) {
-
-  :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):not(.text-base,
-    .text-lg,
-    .text-xl,
-    .text-2xl,
-    .text-3xl) {
+/* Mobile : champs de saisie à 16 px minimum. En dessous, Safari iOS agrandit la page
+   au focus d'un champ et ne la rétablit pas ensuite. Les champs déjà plus grands
+   (text-base, text-lg…) gardent leur taille. */
+@media (max-width: 767px), (pointer: coarse) {
+  :is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), select, textarea):not(.text-base, .text-lg, .text-xl, .text-2xl, .text-3xl) {
     font-size: 16px;
   }
 }
 
-/* ── Zone tactile de 44 × 44 px sans changer l'apparence ──────────────────
-   Pour les boutons d'icône compacts (en-tête mobile) : la zone cliquable est
-   agrandie par un pseudo-élément centré, le dessin du bouton reste identique. */
-.tap-44 {
-  position: relative;
-}
-
-.tap-44::after {
-  content: '';
-  position: absolute;
-  inset-inline-start: 50%;
-  top: 50%;
-  width: max(100%, 44px);
-  height: max(100%, 44px);
-  transform: translate(-50%, -50%);
-}
-
-[dir='rtl'] .tap-44::after {
-  transform: translate(50%, -50%);
-}
-
-/* ── Barre d'action fixe en bas d'écran (fiche véhicule, mobile) ──────────
-   --cd-bottom-bar est publiée par la barre elle-même (0 quand elle est masquée) :
-   la fin de la page reste lisible au-dessus d'elle. Même chose pour le bandeau cookies
-   (--cd-cookie-banner, 0 une fois fermé) : rien en fin de page ne reste caché dessous. */
-body {
-  padding-bottom: calc(var(--cd-bottom-bar, 0px) + var(--cd-cookie-banner, 0px) + var(--cd-bottom-nav, 0px));
-}
-
-/* ── Navigation inférieure du site public (mobile / tablette) ────────────
-   Hauteur connue d'avance (barre de 4 rem + zone sûre de l'appareil) : la place est réservée
-   dès le HTML serveur, sans mesure en JavaScript, donc sans décalage de mise en page (CLS).
+/* Navigation inférieure du site public (mobile / tablette). Hauteur connue d'avance
+   (barre de 4 rem + filet de 1 px + zone sûre) : la place est réservée dès le HTML
+   serveur, sans mesure en JavaScript, donc sans décalage de mise en page (CLS).
    Absente (fiche véhicule, connexion, espaces agence/admin) ou masquée (≥ 1024 px) : 0. */
 @media (width < 64rem) {
   html:has(#cd-bottom-nav) {
-    /* barre de 4 rem + filet supérieur de 1 px + zone sûre */
     --cd-bottom-nav: calc(4rem + 1px + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Panneau inférieur (filtres) et tiroir latéral (menu) : entrées courtes, sans rebond */
-@keyframes cd-sheet-up {
-  from {
-    transform: translateY(100%);
-  }
-
-  to {
-    transform: translateY(0);
+/* Contraste élevé (Windows) : les anneaux en box-shadow disparaissent, on rend
+   un contour système à tout élément qui a le focus clavier. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }
 
-@keyframes cd-drawer-in {
-  from {
-    transform: translateX(var(--cd-drawer-from, 100%));
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-[dir='rtl'] {
-  --cd-drawer-from: -100%;
-}
-
+/* Mouvement réduit : toutes les animations et transitions deviennent instantanées
+   (elles atteignent leur état final, les événements de fin restent émis). */
 @media (prefers-reduced-motion: reduce) {
-  .skeleton {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Sans mouvement, ces éléments s'affichent directement (pas de reflet, pas de cascade) */
+  .cd-reveal,
+  .cd-reveal-stagger > *,
+  .skeleton::after {
     animation: none;
   }
 }

@@ -1,13 +1,13 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { AlertCircle, Inbox, RefreshCw, X } from 'lucide-react';
+import { AlertCircle, RefreshCw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState as BaseEmptyState } from '@/components/ui/EmptyState';
 
-/** Bloc de chargement neutre (squelette). */
-export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cn('animate-pulse rounded-lg bg-slate-200', className)} />;
-}
+/** Bloc de chargement neutre : celui du design system, partagé avec le site public. */
+export { Skeleton };
 
 export function CardSkeleton({ rows = 4, tall = false }: { rows?: number; tall?: boolean }) {
   return (
@@ -62,16 +62,8 @@ export function EmptyState({
   text: string;
   action?: ReactNode;
 }) {
-  return (
-    <div className="flex flex-col items-center px-6 py-14 text-center">
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-        <Inbox aria-hidden="true" className="h-5 w-5" />
-      </div>
-      <p className="mt-4 text-sm font-semibold text-[#0F172A]">{title}</p>
-      <p className="mt-1 max-w-sm text-sm text-[#64748B]">{text}</p>
-      {action && <div className="mt-5">{action}</div>}
-    </div>
-  );
+  // État vide du design system ; le titre reste un paragraphe (un état vide n'est pas un titre)
+  return <BaseEmptyState title={title} description={text} action={action} />;
 }
 
 export function ErrorBanner({
@@ -121,7 +113,7 @@ export function Toast({
     <div
       role={kind === 'error' ? 'alert' : 'status'}
       className={cn(
-        'fixed inset-x-4 bottom-[calc(var(--cd-fixed-nav,0px)+0.75rem)] z-50 flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm shadow-lg sm:inset-x-auto sm:right-4 sm:bottom-auto sm:top-4 sm:max-w-sm',
+        'fixed inset-x-4 bottom-[calc(var(--cd-fixed-nav,0px)+0.75rem)] z-50 flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm shadow-lg motion-safe:animate-cd-slide-up sm:inset-x-auto sm:right-4 sm:bottom-auto sm:top-4 sm:max-w-sm',
         kind === 'error'
           ? 'border-red-200 bg-red-50 text-red-950'
           : 'border-emerald-200 bg-emerald-50 text-emerald-950'

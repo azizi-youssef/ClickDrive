@@ -33,7 +33,7 @@ export function VehicleTrackingList({
               onClick={() => onSelect(vehicle.id)}
               aria-pressed={selected}
               className={cn(
-                'flex w-full items-start gap-3 px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E63946]',
+                'flex w-full items-start gap-3 px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand',
                 selected ? 'bg-slate-50' : 'hover:bg-slate-50/70'
               )}
             >
@@ -42,12 +42,12 @@ export function VehicleTrackingList({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-start justify-between gap-2">
-                  <span className="truncate text-sm font-semibold text-[#0F172A]">
+                  <span className="truncate text-sm font-semibold text-ink">
                     {vehicle.brand} {vehicle.model}
                   </span>
                   <VehicleStatusBadge state={vehicle.state} />
                 </span>
-                <span className="mt-0.5 block truncate text-xs text-[#64748B]">
+                <span className="mt-0.5 block truncate text-xs text-ink-secondary">
                   {[vehicle.unit_number, vehicle.license_plate].filter(Boolean).join(' · ') || 'Sans identifiant'}
                 </span>
                 <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">

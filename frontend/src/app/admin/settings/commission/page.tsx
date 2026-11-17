@@ -103,7 +103,7 @@ export default function CommissionSettingsPage() {
     }) || plans[0];
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-10 pb-20">
+    <div className="bg-slate-50 min-h-screen py-10 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Navigation retour */}
@@ -115,14 +115,14 @@ export default function CommissionSettingsPage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Retour aux paramètres</span>
           </Link>
-          <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+          <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
             Finance & Monétisation
           </span>
         </div>
 
         {/* Titre */}
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0B1220] text-xs font-bold mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-ink text-xs font-bold mb-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Nouveau Modèle de Monétisation</span>
           </div>
@@ -183,7 +183,7 @@ export default function CommissionSettingsPage() {
                 <div>
                   <h3 className="text-lg font-extrabold text-slate-900">{plan.name}</h3>
                   <div className="mt-2 mb-3">
-                    <span className="text-3xl font-black text-[#0B1220]">
+                    <span className="text-3xl font-black text-ink">
                       {formatPrice(plan.price_monthly)}
                     </span>
                     <span className="text-xs font-semibold text-slate-500"> / mois</span>
@@ -205,7 +205,7 @@ export default function CommissionSettingsPage() {
                   </ul>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 text-[11px] font-medium text-slate-400">
+                <div className="pt-3 border-t border-slate-100 text-[11px] font-medium text-slate-500">
                   Blocage automatique dès {plan.max_vehicles ? plan.max_vehicles + 1 : 'N/A'} véh.
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function CommissionSettingsPage() {
         {/* Section 2: Simulateur de concession */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#0B1220]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-ink">
               <TrendingUp className="h-5 w-5" />
             </div>
             <div>
@@ -235,7 +235,7 @@ export default function CommissionSettingsPage() {
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Nombre de véhicules de la concession
                 </label>
-                <span className="text-2xl font-black text-[#0B1220]">
+                <span className="text-2xl font-black text-ink">
                   {simulatedVehicleCount} véhicules
                 </span>
               </div>
@@ -246,10 +246,10 @@ export default function CommissionSettingsPage() {
                 max="50"
                 value={simulatedVehicleCount}
                 onChange={(e) => setSimulatedVehicleCount(Number(e.target.value))}
-                className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0B1220]"
+                className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-ink"
               />
 
-              <div className="flex justify-between text-[11px] text-slate-400 font-semibold">
+              <div className="flex justify-between text-[11px] text-slate-500 font-semibold">
                 <span>1 véh. (Starter)</span>
                 <span>15 véh. (Pro)</span>
                 <span>30 véh. (Business)</span>
@@ -262,7 +262,7 @@ export default function CommissionSettingsPage() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
                   Palier Assigné Automatiquement
                 </span>
-                <p className="text-xl font-extrabold text-[#0B1220]">
+                <p className="text-xl font-extrabold text-ink">
                   Formule {recommendedPlan.name}
                 </p>
                 <p className="text-2xl font-black text-slate-900">
@@ -303,9 +303,9 @@ export default function CommissionSettingsPage() {
                   max="100"
                   value={newRateInput}
                   onChange={(e) => setNewRateInput(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 font-extrabold text-base text-slate-900 outline-none focus:border-[#0B1220] focus:ring-2 focus:ring-[#0B1220]/20"
+                  className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 font-extrabold text-base text-slate-900 outline-none focus:border-ink focus:ring-2 focus:ring-ink/20"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-500 text-sm">
                   %
                 </span>
               </div>
@@ -313,7 +313,7 @@ export default function CommissionSettingsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2.5 rounded-xl bg-[#0B1220] hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-ink hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>{saving ? 'Enregistrement...' : 'Mettre à jour le taux'}</span>

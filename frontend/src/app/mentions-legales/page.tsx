@@ -14,7 +14,7 @@ const LAST_UPDATE = '26 octobre 2026';
 export default function MentionsLegalesPage() {
   return (
     <LegalFrenchText>
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -24,7 +24,7 @@ export default function MentionsLegalesPage() {
               <span className="text-slate-700 font-medium">Mentions légales</span>
             </nav>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0B1220]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink">
                 <Scale className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -197,7 +197,7 @@ export default function MentionsLegalesPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-[#E63946] pl-4">
+      <h2 className="mb-4 text-xl font-bold text-slate-900 border-l-4 border-brand pl-4">
         {title}
       </h2>
       <div className="space-y-3">{children}</div>

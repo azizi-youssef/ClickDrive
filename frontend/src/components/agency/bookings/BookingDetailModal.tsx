@@ -303,7 +303,7 @@ export function BookingDetailModal({
             disabled={loadingDetail}
             className="-my-2 flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-slate-500 transition hover:text-slate-900 disabled:opacity-50 sm:my-0 sm:min-h-0 sm:px-0"
           >
-            <RefreshCw className={cn('h-3.5 w-3.5', loadingDetail && 'animate-spin text-[#E63946]')} />
+            <RefreshCw className={cn('h-3.5 w-3.5', loadingDetail && 'animate-spin text-brand')} />
             <span>{loadingDetail ? 'Actualisation...' : 'Actualiser le dossier'}</span>
           </button>
         </div>
@@ -401,7 +401,7 @@ export function BookingDetailModal({
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <div className="mb-4 flex items-center justify-between">
             <h3 className={cn('flex items-center gap-2', heading.sub)}>
-              <Calendar className="h-4 w-4 text-[#E63946]" />
+              <Calendar className="h-4 w-4 text-brand" />
               <span>Détails de la période et lieux</span>
             </h3>
             {typeof loaded.total_days === 'number' && (
@@ -433,7 +433,7 @@ export function BookingDetailModal({
               )}
               {loaded.pickup_location && (
                 <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-white p-2 text-xs text-slate-700 border border-slate-100">
-                  <MapPin className="h-4 w-4 shrink-0 text-[#E63946] mt-0.5" />
+                  <MapPin className="h-4 w-4 shrink-0 text-brand mt-0.5" />
                   <span className="font-medium">{loaded.pickup_location}</span>
                 </div>
               )}
@@ -497,7 +497,7 @@ export function BookingDetailModal({
               <p className="text-2xl font-extrabold tabular-nums text-emerald-800">
                 {money(loaded.agency_amount)}
               </p>
-              <p className="text-xs font-medium text-emerald-600">Montant net perçu par votre agence</p>
+              <p className="text-xs font-medium text-emerald-700">Montant net perçu par votre agence</p>
             </div>
           </div>
         </section>
@@ -524,8 +524,8 @@ export function BookingDetailModal({
               aria-describedby={reasonError ? 'reject-reason-error' : undefined}
               placeholder="Ex : Véhicule indisponible suite à une prolongation de contrat ou révision atelier..."
               className={cn(
-                'w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-[#E63946] focus:ring-2 focus:ring-[#E63946]/20',
-                reasonError ? 'border-[#E63946] bg-[#FFF6F7]' : 'border-slate-300'
+                'w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20',
+                reasonError ? 'border-brand bg-brand-soft' : 'border-slate-300'
               )}
             />
             {reasonError && (
@@ -558,7 +558,7 @@ export function BookingDetailModal({
                     className={cn(
                       'flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors',
                       alternativeId === vehicle.id
-                        ? 'border-[#E63946] bg-white shadow-xs ring-1 ring-[#E63946]'
+                        ? 'border-brand bg-white shadow-xs ring-1 ring-brand'
                         : 'border-slate-200 bg-white hover:bg-slate-50'
                     )}
                   >
@@ -568,7 +568,7 @@ export function BookingDetailModal({
                       value={vehicle.id}
                       checked={alternativeId === vehicle.id}
                       onChange={() => setAlternativeId(vehicle.id)}
-                      className="h-4 w-4 accent-[#E63946]"
+                      className="h-4 w-4 accent-brand"
                     />
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-bold text-slate-900">

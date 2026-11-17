@@ -74,9 +74,9 @@ Pour votre sécurité, nous vous invitons à modifier votre mot de passe dès vo
       aria-modal="true"
       aria-labelledby="agency-credentials-title"
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm motion-safe:animate-cd-fade-in"
     >
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 motion-safe:animate-cd-slide-up overflow-hidden flex flex-col">
         {/* Header */}
         <div className="border-b border-slate-100 px-6 py-5 bg-emerald-50/70 flex items-start justify-between">
           <div className="flex items-center gap-3">
