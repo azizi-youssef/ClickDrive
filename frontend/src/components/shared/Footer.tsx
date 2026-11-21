@@ -227,13 +227,18 @@ export function Footer() {
         {/* ============================================================ */}
         <div className="grid grid-cols-1 gap-x-8 pb-6 md:grid-cols-2 md:gap-y-10 md:pb-8 lg:grid-cols-12">
           <div className="space-y-3.5 border-b border-white/8 pb-5 md:space-y-4 md:border-b-0 md:pb-0 lg:col-span-4">
-            {/* Logo sur pastille claire : le « Drive » gris foncé est illisible sur le fond graphite */}
+            {/* Logo filtré en blanc monochrome pour fond sombre graphite (sans pastille) */}
             <Link
               href="/"
               aria-label={strings.homeAria}
-              className="inline-flex items-center rounded-xl bg-white px-3.5 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="inline-flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
-              <Image src={brandLogo} alt="ClickDrive" sizes="160px" className="h-9 w-auto" />
+              <Image
+                src={brandLogo}
+                alt="ClickDrive"
+                sizes="160px"
+                className="h-9 w-auto brightness-0 invert"
+              />
             </Link>
 
             <p className="max-w-sm text-[13px] leading-relaxed text-slate-300 md:text-sm">{strings.brandDesc}</p>

@@ -134,6 +134,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns,
+    // En développement, désactiver le proxy d'optimisation Next.js pour éviter les timeouts 504
+    // sur les fichiers du stockage Supabase (les images sont chargées directement par le navigateur).
+    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true" || !isProduction,
     // Enable size optimization
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 3600,
