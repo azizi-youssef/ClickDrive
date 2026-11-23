@@ -20,7 +20,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/* 10 h 00 à Casablanca le 9 novembre 2026 (UTC+1) */
+/* 9 h 00 à Casablanca le 9 novembre 2026 : le Maroc est revenu à GMT (UTC+0) le 20 septembre 2026 (tzdata 2026c) */
 const NOW = new Date('2026-11-09T09:00:00.000Z');
 const minutesAgo = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
 /** Événement de réservation réduit à son type (seul champ lu par la planification) */
@@ -67,8 +67,9 @@ describe('Liens signés (suivi, avis)', () => {
 describe('Relances automatiques', () => {
   it('fenêtre horaire du Maroc : 8 h – 22 h', () => {
     expect(isFollowUpHours(NOW)).toBe(true);
-    expect(isFollowUpHours(new Date('2026-11-09T02:00:00.000Z'))).toBe(false); // 3 h au Maroc
-    expect(isFollowUpHours(new Date('2026-11-09T21:30:00.000Z'))).toBe(false); // 22 h 30
+    // Instants choisis hors fenêtre que l'heure du Maroc soit UTC+0 (tzdata ≥ 2026c) ou UTC+1 (tzdata plus ancien)
+    expect(isFollowUpHours(new Date('2026-11-09T02:00:00.000Z'))).toBe(false); // 2 h au Maroc
+    expect(isFollowUpHours(new Date('2026-11-09T22:30:00.000Z'))).toBe(false); // 22 h 30 au Maroc
   });
 
   it('30 min sans réponse : relance de l’agence, une seule fois', () => {

@@ -106,7 +106,8 @@ const securityHeaders = [
       // Polices auto-hébergées (next/font/local)
       "font-src 'self'",
       // Images: self + stockage Supabase du projet + Unsplash + data URIs
-      `img-src 'self' data: blob: ${supabaseHttps} https://images.unsplash.com${mapSources}`,
+      // + photos de profil des comptes Google (lh3.googleusercontent.com et variantes lhN)
+      `img-src 'self' data: blob: ${supabaseHttps} https://images.unsplash.com https://*.googleusercontent.com${mapSources}`,
       // Connections: self + API & Realtime du projet Supabase
       `connect-src 'self' ${supabaseHttps} ${supabaseWss}${analyticsOrigin ? ` ${analyticsOrigin}` : ""}${mapSources}`,
       // Workers: self

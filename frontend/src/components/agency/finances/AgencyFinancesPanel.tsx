@@ -15,9 +15,10 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
-import { bookingStatusLabel } from '@/lib/bookings/status';
 import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
-import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
+import { agencyFinancesSheet } from '@/lib/export/dashboard-sheets';
 import { eyebrow, eyebrowMuted, heading } from '@/lib/design/tokens';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
@@ -106,20 +107,11 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
     void loadFinances();
   }, [loadFinances]);
 
-  const exportCSV = () => {
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
+  const exportExcel = () => {
     if (!data || data.transactions.length === 0) return;
-    downloadCsv(csvFileName('clickdrive-finances'), [
-      ['Référence', 'Date', 'Client', 'Véhicule', 'Montant (DH)', 'Part agence (DH)', 'Statut'],
-      ...data.transactions.map((t) => [
-        t.reference,
-        csvDate(t.date),
-        t.customerName,
-        t.vehicle,
-        t.totalPrice,
-        t.agencyAmount,
-        bookingStatusLabel(t.status, 'fr', 'business'),
-      ]),
-    ]);
+    const { transactions } = data;
+    void exportXlsx(xlsxFileName('clickdrive-finances'), () => agencyFinancesSheet(transactions));
   };
 
   return (
@@ -142,12 +134,17 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           </button>
           <button
             type="button"
-            onClick={exportCSV}
-            disabled={!data || data.transactions.length === 0}
+            onClick={exportExcel}
+            disabled={!data || data.transactions.length === 0 || exporting}
+            aria-busy={exporting}
             className="flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-40"
           >
-            <FileSpreadsheet className="h-4 w-4" />
-            Exporter CSV
+            {exporting ? (
+              <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            ) : (
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+            )}
+            Exporter en Excel
           </button>
         </div>
       </div>
@@ -156,6 +153,12 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+      {exportError && (
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
+          <span>{exportError}</span>
         </div>
       )}
 

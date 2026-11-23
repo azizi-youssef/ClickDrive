@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
-import { signOutEverywhere } from '@/lib/auth/client';
+import { fetchClientAuthProfile, signOutEverywhere, type ClientAuthProfile } from '@/lib/auth/client';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { loginUrl } from '@/lib/auth/login-portals';
 import { ReviewModal } from '@/components/shared/ReviewModal';
@@ -45,6 +45,11 @@ export default function AccountPage() {
   // Avis : quelle réservation est en cours de notation
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
   const [reviewedBookingIds, setReviewedBookingIds] = useState<Set<string>>(new Set());
+  // Photo de profil qui n'a pas pu se charger : on affiche l'initiale à la place (jamais d'image cassée)
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
+  // Profil du compte (/api/auth/me), comme le menu : photo et nom choisis dans « Mon profil »,
+  // sinon ceux du compte Google
+  const [authProfile, setAuthProfile] = useState<ClientAuthProfile | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,6 +71,28 @@ export default function AccountPage() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Rechargé quand le compte change et après chaque enregistrement de « Mon profil »
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    const loadProfile = () => {
+      fetchClientAuthProfile()
+        .then((profile) => {
+          if (active) setAuthProfile(profile);
+        })
+        .catch(() => {
+          /* profil indisponible : le nom et la photo du compte Google restent affichés */
+        });
+    };
+    loadProfile();
+    window.addEventListener('clickdrive:profile-updated', loadProfile);
+    return () => {
+      active = false;
+      window.removeEventListener('clickdrive:profile-updated', loadProfile);
+    };
+  }, [userId]);
 
   const loadBookings = useCallback(async (isInitial = false) => {
     if (!user) {
@@ -113,13 +140,21 @@ export default function AccountPage() {
     }
   };
 
+  // Profil du compte connecté seulement (jamais celui d'une session précédente)
+  const profile = user && authProfile?.id === user.id ? authProfile : null;
+
   const displayName =
+    profile?.displayName ||
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     (user?.email ? user.email.split('@')[0] : c.guest);
 
   const displayEmail = user?.email || c.notSignedIn;
-  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  // Photo : celle de « Mon profil » si elle existe, sinon celle du compte Google (même règle que le menu).
+  // En attendant le profil, la photo Google s'affiche directement.
+  const metadataAvatar: unknown = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const googleAvatar = typeof metadataAvatar === 'string' && metadataAvatar.trim() ? metadataAvatar.trim() : null;
+  const avatarUrl = profile ? profile.avatarUrl : googleAvatar;
   const signedInWithGoogle = user?.app_metadata?.provider === 'google';
   const emailVerified = Boolean(user?.email_confirmed_at);
 
@@ -135,15 +170,19 @@ export default function AccountPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              {avatarUrl ? (
+              {avatarUrl && avatarUrl !== failedAvatarUrl ? (
+                // Photo décorative (le nom est juste à côté). Sans référent : Google refuse parfois
+                // les photos de profil demandées depuis un autre site.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={avatarUrl}
-                  alt={displayName}
-                  className="w-16 h-16 rounded-2xl border-2 border-white/30 object-cover shadow-lg"
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  onError={() => setFailedAvatarUrl(avatarUrl)}
+                  className="w-16 h-16 shrink-0 overflow-hidden rounded-2xl border-2 border-white/30 bg-white/10 object-cover shadow-lg"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl font-extrabold shadow-lg">
+                <div className="w-16 h-16 shrink-0 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-2xl font-extrabold shadow-lg">
                   {displayName.charAt(0).toUpperCase()}
                 </div>
               )}

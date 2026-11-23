@@ -4,28 +4,40 @@ import { render, screen, waitFor, within } from '@/tests/setup/render';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adminReportJson } from '@/tests/fixtures/analytics-report';
-
-const downloads = vi.hoisted(() => ({ calls: [] as { name: string; rows: readonly (readonly unknown[])[] }[] }));
+import { blobBytes, readXlsx } from '@/tests/setup/xlsx-reader';
 
 vi.mock('@/lib/supabase/realtime', () => ({ useRealtimeRefresh: () => undefined }));
-vi.mock('@/lib/export/csv', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/export/csv')>()),
-  downloadCsv: (name: string, rows: readonly (readonly unknown[])[]) => downloads.calls.push({ name, rows }),
-}));
 
 import { AdminAnalyticsClient } from './AdminAnalyticsClient';
 
 const ok = (data: unknown) => new Response(JSON.stringify({ success: true, data }), { status: 200 });
 
 let fetchMock: ReturnType<typeof vi.fn>;
+/** Téléchargements déclenchés : nom du fichier et Blob passé à URL.createObjectURL */
+let downloads: { name: string; blob: Blob }[];
 
 beforeEach(() => {
-  downloads.calls = [];
   fetchMock = vi.fn(async () => ok(adminReportJson()));
   vi.stubGlobal('fetch', fetchMock);
+  downloads = [];
+  const blobs = new Map<string, Blob>();
+  Object.assign(URL, {
+    createObjectURL: vi.fn((blob: Blob) => {
+      const url = `blob:test-${blobs.size}`;
+      blobs.set(url, blob);
+      return url;
+    }),
+    revokeObjectURL: vi.fn(),
+  });
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+    downloads.push({ name: this.download, blob: blobs.get(this.getAttribute('href') ?? '')! });
+  });
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 const requestedUrl = (index: number) => new URL(String(fetchMock.mock.calls[index][0]), 'http://localhost');
 
@@ -118,14 +130,21 @@ describe('Statistiques plateforme', () => {
     expect(screen.getByText(/2 agences actives sans aucune demande/)).toBeInTheDocument();
   });
 
-  it('export CSV du rapport affiché', async () => {
+  it('export Excel (.xlsx) du rapport affiché', async () => {
     const user = userEvent.setup();
     render(<AdminAnalyticsClient />);
     await screen.findByRole('heading', { name: 'Entonnoir des demandes' });
-    await user.click(screen.getByRole('button', { name: /Exporter CSV/ }));
-    expect(downloads.calls).toHaveLength(1);
-    expect(downloads.calls[0].name).toMatch(/^clickdrive-statistiques-2026-10-01-au-2026-10-30-\d{4}-\d{2}-\d{2}\.csv$/);
-    expect(downloads.calls[0].rows).toContainEqual(['MRR (DH par mois)', 1500]);
+    await user.click(screen.getByRole('button', { name: 'Exporter en Excel' }));
+    await waitFor(() => expect(downloads).toHaveLength(1));
+
+    const [{ name, blob }] = downloads;
+    expect(name).toMatch(/^clickdrive-statistiques-2026-10-01-au-2026-10-30-\d{4}-\d{2}-\d{2}\.xlsx$/);
+    expect(blob.type).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    const sheet = readXlsx(await blobBytes(blob));
+    expect(sheet.values[0]).toEqual(['Statistiques plateforme ClickDrive']);
+    expect(sheet.values[1]).toEqual(['Période', '2026-10-01', '2026-10-30', '30 jours']);
+    expect(sheet.values).toContainEqual(['MRR (DH par mois)', 1500]);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Exporter en Excel' })).toBeEnabled());
   });
 
   it('aucune demande sur la période : états vides explicites', async () => {

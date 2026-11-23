@@ -109,15 +109,18 @@ function AccountAvatar({
   const avatarUrl = profile.canAccessAgency
     ? profile.agencyLogoUrl?.trim() || profile.avatarUrl?.trim()
     : profile.avatarUrl?.trim();
-  const [imageError, setImageError] = useState(false);
+  // Adresse en échec (et non un simple booléen) : une nouvelle photo enregistrée est de nouveau tentée
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
-  if (avatarUrl && !imageError) {
+  if (avatarUrl && avatarUrl !== failedUrl) {
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
       <img
         src={avatarUrl}
         alt={identity.name}
-        onError={() => setImageError(true)}
+        // Sans référent : Google refuse parfois les photos de profil demandées depuis un autre site
+        referrerPolicy="no-referrer"
+        onError={() => setFailedUrl(avatarUrl)}
         className={cn('shrink-0 rounded-full object-cover ring-1 ring-slate-200/80', className)}
       />
     );
@@ -263,6 +266,8 @@ export function Navbar() {
     };
 
     window.addEventListener('focus', refreshAuthProfile);
+    // Photo ou nom enregistrés dans « Mon profil » : le menu se met à jour aussitôt
+    window.addEventListener('clickdrive:profile-updated', refreshAuthProfile);
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
@@ -270,6 +275,7 @@ export function Navbar() {
       authRequest.current += 1;
       authSubscription?.data.subscription.unsubscribe();
       window.removeEventListener('focus', refreshAuthProfile);
+      window.removeEventListener('clickdrive:profile-updated', refreshAuthProfile);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [refreshAuthProfile, strings.sessionError]);

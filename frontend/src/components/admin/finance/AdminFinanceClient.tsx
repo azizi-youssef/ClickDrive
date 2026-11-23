@@ -29,8 +29,9 @@ import {
 } from '@/components/admin/AdminUI';
 import { fetchAdminBookings } from '@/lib/api/admin-dashboard.api';
 import { formatPrice } from '@/lib/utils';
-import { bookingStatusLabel } from '@/lib/bookings/status';
-import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
+import { adminFinanceSheet } from '@/lib/export/dashboard-sheets';
 
 const PAGE_SIZE = 20;
 
@@ -52,23 +53,6 @@ function formatDay(value: string | null | undefined): string {
   return Number.isNaN(date.getTime()) ? value : dayFormat.format(date);
 }
 
-function csvExport(rows: Booking[]) {
-  downloadCsv(csvFileName('clickdrive-finances'), [
-    ['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Total (DH)', 'Commission (DH)', 'Net agence (DH)', 'Statut'],
-    ...rows.map((b) => [
-      b.booking_ref ?? b.reference ?? '',
-      b.customer_name,
-      b.agency?.name ?? '',
-      csvDate(b.start_date),
-      csvDate(b.end_date),
-      b.total_price,
-      b.commission_amount ?? 0,
-      b.agency_amount ?? b.total_price,
-      bookingStatusLabel(b.status, 'fr', 'business'),
-    ]),
-  ]);
-}
-
 export function AdminFinanceClient() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [subscriptions, setSubscriptions] = useState<AgencySubscription[]>([]);
@@ -86,6 +70,7 @@ export function AdminFinanceClient() {
   const [pendingPlanChange, setPendingPlanChange] = useState<{ subscription: AgencySubscription; plan: SubscriptionPlan } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
 
   const load = useCallback(async (mode: 'initial' | 'refresh') => {
     abortRef.current?.abort();
@@ -170,6 +155,7 @@ export function AdminFinanceClient() {
   return (
     <div className="space-y-8">
       {error && <ErrorBanner message={error} onRetry={() => void load('refresh')} retrying={refreshing} />}
+      {exportError && <ErrorBanner message={exportError} />}
       {planError && (
         <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           <span><strong>Forfait non modifié.</strong> {planError}</span>
@@ -387,9 +373,17 @@ export function AdminFinanceClient() {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
             </Btn>
-            <Btn variant="secondary" size="sm" onClick={() => csvExport(filtered)} disabled={filtered.length === 0}>
-              <Download className="h-3.5 w-3.5" />
-              CSV
+            <Btn
+              variant="secondary"
+              size="sm"
+              onClick={() => void exportXlsx(xlsxFileName('clickdrive-finances'), () => adminFinanceSheet(filtered))}
+              disabled={filtered.length === 0}
+              loading={exporting}
+              aria-label="Exporter en Excel"
+              title="Exporter en Excel"
+            >
+              {!exporting && <Download className="h-3.5 w-3.5" aria-hidden="true" />}
+              Excel
             </Btn>
           </div>
         </div>

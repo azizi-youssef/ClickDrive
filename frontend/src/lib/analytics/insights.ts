@@ -1,5 +1,5 @@
 import { formatTrend, trendFigures } from '@/lib/admin/trend';
-import type { CsvRow } from '@/lib/export/csv';
+import type { XlsxCell, XlsxRow, XlsxSheet } from '@/lib/export/spreadsheet';
 import type {
   AdminAnalyticsReport,
   AgencyAnalyticsReport,
@@ -11,7 +11,7 @@ import type {
 
 /**
  * Présentation des rapports « Statistiques » : taux, entonnoir, comparaison à la période précédente,
- * libellés et export CSV. Fonctions pures (aucun calcul d'agrégat : ils viennent de la base).
+ * libellés et export Excel. Fonctions pures (aucun calcul d'agrégat : ils viennent de la base).
  */
 
 /** Médiane du délai de réponse affichée à partir de 3 réponses mesurées (même seuil que la fiche agence) */
@@ -300,38 +300,45 @@ export function rangeError(from: string, to: string): string | null {
   return null;
 }
 
-/* ── Export CSV ──────────────────────────────────────────────────────── */
+/* ── Export Excel ────────────────────────────────────────────────────── */
 
-function csvMetric(unit: MetricUnit, value: number | null): number | string {
+/** Jour « AAAA-MM-JJ » → vraie date Excel */
+const dayCell = (value: string): XlsxCell => ({ value, format: 'date' });
+/** Mois « AAAA-MM » → vraie date Excel (premier du mois), affichée « oct. 2026 » */
+const monthCell = (value: string): XlsxCell => ({ value, format: 'month' });
+/** Montant en DH : nombre affiché sans décimale, avec séparateur de milliers */
+const amountCell = (value: number | null | undefined): XlsxCell => (value === null || value === undefined ? '' : { value, format: 'integer' });
+
+function exportMetric(unit: MetricUnit, value: number | null): XlsxCell {
   if (value === null) return '';
-  return unit === 'money' ? Math.round(value) : value;
+  return unit === 'money' ? amountCell(Math.round(value)) : value;
 }
 
 function unitSuffix(unit: MetricUnit): string {
   return unit === 'money' ? ' (DH)' : unit === 'percent' ? ' (%)' : unit === 'minutes' ? ' (min)' : unit === 'days' ? ' (jours)' : '';
 }
 
-function breakdownSection(title: string, rows: readonly BreakdownRow[], total: number, label: (value: string) => string = (v) => v): CsvRow[] {
+function breakdownSection(title: string, rows: readonly BreakdownRow[], total: number, label: (value: string) => string = (v) => v): XlsxRow[] {
   return [
     [title, 'Demandes', 'Part des demandes (%)', 'Confirmées', 'Chiffre d’affaires (DH)'],
-    ...rows.map((row) => [label(row.label), row.requests, percentOf(row.requests, total) ?? '', row.confirmed, Math.round(row.revenue)]),
+    ...rows.map((row) => [label(row.label), row.requests, percentOf(row.requests, total) ?? '', row.confirmed, amountCell(Math.round(row.revenue))]),
     [],
   ];
 }
 
-function commonCsvRows(report: AnalyticsReport, title: string): CsvRow[] {
+function commonExportRows(report: AnalyticsReport, title: string): XlsxRow[] {
   const { period, current } = report;
   return [
     [title],
-    ['Période', period.from, period.to, `${period.days} jours`],
-    ['Période précédente', period.previousFrom, period.previousTo],
+    ['Période', dayCell(period.from), dayCell(period.to), `${period.days} jours`],
+    ['Période précédente', dayCell(period.previousFrom), dayCell(period.previousTo)],
     ['Fuseau horaire', 'Africa/Casablanca'],
     [],
     ['Indicateur', 'Période', 'Période précédente'],
     ...metricComparisons(report).map((metric) => [
       `${metric.label}${unitSuffix(metric.unit)}`,
-      csvMetric(metric.unit, metric.current),
-      csvMetric(metric.unit, metric.previous),
+      exportMetric(metric.unit, metric.current),
+      exportMetric(metric.unit, metric.previous),
     ]),
     [],
     ['Entonnoir', 'Demandes', 'Taux depuis l’étape précédente (%)', 'Part des demandes reçues (%)'],
@@ -348,12 +355,12 @@ function commonCsvRows(report: AnalyticsReport, title: string): CsvRow[] {
     [],
     ['Mois', 'Demandes', 'Confirmées', 'Chiffre d’affaires (DH)', 'Demandes un an plus tôt', 'Chiffre d’affaires un an plus tôt (DH)', 'Mois en cours'],
     ...report.monthly.map((point) => [
-      point.month,
+      monthCell(point.month),
       point.requests,
       point.confirmed,
-      Math.round(point.revenue),
+      amountCell(Math.round(point.revenue)),
       point.previousYearRequests,
-      Math.round(point.previousYearRevenue),
+      amountCell(Math.round(point.previousYearRevenue)),
       point.partial ? 'oui' : '',
     ]),
     [],
@@ -363,15 +370,20 @@ function commonCsvRows(report: AnalyticsReport, title: string): CsvRow[] {
     ...breakdownSection('Pays du client', report.breakdowns.countries, current.requests),
     ...breakdownSection('Langue du client', report.breakdowns.locales, current.requests, localeLabel),
     ['Flotte', 'Véhicules', 'Taux d’occupation (%)', 'Revenu (DH)', 'Revenu par véhicule (DH)'],
-    ['Total', report.fleet.vehicles, report.fleet.occupancyRate ?? '', report.fleet.revenue, report.fleet.revenuePerVehicle ?? ''],
-    ...report.fleet.byType.map((row) => [vehicleTypeLabel(row.vehicleType), row.vehicles, row.occupancyRate ?? '', row.revenue, row.revenuePerVehicle ?? '']),
+    ['Total', report.fleet.vehicles, report.fleet.occupancyRate ?? '', amountCell(report.fleet.revenue), amountCell(report.fleet.revenuePerVehicle)],
+    ...report.fleet.byType.map((row) => [vehicleTypeLabel(row.vehicleType), row.vehicles, row.occupancyRate ?? '', amountCell(row.revenue), amountCell(row.revenuePerVehicle)]),
     [],
   ];
 }
 
-export function agencyAnalyticsCsvRows(report: AgencyAnalyticsReport, agencyName: string): CsvRow[] {
+/** Rapport « Statistiques » d'une agence : une feuille en sections, comme l'écran */
+export function agencyAnalyticsSheet(report: AgencyAnalyticsReport, agencyName: string): XlsxSheet {
+  return { kind: 'report', name: 'Statistiques', rows: agencyAnalyticsExportRows(report, agencyName) };
+}
+
+export function agencyAnalyticsExportRows(report: AgencyAnalyticsReport, agencyName: string): XlsxRow[] {
   return [
-    ...commonCsvRows(report, `Statistiques ClickDrive — ${agencyName}`),
+    ...commonExportRows(report, `Statistiques ClickDrive — ${agencyName}`),
     ['Véhicule', 'Type', 'Catégorie', 'Archivé', 'Jours en flotte', 'Nuits réservées', 'Taux d’occupation (%)', 'Réservations', 'Revenu des nuits de la période (DH)'],
     ...(report.fleet.items ?? []).map((item) => [
       item.label,
@@ -382,15 +394,20 @@ export function agencyAnalyticsCsvRows(report: AgencyAnalyticsReport, agencyName
       item.bookedDays,
       item.occupancyRate ?? '',
       item.bookings,
-      item.revenue,
+      amountCell(item.revenue),
     ]),
   ];
 }
 
-export function adminAnalyticsCsvRows(report: AdminAnalyticsReport): CsvRow[] {
+/** Rapport « Statistiques » de la plateforme (Super-Admin) */
+export function adminAnalyticsSheet(report: AdminAnalyticsReport): XlsxSheet {
+  return { kind: 'report', name: 'Statistiques plateforme', rows: adminAnalyticsExportRows(report) };
+}
+
+export function adminAnalyticsExportRows(report: AdminAnalyticsReport): XlsxRow[] {
   const { subscriptions, network } = report;
   return [
-    ...commonCsvRows(report, 'Statistiques plateforme ClickDrive'),
+    ...commonExportRows(report, 'Statistiques plateforme ClickDrive'),
     ['Réseau', 'Valeur'],
     ['Agences actives', network.agencies],
     ['Agences en attente de validation', network.pendingAgencies],
@@ -408,7 +425,7 @@ export function adminAnalyticsCsvRows(report: AdminAnalyticsReport): CsvRow[] {
       agency.rejected,
       agency.expiredUnanswered,
       agency.confirmed,
-      Math.round(agency.revenue),
+      amountCell(Math.round(agency.revenue)),
       agency.responsesMeasured >= MIN_RESPONSES_FOR_MEDIAN ? agency.responseMedianMinutes ?? '' : '',
       agency.responsesMeasured,
       agency.rating ?? '',
@@ -416,24 +433,24 @@ export function adminAnalyticsCsvRows(report: AdminAnalyticsReport): CsvRow[] {
     ]),
     [],
     ['Revenu récurrent', 'Valeur'],
-    ['MRR (DH par mois)', subscriptions.mrr],
+    ['MRR (DH par mois)', amountCell(subscriptions.mrr)],
     ['Agences abonnées', subscriptions.subscribers],
     ['Dont en essai', subscriptions.trialSubscribers],
     ['Paiement en retard', subscriptions.pastDue],
     ['Résiliées ou expirées', subscriptions.cancelledOrExpired],
-    ['Revenu moyen par agence abonnée (DH)', subscriptions.averageRevenuePerSubscriber ?? ''],
+    ['Revenu moyen par agence abonnée (DH)', amountCell(subscriptions.averageRevenuePerSubscriber)],
     [],
     ['Formule', 'Agences abonnées', 'MRR (DH)'],
-    ...subscriptions.plans.map((plan) => [plan.name, plan.subscribers, plan.mrr]),
+    ...subscriptions.plans.map((plan) => [plan.name, plan.subscribers, amountCell(plan.mrr)]),
     [],
     ['Mois', 'MRR fin de mois (DH)', 'Nouveaux (DH)', 'Hausses (DH)', 'Baisses (DH)', 'Résiliations (DH)', 'Nouvelles agences', 'Agences perdues', 'Mois en cours'],
     ...subscriptions.monthly.map((month) => [
-      month.month,
-      month.mrr,
-      month.newMrr,
-      month.expansionMrr,
-      month.contractionMrr,
-      month.churnedMrr,
+      monthCell(month.month),
+      amountCell(month.mrr),
+      amountCell(month.newMrr),
+      amountCell(month.expansionMrr),
+      amountCell(month.contractionMrr),
+      amountCell(month.churnedMrr),
       month.newSubscribers,
       month.churnedSubscribers,
       month.partial ? 'oui' : '',

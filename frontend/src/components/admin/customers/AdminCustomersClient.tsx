@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
+import { adminCustomersSheet } from '@/lib/export/dashboard-sheets';
 import {
   Users,
   Phone,
@@ -138,12 +140,8 @@ export function AdminCustomersClient() {
     window.open(`https://wa.me/${cleaned.startsWith('+') ? cleaned.slice(1) : cleaned}?text=${text}`, '_blank');
   };
 
-  const exportCSV = () => {
-    downloadCsv(csvFileName('clickdrive-clients'), [
-      ['Nom', 'E-mail', 'Téléphone', 'CIN/Passeport', 'Pays', 'Réservations', 'Total dépensé (DH)', 'Dernière réservation'],
-      ...customers.map((c) => [c.name, c.email, c.phone, c.cin, c.country, c.bookingCount, c.totalSpent, c.lastBookingRef]),
-    ]);
-  };
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
+  const exportExcel = () => void exportXlsx(xlsxFileName('clickdrive-clients'), () => adminCustomersSheet(customers));
 
   return (
     <div className="space-y-6">
@@ -207,9 +205,9 @@ export function AdminCustomersClient() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Btn variant="secondary" size="sm" onClick={exportCSV} className="flex items-center gap-1.5">
-            <Download className="h-3.5 w-3.5" />
-            Exporter CSV
+          <Btn variant="secondary" size="sm" onClick={exportExcel} loading={exporting} className="flex items-center gap-1.5">
+            {!exporting && <Download className="h-3.5 w-3.5" aria-hidden="true" />}
+            Exporter en Excel
           </Btn>
           <Btn variant="secondary" size="sm" onClick={() => loadData(false)} disabled={refreshing} className="flex items-center gap-1.5">
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -217,6 +215,8 @@ export function AdminCustomersClient() {
           </Btn>
         </div>
       </div>
+
+      {exportError && <ErrorBanner message={exportError} />}
 
       {/* Table des clients */}
       {error && !customers.length ? (

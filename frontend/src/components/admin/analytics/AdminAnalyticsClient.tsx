@@ -7,12 +7,13 @@ import { Btn, ErrorBanner } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh, type RealtimeTable } from '@/lib/supabase/realtime';
 import { cn } from '@/lib/utils';
 import { eyebrow, heading } from '@/lib/design/tokens';
-import { csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
 import { parseAdminAnalyticsReport, type AdminAnalyticsReport } from '@/lib/analytics/report';
 import { useAnalyticsReport } from '@/lib/analytics/use-analytics-report';
 import {
   MIN_RESPONSES_FOR_MEDIAN,
-  adminAnalyticsCsvRows,
+  adminAnalyticsSheet,
   formatCount,
   formatDuration,
   formatMoney,
@@ -57,9 +58,10 @@ export function AdminAnalyticsClient() {
   // Les changements arrivent en direct ; le polling n'est qu'un filet de sécurité
   useRealtimeRefresh({ tables: REALTIME_TABLES, onRefresh: reload, pollingIntervalMs: 120_000 });
 
-  const exportCsv = () => {
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
+  const exportExcel = () => {
     if (!data) return;
-    downloadCsv(csvFileName(`clickdrive-statistiques-${data.period.from}-au-${data.period.to}`), adminAnalyticsCsvRows(data));
+    void exportXlsx(xlsxFileName(`clickdrive-statistiques-${data.period.from}-au-${data.period.to}`), () => adminAnalyticsSheet(data));
   };
 
   return (
@@ -76,14 +78,15 @@ export function AdminAnalyticsClient() {
             <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin motion-reduce:animate-none')} aria-hidden="true" />
             Actualiser
           </Btn>
-          <Btn variant="secondary" size="sm" onClick={exportCsv} disabled={!data}>
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            Exporter CSV
+          <Btn variant="secondary" size="sm" onClick={exportExcel} disabled={!data} loading={exporting}>
+            {!exporting && <Download className="h-3.5 w-3.5" aria-hidden="true" />}
+            Exporter en Excel
           </Btn>
         </div>
       </div>
 
       {error && <ErrorBanner message={error} onRetry={() => void reload()} retrying={refreshing || loading} />}
+      {exportError && <ErrorBanner message={exportError} />}
 
       {loading && !data ? (
         <AnalyticsSkeleton />

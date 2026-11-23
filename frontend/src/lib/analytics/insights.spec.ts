@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { adminReportJson, agencyReportJson, totals } from '@/tests/fixtures/analytics-report';
-import { toCsv } from '@/lib/export/csv';
+import type { XlsxCell, XlsxRow } from '@/lib/export/spreadsheet';
+import { buildXlsx } from '@/lib/export/xlsx';
+import { readXlsx } from '@/tests/setup/xlsx-reader';
 import { parseAdminAnalyticsReport, parseAgencyAnalyticsReport, parseTotals } from './report';
 import {
-  adminAnalyticsCsvRows,
-  agencyAnalyticsCsvRows,
+  adminAnalyticsExportRows,
+  adminAnalyticsSheet,
+  agencyAnalyticsExportRows,
+  agencyAnalyticsSheet,
   comparisonBadge,
   formatDuration,
   funnelOutcomes,
@@ -128,26 +132,50 @@ describe('libellés et périodes', () => {
   });
 });
 
-describe('export CSV', () => {
+const cellValue = (cell: XlsxCell) => (cell !== null && typeof cell === 'object' && !(cell instanceof Date) ? cell.value : cell);
+const plainRows = (rows: readonly XlsxRow[]) => rows.map((row) => row.map(cellValue));
+const formatOf = (rows: readonly XlsxRow[], label: string, column: number) => {
+  const cell = rows.find((row) => cellValue(row[0]) === label)?.[column];
+  return cell !== null && typeof cell === 'object' && !(cell instanceof Date) ? cell.format : undefined;
+};
+
+describe('export Excel', () => {
   it('agence : indicateurs comparés, entonnoir, mois, répartitions et détail par véhicule', () => {
-    const csv = toCsv(agencyAnalyticsCsvRows(parseAgencyAnalyticsReport(agencyReportJson()), 'Agence Alpha'));
-    expect(csv).toContain('Statistiques ClickDrive — Agence Alpha');
-    expect(csv).toContain('Période;2026-10-01;2026-10-30;30 jours');
-    expect(csv).toContain('Demandes reçues;40;32');
-    expect(csv).toContain('Délai de réponse médian (min);42;60');
-    expect(csv).toContain('Acceptées;30;75;75');
-    expect(csv).toContain('2026-10;21;17;31000;8;15000;oui');
-    expect(csv).toContain('Langue du client;');
-    expect(csv).toContain('Néerlandais;10;25;6;18000');
-    expect(csv).toContain('Renault Clio · A-2;Voiture;Économique;oui;30;0;0;0;0');
+    const rows = agencyAnalyticsExportRows(parseAgencyAnalyticsReport(agencyReportJson()), 'Agence Alpha');
+    const plain = plainRows(rows);
+    expect(plain[0]).toEqual(['Statistiques ClickDrive — Agence Alpha']);
+    expect(plain).toContainEqual(['Période', '2026-10-01', '2026-10-30', '30 jours']);
+    expect(plain).toContainEqual(['Demandes reçues', 40, 32]);
+    expect(plain).toContainEqual(['Délai de réponse médian (min)', 42, 60]);
+    expect(plain).toContainEqual(['Acceptées', 30, 75, 75]);
+    expect(plain).toContainEqual(['2026-10', 21, 17, 31000, 8, 15000, 'oui']);
+    expect(plain.some((row) => row[0] === 'Langue du client')).toBe(true);
+    expect(plain).toContainEqual(['Néerlandais', 10, 25, 6, 18000]);
+    expect(plain).toContainEqual(['Renault Clio · A-2', 'Voiture', 'Économique', 'oui', 30, 0, 0, 0, 0]);
+    // Vraies dates et montants pour Excel
+    expect(formatOf(rows, 'Période', 1)).toBe('date');
+    expect(formatOf(rows, '2026-10', 0)).toBe('month');
+    expect(formatOf(rows, '2026-10', 3)).toBe('integer');
+    expect(agencyAnalyticsSheet(parseAgencyAnalyticsReport(agencyReportJson()), 'Agence Alpha')).toMatchObject({ kind: 'report', name: 'Statistiques' });
   });
 
   it('plateforme : réseau, classement (médiane masquée sous 3 réponses) et mouvements MRR', () => {
-    const csv = toCsv(adminAnalyticsCsvRows(parseAdminAnalyticsReport(adminReportJson())));
-    expect(csv).toContain('Agences sans demande sur la période;2');
-    expect(csv).toContain('Agence Alpha;Nador;25;20;80;2;1;19;60000;35;22;4.6;12');
-    expect(csv).toContain('Agence Sans Avis;;15;10;67;2;2;9;24000;;2;;0');
-    expect(csv).toContain('MRR (DH par mois);1500');
-    expect(csv).toContain('2026-10;1400;300;0;0;100;1;1;oui');
+    const rows = adminAnalyticsExportRows(parseAdminAnalyticsReport(adminReportJson()));
+    const plain = plainRows(rows);
+    expect(plain).toContainEqual(['Agences sans demande sur la période', 2]);
+    expect(plain).toContainEqual(['Agence Alpha', 'Nador', 25, 20, 80, 2, 1, 19, 60000, 35, 22, 4.6, 12]);
+    expect(plain).toContainEqual(['Agence Sans Avis', '', 15, 10, 67, 2, 2, 9, 24000, '', 2, '', 0]);
+    expect(plain).toContainEqual(['MRR (DH par mois)', 1500]);
+    expect(plain).toContainEqual(['2026-10', 1400, 300, 0, 0, 100, 1, 1, 'oui']);
+    expect(formatOf(rows, 'MRR (DH par mois)', 1)).toBe('integer');
+  });
+
+  it('fichier produit : rapport en une feuille, périodes en vraies dates', async () => {
+    const sheet = readXlsx(await buildXlsx(adminAnalyticsSheet(parseAdminAnalyticsReport(adminReportJson()))));
+    expect(sheet.sheetName).toBe('Statistiques plateforme');
+    expect(sheet.values[0]).toEqual(['Statistiques plateforme ClickDrive']);
+    expect(sheet.values[1]).toEqual(['Période', '2026-10-01', '2026-10-30', '30 jours']);
+    expect(sheet.cells.get('B2')).toMatchObject({ type: 'number', format: 'dd/mm/yyyy' });
+    expect(sheet.values).toContainEqual(['MRR (DH par mois)', 1500]);
   });
 });

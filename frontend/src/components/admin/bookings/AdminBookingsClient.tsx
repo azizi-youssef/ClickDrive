@@ -23,8 +23,9 @@ import {
 } from '@/components/admin/AdminUI';
 import { fetchAdminBookings } from '@/lib/api/admin-dashboard.api';
 import { formatNumber, formatPrice } from '@/lib/utils';
-import { bookingStatusLabel } from '@/lib/bookings/status';
-import { csvDate, csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
+import { adminBookingsSheet } from '@/lib/export/dashboard-sheets';
 
 const PAGE_SIZE = 20;
 
@@ -46,26 +47,6 @@ const STATUS_OPTIONS = [
   { value: 'CANCELLED', label: 'Annulée' },
 ];
 
-function csvExport(rows: Booking[]) {
-  downloadCsv(csvFileName('clickdrive-reservations'), [
-    ['Dossier', 'Client', 'E-mail', 'Téléphone', 'Véhicule', 'Agence', 'Début', 'Fin', 'Jours', 'Montant (DH)', 'Statut', 'Créé le'],
-    ...rows.map((b) => [
-      b.booking_ref ?? b.reference ?? '',
-      b.customer_name,
-      b.customer_email,
-      b.customer_phone,
-      `${b.vehicle?.brand ?? ''} ${b.vehicle?.model ?? ''}`.trim(),
-      b.agency?.name ?? '',
-      csvDate(b.start_date),
-      csvDate(b.end_date),
-      b.total_days,
-      b.total_price,
-      bookingStatusLabel(b.status, 'fr', 'business'),
-      csvDate(b.created_at),
-    ]),
-  ]);
-}
-
 export function AdminBookingsClient() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +57,7 @@ export function AdminBookingsClient() {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [page, setPage] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
 
   const load = useCallback(async (mode: 'initial' | 'refresh') => {
     abortRef.current?.abort();
@@ -123,6 +105,7 @@ export function AdminBookingsClient() {
   return (
     <div className="space-y-5">
       {error && <ErrorBanner message={error} onRetry={() => void load('refresh')} retrying={refreshing} />}
+      {exportError && <ErrorBanner message={exportError} />}
 
       {/* Summary strip */}
       {!loading && filtered.length > 0 && (
@@ -172,9 +155,17 @@ export function AdminBookingsClient() {
             <Btn variant="secondary" size="sm" onClick={() => void load('refresh')} disabled={refreshing}>
               <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </Btn>
-            <Btn variant="secondary" size="sm" onClick={() => csvExport(filtered)} disabled={filtered.length === 0}>
-              <Download className="h-3.5 w-3.5" />
-              CSV
+            <Btn
+              variant="secondary"
+              size="sm"
+              onClick={() => void exportXlsx(xlsxFileName('clickdrive-reservations'), () => adminBookingsSheet(filtered))}
+              disabled={filtered.length === 0}
+              loading={exporting}
+              aria-label="Exporter en Excel"
+              title="Exporter en Excel"
+            >
+              {!exporting && <Download className="h-3.5 w-3.5" aria-hidden="true" />}
+              Excel
             </Btn>
           </div>
         </div>

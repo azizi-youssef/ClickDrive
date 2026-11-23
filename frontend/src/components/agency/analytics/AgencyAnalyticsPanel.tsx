@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Car, FileSpreadsheet, Motorbike, RefreshCw } from 'lucide-react';
+import { Car, FileSpreadsheet, Loader2, Motorbike, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { csvFileName, downloadCsv } from '@/lib/export/csv';
+import { xlsxFileName } from '@/lib/export/spreadsheet';
+import { useXlsxExport } from '@/lib/export/use-xlsx-export';
 import { parseAgencyAnalyticsReport, type AgencyAnalyticsReport, type VehicleUsage } from '@/lib/analytics/report';
 import { useAnalyticsReport } from '@/lib/analytics/use-analytics-report';
-import { agencyAnalyticsCsvRows, formatCount, formatMoney, formatRate } from '@/lib/analytics/insights';
+import { agencyAnalyticsSheet, formatCount, formatMoney, formatRate } from '@/lib/analytics/insights';
 import { ErrorBanner } from '@/components/agency/shell/Feedback';
 import { AnalyticsSkeleton, ChartCard, PeriodPicker, initialPeriod, type PeriodValue } from '@/components/analytics/AnalyticsUI';
 import {
@@ -30,9 +31,10 @@ export function AgencyAnalyticsPanel({ agencyId, agencyName }: { agencyId: strin
   const endpoint = `/api/stats/agency/${encodeURIComponent(agencyId)}/analytics`;
   const { data, loading, refreshing, error, lastUpdated, reload } = useAnalyticsReport(endpoint, period, parseAgencyAnalyticsReport);
 
-  const exportCsv = () => {
+  const { exporting, exportError, exportXlsx } = useXlsxExport();
+  const exportExcel = () => {
     if (!data) return;
-    downloadCsv(csvFileName(`clickdrive-statistiques-agence-${data.period.from}-au-${data.period.to}`), agencyAnalyticsCsvRows(data, agencyName));
+    void exportXlsx(xlsxFileName(`clickdrive-statistiques-agence-${data.period.from}-au-${data.period.to}`), () => agencyAnalyticsSheet(data, agencyName));
   };
 
   return (
@@ -57,17 +59,23 @@ export function AgencyAnalyticsPanel({ agencyId, agencyName }: { agencyId: strin
           </button>
           <button
             type="button"
-            onClick={exportCsv}
-            disabled={!data}
+            onClick={exportExcel}
+            disabled={!data || exporting}
+            aria-busy={exporting}
             className="flex min-h-10 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-40"
           >
-            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-            Exporter CSV
+            {exporting ? (
+              <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            ) : (
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+            )}
+            Exporter en Excel
           </button>
         </div>
       </div>
 
       {error && <ErrorBanner message={error} onRetry={() => void reload()} />}
+      {exportError && <ErrorBanner message={exportError} />}
 
       {loading && !data ? (
         <AnalyticsSkeleton />
