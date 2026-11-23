@@ -217,7 +217,6 @@ const loginStyles = `
     font-weight: 800;
     letter-spacing: -.035em;
   }
-  .cd-hero-title span { color: var(--cd-red); }
   .cd-hero-copy {
     max-width: 400px;
     margin-top: 22px;
@@ -543,7 +542,6 @@ const loginStyles = `
     }
     .cd-mobile-hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #FF6B76; }
     .cd-mobile-hero-title { margin-top: 8px; font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
-    .cd-mobile-hero-title span { color: var(--cd-red); }
     .cd-form-content { max-width: 520px; margin: -30px auto 0; padding-top: 0; }
   }
   @media (max-width: 400px) {
@@ -591,7 +589,7 @@ function BrandPanel({ portal, s }: { portal: LoginPortal; s: LoginMessages }) {
         <p className="cd-hero-title">
           {copy.title}
           <br />
-          <span>{copy.titleAccent}</span>
+          {copy.titleAccent}
         </p>
         <p className="cd-hero-copy">{copy.copy}</p>
         <div className="cd-features">
@@ -888,7 +886,7 @@ function PortalLoginForm() {
         <div className="cd-mobile-hero" aria-hidden="true">
           <p className="cd-mobile-hero-eyebrow">{copy.eyebrow}</p>
           <p className="cd-mobile-hero-title">
-            {copy.title} <span>{copy.titleAccent}</span>
+            {copy.title} {copy.titleAccent}
           </p>
         </div>
 

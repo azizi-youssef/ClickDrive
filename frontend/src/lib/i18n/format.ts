@@ -53,6 +53,8 @@ const DATE_STYLES = {
   long: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
   /** 12 juil. */
   dayMonth: { day: 'numeric', month: 'short' },
+  /** sam. 12 juil. */
+  weekdayDayMonth: { weekday: 'short', day: 'numeric', month: 'short' },
   /** 12 juil. 2026, 14:30 */
   dateTime: { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' },
 } satisfies Record<string, Intl.DateTimeFormatOptions>;

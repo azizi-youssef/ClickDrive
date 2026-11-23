@@ -70,6 +70,13 @@ export const fr = {
     dropoffLocation: 'Lieu de restitution',
     pickupDate: 'Date de départ',
     dropoffDate: 'Date de retour',
+    // Formes courtes : colonnes étroites de la recherche mobile (jamais tronquées)
+    pickupShort: 'Départ',
+    dropoffShort: 'Retour',
+    // Carte repliable de l'accueil (mobile)
+    yourSearch: 'Votre recherche',
+    editSearch: 'Modifier la recherche',
+    collapse: 'Réduire',
     allLocations: 'Tous les points de retrait',
     airport: 'Aéroport Nador-Al Aroui (NDR)',
     port: 'Port de Beni Ansar',

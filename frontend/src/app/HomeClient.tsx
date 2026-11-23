@@ -201,8 +201,7 @@ export function HomeClient({
 
         <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-20">
           <h1 className="max-w-3xl text-[28px] font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[56px]">
-            {t.hero.titleLead}{' '}
-            <span className="text-accent-text">{t.hero.titleAccent}</span>
+            {t.hero.titleLead} {t.hero.titleAccent}
           </h1>
 
           {/* Masqué sur les petits téléphones (≤ 720 px de haut) pour garder « Rechercher » visible au chargement */}

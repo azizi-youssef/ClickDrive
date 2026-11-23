@@ -72,27 +72,41 @@ export function CookieBanner() {
       // Zone sûre du bas d'écran : déjà comprise dans la navigation inférieure quand elle est présente.
       className="fixed inset-x-0 bottom-[calc(var(--cd-bottom-bar,0px)+var(--cd-fixed-nav,0px)+var(--cd-bottom-nav,0px))] z-45 border-t border-slate-200 bg-white/95 shadow-[0_-12px_32px_-16px_rgba(11,18,32,0.25)] backdrop-blur-md pb-[max(0px,calc(env(safe-area-inset-bottom,0px)-var(--cd-bottom-nav,0px)))]"
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 sm:flex-row sm:py-3 sm:items-center sm:gap-5 sm:px-6 lg:px-8">
-        <p className="flex min-w-0 flex-1 items-start gap-2.5 text-xs leading-snug text-slate-600 sm:text-[13px] sm:items-center">
-          <Cookie className="mt-0.5 h-4 w-4 shrink-0 text-amber-500 sm:mt-0" aria-hidden="true" />
+      <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2 sm:flex-row sm:py-3 sm:items-center sm:gap-5 sm:px-6 lg:px-8">
+        {/* Mobile : icône dans le fil du texte, qui garde ainsi toute la largeur de l'écran */}
+        <p className="min-w-0 text-xs leading-snug text-slate-600 sm:flex sm:flex-1 sm:items-center sm:gap-2.5 sm:text-[13px]">
+          <Cookie className="me-1.5 inline-block h-4 w-4 shrink-0 align-[-0.25em] text-amber-500 sm:me-0" aria-hidden="true" />
           <span>
-            {t.cookie.desc}{' '}
-            <Link
-              href="/confidentialite"
-              className="whitespace-nowrap font-semibold text-ink underline underline-offset-2 hover:text-accent-text"
-            >
-              {t.cookie.privacy}
-            </Link>
+            {t.cookie.desc}
+            {/* ≥ 640 px : lien dans la phrase (sur mobile, il rejoint la ligne du bouton) */}
+            <span className="hidden sm:inline">
+              {' '}
+              <Link
+                href="/confidentialite"
+                className="whitespace-nowrap font-semibold text-ink underline underline-offset-2 hover:text-accent-text"
+              >
+                {t.cookie.privacy}
+              </Link>
+            </span>
           </span>
         </p>
-        <button
-          type="button"
-          id="cookie-ok"
-          onClick={dismiss}
-          className="min-h-11 shrink-0 rounded-xl bg-ink px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:min-h-10"
-        >
-          {t.cookie.ok}
-        </button>
+        {/* Mobile : lien et bouton sur une seule ligne, bouton compact qui ne concurrence pas les actions de la page */}
+        <div className="flex items-center justify-between gap-3 sm:contents">
+          <Link
+            href="/confidentialite"
+            className="inline-flex min-h-10 items-center text-xs font-semibold text-ink underline underline-offset-2 hover:text-accent-text sm:hidden"
+          >
+            {t.cookie.privacy}
+          </Link>
+          <button
+            type="button"
+            id="cookie-ok"
+            onClick={dismiss}
+            className="min-h-10 shrink-0 rounded-xl bg-ink px-5 text-sm font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            {t.cookie.ok}
+          </button>
+        </div>
       </div>
     </section>
   );

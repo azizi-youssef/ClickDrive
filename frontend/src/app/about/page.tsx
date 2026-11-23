@@ -184,7 +184,7 @@ export default async function AboutPage() {
               id="hero-title"
               className="mt-5 text-balance text-[40px] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-[68px]"
             >
-              {c.heroTitle} <span className="text-accent-text">{c.heroAccent}</span>
+              {c.heroTitle} {c.heroAccent}
             </h1>
 
             <p className="mt-6 text-pretty text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">

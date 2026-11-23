@@ -149,8 +149,7 @@ export default function AgencyJoinPage() {
             </div>
 
             <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Faites grandir votre agence avec{' '}
-              <span className="text-brand">ClickDrive.</span>
+              Faites grandir votre agence avec ClickDrive.
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">

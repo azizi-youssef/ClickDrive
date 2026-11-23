@@ -220,7 +220,7 @@ export function AgenciesClient() {
             </nav>
 
             <h1 className="max-w-2xl text-[34px] font-black leading-[1.08] tracking-tight sm:text-5xl">
-              {l.titleBefore} <span className="text-accent-text">{l.titleAccent}</span> {l.titleAfter}
+              {l.titleBefore} {l.titleAccent} {l.titleAfter}
             </h1>
             <p className="mt-4 max-w-xl text-[15px] leading-7 text-slate-400">{l.subtitle}</p>
 
