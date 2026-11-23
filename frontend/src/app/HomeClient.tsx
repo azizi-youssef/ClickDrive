@@ -199,14 +199,18 @@ export function HomeClient({
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-r from-[#05080D]/95 via-[#05080D]/70 to-[#05080D]/25 rtl:bg-linear-to-l" />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-t from-[#05080D] via-transparent to-transparent" />
 
-        <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-20">
-          <h1 className="max-w-3xl text-[28px] font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[56px]">
+        <div className="mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6 sm:pb-16 sm:pt-16 lg:px-8 lg:pb-20 lg:pt-20">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 shadow-sm backdrop-blur-md sm:mb-6 sm:px-3.5 sm:py-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-300" aria-hidden="true" />
+            <span>{t.hero.badgeVerified}</span>
+          </div>
+          <h1 className="max-w-3xl text-display font-black text-white">
             {t.hero.titleLead}{' '}
             <span className="text-accent-text">{t.hero.titleAccent}</span>
           </h1>
 
-          {/* Masqué sur les petits téléphones (≤ 720 px de haut) pour garder « Rechercher » visible au chargement */}
-          <p className="mt-3 max-w-2xl text-[15px] leading-6 max-sm:[@media(max-height:720px)]:hidden sm:mt-4 sm:leading-7 text-slate-300 sm:text-base">
+          {/* Masqué sur les petits téléphones pour garder la recherche visible au chargement */}
+          <p className="mt-3 max-w-2xl text-[15px] leading-6 max-sm:[@media(max-height:850px)]:hidden sm:mt-4 sm:leading-7 text-slate-300 sm:text-base">
             {t.hero.subtitle}
           </p>
 
