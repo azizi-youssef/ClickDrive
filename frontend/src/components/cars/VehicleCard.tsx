@@ -400,6 +400,10 @@ function VehicleCardComponent({
       : null;
   const isMoto = isMotorcycle(vehicle);
   const engineCc = formatEngineCc(vehicle.engine_cc);
+  // Statut affiché seulement quand il informe : « Libre à vos dates » (recherche datée) ou une
+  // indisponibilité. « Disponible aujourd'hui » sur chaque carte n'apprenait rien : l'absence de
+  // pastille vaut disponibilité, et les exceptions (réservée, louée…) ressortent.
+  const showStatus = availabilityChecked || !isBookable;
 
   // Retour visuel de l'ajout aux favoris : le cœur se gonfle une fois, seulement après un clic
   // (pas au chargement d'une liste où des véhicules sont déjà favoris)
@@ -448,22 +452,26 @@ function VehicleCardComponent({
         />
 
         {/* Statut — pastille + texte (jamais la couleur seule) */}
-        <span
-          className={cn(
-            // Fond opaque à 95 % : le flou d'arrière-plan n'y changeait rien et coûtait un calque GPU par carte
-            'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition-colors duration-fast',
-            status.text
-          )}
-        >
-          <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} aria-hidden="true" />
-          {card[labelKey]}
-        </span>
+        {showStatus && (
+          <span
+            className={cn(
+              // Fond opaque à 95 % : le flou d'arrière-plan n'y changeait rien et coûtait un calque GPU par carte
+              'absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition-colors duration-fast',
+              status.text
+            )}
+          >
+            <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', status.dot)} aria-hidden="true" />
+            {card[labelKey]}
+          </span>
+        )}
 
-        {/* Promotion : pleine quand elle s'applique aux dates choisies, claire quand elle est annoncée */}
+        {/* Promotion : pleine quand elle s'applique aux dates choisies, claire quand elle est annoncée.
+            Elle prend la place du statut quand celui-ci est masqué. */}
         {promoLabel && (
           <span
             className={cn(
-              'pointer-events-none absolute start-3 top-12 z-10 inline-flex max-w-[calc(100%-4.5rem)] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums shadow-sm transition-colors duration-fast',
+              'pointer-events-none absolute start-3 z-10 inline-flex max-w-[calc(100%-4.5rem)] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums shadow-sm transition-colors duration-fast',
+              showStatus ? 'top-12' : 'top-3',
               reduction ? 'bg-emerald-700 text-white' : 'bg-white/95 text-emerald-800'
             )}
           >
@@ -558,8 +566,10 @@ function VehicleCardComponent({
                 {card.verified}
               </span>
             )}
-            <span className="ms-auto shrink-0 text-xs font-semibold text-ink-tertiary">
-              {showRating ? (
+            {/* Note affichée à partir de MIN_REVIEWS_FOR_RATING avis ; sinon rien (« Nouvelle » se répétait
+                sur toutes les cartes tant que les agences n'ont pas d'avis) */}
+            {showRating && (
+              <span className="ms-auto shrink-0 text-xs font-semibold text-ink-tertiary">
                 <span
                   className="inline-flex items-center gap-1"
                   aria-label={fmt(card.ratingAria, { rating: formatDecimal(agencyRating!, locale), count: reviewCount })}
@@ -567,10 +577,8 @@ function VehicleCardComponent({
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
                   {formatDecimal(agencyRating!, locale)}
                 </span>
-              ) : (
-                card.newAgency
-              )}
-            </span>
+              </span>
+            )}
           </div>
         )}
 
@@ -626,9 +634,11 @@ function VehicleCardComponent({
               className={cn(
                 'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold transition-colors duration-fast',
                 'outline-none after:absolute after:inset-0 after:z-10 after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand',
+                // Bouton secondaire au repos (la photo et le prix mènent la carte, plus six aplats noirs
+                // par grille) ; plein graphite au survol de la carte, qui est entièrement cliquable
                 isBookable
-                  ? 'bg-ink text-white group-hover:bg-action'
-                  : 'border border-slate-200 bg-white text-ink group-hover:border-slate-300'
+                  ? 'border border-slate-300 bg-white text-ink group-hover:border-ink group-hover:bg-ink group-hover:text-white'
+                  : 'border border-slate-200 bg-white text-slate-600 group-hover:border-slate-300'
               )}
             >
               {card.viewDetails}

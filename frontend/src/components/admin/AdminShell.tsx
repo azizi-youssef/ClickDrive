@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { brandLogo } from '@/lib/brand/logo';
+import { BrandLogo, BrandSymbol } from '@/components/shared/BrandLogo';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -94,21 +93,15 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
       aria-label="ClickDrive Admin — vue d'ensemble"
       className="flex items-center gap-2.5 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-brand/60"
     >
-      <div
-        className={cn(
-          'relative shrink-0 rounded-md bg-white p-1',
-          collapsed ? 'h-8 w-8' : 'h-10 w-32'
-        )}
-      >
-        <Image
-          src={brandLogo}
-          alt="ClickDrive"
-          fill
-          sizes={collapsed ? '32px' : '128px'}
-          className="object-contain object-left p-1"
-          priority
-        />
-      </div>
+      {/* Logo filtré en blanc, sans pastille, comme dans le pied de page. Barre réduite (32 px) : symbole
+          seul — le mot « ClickDrive » y devenait illisible. */}
+      {collapsed ? (
+        <BrandSymbol tone="white" size={32} label="ClickDrive" />
+      ) : (
+        // 22 px de haut (≈ 112 px de large) : même encombrement que l'ancien logo sur pastille, la ligne
+        // logo + « Admin » + bouton « Réduire » tient dans les 224 px utiles de la barre
+        <BrandLogo tone="white" className="h-5.5 w-auto" sizes="120px" priority />
+      )}
       {!collapsed && (
         <span className="rounded-md bg-action px-1.5 py-0.5 text-[11px] font-bold uppercase leading-none tracking-wider text-white">
           Admin

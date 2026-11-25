@@ -28,7 +28,6 @@ import {
   ArrowRight,
   MapPin,
   ShieldCheck,
-  LogIn,
   LogOut,
   Loader2,
   Compass,
@@ -313,6 +312,26 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Accueil : tant que le formulaire de recherche du hero est à l'écran, le bouton « Rechercher » de
+  // l'en-tête passe en style neutre (un seul bouton rouge par écran) ; il redevient rouge une fois le
+  // formulaire dépassé. Il reste à sa place : aucun décalage de l'en-tête collant.
+  const [heroSearchInView, setHeroSearchInView] = useState(true);
+  useEffect(() => {
+    if (pathname !== '/') return;
+    const target = document.getElementById('hero-search');
+    if (!target) return;
+    // Marge haute ≈ hauteur de l'en-tête collant : un formulaire passé dessous ne compte plus comme visible
+    const observer = new IntersectionObserver(([entry]) => setHeroSearchInView(entry.isIntersecting), {
+      rootMargin: '-110px 0px 0px 0px',
+    });
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+      setHeroSearchInView(true);
+    };
+  }, [pathname]);
+  const searchCtaQuiet = pathname === '/' && heroSearchInView;
+
   /* -------------------------------------------------------------------- */
   /* Click Outside & Escape Key Handlers                                  */
   /* -------------------------------------------------------------------- */
@@ -529,47 +548,9 @@ export function Navbar() {
               <span>{strings.becomePartner}</span>
             </Link>
 
+            {/* Compte : uniquement dans la barre principale (bouton ou menu à toutes les tailles d'écran),
+                plus de second « Se connecter » / nom de compte ici */}
             <span className="hidden h-3 w-px bg-slate-800 lg:block" aria-hidden="true" />
-
-            {/* Quick Auth Shortcut */}
-            {authLoading ? (
-              <span
-                className="inline-flex items-center gap-1.5 text-slate-400"
-                role="status"
-                aria-label={strings.sessionChecking}
-              >
-                <Loader2 className="h-3 w-3 animate-spin text-slate-400" aria-hidden="true" />
-                <span>{strings.account}</span>
-              </span>
-            ) : authProfile ? (
-              <Link
-                href={accountHref(authProfile)}
-                aria-label={`${accountIdentity(authProfile, strings).badge} : ${accountIdentity(authProfile, strings).name}`}
-                title={accountIdentity(authProfile, strings).name}
-                className="flex min-w-0 max-w-52 items-center gap-1.5 font-medium text-slate-300 transition-colors hover:text-white"
-              >
-                <AccountAvatar profile={authProfile} className="h-4.5 w-4.5 text-[9px]" />
-                <span className="truncate">{accountIdentity(authProfile, strings).name}</span>
-              </Link>
-            ) : authError ? (
-              <button
-                type="button"
-                onClick={() => void refreshAuthProfile()}
-                className="font-medium text-amber-400 transition-colors hover:text-white"
-              >
-                {strings.sessionError}
-              </button>
-            ) : (
-              <Link
-                href={LOGIN_PATH}
-                className="flex items-center gap-1.5 font-medium text-slate-400 transition-colors hover:text-white"
-              >
-                <LogIn className="h-3 w-3 text-accent-text" aria-hidden="true" />
-                <span>{strings.login}</span>
-              </Link>
-            )}
-
-            <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
 
             <a
               href="https://wa.me/212634536286?text=Bonjour%2C%20je%20souhaite%20louer%20un%20v%C3%A9hicule%20%C3%A0%20Nador"
@@ -1058,12 +1039,19 @@ export function Navbar() {
               <Magnet strength={0.25}>
                 <Link
                   href="/search"
-                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-action px-4 py-2.5 text-xs font-bold text-white shadow-xs shadow-red-900/20 transition-[background-color,box-shadow,scale] duration-fast hover:bg-action-hover hover:shadow-[0_6px_22px_rgba(230,57,70,0.35)] motion-press focus-visible:outline-2 focus-visible:outline-ink"
+                  className={cn(
+                    'group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border px-4 py-2.5 text-xs font-bold shadow-xs transition-[background-color,border-color,color,box-shadow,scale] duration-base motion-press focus-visible:outline-2 focus-visible:outline-ink motion-reduce:transition-none',
+                    searchCtaQuiet
+                      ? 'border-slate-200/90 bg-white text-ink hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-transparent bg-action text-white shadow-red-900/20 hover:bg-action-hover hover:shadow-[0_6px_22px_rgba(230,57,70,0.35)]'
+                  )}
                 >
-                  <span
-                    className="absolute inset-0 bg-linear-to-br from-white/15 to-transparent pointer-events-none"
-                    aria-hidden="true"
-                  />
+                  {!searchCtaQuiet && (
+                    <span
+                      className="absolute inset-0 bg-linear-to-br from-white/15 to-transparent pointer-events-none"
+                      aria-hidden="true"
+                    />
+                  )}
                   <Search className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>{strings.search}</span>
                   <ArrowRight

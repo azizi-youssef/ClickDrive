@@ -1,14 +1,45 @@
 'use client';
-import { brandLogo } from '@/lib/brand/logo';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Bell, ChevronDown, Home, LogOut, RefreshCw, Settings, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { eyebrowMuted } from '@/lib/design/tokens';
+import { AgencyLogoMark } from '@/components/agencies/AgencyLogoMark';
+import { BrandSymbol } from '@/components/shared/BrandLogo';
 import { MobileNav } from './MobileNav';
 
 export type TopbarCrumb = { label: string; href?: string };
+
+/**
+ * Vignette du compte (bouton et en-tête du menu) : logo de l'agence en tuile uniforme, comme sur les
+ * cartes publiques (une photo de profil, non cadrable, reste en plein cadre). Sans image : symbole
+ * ClickDrive en couleur (fond clair). Décorative : le nom du compte est écrit à côté.
+ */
+function AccountMark({
+  avatarUrl,
+  agencyName,
+  size,
+  className,
+}: {
+  avatarUrl: string | null;
+  agencyName: string;
+  size: number;
+  className?: string;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white', className)}
+    >
+      {avatarUrl ? (
+        <AgencyLogoMark slug="" name={agencyName} logoUrl={avatarUrl} size={size} fallback="cover" />
+      ) : (
+        <BrandSymbol tone="color" size={size - 6} />
+      )}
+    </div>
+  );
+}
 
 
 /** Menu contextuel accessible : fermeture au clic extérieur et via Échap. */
@@ -225,15 +256,7 @@ export function Topbar({
               {...props}
               className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-2.5 outline-none sm:min-h-0 transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-white border border-slate-200 shrink-0 flex items-center justify-center">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo.src} alt="" className="h-full w-full object-contain p-0.5" />
-                )}
-              </div>
+              <AccountMark avatarUrl={avatarUrl} agencyName={agencyName} size={28} className="h-7 w-7" />
               <span className="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block">
                 {userLabel}
               </span>
@@ -248,15 +271,7 @@ export function Topbar({
           )}
         >
           <div className="border-b border-slate-100 px-3 pb-2.5 pt-2 flex items-center gap-2.5">
-            <div className="relative h-9 w-9 rounded-lg overflow-hidden bg-white border border-slate-200 shrink-0 flex items-center justify-center shadow-xs">
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo.src} alt="" className="h-full w-full object-contain p-0.5" />
-              )}
-            </div>
+            <AccountMark avatarUrl={avatarUrl} agencyName={agencyName} size={36} className="h-9 w-9 shadow-xs" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-ink">{userLabel}</p>
               <p className="truncate text-xs text-ink-secondary">{agencyName}</p>

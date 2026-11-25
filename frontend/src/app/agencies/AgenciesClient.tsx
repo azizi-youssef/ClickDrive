@@ -20,7 +20,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 
-import { AgencyCard } from '@/components/agencies/AgencyCard';
+import { AgencyCard, AgencyCardSkeleton } from '@/components/agencies/AgencyCard';
 import type { Agency } from '@/types';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { Magnet, GsapReveal } from '@/components/ui/react-bits';
@@ -417,16 +417,9 @@ export function AgenciesClient() {
           {/* Chargement */}
           {loading && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label={l.loadingAria}>
+              {/* Squelette au gabarit exact de la carte : rien ne saute à l'arrivée des agences */}
               {[1, 2, 3].map((item) => (
-                <div key={item} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
-                  <div className="skeleton h-36 w-full" />
-                  <div className="space-y-3 p-5 pt-10">
-                    <div className="skeleton h-5 w-2/3 rounded" />
-                    <div className="skeleton h-3 w-1/2 rounded" />
-                    <div className="skeleton h-3 w-full rounded" />
-                    <div className="skeleton mt-6 h-11 w-full rounded-xl" />
-                  </div>
-                </div>
+                <AgencyCardSkeleton key={item} />
               ))}
             </div>
           )}

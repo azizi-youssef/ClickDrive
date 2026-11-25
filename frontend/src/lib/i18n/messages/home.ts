@@ -41,6 +41,8 @@ const fr = {
       'Les véhicules sont gérés en direct par les agences locales à Nador. Utilisez le formulaire de recherche ci-dessus pour afficher les disponibilités exactes pour vos dates.',
     emptyCta: 'Lancer une recherche de véhicule',
     seeAllCars: 'Voir toutes les voitures',
+    /** Lien sous la sélection plafonnée : nombre réel de véhicules correspondant au filtre actif */
+    seeCount: { one: 'Voir la voiture', other: 'Voir les {count} voitures' } as PluralForms,
   },
   motos: {
     eyebrow: 'Deux-roues',
@@ -144,6 +146,7 @@ export const home: Record<Locale, HomeMessages> = {
         'Vehicles are managed live by local agencies in Nador. Use the search form above to see exact availability for your dates.',
       emptyCta: 'Search for a vehicle',
       seeAllCars: 'See all cars',
+      seeCount: { one: 'See the car', other: 'See all {count} cars' },
     },
     motos: {
       eyebrow: 'Two-wheelers',
@@ -243,6 +246,7 @@ export const home: Record<Locale, HomeMessages> = {
         'Los vehículos los gestionan en directo las agencias locales de Nador. Usa el buscador de arriba para ver la disponibilidad exacta en tus fechas.',
       emptyCta: 'Buscar un vehículo',
       seeAllCars: 'Ver todos los coches',
+      seeCount: { one: 'Ver el coche', other: 'Ver los {count} coches' },
     },
     motos: {
       eyebrow: 'Dos ruedas',
@@ -342,6 +346,7 @@ export const home: Record<Locale, HomeMessages> = {
         'Die Fahrzeuge werden live von lokalen Vermietern in Nador verwaltet. Nutzen Sie die Suche oben, um die genaue Verfügbarkeit für Ihre Daten zu sehen.',
       emptyCta: 'Fahrzeug suchen',
       seeAllCars: 'Alle Autos ansehen',
+      seeCount: { one: 'Das Auto ansehen', other: 'Alle {count} Autos ansehen' },
     },
     motos: {
       eyebrow: 'Zweiräder',
@@ -441,6 +446,7 @@ export const home: Record<Locale, HomeMessages> = {
         'De voertuigen worden live beheerd door lokale verhuurders in Nador. Gebruik het zoekformulier hierboven om de exacte beschikbaarheid voor jouw data te zien.',
       emptyCta: 'Zoek een voertuig',
       seeAllCars: 'Alle auto’s bekijken',
+      seeCount: { one: 'De auto bekijken', other: 'Alle {count} auto’s bekijken' },
     },
     motos: {
       eyebrow: 'Tweewielers',
@@ -545,6 +551,14 @@ export const home: Record<Locale, HomeMessages> = {
       emptyText: 'تدير الوكالات المحلية في الناظور مركباتها مباشرة. استعمل نموذج البحث أعلاه لعرض التوفر الدقيق في تواريخك.',
       emptyCta: 'ابحث عن مركبة',
       seeAllCars: 'عرض جميع السيارات',
+      seeCount: {
+        zero: 'عرض {count} سيارة',
+        one: 'عرض السيارة',
+        two: 'عرض السيارتين',
+        few: 'عرض {count} سيارات',
+        many: 'عرض {count} سيارة',
+        other: 'عرض {count} سيارة',
+      },
     },
     motos: {
       eyebrow: 'الدراجات',

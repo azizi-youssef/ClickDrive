@@ -25,6 +25,20 @@ describe('summarizeCategories — données réelles uniquement', () => {
     expect(upcoming).not.toContain('Économique');
   });
 
+  it('n’annonce pas « Bientôt : Automatique / 7 places » quand des voitures ont déjà cet attribut', () => {
+    const withAttributes = [
+      testVehicle({ id: 'e', category: 'SUV', transmission: 'AUTOMATIC', seats: 5 }),
+      testVehicle({ id: 'f', category: 'Économique', transmission: 'MANUAL', seats: 7 }),
+    ];
+    const { upcoming } = summarizeCategories(withAttributes, 'CAR');
+    expect(upcoming).not.toContain('Automatique');
+    expect(upcoming).not.toContain('7 places');
+    expect(upcoming).toContain('Berline');
+
+    const manualOnly = summarizeCategories([testVehicle({ id: 'g', category: 'SUV', transmission: 'MANUAL', seats: 5 })], 'CAR');
+    expect(manualOnly.upcoming).toEqual(expect.arrayContaining(['Automatique', '7 places']));
+  });
+
   it('sépare voitures et motos', () => {
     const motos = summarizeCategories(catalog, 'MOTORCYCLE');
     expect(motos.total).toBe(1);

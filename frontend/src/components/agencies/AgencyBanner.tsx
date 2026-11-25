@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Image from 'next/image';
+import { isCorsReadable } from '@/components/agencies/logo-fit';
 
 export function AgencyBanner({
   name,
@@ -9,12 +10,22 @@ export function AgencyBanner({
   className = 'object-cover',
   priority = false,
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+  style,
+  onLoad,
 }: {
   name: string;
   bannerUrl?: string | null;
   className?: string;
   priority?: boolean;
   sizes?: string;
+  /**
+   * Style en ligne de l'image (pas de la bannière de secours). Fourni, l'appelant gère tout le placement
+   * (position, taille) : l'image n'est plus en mode `fill`, que next/image interdit de combiner avec
+   * un style de position ou de taille.
+   */
+  style?: CSSProperties;
+  /** Image chargée ; fournie, elle rend l'image lisible par un canevas quand son origine l'autorise (CORS) */
+  onLoad?: (img: HTMLImageElement) => void;
 }) {
   const storedBanner = bannerUrl?.trim() || '';
   const [failedSource, setFailedSource] = useState<string | null>(null);
@@ -37,10 +48,14 @@ export function AgencyBanner({
     <Image
       src={src}
       alt={`Bannière ${name}`}
-      fill
+      // Dimensions intrinsèques indicatives (12:5) : la taille réelle vient du style de l'appelant
+      {...(style ? { width: 1200, height: 500 } : { fill: true })}
       priority={priority}
       sizes={sizes}
       className={className}
+      style={style}
+      crossOrigin={onLoad && isCorsReadable(src) ? 'anonymous' : undefined}
+      onLoad={onLoad ? (event) => onLoad(event.currentTarget) : undefined}
       onError={() => setFailedSource(src)}
     />
   );

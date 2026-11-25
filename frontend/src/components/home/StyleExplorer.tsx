@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { Fragment, useId, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from '@/components/i18n/LocalizedLink';
 import { ArrowRight, ArrowUpRight, Car, Motorbike } from 'lucide-react';
@@ -35,6 +35,12 @@ const CATEGORY_VISUALS: Record<string, { image?: string }> = {
   Trail: { image: '/suzuki.jpeg' },
 };
 
+/** Catégories qui décrivent aussi un attribut du véhicule : déjà couvertes si un véhicule publié le possède */
+const ATTRIBUTE_CATEGORIES: Record<string, (vehicles: readonly Vehicle[]) => boolean> = {
+  Automatique: (vehicles) => vehicles.some((vehicle) => vehicle.transmission === 'AUTOMATIC'),
+  '7 places': (vehicles) => vehicles.some((vehicle) => (vehicle.seats ?? 0) >= 7),
+};
+
 interface CategorySummary {
   name: string;
   count: number;
@@ -52,7 +58,9 @@ export function summarizeCategories(vehicles: readonly Vehicle[], kind: VehicleT
   for (const name of taxonomy) {
     const inCategory = scoped.filter((vehicle) => vehicle.category === name);
     if (inCategory.length === 0) {
-      upcoming.push(name);
+      // « Automatique » et « 7 places » sont aussi des attributs : ne pas annoncer « Bientôt : Automatique »
+      // quand des voitures automatiques (rangées dans une autre catégorie) sont déjà en ligne
+      if (!ATTRIBUTE_CATEGORIES[name]?.(scoped)) upcoming.push(name);
       continue;
     }
     const visual = CATEGORY_VISUALS[name];
@@ -248,12 +256,14 @@ export function StyleExplorer({ vehicles, loading }: { vehicles: readonly Vehicl
       )}
 
       {!loading && current.upcoming.length > 0 && (
-        <p className="mt-5 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-          <span className="font-semibold text-slate-700">{styles.upcoming}</span>
-          {current.upcoming.map((name) => (
-            <span key={name} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-              {categoryLabel(t, name)}
-            </span>
+        // Simple mention, pas des pastilles bordées : identiques aux filtres cliquables, elles appelaient un clic sans effet
+        <p className="mt-5 text-xs leading-5 text-slate-500">
+          <span className="font-semibold text-slate-600">{styles.upcoming}</span>{' '}
+          {current.upcoming.map((name, index) => (
+            <Fragment key={name}>
+              {index > 0 && ', '}
+              <span>{categoryLabel(t, name)}</span>
+            </Fragment>
           ))}
         </p>
       )}

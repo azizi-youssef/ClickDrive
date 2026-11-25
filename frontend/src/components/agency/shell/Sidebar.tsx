@@ -1,5 +1,6 @@
 'use client';
-import { brandLogo } from '@/lib/brand/logo';
+import { AgencyLogoMark } from '@/components/agencies/AgencyLogoMark';
+import { BrandSymbol } from '@/components/shared/BrandLogo';
 
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
@@ -115,16 +116,20 @@ export function Sidebar({
       )}
     >
       <div className="flex h-16 items-center gap-3 border-b border-white/10 px-4">
+        {/* Logo de l'agence : même tuile uniforme que les cartes publiques (fond du fichier prolongé, dessin
+            entier) au lieu d'un recadrage object-cover qui coupait les logos larges. Sans logo : symbole
+            ClickDrive filtré en blanc, sans pastille, comme dans le pied de page. */}
         <div
           aria-hidden="true"
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white overflow-hidden border border-white/20 shadow-xs"
+          className={cn(
+            'relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl',
+            logoUrl && 'border border-white/20 bg-white shadow-xs'
+          )}
         >
           {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={agencyName} className="h-full w-full object-cover" />
+            <AgencyLogoMark slug="" name={agencyName} logoUrl={logoUrl} size={36} />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={brandLogo.src} alt="ClickDrive" className="h-full w-full object-contain p-1" />
+            <BrandSymbol tone="white" size={30} />
           )}
         </div>
         {!collapsed && (

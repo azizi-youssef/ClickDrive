@@ -15,13 +15,20 @@ import { GsapReveal } from '@/components/ui/react-bits';
 import { StyleExplorer } from '@/components/home/StyleExplorer';
 import type { RentalPeriod } from '@/lib/utils/date-only';
 import { calculateRentalDays } from '@/lib/utils/pricing';
+import { cn } from '@/lib/utils';
+
+/**
+ * L'accueil présente une sélection, pas le catalogue : 6 voitures (2 rangées) sur tablette et ordinateur,
+ * 4 sur téléphone (une carte mesure ~500 px de haut). Le reste est à un clic, filtre conservé.
+ */
+const FEATURED_LIMIT = 6;
+const MOBILE_FEATURED_LIMIT = 4;
 
 import {
   AlertCircle,
   ArrowRight,
   Motorbike,
   Car,
-  CheckCircle2,
   Clock3,
   FileText,
   MapPin,
@@ -128,6 +135,20 @@ export function HomeClient({
     const budgetMatch = budgetMax === 0 || v.daily_price <= budgetMax;
     return categoryMatch && budgetMatch;
   });
+  const visibleVehicles = featuredVehicles.slice(0, FEATURED_LIMIT);
+  const overflowsDesktop = featuredVehicles.length > FEATURED_LIMIT;
+  const overflowsMobile = featuredVehicles.length > MOBILE_FEATURED_LIMIT;
+  // Lien « voir tout » : catégorie réelle et dates reprises (le catalogue ne lit ni boîte, ni places, ni budget dans l'URL)
+  const catalogHref = (() => {
+    const query = new URLSearchParams();
+    if (vehicleFilter !== 'Tous' && !['Automatique', '7 places'].includes(vehicleFilter)) query.set('category', vehicleFilter);
+    if (period) {
+      query.set('startDate', period.startDate);
+      query.set('endDate', period.endDate);
+    }
+    const text = query.toString();
+    return text ? `/search?${text}` : '/search';
+  })();
 
   const totalAgencies = agencies.length;
 
@@ -210,20 +231,14 @@ export function HomeClient({
           </p>
 
           {/* Formulaire de recherche — visible et utilisable dès l'ouverture */}
-          <div className="mt-5 max-w-5xl sm:mt-7">
+          {/* id lu par l'en-tête : son bouton « Rechercher » reste neutre tant que ce formulaire est visible */}
+          <div id="hero-search" className="mt-5 max-w-5xl sm:mt-7">
             <SearchBar categories={heroCategories} onPeriodChange={setPeriod} />
           </div>
 
-          {/* Réassurance factuelle + liens secondaires */}
-          <div className="mt-5 flex max-w-5xl flex-col gap-4 text-[13px] text-slate-300 lg:flex-row lg:items-center lg:justify-between">
-            <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              {[t.hero.badgeVerified, t.hero.badgePickup].map((label) => (
-                <li key={label} className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                  {label}
-                </li>
-              ))}
-            </ul>
+          {/* Liens secondaires. La réassurance (agences vérifiées, aéroport/port) est portée par la barre
+              supérieure et la bande de confiance juste en dessous : pas de troisième répétition ici. */}
+          <div className="mt-5 max-w-5xl text-[13px]">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <Link
                 href="/about"
@@ -247,23 +262,25 @@ export function HomeClient({
           BANDE DE CONFIANCE UNIQUE — Fusionnée, lisible et factuelle
       ================================================================= */}
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          {/* Téléphone : grille 2 × 2, titres seuls (la bande tenait ~400 px en pile) ; détails à partir de 640 px */}
           <GsapReveal
             stagger
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-slate-100"
+            className="grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-6 lg:grid-cols-4 lg:gap-x-0 lg:divide-x lg:divide-slate-100"
           >
-            {unifiedTrustItems.map((item, idx) => {
+            {unifiedTrustItems.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className={`flex items-start gap-3.5 ${idx > 0 ? 'lg:pl-6' : ''}`}>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white shadow-sm">
-                    <Icon className="h-5 w-5 text-brand" />
+                // Marge des deux côtés du séparateur (le texte ne touche plus le filet vertical)
+                <div key={item.title} className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:gap-3.5 lg:px-6 lg:first:ps-0 lg:last:pe-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ink text-white shadow-sm sm:h-11 sm:w-11 sm:rounded-xl">
+                    <Icon className="h-4 w-4 text-brand sm:h-5 sm:w-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 leading-snug">
+                    <p className="text-[13px] font-bold leading-snug text-slate-900 sm:text-sm">
                       {item.title}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                    <p className="mt-1 hidden text-xs leading-relaxed text-slate-600 sm:block">
                       {item.description}
                     </p>
                   </div>
@@ -408,9 +425,9 @@ export function HomeClient({
               </Link>
             </div>
           ) : (
-            /* Grille de véhicules réelle */
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredVehicles.map((vehicle, index) => (
+            /* Sélection plafonnée (voir FEATURED_LIMIT) ; au-delà de 4 cartes, masquées sur téléphone */
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 max-sm:[&>*:nth-child(n+5)]:hidden">
+              {visibleVehicles.map((vehicle, index) => (
                 <VehicleCard
                   key={vehicle.id}
                   vehicle={vehicle}
@@ -422,11 +439,15 @@ export function HomeClient({
             </div>
           )}
 
-          <div className="mt-8 flex justify-center sm:hidden">
-            <Link href="/search" className="btn-primary px-5 py-3 text-sm">
-              {home.featured.seeAllCars} <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          {/* Suite de la sélection : nombre réel de voitures du filtre actif ; sur ordinateur, seulement s'il en reste */}
+          {dataLoaded && !hasError && featuredVehicles.length > 0 && (
+            <div className={cn('mt-8 flex justify-center', !overflowsDesktop && 'sm:hidden')}>
+              <Link href={catalogHref} className="btn-primary px-5 py-3 text-sm">
+                {overflowsMobile ? plural(featuredVehicles.length, home.featured.seeCount) : home.featured.seeAllCars}
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
