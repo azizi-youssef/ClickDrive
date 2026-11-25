@@ -128,10 +128,10 @@ export function HomeClient({
       vehicleFilter === 'Tous'
         ? true
         : vehicleFilter === 'Automatique'
-        ? v.transmission === 'AUTOMATIC'
-        : vehicleFilter === '7 places'
-        ? (v.seats ?? 0) >= 7
-        : v.category === vehicleFilter;
+          ? v.transmission === 'AUTOMATIC'
+          : vehicleFilter === '7 places'
+            ? (v.seats ?? 0) >= 7
+            : v.category === vehicleFilter;
     const budgetMatch = budgetMax === 0 || v.daily_price <= budgetMax;
     return categoryMatch && budgetMatch;
   });
@@ -209,7 +209,7 @@ export function HomeClient({
       <section className="relative isolate overflow-hidden bg-[#070B12] text-white">
         {/* Photo d'ambiance décorative : alt vide, chargée en priorité (élément LCP) */}
         <Image
-          src="/hero-nador.webp"
+          src="/hero-nador.png"
           alt=""
           fill
           priority
