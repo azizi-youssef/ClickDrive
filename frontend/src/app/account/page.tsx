@@ -218,9 +218,22 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20 text-slate-900">
       {/* ================================================================
-          1. PROFILE HEADER — Obsidian luxury styling with ambient depth
+          1. PROFILE HEADER — Obsidian luxury styling with ambient background
       ================================================================= */}
-      <div className="relative overflow-hidden bg-[#0B1220] text-white pt-10 pb-20 border-b border-white/10">
+      <div
+        className="relative overflow-hidden bg-[#0B1220] bg-cover bg-center text-white pt-10 pb-20 border-b border-white/10"
+        style={{ backgroundImage: "url('/account.jpg')" }}
+      >
+        {/* Luxury gradient overlays for high legibility */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-linear-to-r from-[#05080D]/92 via-[#05080D]/80 to-[#05080D]/65 rtl:bg-linear-to-l"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-linear-to-t from-[#0B1220] via-transparent to-transparent"
+        />
+
         {/* Subtle automotive radial glows */}
         <div
           aria-hidden="true"
