@@ -142,7 +142,7 @@ export function DeleteAgencyModal({
               </p>
               <p className="text-amber-800 leading-relaxed">
                 Cette agence possède des réservations enregistrées. Pour préserver les factures,
-                commissions et preuves contractuelles, <strong>l'agence sera archivée et suspendue</strong>,
+                abonnements et preuves contractuelles, <strong>l'agence sera archivée et suspendue</strong>,
                 ses accès seront immédiatement révoqués, mais ses données historiques resteront
                 consultables.
               </p>

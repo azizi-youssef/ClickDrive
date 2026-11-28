@@ -61,7 +61,6 @@ export const adminAuditQuerySchema = z.object({
 export const adminPlatformConfigSchema = z.object({
   maintenanceMode: z.boolean().default(false),
   registrationsEnabled: z.boolean().default(true),
-  defaultCommissionRate: z.coerce.number().min(0).max(100).default(15),
   supportPhone: z.string().trim().optional(),
   supportEmail: z.string().trim().email().optional(),
   emergencyBanner: z

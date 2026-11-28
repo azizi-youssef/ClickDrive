@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Vehicle } from '@/types';
-import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
+import { PLATFORM_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { formatNumber } from '@/lib/i18n/format';
 import { addDateDays, formatLocalDate, getEffectiveRentalDates, isValidDateOnly, type RentalPeriod } from '@/lib/utils/date-only';
@@ -416,7 +416,7 @@ export function BookingCard({ vehicle, requestedPeriod, onAvailabilityChange, de
         </ul>
 
         <a
-          href={`https://wa.me/${CLICKDRIVE_WHATSAPP_NUMBER}?text=${encodeURIComponent(fmt(c.whatsappQuestion, { vehicle: `${vehicle.brand} ${vehicle.model} (${vehicle.year})` }))}`}
+          href={`https://wa.me/${PLATFORM_WHATSAPP_NUMBER}?text=${encodeURIComponent(fmt(c.whatsappQuestion, { vehicle: `${vehicle.brand} ${vehicle.model} (${vehicle.year})` }))}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl text-[13px] font-semibold text-slate-600 transition-colors hover:text-ink"

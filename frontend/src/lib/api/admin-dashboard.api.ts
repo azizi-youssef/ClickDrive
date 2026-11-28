@@ -198,18 +198,6 @@ export async function patchAgencyVerification(
   }
 }
 
-export async function fetchCommissionRatePct(): Promise<number | null> {
-  const res = await fetch('/api/settings/commission', { cache: 'no-store' });
-  const body = (await res.json().catch(() => ({}))) as {
-    success?: boolean;
-    settings?: { commission_rate?: number };
-  };
-  if (body.success && body.settings?.commission_rate != null) {
-    return Number(body.settings.commission_rate);
-  }
-  return null;
-}
-
 export type HealthReport = {
   success: boolean;
   checks: Record<string, string>;

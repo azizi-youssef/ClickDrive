@@ -77,6 +77,8 @@ export const de: Translations = {
     yourSearch: 'Ihre Suche',
     editSearch: 'Suche bearbeiten',
     collapse: 'Einklappen',
+    edit: 'Ändern',
+    durationLabel: 'Dauer',
     allLocations: 'Alle Abholorte',
     airport: 'Flughafen Nador-Al Aroui (NDR)',
     port: 'Hafen Beni Ensar',
@@ -149,7 +151,7 @@ export const de: Translations = {
     mentions: 'Impressum & Rechtliches',
   },
   footer: {
-    tagline: 'Die führende Plattform für Autovermietung in Nador und der Region Oriental.',
+    tagline: 'Die führende Plattform für Autovermietung in Nador.',
     agencyBoxTitle: 'Sind Sie eine Autovermietung in Nador?',
     agencyBoxDesc: 'Treten Sie dem ClickDrive-Netzwerk bei, digitalisieren Sie Ihre Flotte und erhalten Sie qualifizierte Buchungen.',
     agencyBoxCta: 'Partneragentur werden',

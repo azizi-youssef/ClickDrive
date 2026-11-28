@@ -114,11 +114,11 @@ describe('Refus d’une demande par l’agence', () => {
 });
 
 describe('Montants du dossier', () => {
-  it('montant total et net agence, sans taux ni montant de commission', () => {
+  it('un seul montant : ni « net agence », ni taux, ni montant de commission (modèle par abonnement)', () => {
     render(<Workspace runAction={vi.fn()} />);
     const dossier = screen.getByRole('dialog', { name: 'Dossier CD-2026-755232' });
     expect(within(dossier).getByText('Montant total')).toBeInTheDocument();
-    expect(within(dossier).getByText('Net agence')).toBeInTheDocument();
+    expect(within(dossier).queryByText(/net agence/i)).not.toBeInTheDocument();
     expect(within(dossier).queryByText(/commission/i)).not.toBeInTheDocument();
     expect(within(dossier).queryByText(/15\s?%/)).not.toBeInTheDocument();
   });

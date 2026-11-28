@@ -9,7 +9,8 @@ async function fillAndSend() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Nom complet *'), 'Karim Benali');
   await user.type(screen.getByLabelText('Email *'), 'karim@example.com');
-  await user.selectOptions(screen.getByLabelText('Catégorie *'), 'reservation');
+  // Catégorie : cartes à choisir (boutons radio)
+  await user.click(screen.getByRole('radio', { name: /Demande d’information sur un véhicule/ }));
   await user.type(screen.getByLabelText('Message *'), 'Bonjour, une voiture automatique est-elle libre la semaine prochaine ?');
   await user.click(screen.getByRole('button', { name: /Envoyer le message/ }));
 }
@@ -46,5 +47,31 @@ describe('Page Contact — envoi réel', () => {
     expect(alert).toHaveTextContent('Envoi impossible pour le moment.');
     expect(screen.getByRole('link', { name: 'Écrire sur WhatsApp' })).toHaveAttribute('href', expect.stringContaining('https://wa.me/'));
     expect(screen.queryByText('Message bien reçu')).not.toBeInTheDocument();
+  });
+});
+
+describe('Page Contact — parcours', () => {
+  it('conseil adapté à la catégorie choisie, compteur avec minimum, focus sur le premier champ en erreur', async () => {
+    const user = userEvent.setup();
+    render(<ContactClient />);
+
+    // Aucune catégorie : envoi refusé, focus sur la première carte de catégorie
+    await user.click(screen.getByRole('button', { name: /Envoyer le message/ }));
+    expect(screen.getByText('Veuillez choisir une catégorie')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Demande d’information sur un véhicule/ })).toHaveFocus();
+
+    await user.click(screen.getByRole('radio', { name: /Problème technique/ }));
+    expect(screen.getByText(/Précisez la page concernée/)).toBeInTheDocument();
+
+    expect(screen.getByText('0 / 20 caractères minimum')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Message *'), 'La page ne charge pas sur mon téléphone.');
+    expect(screen.queryByText(/caractères minimum/)).not.toBeInTheDocument();
+  });
+
+  it('WhatsApp et e-mail accessibles dès le haut de la page', () => {
+    render(<ContactClient />);
+    const whatsappLinks = screen.getAllByRole('link', { name: 'Écrivez-nous sur WhatsApp' });
+    expect(whatsappLinks[0]).toHaveAttribute('href', expect.stringMatching(/^https:\/\/wa\.me\/212\d{9}\?text=/));
+    expect(screen.getAllByRole('link', { name: /contact@clickdrive\.ma/ })[0]).toHaveAttribute('href', 'mailto:contact@clickdrive.ma');
   });
 });

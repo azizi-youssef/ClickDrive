@@ -78,6 +78,8 @@ export const en: Translations = {
     yourSearch: 'Your search',
     editSearch: 'Edit search',
     collapse: 'Collapse',
+    edit: 'Edit',
+    durationLabel: 'Duration',
     allLocations: 'All pickup points',
     airport: 'Nador-Al Aroui Airport (NDR)',
     port: 'Beni Ansar Port',
@@ -150,7 +152,7 @@ export const en: Translations = {
     mentions: 'Legal notice',
   },
   footer: {
-    tagline: 'The reference platform for car rental in Nador and the Oriental region.',
+    tagline: 'The reference platform for car rental in Nador.',
     agencyBoxTitle: 'Are you an agency in Nador?',
     agencyBoxDesc: 'Join the ClickDrive network to digitise your fleet and receive qualified rental requests.',
     agencyBoxCta: 'Become a partner agency',

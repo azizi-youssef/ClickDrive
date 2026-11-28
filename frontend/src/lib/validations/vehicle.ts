@@ -4,7 +4,9 @@ import {
   ALL_VEHICLE_CATEGORIES,
   MOTORCYCLE_LICENSES,
   VEHICLE_TYPES,
+  LIGHT_MOTORCYCLE_MAX_CC,
   categoryMatchesType,
+  isLicenseConsistentWithEngineCc,
   type VehicleType,
 } from '@/lib/vehicles/kind';
 
@@ -99,6 +101,14 @@ export function vehicleKindIssues(vehicle: KindFields): string[] {
   }
   if (type === 'MOTORCYCLE') {
     if (vehicle.seats != null && vehicle.seats > 2) issues.push('Une moto compte 1 ou 2 places.');
+    // Cylindrée ↔ permis : ≤ 125 cm³ → A1 (AM ou B jusqu'à 50 cm³) ; > 125 cm³ → A2 ou A
+    if (!isLicenseConsistentWithEngineCc(vehicle.engine_cc, vehicle.license_required)) {
+      issues.push(
+        (vehicle.engine_cc ?? 0) > LIGHT_MOTORCYCLE_MAX_CC
+          ? `Une moto de plus de ${LIGHT_MOTORCYCLE_MAX_CC} cm³ exige le permis A2 ou A.`
+          : `Une moto de ${LIGHT_MOTORCYCLE_MAX_CC} cm³ ou moins relève du permis A1 (AM ou B jusqu'à 50 cm³).`
+      );
+    }
   } else {
     if (vehicle.seats != null && vehicle.seats < 2) issues.push('Une voiture compte au moins 2 places.');
     if (vehicle.doors != null && vehicle.doors < 2) issues.push('Une voiture compte au moins 2 portes.');

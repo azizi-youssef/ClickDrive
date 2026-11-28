@@ -420,7 +420,7 @@ export function AddAgencyModal({ isOpen, onClose, onSuccess }: AddAgencyModalPro
                     Email de connexion officiel <span className="text-danger">*</span>
                   </label>
                   <span className="text-[11px] text-slate-500">
-                    Format : <span className="font-mono text-amber-900">nom.agence@Clickdrive.ma</span>
+                    Format : <span className="font-mono text-amber-900">nom.agence@clickdrive.ma</span>
                   </span>
                 </div>s
                 <input

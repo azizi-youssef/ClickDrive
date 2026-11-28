@@ -243,7 +243,8 @@ export function CatalogFilters({
               onClick={() => onChange({ category: value })}
             >
               {value === ALL_CATEGORIES ? f.allCategories : categoryLabel(t, value)}
-              {count !== undefined && <span className="ms-1 font-medium opacity-70">({count})</span>}
+              {/* Compteur en graisse normale, sans transparence : contraste AA conservé */}
+              {count !== undefined && <span className="ms-1 font-medium">({count})</span>}
             </OptionChip>
           ))}
         </div>

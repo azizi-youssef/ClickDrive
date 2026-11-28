@@ -63,7 +63,7 @@ function stubApi() {
       const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
       if (p.endsWith('/analytics')) return json({ success: true, data: agencyReportJson() });
       if (p.endsWith('/dashboard')) {
-        return json({ data: { stats: { totalVehicles: 4, availableVehicles: 2, reservedVehicles: 0, rentedVehicles: 2, maintenanceVehicles: 0, pendingBookings: 1, confirmedBookings: 3, completedBookings: 9, cancelledBookings: 1, grossRevenue: 24000, platformCommission: 0, agencyNet: 24000, occupancyRate: 50 }, agenda: { upcomingPickups: [], upcomingReturns: [], recentActivity: [] } } });
+        return json({ data: { stats: { totalVehicles: 4, availableVehicles: 2, reservedVehicles: 0, rentedVehicles: 2, maintenanceVehicles: 0, pendingBookings: 1, confirmedBookings: 3, completedBookings: 9, cancelledBookings: 1, grossRevenue: 24000, occupancyRate: 50 }, agenda: { upcomingPickups: [], upcomingReturns: [], recentActivity: [] } } });
       }
       if (p.endsWith('/subscription')) return json({ success: true, data: SUBSCRIPTION });
       if (/\/bookings$/.test(p)) return json({ success: true, data: [BOOKING], meta: { page: 1, pageSize: 15, total: 1, totalPages: 1 } });
@@ -72,7 +72,7 @@ function stubApi() {
         return json({ success: true, data: { vehicles: [{ id: 'v1', brand: 'Dacia', model: 'Logan', licensePlate: '12345-A-1', category: 'Économique', status: 'AVAILABLE', dailyPrice: 350, primaryImage: null }], events: [] } });
       }
       if (p.endsWith('/finances')) {
-        return json({ success: true, data: { platformRate: 0, subscription: SUBSCRIPTION, kpis: { grossRevenue: 24000, platformCommission: 0, agencyNet: 24000, settledNet: 18000, pendingNet: 6000, totalBookingsCount: 4, completedBookingsCount: 3 }, transactions: [] } });
+        return json({ success: true, data: { subscription: SUBSCRIPTION, kpis: { revenue: 24000, settledRevenue: 18000, pendingRevenue: 6000, totalBookingsCount: 4, completedBookingsCount: 3 }, transactions: [] } });
       }
       if (p.startsWith('/api/bookings/')) return json({ booking: { ...BOOKING, events: [] } });
       return json({ success: true, data: [] });

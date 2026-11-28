@@ -59,7 +59,7 @@ export async function GET() {
         category: 'Administration Plateforme',
         permissions: [
           { name: 'Accès au Dashboard Super Admin', key: 'admin.access', roles: ['SUPER_ADMIN', 'ADMIN'] },
-          { name: 'Configuration du taux de commission', key: 'settings.commission', roles: ['SUPER_ADMIN'] },
+          { name: 'Gestion des abonnements et forfaits', key: 'settings.subscriptions', roles: ['SUPER_ADMIN'] },
           { name: 'Gestion des rôles & attributions RBAC', key: 'members.update_role', roles: ['SUPER_ADMIN'] },
           { name: 'Consultation des Audit Logs système', key: 'audit.read', roles: ['SUPER_ADMIN', 'ADMIN'] },
         ],

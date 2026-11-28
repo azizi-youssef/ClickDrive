@@ -24,9 +24,6 @@ export type AgencyBookingRow = {
   end_date: string;
   total_days: number | null;
   total_price: number;
-  commission_rate: number | null;
-  commission_amount: number | null;
-  agency_amount: number | null;
   status: string;
   created_at: string;
   vehicle: { id: string; brand: string; model: string; category: string | null } | null;

@@ -78,7 +78,7 @@ const PRO_PORTAL_COPY: Record<Exclude<LoginPortal, 'client'>, PortalCopy> = {
     eyebrow: 'Administration plateforme',
     title: 'Votre parc,',
     titleAccent: 'sous contrôle.',
-    copy: 'Validez les agences, la commission et la marketplace depuis l’administration.',
+    copy: 'Validez les agences, les abonnements et la marketplace depuis l’administration.',
     formSubtitle: 'Connectez-vous pour gérer la plateforme ClickDrive.',
     emailPlaceholder: 'admin@clickdrive.ma',
     emailLabel: 'Adresse e-mail',

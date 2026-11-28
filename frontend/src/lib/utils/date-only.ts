@@ -76,6 +76,17 @@ export function parseRentalPeriod(startDate: unknown, endDate: unknown): RentalP
   return { startDate, endDate };
 }
 
+/** Nombre de jours facturés d'une période (retour exclu) : 0 si la période est invalide */
+export function rentalDayCount(startDate: string, endDate: string): number {
+  const period = parseRentalPeriod(startDate, endDate);
+  if (!period) return 0;
+  const toUtc = (value: string) => {
+    const [year, month, day] = value.split('-').map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((toUtc(period.endDate) - toUtc(period.startDate)) / 86_400_000);
+}
+
 /** Paramètres d'adresse d'une période (« ?startDate=…&endDate=… »), ou chaîne vide si elle est invalide */
 export function rentalPeriodQuery(period: RentalPeriod | null | undefined): string {
   const valid = period ? parseRentalPeriod(period.startDate, period.endDate) : undefined;

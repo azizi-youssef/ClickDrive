@@ -1,6 +1,6 @@
 'use client';
 
-import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
+import { PLATFORM_WHATSAPP_NUMBER, whatsappUrl } from '@/lib/constants/contact';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from '@/components/i18n/LocalizedLink';
 import { findSameModelAlternatives } from '@/lib/availability/engine';
@@ -11,7 +11,7 @@ import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { formatDecimal, formatNumber } from '@/lib/i18n/format';
-import { categoryLabel, featureLabel, fuelLabel, licenseLabel as licenseText, transmissionLabel } from '@/lib/i18n/labels';
+import { categoryLabel, featureLabel, fuelLabel, licenseLabel as licenseText, locationLabel, transmissionLabel } from '@/lib/i18n/labels';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
 import type { Vehicle, Review } from '@/types';
 import {
@@ -182,14 +182,28 @@ export function CarDetailsClient({ slug, initialVehicle, alternativesPool, reque
 
   const agency = vehicle.agency;
   // Numéro de l'agence (WhatsApp, sinon téléphone) ; à défaut, l'assistance ClickDrive, jamais un numéro inventé
-  const agencyPhone = (agency?.whatsapp || agency?.phone || '').replace(/[^0-9]/g, '') || CLICKDRIVE_WHATSAPP_NUMBER;
-  const whatsappLink = `https://wa.me/${agencyPhone}?text=${encodeURIComponent(
-    fmt(isMoto ? c.whatsappMoto : c.whatsappCar, {
-      agency: agency?.name || 'ClickDrive',
-      vehicle: `${vehicle.brand} ${vehicle.model}`,
-      price: num(vehicle.daily_price),
-    })
-  )}`;
+  const agencyPhone = (agency?.whatsapp || agency?.phone || '').replace(/[^0-9]/g, '') || PLATFORM_WHATSAPP_NUMBER;
+  // Message pré-rempli contextuel : véhicule et prix, puis dates et lieu quand le client les a choisis
+  const whatsappLink = whatsappUrl(
+    [
+      fmt(isMoto ? c.whatsappMoto : c.whatsappCar, {
+        agency: agency?.name || 'ClickDrive',
+        vehicle: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`,
+        price: num(vehicle.daily_price),
+      }),
+      period && periodDays
+        ? fmt(c.whatsappDates, {
+            start: date(period.startDate, 'medium'),
+            end: date(period.endDate, 'medium'),
+            days: plural(periodDays, t.vehicle.days),
+          })
+        : null,
+      requestedLocation ? fmt(c.whatsappPlace, { location: locationLabel(t, requestedLocation) }) : null,
+    ]
+      .filter(Boolean)
+      .join(' '),
+    agencyPhone
+  );
 
   const handleShare = async () => {
     const url = window.location.href;

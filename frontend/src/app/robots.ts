@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { PREFIXED_LOCALES } from '@/lib/i18n/config';
+import { absoluteUrl, siteConfig } from '@/config/site';
 
 /** Espaces privés et liens signés, aussi sous les préfixes de langue (/nl/account, /ar/suivi/…) */
 const LOCALIZED_PRIVATE = PREFIXED_LOCALES.flatMap((locale) => [
@@ -52,7 +53,8 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/'],
       },
     ],
-    sitemap: 'https://clickdrive.ma/sitemap.xml',
-    host: 'https://clickdrive.ma',
+    // Domaine lu dans la config (NEXT_PUBLIC_SITE_URL) : suit automatiquement le passage à clickdrive.ma
+    sitemap: absoluteUrl('/sitemap.xml'),
+    host: siteConfig.url,
   };
 }

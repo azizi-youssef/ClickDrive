@@ -381,7 +381,7 @@ export function AdminOverviewClient({ initialStats, statsError }: Props) {
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
               <Sparkles className="h-3 w-3 text-amber-300" aria-hidden="true" />
-              Modèle abonnement · 0 % de commission
+              Modèle abonnement
             </span>
             <h2 id="admin-mrr" className="mt-4 text-sm font-semibold text-slate-400">
               Revenu récurrent mensuel

@@ -42,9 +42,7 @@ export function adminFinanceSheet(bookings: readonly Booking[]): XlsxSheet {
       { header: 'Agence', value: (b) => b.agency?.name ?? '' },
       { header: 'Début', format: 'date', value: (b) => b.start_date },
       { header: 'Fin', format: 'date', value: (b) => b.end_date },
-      { header: 'Total (DH)', format: 'money', value: (b) => b.total_price },
-      { header: 'Commission (DH)', format: 'money', value: (b) => b.commission_amount ?? 0 },
-      { header: 'Net agence (DH)', format: 'money', value: (b) => b.agency_amount ?? b.total_price },
+      { header: 'Montant (DH)', format: 'money', value: (b) => b.total_price },
       { header: 'Statut', value: (b) => businessStatus(b.status) },
     ],
     bookings
@@ -86,7 +84,6 @@ export interface AgencyTransactionExportRow {
   customerName: string;
   vehicle: string;
   totalPrice: number;
-  agencyAmount: number;
   status: string;
 }
 
@@ -100,7 +97,6 @@ export function agencyFinancesSheet(transactions: readonly AgencyTransactionExpo
       { header: 'Client', value: (t) => t.customerName },
       { header: 'Véhicule', value: (t) => t.vehicle },
       { header: 'Montant (DH)', format: 'money', value: (t) => t.totalPrice },
-      { header: 'Part agence (DH)', format: 'money', value: (t) => t.agencyAmount },
       { header: 'Statut', value: (t) => businessStatus(t.status) },
     ],
     transactions

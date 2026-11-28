@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Btn } from '@/components/admin/AdminUI';
 import { useModalDialog } from '@/lib/a11y/useModalDialog';
+import { absoluteUrl } from '@/config/site';
 
 interface AgencyCredentialsSuccessModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ Votre agence a été configurée avec succès sur la marketplace ClickDrive.
 Voici vos identifiants de connexion officiels :
 • E-mail : ${credentials.email}
 • Mot de passe temporaire : ${credentials.temporaryPassword}
-• Portail de connexion : https://clickdrive.ma/login?portal=agency
+• Portail de connexion : ${absoluteUrl('/login?portal=agency')}
 
 Pour votre sécurité, nous vous invitons à modifier votre mot de passe dès votre première connexion.
 Équipe ClickDrive — Nador & Oriental`;

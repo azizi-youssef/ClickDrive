@@ -6,14 +6,13 @@ import { ALL_SEO_SLUGS } from '@/lib/seo/landingPages';
 import { ALL_LOCALES } from '@/lib/i18n/config';
 import { alternateHrefs } from '@/lib/i18n/routing';
 
-const BASE_URL = 'https://clickdrive.ma';
+import { absoluteUrl } from '@/config/site';
 
 type Entry = MetadataRoute.Sitemap[number];
 type EntryOptions = Omit<Entry, 'url' | 'alternates'>;
 
-function absolute(path: string): string {
-  return path === '/' ? BASE_URL : `${BASE_URL}${path}`;
-}
+/** URL absolue d'une page (domaine de config/site.ts) */
+const absolute = absoluteUrl;
 
 /**
  * Une page traduite : une entrée par langue (français à la racine, /ar, /en, /de, /es, /nl, slugs

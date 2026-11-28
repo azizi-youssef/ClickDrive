@@ -11,7 +11,7 @@ const stats = (pendingBookings: number): OverviewResource => ({
   data: {
     totalVehicles: 12, availableVehicles: 4, reservedVehicles: 2, rentedVehicles: 5, maintenanceVehicles: 1,
     pendingBookings, confirmedBookings: 7, completedBookings: 41, cancelledBookings: 6,
-    grossRevenue: 98400, platformCommission: 0, agencyNet: 98400, occupancyRate: 42,
+    grossRevenue: 98400, occupancyRate: 42,
   },
 });
 const agenda: AgendaResource = { loading: false, error: null, data: { upcomingPickups: [], upcomingReturns: [], recentActivity: [] } };

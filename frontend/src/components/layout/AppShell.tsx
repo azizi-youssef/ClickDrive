@@ -10,15 +10,19 @@ import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import type { Locale } from '@/lib/i18n/config';
 import type { Messages } from '@/lib/i18n/messages';
 import { delocalizeHref } from '@/lib/i18n/routing';
+import type { FooterCatalog } from '@/lib/catalog/footer-categories';
 
 export function AppShell({
   children,
   locale,
   messages,
+  footerCategories = null,
 }: {
   children: React.ReactNode;
   locale: Locale;
   messages: Partial<Messages>;
+  /** Catégories qui contiennent des véhicules (null : catalogue indisponible) */
+  footerCategories?: FooterCatalog | null;
 }) {
   // Chemin français canonique : /nl/login se met en page comme /login
   const rawPathname = usePathname();
@@ -60,7 +64,7 @@ export function AppShell({
             {children}
           </main>
 
-          <Footer />
+          <Footer catalog={footerCategories} />
 
           {/* Mobile / tablette : navigation inférieure (4 destinations) */}
           {!hasOwnBottomBar && <BottomNav />}

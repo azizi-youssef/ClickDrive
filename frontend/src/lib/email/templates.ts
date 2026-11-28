@@ -1,6 +1,6 @@
 import type { EmailMessage } from './send';
 import { bookingNextStepHint } from '@/lib/bookings/status';
-import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
+import { PLATFORM_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import type { Locale } from '@/lib/i18n/config';
 import { formatDate as formatLocaleDate, formatMoney, interpolate, plural } from '@/lib/i18n/format';
 import { CUSTOMER_EMAIL_COPY, type CustomerEmailCopy } from './customer-copy';
@@ -51,7 +51,7 @@ function formatDate(value: unknown, locale: Locale = 'fr'): string {
 function layout(title: string, bodyHtml: string, locale: Locale = 'fr'): string {
   const copy = copyFor(locale);
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
-  const footer = interpolate(copy.footer, { whatsapp: CLICKDRIVE_WHATSAPP_NUMBER });
+  const footer = interpolate(copy.footer, { whatsapp: PLATFORM_WHATSAPP_NUMBER });
   return `<!doctype html><html lang="${copy.htmlLang}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(title)}</title></head>
 <body style="margin:0;background:#f5f6f8;font-family:Arial,Helvetica,sans-serif;color:#0b1220">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:24px 12px"><tr><td align="center">

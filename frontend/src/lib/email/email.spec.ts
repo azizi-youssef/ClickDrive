@@ -152,7 +152,7 @@ describe('Gabarits d’e-mails', () => {
     expect(arabic?.html).toContain('<html lang="ar" dir="rtl">');
     expect(arabic?.subject).toBe('الحجز CD-2026-123456: مؤكد');
     // Chiffres latins, comme sur le site
-    expect(arabic?.text).toMatch(/1[\s ,.]?050 MAD/);
+    expect(arabic?.text).toMatch(/1[\s ,.]?050\sMAD/); // espace insécable avant la devise (formatMoney)
 
     const agency = bookingNewAgencyEmail({ ...booking, status: 'PENDING', locale: 'nl', dashboardUrl: 'https://clickdrive.ma/agency' });
     expect(agency.subject).toBe('Nouvelle demande CD-2026-123456 — Renault Clio 2025');

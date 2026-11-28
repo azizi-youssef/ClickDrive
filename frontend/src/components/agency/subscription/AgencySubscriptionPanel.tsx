@@ -17,7 +17,7 @@ import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/
 import { PendingPlanChangeBanner } from './PendingPlanChangeBanner';
 import { FleetCapacityCard } from './FleetCapacityCard';
 import { AgencySubscriptionModal } from './AgencySubscriptionModal';
-import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { platformWhatsAppUrl } from '@/lib/constants/contact';
 
 interface Props {
   agencyId: string;
@@ -101,7 +101,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
           {/* Le titre de page (« Forfait et capacité ») suffit : pas de second titre qui le répète */}
           <p className="text-sm text-slate-500">
             <Sparkles className="me-1.5 inline h-4 w-4 -translate-y-px text-accent-text" aria-hidden="true" />
-            Gérez votre capacité de véhicules et profitez de <strong>0 % de commission</strong> sur toutes vos réservations.
+            Gérez votre capacité de véhicules : <strong>le montant de vos réservations vous revient entièrement</strong>.
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
           </div>
           <p className="mt-1 text-xs text-emerald-700 font-semibold flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
-            0 % de commission prélevée
+Vos locations vous reviennent en totalité
           </p>
         </div>
 
@@ -195,7 +195,7 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
         </div>
       </div>
 
-      {/* Rassurance Modèle 0% commission */}
+      {/* Rassurance : le montant des locations revient entièrement à l'agence (modèle par abonnement) */}
       <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-linear-to-r from-emerald-50/80 via-white to-teal-50/40 p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
@@ -204,16 +204,16 @@ export function AgencySubscriptionPanel({ agencyId }: Props) {
             </div>
             <div>
               <h2 className={heading.block}>
-                100 % de vos gains locatifs vous reviennent
+                Vos gains locatifs vous reviennent en totalité
               </h2>
               <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
                 ClickDrive fonctionne avec un forfait mensuel fixe calculé selon la capacité de votre flotte.
-                Aucune commission n’est prélevée sur le montant payé par les clients : vous encaissez directement la totalité de vos locations.
+                Rien n’est prélevé sur le montant payé par les clients : vous encaissez directement la totalité de vos locations.
               </p>
             </div>
           </div>
           <a
-            href={clickdriveWhatsAppUrl('Bonjour, je souhaite des informations sur les abonnements ClickDrive')}
+            href={platformWhatsAppUrl('Bonjour, je souhaite des informations sur les abonnements ClickDrive')}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"

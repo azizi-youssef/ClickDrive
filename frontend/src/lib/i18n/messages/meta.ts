@@ -11,7 +11,7 @@ const fr = {
   siteTitle: 'ClickDrive — Location de voitures à Nador',
   siteDescription:
     'Comparez les voitures et motos des agences de location de Nador : aéroport Nador-Al Aroui, port de Beni Ansar et centre-ville. Demande gratuite en ligne.',
-  shareDescription: "Comparez les voitures disponibles à Nador et réservez auprès d'agences locales.",
+  shareDescription: "Comparez les voitures disponibles à Nador et envoyez votre demande aux agences locales.",
   ogLocale: 'fr_MA',
   pages: {
     search: {
@@ -101,7 +101,7 @@ export const meta: Record<Locale, MetaMessages> = {
     siteTitle: 'ClickDrive — Car rental in Nador',
     siteDescription:
       'Compare cars and motorbikes from rental agencies in Nador: Nador-Al Aroui airport, Beni Ansar port and the city centre. Free online request.',
-    shareDescription: 'Compare the cars available in Nador and book with local agencies.',
+    shareDescription: 'Compare the cars available in Nador and send your request to local agencies.',
     ogLocale: 'en_GB',
     pages: {
       search: {
@@ -185,7 +185,7 @@ export const meta: Record<Locale, MetaMessages> = {
     siteTitle: 'ClickDrive — Alquiler de coches en Nador',
     siteDescription:
       'Compara coches y motos de las agencias de alquiler de Nador: aeropuerto Nador-Al Aroui, puerto de Beni Ansar y centro. Solicitud gratuita en línea.',
-    shareDescription: 'Compara los coches disponibles en Nador y reserva con agencias locales.',
+    shareDescription: 'Compara los coches disponibles en Nador y envía tu solicitud a agencias locales.',
     ogLocale: 'es_ES',
     pages: {
       search: {
@@ -269,7 +269,7 @@ export const meta: Record<Locale, MetaMessages> = {
     siteTitle: 'ClickDrive — Mietwagen in Nador',
     siteDescription:
       'Vergleichen Sie Autos und Motorräder der Vermieter in Nador: Flughafen Nador-Al Aroui, Hafen Beni Ansar und Zentrum. Kostenlose Online-Anfrage.',
-    shareDescription: 'Vergleichen Sie die verfügbaren Autos in Nador und buchen Sie bei lokalen Vermietern.',
+    shareDescription: 'Vergleichen Sie die verfügbaren Autos in Nador und senden Sie Ihre Anfrage an lokale Vermieter.',
     ogLocale: 'de_DE',
     pages: {
       search: {
@@ -353,7 +353,7 @@ export const meta: Record<Locale, MetaMessages> = {
     siteTitle: 'ClickDrive — Auto huren in Nador',
     siteDescription:
       'Vergelijk auto’s en motoren van verhuurbedrijven in Nador: luchthaven Nador-Al Aroui, haven Beni Ansar en het centrum. Gratis online aanvraag.',
-    shareDescription: 'Vergelijk de beschikbare auto’s in Nador en boek bij lokale verhuurbedrijven.',
+    shareDescription: 'Vergelijk de beschikbare auto’s in Nador en stuur je aanvraag naar lokale verhuurbedrijven.',
     ogLocale: 'nl_NL',
     pages: {
       search: {
@@ -437,7 +437,7 @@ export const meta: Record<Locale, MetaMessages> = {
     siteTitle: 'ClickDrive — كراء السيارات في الناظور',
     siteDescription:
       'قارن السيارات والدراجات النارية لدى وكالات الكراء في الناظور: مطار الناظور العروي، ميناء بني انصار ووسط المدينة. طلب مجاني عبر الإنترنت.',
-    shareDescription: 'قارن السيارات المتوفرة في الناظور واحجز لدى الوكالات المحلية.',
+    shareDescription: 'قارن السيارات المتوفرة في الناظور وأرسل طلبك إلى الوكالات المحلية.',
     ogLocale: 'ar_MA',
     pages: {
       search: {

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import Link from '@/components/i18n/LocalizedLink';
 import { ChevronRight, Scale } from 'lucide-react';
-import { LEGAL_IDENTIFIERS, clickdrivePhoneDisplay } from '@/lib/constants/legal';
+import { LEGAL_IDENTIFIERS, formatPhoneDisplay } from '@/lib/constants/legal';
 import { legalPageMetadata } from '@/lib/i18n/server';
 import { LegalFrenchText } from '@/components/legal/LegalFrenchText';
+import { siteConfig } from '@/config/site';
+import { CONTACT_EMAIL, PRIVACY_EMAIL } from '@/lib/constants/contact';
 
 export async function generateMetadata(): Promise<Metadata> {
   return legalPageMetadata('legal', '/mentions-legales');
@@ -46,9 +48,9 @@ export default function MentionsLegalesPage() {
                 { label: 'Forme juridique', value: 'Entreprise individuelle' },
                 { label: 'Responsable de la publication', value: 'Youssef Azizi' },
                 { label: 'Adresse', value: 'Nador, Région de l\'Oriental, Maroc' },
-                { label: 'Email', value: 'contact@clickdrive.ma' },
-                { label: 'Téléphone / WhatsApp', value: clickdrivePhoneDisplay() },
-                { label: 'Site web', value: 'https://clickdrive.ma' },
+                { label: 'Email', value: CONTACT_EMAIL },
+                { label: 'Téléphone / WhatsApp', value: formatPhoneDisplay() },
+                { label: 'Site web', value: siteConfig.url },
                 // Identifiants légaux : affichés dès qu'ils sont renseignés dans lib/constants/legal.ts
                 ...([
                   { label: 'ICE', value: LEGAL_IDENTIFIERS.ice },
@@ -100,8 +102,8 @@ export default function MentionsLegalesPage() {
               <Paragraph>
                 Pour toute demande relative à vos données personnelles (accès, rectification,
                 suppression), contactez-nous à{' '}
-                <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">
-                  privacy@clickdrive.ma
+                <a href={`mailto:${PRIVACY_EMAIL}`} className="text-accent-text hover:underline font-semibold">
+                  {PRIVACY_EMAIL}
                 </a>.
               </Paragraph>
               <Paragraph>
@@ -159,7 +161,7 @@ export default function MentionsLegalesPage() {
               </Paragraph>
               <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
                 <li>
-                  📧 <a href="mailto:contact@clickdrive.ma" className="text-accent-text hover:underline font-semibold">contact@clickdrive.ma</a>
+                  📧 <a href={`mailto:${CONTACT_EMAIL}`} className="text-accent-text hover:underline font-semibold">{CONTACT_EMAIL}</a>
                 </li>
                 <li>
                   📍 Nador, Région de l&apos;Oriental, Maroc

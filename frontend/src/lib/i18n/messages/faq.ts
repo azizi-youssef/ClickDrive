@@ -49,9 +49,9 @@ const fr = {
         'Vous pouvez commencer votre recherche depuis la page Véhicules en indiquant vos dates et vos critères. Vous pouvez ensuite consulter les modèles disponibles, comparer les caractéristiques et ouvrir la fiche d’un véhicule pour obtenir davantage d’informations.',
     },
     reserver: {
-      question: 'Comment réserver un véhicule ?',
+      question: 'Comment envoyer une demande de location ?',
       answer:
-        'Après avoir choisi un véhicule et vos dates, cliquez sur « Réserver ce véhicule » et complétez votre demande avec vos coordonnées ; la pièce d’identité et le permis peuvent être présentés plus tard, en original, à la remise des clés. ClickDrive transmet votre demande à l’agence partenaire, qui confirme la disponibilité. Si elle tarde à répondre, ClickDrive la relance puis vous propose des véhicules équivalents.',
+        'Après avoir choisi un véhicule et vos dates, cliquez sur « Envoyer une demande » et complétez votre demande avec vos coordonnées ; la pièce d’identité et le permis peuvent être présentés plus tard, en original, à la remise des clés. ClickDrive transmet votre demande à l’agence partenaire, qui confirme la disponibilité. Si elle tarde à répondre, ClickDrive la relance puis vous propose des véhicules équivalents.',
     },
     disponibilite: {
       question: 'Comment fonctionne la disponibilité des véhicules ?',
@@ -144,7 +144,7 @@ export const faq: Record<Locale, FaqMessages> = {
       reserver: {
         question: 'How do I book a vehicle?',
         answer:
-          'Once you have chosen a vehicle and your dates, click “Book this vehicle” and complete your request with your contact details; your ID and driving licence can be shown later, in the original, when you collect the keys. ClickDrive passes your request to the partner agency, which confirms availability. If it is slow to reply, ClickDrive reminds it and then suggests equivalent vehicles.',
+          'Once you have chosen a vehicle and your dates, click “Send a request” and complete your request with your contact details; your ID and driving licence can be shown later, in the original, when you collect the keys. ClickDrive passes your request to the partner agency, which confirms availability. If it is slow to reply, ClickDrive reminds it and then suggests equivalent vehicles.',
       },
       disponibilite: {
         question: 'How does vehicle availability work?',
@@ -232,7 +232,7 @@ export const faq: Record<Locale, FaqMessages> = {
       reserver: {
         question: '¿Cómo reservo un vehículo?',
         answer:
-          'Después de elegir un vehículo y tus fechas, haz clic en «Reservar este vehículo» y completa tu solicitud con tus datos de contacto; el documento de identidad y el permiso pueden presentarse más tarde, en original, al recoger las llaves. ClickDrive envía tu solicitud a la agencia asociada, que confirma la disponibilidad. Si tarda en responder, ClickDrive se lo recuerda y luego te propone vehículos equivalentes.',
+          'Después de elegir un vehículo y tus fechas, haz clic en «Enviar una solicitud» y completa tu solicitud con tus datos de contacto; el documento de identidad y el permiso pueden presentarse más tarde, en original, al recoger las llaves. ClickDrive envía tu solicitud a la agencia asociada, que confirma la disponibilidad. Si tarda en responder, ClickDrive se lo recuerda y luego te propone vehículos equivalentes.',
       },
       disponibilite: {
         question: '¿Cómo funciona la disponibilidad de los vehículos?',
@@ -320,7 +320,7 @@ export const faq: Record<Locale, FaqMessages> = {
       reserver: {
         question: 'Wie buche ich ein Fahrzeug?',
         answer:
-          'Wählen Sie ein Fahrzeug und Ihre Daten, klicken Sie auf „Dieses Fahrzeug buchen“ und vervollständigen Sie Ihre Anfrage mit Ihren Kontaktdaten; Ausweis und Führerschein können Sie später im Original bei der Schlüsselübergabe vorlegen. ClickDrive leitet Ihre Anfrage an den Partnervermieter weiter, der die Verfügbarkeit bestätigt. Antwortet er nicht rechtzeitig, erinnert ClickDrive ihn und schlägt Ihnen dann gleichwertige Fahrzeuge vor.',
+          'Wählen Sie ein Fahrzeug und Ihre Daten, klicken Sie auf „Anfrage senden“ und vervollständigen Sie Ihre Anfrage mit Ihren Kontaktdaten; Ausweis und Führerschein können Sie später im Original bei der Schlüsselübergabe vorlegen. ClickDrive leitet Ihre Anfrage an den Partnervermieter weiter, der die Verfügbarkeit bestätigt. Antwortet er nicht rechtzeitig, erinnert ClickDrive ihn und schlägt Ihnen dann gleichwertige Fahrzeuge vor.',
       },
       disponibilite: {
         question: 'Wie funktioniert die Verfügbarkeit der Fahrzeuge?',
@@ -408,7 +408,7 @@ export const faq: Record<Locale, FaqMessages> = {
       reserver: {
         question: 'Hoe reserveer ik een voertuig?',
         answer:
-          'Kies een voertuig en je data, klik op ‘Dit voertuig reserveren’ en vul je aanvraag aan met je contactgegevens; je identiteitsbewijs en rijbewijs kun je later in het origineel tonen bij de sleuteloverdracht. ClickDrive stuurt je aanvraag naar de partnerverhuurder, die de beschikbaarheid bevestigt. Reageert die niet snel genoeg, dan herinnert ClickDrive hem eraan en stelt je daarna vergelijkbare voertuigen voor.',
+          'Kies een voertuig en je data, klik op ‘Aanvraag versturen’ en vul je aanvraag aan met je contactgegevens; je identiteitsbewijs en rijbewijs kun je later in het origineel tonen bij de sleuteloverdracht. ClickDrive stuurt je aanvraag naar de partnerverhuurder, die de beschikbaarheid bevestigt. Reageert die niet snel genoeg, dan herinnert ClickDrive hem eraan en stelt je daarna vergelijkbare voertuigen voor.',
       },
       disponibilite: {
         question: 'Hoe werkt de beschikbaarheid van de voertuigen?',
@@ -503,7 +503,7 @@ export const faq: Record<Locale, FaqMessages> = {
       reserver: {
         question: 'كيف أحجز مركبة؟',
         answer:
-          'بعد اختيار مركبة وتواريخك، انقر على «احجز هذه المركبة» وأكمل طلبك بمعلومات الاتصال؛ ويمكن تقديم وثيقة الهوية والرخصة لاحقاً بالأصل عند تسلم المفاتيح. يحيل ClickDrive طلبك إلى الوكالة الشريكة التي تؤكد التوفر. وإذا تأخرت في الرد، يذكّرها ClickDrive ثم يقترح عليك مركبات مماثلة.',
+          'بعد اختيار مركبة وتواريخك، انقر على «أرسل طلبًا» وأكمل طلبك بمعلومات الاتصال؛ ويمكن تقديم وثيقة الهوية والرخصة لاحقاً بالأصل عند تسلم المفاتيح. يحيل ClickDrive طلبك إلى الوكالة الشريكة التي تؤكد التوفر. وإذا تأخرت في الرد، يذكّرها ClickDrive ثم يقترح عليك مركبات مماثلة.',
       },
       disponibilite: {
         question: 'كيف يُدار توفر المركبات؟',

@@ -12,6 +12,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { detectInboundIntent, extractBookingReference, whatsappService } from './whatsapp.service';
+import { PLATFORM_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 
 const CUSTOMER_PHONE = '0612345678';
 const CUSTOMER_WA = '212612345678';
@@ -183,7 +184,7 @@ describe('Dossier associé au seul titulaire du numéro', () => {
 
   it('le numéro d’assistance est celui de la plateforme', async () => {
     const result = await inbound('AIDE');
-    expect(result.replySent).toContain('+212767137136');
+    expect(result.replySent).toContain(`+${PLATFORM_WHATSAPP_NUMBER}`);
     expect(result.replySent).not.toContain('661-987654');
   });
 });

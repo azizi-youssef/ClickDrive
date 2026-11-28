@@ -55,7 +55,7 @@ const fr = {
     },
     {
       title: 'Des agences partenaires identifiées',
-      description: 'Chaque agence et chaque véhicule sont présentés avec des informations claires, pour réserver en confiance.',
+      description: 'Chaque agence et chaque véhicule sont présentés avec des informations claires, pour choisir en confiance.',
     },
     {
       title: 'Une alternative si votre modèle est indisponible',

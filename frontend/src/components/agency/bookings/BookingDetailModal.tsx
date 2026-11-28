@@ -211,7 +211,7 @@ export function BookingDetailModal({
 
   // Numéro de téléphone pour WhatsApp
   const cleanPhone = loaded.customer_phone ? loaded.customer_phone.replace(/[^0-9]/g, '') : null;
-  const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=Bonjour%20${encodeURIComponent(loaded.customer_name)},%20concernant%20votre%20demande%20de%20r%C3%A9servation%20${encodeURIComponent(refCode)}%20sur%20KlickDrive` : null;
+  const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=Bonjour%20${encodeURIComponent(loaded.customer_name)},%20concernant%20votre%20demande%20de%20r%C3%A9servation%20${encodeURIComponent(refCode)}%20sur%20ClickDrive` : null;
 
   return (
     <Modal
@@ -481,24 +481,13 @@ export function BookingDetailModal({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            {/* Montant total */}
-            <div className="flex flex-col gap-1 p-5">
-              <span className={eyebrowMuted}>Montant total</span>
-              <p className="text-2xl font-extrabold tabular-nums text-slate-900">
-                {money(loaded.total_price)}
-              </p>
-              <p className="text-xs text-slate-400">Total client pour {loaded.total_days || 1} jour(s)</p>
-            </div>
-
-            {/* Net Agence (mis en valeur) */}
-            <div className="flex flex-col gap-1 bg-emerald-50/60 p-5">
-              <span className={cn(eyebrow, 'text-emerald-700')}>Net agence</span>
-              <p className="text-2xl font-extrabold tabular-nums text-emerald-800">
-                {money(loaded.agency_amount)}
-              </p>
-              <p className="text-xs font-medium text-emerald-700">Montant net perçu par votre agence</p>
-            </div>
+          {/* Un seul montant : aucune commission (modèle par abonnement), il revient entièrement à l'agence */}
+          <div className="flex flex-col gap-1 p-5">
+            <span className={eyebrowMuted}>Montant total</span>
+            <p className="text-2xl font-extrabold tabular-nums text-slate-900">
+              {money(loaded.total_price)}
+            </p>
+            <p className="text-xs text-slate-400">Total client pour {loaded.total_days || 1} jour(s)</p>
           </div>
         </section>
 

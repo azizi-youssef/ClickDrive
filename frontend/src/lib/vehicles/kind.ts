@@ -26,6 +26,24 @@ export type MotorcycleCategory = (typeof MOTORCYCLE_CATEGORIES)[number];
 
 export const ALL_VEHICLE_CATEGORIES = [...CAR_CATEGORIES, ...MOTORCYCLE_CATEGORIES] as const;
 
+/**
+ * Catégorie de véhicule : énumération unique (valeurs de la contrainte SQL `vehicles_category_check`)
+ * partagée par la recherche, les filtres, les cartes, le pied de page et la section « Bientôt ».
+ */
+export type VehicleCategory = (typeof ALL_VEHICLE_CATEGORIES)[number];
+
+const ALL_CATEGORY_SET = new Set<string>(ALL_VEHICLE_CATEGORIES);
+
+export function isVehicleCategory(value: unknown): value is VehicleCategory {
+  return typeof value === 'string' && ALL_CATEGORY_SET.has(value);
+}
+
+/**
+ * Catégories voitures qui sont des attributs plutôt que des gammes (« Automatique » = boîte,
+ * « 7 places » = capacité) : jamais annoncées seules dans « Bientôt » ni dans le pied de page.
+ */
+export const ATTRIBUTE_CATEGORIES: readonly VehicleCategory[] = ['Automatique', '7 places'];
+
 /** Permis exigé par l'agence pour une moto (choisi par l'agence, affiché tel quel au client) */
 export const MOTORCYCLE_LICENSES = ['AM', 'A1', 'A2', 'A', 'B'] as const;
 export type MotorcycleLicense = (typeof MOTORCYCLE_LICENSES)[number];
@@ -37,6 +55,38 @@ export const MOTORCYCLE_LICENSE_LABELS: Record<MotorcycleLicense, string> = {
   A: 'Permis A',
   B: 'Permis B (voiture)',
 };
+
+/** Cylindrée maximale d'une moto légère (permis A1) */
+export const LIGHT_MOTORCYCLE_MAX_CC = 125;
+/** Cylindrée maximale d'un cyclomoteur (permis AM) */
+export const MOPED_MAX_CC = 50;
+
+/**
+ * Permis cohérents avec une cylindrée :
+ * - jusqu'à 50 cm³ : AM, A1 ou B ;
+ * - de 51 à 125 cm³ : A1 ;
+ * - au-delà de 125 cm³ : A2 ou A.
+ */
+export function licensesForEngineCc(engineCc: number): readonly MotorcycleLicense[] {
+  if (engineCc <= MOPED_MAX_CC) return ['AM', 'A1', 'B'];
+  if (engineCc <= LIGHT_MOTORCYCLE_MAX_CC) return ['A1'];
+  return ['A2', 'A'];
+}
+
+/** Permis proposé par défaut pour une cylindrée (pré-remplissage du formulaire agence) */
+export function defaultLicenseForEngineCc(engineCc: number): MotorcycleLicense {
+  if (engineCc <= MOPED_MAX_CC) return 'AM';
+  return engineCc <= LIGHT_MOTORCYCLE_MAX_CC ? 'A1' : 'A';
+}
+
+/** Vrai quand le permis exigé est compatible avec la cylindrée (ou qu'une des deux valeurs manque) */
+export function isLicenseConsistentWithEngineCc(
+  engineCc: number | null | undefined,
+  license: string | null | undefined
+): boolean {
+  if (engineCc == null || !Number.isFinite(engineCc) || engineCc <= 0 || !license) return true;
+  return (licensesForEngineCc(engineCc) as readonly string[]).includes(license);
+}
 
 export const VEHICLE_TYPE_LABELS: Record<VehicleType, { singular: string; plural: string; article: string }> = {
   CAR: { singular: 'Voiture', plural: 'Voitures', article: 'cette voiture' },

@@ -3,7 +3,6 @@ import {
   monetaryAmountSchema,
   createPaymentSchema,
   updatePaymentStatusSchema,
-  commissionSettingsSchema,
 } from './payment';
 
 describe('Payment Validations', () => {
@@ -63,22 +62,6 @@ describe('Payment Validations', () => {
         transactionReference: 'CMI-TX-998877',
       });
       expect(res.success).toBe(true);
-    });
-  });
-
-  describe('commissionSettingsSchema', () => {
-    it('validates commission percentages between 0 and 100', () => {
-      expect(
-        commissionSettingsSchema.safeParse({
-          commissionRatePercent: 15,
-        }).success
-      ).toBe(true);
-
-      expect(
-        commissionSettingsSchema.safeParse({
-          commissionRatePercent: 120, // > 100%
-        }).success
-      ).toBe(false);
     });
   });
 });

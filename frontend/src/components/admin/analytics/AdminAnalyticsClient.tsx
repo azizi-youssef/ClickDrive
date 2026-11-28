@@ -132,7 +132,7 @@ function MrrBanner({ report }: { report: AdminAnalyticsReport }) {
         <div>
           <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Modèle forfaits mensuels · 0 % de commission
+            Modèle forfaits mensuels
           </div>
           <h2 id="mrr-overview-title" className={cn(eyebrow, 'text-slate-400')}>
             Revenu récurrent mensuel (MRR plateforme)

@@ -77,6 +77,8 @@ export const ar: Translations = {
     yourSearch: 'بحثك',
     editSearch: 'تعديل البحث',
     collapse: 'طي',
+    edit: 'تعديل',
+    durationLabel: 'المدة',
     allLocations: 'جميع مواقع الاستلام',
     airport: 'مطار الناظور العروي (NDR)',
     port: 'ميناء بني انصار',
@@ -149,7 +151,7 @@ export const ar: Translations = {
     mentions: 'الشروط القانونية',
   },
   footer: {
-    tagline: 'المنصة الأولى المرجعية لتأجير السيارات في الناظور والجهة الشرقية.',
+    tagline: 'المنصة المرجعية لتأجير السيارات في الناظور.',
     agencyBoxTitle: 'هل تمتلك وكالة كراء سيارات بالناظور؟',
     agencyBoxDesc: 'انضم لشبكة كاردرايف لترقية أسطولك رقمياً واستقبال طلبات حجز موثوقة ومباشرة.',
     agencyBoxCta: 'انضم كوكالة شريكة',

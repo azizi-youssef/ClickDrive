@@ -5,7 +5,7 @@ import { isPlatformAdminRole } from '@clickdrive/shared/booking-state-machine';
 import { getServerAuth, hasAccessPermission } from '@/lib/auth/server';
 import { bookingsService } from '@/lib/services/bookings.service';
 import { bookingRequestSchema } from '@/lib/validations/booking';
-import { CLICKDRIVE_WHATSAPP_NUMBER } from '@/lib/constants/contact';
+import { PLATFORM_WHATSAPP_NUMBER } from '@/lib/constants/contact';
 import {
   checkDistributedRateLimit,
   checkRateLimit,
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     const { notificationService } = await import('@/lib/services/notification.service');
     const agencyWhatsAppMessage = notificationService.formatAgencyWhatsAppMessage(result.booking, appUrl);
     // Numéro réel de l'agence ; à défaut, l'assistance ClickDrive (jamais un numéro fictif)
-    const agencyPhone = result.booking.agency?.whatsapp || result.booking.agency?.phone || CLICKDRIVE_WHATSAPP_NUMBER;
+    const agencyPhone = result.booking.agency?.whatsapp || result.booking.agency?.phone || PLATFORM_WHATSAPP_NUMBER;
     const agencyWhatsAppUrl = notificationService.generateWhatsAppLink(agencyPhone, agencyWhatsAppMessage);
     const pdfUrl = `${appUrl}${signedBookingPdfPath(result.booking.reference || '')}`;
     const trackingPath = signedBookingLink('track', result.booking.reference || '');

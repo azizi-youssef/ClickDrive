@@ -5,13 +5,17 @@ import { CORE_NAMESPACES, pickMessages } from '@/lib/i18n/messages';
 
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
+import { siteConfig } from '@/config/site';
+import { openingHoursJsonLd } from '@/lib/constants/contact';
+import { PICKUP_LOCATIONS } from '@/data/locations';
+import { getFooterCategories } from '@/lib/catalog/footer-categories';
 import { Analytics } from '@/components/analytics/Analytics';
 
-const SITE_URL = 'https://clickdrive.ma';
-const SITE_NAME = 'ClickDrive';
-const SITE_TITLE = 'ClickDrive — Location de voitures à Nador';
-const SITE_DESCRIPTION =
-  "Comparez les voitures et motos des agences de location de Nador : aéroport Nador-Al Aroui, port de Beni Ansar et centre-ville. Demande gratuite en ligne.";
+// Nom, slogan, domaine et coordonnées : source unique src/config/site.ts
+const SITE_URL = siteConfig.url;
+const SITE_NAME = siteConfig.name;
+const SITE_TITLE = siteConfig.title;
+const SITE_DESCRIPTION = siteConfig.description;
 
 // Police hébergée dans le projet (variable 200–800, sous-ensemble latin, licence OFL — voir fonts/).
 // next/font/google la téléchargeait au build et faisait échouer Turbopack en CI.
@@ -32,7 +36,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0B1220',
+  themeColor: siteConfig.colors.primary,
   colorScheme: 'light',
 };
 
@@ -67,7 +71,7 @@ const BASE_METADATA: Metadata = {
     },
   },
 
-  manifest: '/manifest.webmanifest',
+  // Manifeste : app/manifest.ts (lien ajouté automatiquement par Next.js)
 
   openGraph: {
     type: 'website',
@@ -76,7 +80,7 @@ const BASE_METADATA: Metadata = {
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description:
-      "Comparez les voitures disponibles à Nador et réservez auprès d'agences locales.",
+      "Comparez les voitures disponibles à Nador et envoyez votre demande aux agences locales.",
   },
 
   twitter: {
@@ -118,57 +122,55 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': ['Organization', 'LocalBusiness'],
+      // AutoRental (sous-type de LocalBusiness) : plateforme de location de véhicules à Nador
+      '@type': ['Organization', 'AutoRental'],
       '@id': `${SITE_URL}/#organization`,
       name: SITE_NAME,
+      slogan: siteConfig.tagline,
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/icon_12.png`,
-        width: 512,
-        height: 512,
+        url: `${SITE_URL}${siteConfig.assets.icon}`,
+        width: siteConfig.assets.iconSize.width,
+        height: siteConfig.assets.iconSize.height,
       },
       image: `${SITE_URL}/opengraph-image`,
       description: SITE_DESCRIPTION,
       address: {
         '@type': 'PostalAddress',
-        addressLocality: 'Nador',
-        addressRegion: 'Oriental',
-        addressCountry: 'MA',
+        addressLocality: siteConfig.area.city,
+        addressRegion: siteConfig.area.region,
+        addressCountry: siteConfig.area.country,
       },
       geo: {
         '@type': 'GeoCoordinates',
-        latitude: 35.1681,
-        longitude: -2.9283,
+        latitude: siteConfig.area.geo.latitude,
+        longitude: siteConfig.area.geo.longitude,
       },
+      // Zone desservie : Nador et ses lieux de prise en charge (src/data/locations.ts)
       areaServed: [
-        { '@type': 'City', name: 'Nador', containedInPlace: { '@type': 'Country', name: 'Maroc' } },
-        { '@type': 'Place', name: 'Aéroport Nador-Al Aroui' },
-        { '@type': 'Place', name: 'Port Beni Ansar' },
-        { '@type': 'Place', name: 'Marchica' },
+        {
+          '@type': 'City',
+          name: siteConfig.area.city,
+          containedInPlace: { '@type': 'Country', name: siteConfig.area.countryName },
+        },
+        ...PICKUP_LOCATIONS.map((location) => ({
+          '@type': location.kind === 'AIRPORT' ? 'Airport' : 'Place',
+          name: location.label,
+          ...(location.kind === 'AIRPORT' && location.code ? { iataCode: location.code } : {}),
+        })),
       ],
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'contact@clickdrive.ma',
-        availableLanguage: ['French', 'Arabic'],
+        email: siteConfig.contact.email,
+        telephone: `+${siteConfig.contact.whatsapp}`,
+        availableLanguage: ['French', 'Arabic', 'English', 'Spanish', 'German', 'Dutch'],
+        hoursAvailable: openingHoursJsonLd(),
       },
       priceRange: '$$',
-      openingHoursSpecification: [
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          opens: '09:00',
-          closes: '18:00',
-        },
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Saturday'],
-          opens: '09:00',
-          closes: '13:00',
-        },
-      ],
-      sameAs: [`${SITE_URL}`],
+      currenciesAccepted: 'MAD',
+      openingHoursSpecification: openingHoursJsonLd(),
     },
     {
       '@type': 'WebSite',
@@ -176,7 +178,7 @@ const jsonLd = {
       url: SITE_URL,
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
-      inLanguage: 'fr-MA',
+      inLanguage: siteConfig.locale,
       publisher: { '@id': `${SITE_URL}/#organization` },
       potentialAction: {
         '@type': 'SearchAction',
@@ -201,6 +203,8 @@ export default async function RootLayout({
 }>) {
   // Langue et sens d'écriture connus côté serveur : pas de bascule LTR → RTL après hydratation
   const { locale, dir } = await getServerLocale();
+  // Catégories du pied de page : seulement celles qui ont des véhicules (catalogue public en cache)
+  const footerCategories = await getFooterCategories();
   return (
     <html
       lang={locale}
@@ -214,7 +218,7 @@ export default async function RootLayout({
         className="flex min-h-full flex-col bg-canvas font-sans text-ink antialiased selection:bg-action selection:text-white"
         suppressHydrationWarning
       >
-        <AppShell locale={locale} messages={pickMessages(locale, CORE_NAMESPACES)}>
+        <AppShell locale={locale} messages={pickMessages(locale, CORE_NAMESPACES)} footerCategories={footerCategories}>
           {children}
         </AppShell>
         <Analytics />

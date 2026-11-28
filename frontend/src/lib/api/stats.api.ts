@@ -9,9 +9,6 @@ export interface AdminStats {
   totalMotorcycles?: number;
   totalBookings: number;
   totalVolume: number;
-  platformCommission: number;
-  /** Revenu net agences (fourni par l’API admin) */
-  agencyNet?: number;
 }
 
 export interface AgencyStats {
@@ -22,8 +19,6 @@ export interface AgencyStats {
   confirmedBookings: number;
   totalRevenue: number;
   occupancyRate: number;
-  netRevenue?: number;
-  platformCommission?: number;
 }
 
 /**

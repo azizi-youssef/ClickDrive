@@ -23,7 +23,7 @@ export default function OpenGraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <div style={{ width: 18, height: 18, borderRadius: 999, background: '#E63946' }} />
-          <div style={{ fontSize: 30, letterSpacing: 6, textTransform: 'uppercase', color: '#CBD5E1' }}>Nador · Oriental</div>
+          <div style={{ fontSize: 30, letterSpacing: 6, textTransform: 'uppercase', color: '#CBD5E1' }}>Nador · Maroc</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ fontSize: 108, fontWeight: 800, letterSpacing: -3 }}>ClickDrive</div>

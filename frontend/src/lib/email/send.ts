@@ -1,10 +1,12 @@
+import { siteConfig } from '@/config/site';
+
 /**
  * Envoi d'e-mails transactionnels via l'API HTTP de Resend (aucune dépendance supplémentaire).
  *
  * Configuration (variables d'environnement serveur) :
  *   RESEND_API_KEY      clé d'API Resend
  *   EMAIL_FROM          expéditeur vérifié, ex. « ClickDrive <notifications@clickdrive.ma> »
- *   CONTACT_INBOX_EMAIL boîte de l'équipe qui reçoit les messages de contact (défaut : contact@clickdrive.ma)
+ *   CONTACT_INBOX_EMAIL boîte de l'équipe qui reçoit les messages de contact (défaut : siteConfig.contact.email)
  *
  * Ne simule jamais un succès : sans configuration, l'envoi est « skipped » et l'appelant le sait.
  * Les adresses des destinataires ne sont jamais écrites dans les journaux.
@@ -26,7 +28,7 @@ export type EmailResult =
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const EMAIL_PATTERN = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:]{2,}$/;
 
-export const DEFAULT_CONTACT_INBOX = 'contact@clickdrive.ma';
+export const DEFAULT_CONTACT_INBOX: string = siteConfig.contact.email;
 
 export function isEmailAddress(value: string | null | undefined): value is string {
   return typeof value === 'string' && value.length <= 254 && EMAIL_PATTERN.test(value.trim());

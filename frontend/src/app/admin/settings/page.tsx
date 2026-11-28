@@ -32,11 +32,11 @@ type SettingSection = {
 
 const SETTING_SECTIONS: SettingSection[] = [
   {
-    href: '/admin/settings/commission',
+    href: '/admin/settings/abonnements',
     icon: DollarSign,
     label: 'Abonnements & Monétisation',
     description:
-      'Gérez les forfaits mensuels basés sur la capacité en véhicules et les règles de monétisation ClickDrive.',
+      'Forfaits mensuels des agences selon la capacité de leur flotte : la seule source de revenus de ClickDrive.',
     accent: 'text-ink',
     iconBackground: 'bg-blue-50',
     category: 'Finance',

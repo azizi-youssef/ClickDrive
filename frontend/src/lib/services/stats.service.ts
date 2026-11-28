@@ -81,9 +81,8 @@ export type AgencyDashboardStats = {
   confirmedBookings: number;
   completedBookings: number;
   cancelledBookings: number;
+  /** Montant des réservations confirmées sur la période (aucune commission : il revient à l'agence) */
   grossRevenue: number;
-  platformCommission: number;
-  agencyNet: number;
   occupancyRate: number;
 };
 
@@ -119,8 +118,6 @@ export class StatsService {
       totalMotorcycles,
       totalBookings: numeric(result.totalBookings),
       totalVolume: numeric(result.totalVolume),
-      platformCommission: numeric(result.platformCommission),
-      agencyNet: numeric(result.agencyNet),
     };
   }
 
@@ -144,8 +141,6 @@ export class StatsService {
       pendingBookings: numeric(result.pendingBookings),
       confirmedBookings: numeric(result.confirmedBookings),
       totalRevenue: numeric(result.totalRevenue),
-      platformCommission: numeric(result.platformCommission),
-      netRevenue: numeric(result.netRevenue),
       occupancyRate: numeric(result.occupancyRate),
     };
   }
@@ -183,8 +178,6 @@ export class StatsService {
       completedBookings: numeric(result.completedBookings),
       cancelledBookings: numeric(result.cancelledBookings),
       grossRevenue: numeric(result.grossRevenue),
-      platformCommission: numeric(result.platformCommission),
-      agencyNet: numeric(result.agencyNet),
       occupancyRate: numeric(result.occupancyRate),
     };
   }

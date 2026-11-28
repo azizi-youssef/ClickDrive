@@ -5,7 +5,7 @@ import { BookingProgress } from '@/components/booking/BookingProgress';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { verifyBookingLink, signedBookingLink } from '@/lib/auth/booking-access-link';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
-import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { platformWhatsAppUrl, whatsappUrl } from '@/lib/constants/contact';
 import { bookingsService } from '@/lib/services/bookings.service';
 import { getTranslations, localizedPageMetadata } from '@/lib/i18n/server';
 import { formatDate, formatMoney, interpolate } from '@/lib/i18n/format';
@@ -70,7 +70,7 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
               {c.signIn}
             </Link>
             <a
-              href={clickdriveWhatsAppUrl(interpolate(c.supportMessage, { reference }))}
+              href={platformWhatsAppUrl(interpolate(c.supportMessage, { reference }))}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 text-sm font-bold text-slate-800 hover:bg-slate-50"
@@ -94,8 +94,8 @@ export default async function BookingTrackingPage({ params, searchParams }: Prop
   const agencyDigits = (booking.agency?.whatsapp || booking.agency?.phone || '').replace(/\D/g, '');
   const contactUrl =
     isConfirmed && agencyDigits.length >= 8
-      ? `https://wa.me/${agencyDigits}?text=${encodeURIComponent(interpolate(c.agencyMessage, { reference: ref, vehicle: vehicleLabel }))}`
-      : clickdriveWhatsAppUrl(interpolate(c.clickdriveMessage, { reference: ref, vehicle: vehicleLabel }));
+      ? whatsappUrl(interpolate(c.agencyMessage, { reference: ref, vehicle: vehicleLabel }), agencyDigits)
+      : platformWhatsAppUrl(interpolate(c.clickdriveMessage, { reference: ref, vehicle: vehicleLabel }));
   const reviewLink = booking.status === 'COMPLETED' ? signedBookingLink('review', ref) : null;
 
   return (

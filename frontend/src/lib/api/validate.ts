@@ -17,7 +17,7 @@ export type ValidationSuccess<T> = {
 export type ValidationResult<T> = ValidationSuccess<T> | ValidationFailure;
 
 /**
- * Formate les erreurs Zod en réponse HTTP 400 standardisée KlickDrive
+ * Formate les erreurs Zod en réponse HTTP 400 standardisée ClickDrive
  */
 export function formatValidationError(error: z.ZodError): NextResponse {
   const fields: Record<string, string> = {};

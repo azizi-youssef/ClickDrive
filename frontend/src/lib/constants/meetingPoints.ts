@@ -1,3 +1,11 @@
+import { PICKUP_LOCATIONS, findPickupLocation, type LocationId } from '@/data/locations';
+
+/** Libellés normalisés des lieux (src/data/locations.ts) */
+function place(id: LocationId): { name: string; shortName: string } {
+  const location = PICKUP_LOCATIONS.find((entry) => entry.id === id);
+  return { name: location?.label ?? id, shortName: location?.shortLabel ?? id };
+}
+
 export interface MeetingPoint {
   id: string;
   name: string;
@@ -16,8 +24,7 @@ export interface MeetingPoint {
 export const MEETING_POINTS: MeetingPoint[] = [
   {
     id: 'aeroport-nador',
-    name: 'Aéroport Nador Al-Aroui (NDR)',
-    shortName: 'Aéroport Nador Al-Aroui',
+    ...place('aeroport-nador'),
     code: 'NDR',
     type: 'AIRPORT',
     badgeLabel: 'Aéroport International',
@@ -29,8 +36,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
   },
   {
     id: 'port-beni-ansar',
-    name: 'Port de Beni Ansar (Gare Maritime)',
-    shortName: 'Port de Beni Ansar',
+    ...place('port-beni-ansar'),
     code: 'BA-PORT',
     type: 'PORT',
     badgeLabel: 'Terminal Ferry & Port',
@@ -55,8 +61,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
   },
   {
     id: 'centre-ville-nador',
-    name: 'Centre-Ville Nador (Boulevard Mohammed V)',
-    shortName: 'Centre-Ville Nador',
+    ...place('nador-centre'),
     code: 'NDR-CENTRE',
     type: 'CITY',
     badgeLabel: 'Zone Urbaine',
@@ -68,8 +73,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
   },
   {
     id: 'corniche-marchica',
-    name: 'Corniche Marchica (Nador)',
-    shortName: 'Lagune Marchica',
+    ...place('corniche-marchica'),
     code: 'MARCHICA',
     type: 'RESORT',
     badgeLabel: 'Resort & Hôtels',
@@ -81,8 +85,7 @@ export const MEETING_POINTS: MeetingPoint[] = [
   },
   {
     id: 'gare-oncf-nador',
-    name: 'Gare ONCF Nador Ville',
-    shortName: 'Gare ONCF Nador',
+    ...place('gare-oncf-nador'),
     code: 'ONCF',
     type: 'TRAIN',
     badgeLabel: 'Gare Ferroviaire',
@@ -106,6 +109,10 @@ export function getMeetingPoint(locationStr?: string): MeetingPoint {
   // 1. Nom exact (accents ignorés) : valeurs enregistrées par la demande et lieux du catalogue
   const exact = MEETING_POINTS.find((point) => [point.name, point.shortName, point.id].some((value) => fold(value) === lower));
   if (exact) return exact;
+  // 1 bis. Lieu connu sous une autre orthographe (valeur historique, alias) : même point de rendez-vous
+  const known = findPickupLocation(locationStr);
+  const knownPoint = known && MEETING_POINTS.find((point) => point.name === known.label);
+  if (knownPoint) return knownPoint;
 
   // 2. Saisie libre : mots-clés. La gare passe avant le centre-ville (« Gare ONCF Nador Ville ») ; les
   //    autres localités (« Selouane Centre », « Al-Aroui Ville ») restent des lieux convenus.

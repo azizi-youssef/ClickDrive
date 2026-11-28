@@ -45,6 +45,7 @@ import type { NavbarMessages } from '@/lib/i18n/messages/navbar';
 import { LanguageSelector } from '@/components/shared/LanguageSelector';
 import { Magnet } from '@/components/ui/react-bits';
 import { usePresence } from '@/lib/ui/use-presence';
+import { platformWhatsAppUrl } from '@/lib/constants/contact';
 
 /* ====================================================================== */
 /* ACCOUNT HELPERS                                                        */
@@ -553,7 +554,7 @@ export function Navbar() {
             <span className="hidden h-3 w-px bg-slate-800 lg:block" aria-hidden="true" />
 
             <a
-              href="https://wa.me/212634536286?text=Bonjour%2C%20je%20souhaite%20louer%20un%20v%C3%A9hicule%20%C3%A0%20Nador"
+              href={platformWhatsAppUrl(t.siteFooter.whatsappMessage)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
@@ -1433,7 +1434,7 @@ export function Navbar() {
 
               {/* Direct WhatsApp Support */}
               <a
-                href="https://wa.me/212634536286?text=Bonjour%2C%20je%20veux%20louer%20une%20voiture%20%C3%A0%20Nador"
+                href={platformWhatsAppUrl(t.siteFooter.whatsappMessage)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-[13px] font-bold text-emerald-800 transition-colors hover:bg-emerald-100"

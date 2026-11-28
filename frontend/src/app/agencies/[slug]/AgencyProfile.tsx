@@ -26,7 +26,7 @@ import { AgencyLogo } from '@/components/agencies/AgencyLogo';
 import { AgencyBanner } from '@/components/agencies/AgencyBanner';
 import { Badge } from '@/components/ui/Badge';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
-import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { platformWhatsAppUrl } from '@/lib/constants/contact';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/types';
@@ -220,7 +220,7 @@ export function AgencyProfile({
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </a>
               <a
-                href={clickdriveWhatsAppUrl(fmt(p.whatsappQuestion, { agency: agency.name, city: agency.city }))}
+                href={platformWhatsAppUrl(fmt(p.whatsappQuestion, { agency: agency.name, city: agency.city }))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-ink transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"

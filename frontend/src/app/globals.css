@@ -56,6 +56,12 @@
   --color-accent-on-dark: #FF6B76; /* texte rouge sur graphite */
   --color-focus: #E63946;          /* anneau de focus (≥ 3:1 sur blanc, canvas et graphite) */
 
+  /* Pied de page premium (bleu nuit + rouge ClickDrive) */
+  --color-footer: #070E1D;         /* fond bleu nuit */
+  --color-footer-accent: #FF263D;  /* rouge ClickDrive : filets, icônes, focus (5,1:1 sur le fond) */
+  --color-whatsapp: #0A9C07;       /* vert WhatsApp choisi : texte bleu nuit dessus (≈ 5,3:1, AA), pas de blanc (3,6:1) */
+  --color-whatsapp-hover: #0BB508; /* survol plus clair : contraste encore meilleur (≈ 7:1) */
+
   /* Texte */
   --color-ink-secondary: var(--color-slate-500); /* #667085 */
   --color-ink-tertiary: var(--color-slate-600);  /* #475467 */

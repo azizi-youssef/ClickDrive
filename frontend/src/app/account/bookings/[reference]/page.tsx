@@ -15,7 +15,7 @@ import {
 import { MeetingPointBadge } from '@/components/booking/MeetingPointBadge';
 import { BookingProgress } from '@/components/booking/BookingProgress';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { platformWhatsAppUrl, whatsappUrl } from '@/lib/constants/contact';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface BookingDetailPageProps {
@@ -86,11 +86,11 @@ export default function BookingDetailPage({ params }: BookingDetailPageProps) {
   const reference = booking.reference || booking.booking_ref || '';
   const vehicleName = `${booking.vehicle?.brand ?? ''} ${booking.vehicle?.model ?? ''}`.trim() || tracking.vehicle;
   const isConfirmed = ['APPROVED', 'CONFIRMED', 'READY_FOR_PICKUP', 'ACTIVE', 'COMPLETED'].includes(booking.status);
-  const conciergeUrl = clickdriveWhatsAppUrl(fmt(tracking.clickdriveMessage, { reference, vehicle: vehicleName }));
+  const conciergeUrl = platformWhatsAppUrl(fmt(tracking.clickdriveMessage, { reference, vehicle: vehicleName }));
   const whatsappText = fmt(tracking.agencyMessage, { reference, vehicle: vehicleName });
   // Pas de numéro de repli inventé : sans numéro d'agence, on oriente vers le support ClickDrive
   const agencyDigits = (booking.agency?.whatsapp || booking.agency?.phone || '').replace(/[^0-9]/g, '');
-  const agencyWhatsappUrl = agencyDigits.length >= 8 ? `https://wa.me/${agencyDigits}?text=${encodeURIComponent(whatsappText)}` : null;
+  const agencyWhatsappUrl = agencyDigits.length >= 8 ? whatsappUrl(whatsappText, agencyDigits) : null;
   const contactAgency = isConfirmed && agencyWhatsappUrl;
   const totalDays = Number(booking.total_days) || 0;
   const days = plural(totalDays, c.days);

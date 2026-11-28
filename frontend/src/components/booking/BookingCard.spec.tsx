@@ -54,7 +54,7 @@ describe('BookingCard — disponibilité en trois états (fail-closed)', () => {
     render(<BookingCard vehicle={testVehicle()} />);
 
     expect(await screen.findByText('Disponible pour ces dates')).toBeInTheDocument();
-    expect(bookButton()).toHaveTextContent('Réserver ce véhicule');
+    expect(bookButton()).toHaveTextContent('Envoyer une demande');
     expect(bookButton()).not.toHaveAttribute('aria-disabled');
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/^\/api\/vehicles\/11111111-1111-4111-8111-111111111111\/availability\?startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}$/),
@@ -139,7 +139,7 @@ describe('BookingCard — rafraîchissement en arrière-plan', () => {
     // Vérification en cours : ni « Vérification… », ni bouton désactivé
     expect(screen.getByText('Disponible pour ces dates')).toBeInTheDocument();
     expect(bookButton()).toBeEnabled();
-    expect(bookButton()).toHaveTextContent('Réserver ce véhicule');
+    expect(bookButton()).toHaveTextContent('Envoyer une demande');
     release();
   });
 

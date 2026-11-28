@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Clock3, Loader2, MessageCircle } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
-import { clickdriveWhatsAppUrl } from '@/lib/constants/contact';
+import { platformWhatsAppUrl } from '@/lib/constants/contact';
 import type { PlanChangeRequest } from '@/types';
 
 /**
@@ -23,7 +23,7 @@ export function PendingPlanChangeBanner({
   const [error, setError] = useState<string | null>(null);
 
   const requestedOn = new Date(request.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-  const whatsapp = clickdriveWhatsAppUrl(
+  const whatsapp = platformWhatsAppUrl(
     `Bonjour, je souhaite régler le passage à la formule ${request.requested_plan.name} (${formatPrice(request.amount_due)} / mois) demandé le ${requestedOn}.`
   );
 

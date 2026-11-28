@@ -3,7 +3,10 @@
  * Jamais d'avis, de note ou de disponibilité inventés.
  */
 
-export const SITE_URL = 'https://clickdrive.ma';
+import { siteConfig } from '@/config/site';
+
+/** URL absolue du site (config/site.ts, variable NEXT_PUBLIC_SITE_URL) */
+export const SITE_URL: string = siteConfig.url;
 
 export interface BreadcrumbItem {
   name: string;

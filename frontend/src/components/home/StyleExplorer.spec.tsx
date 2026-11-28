@@ -50,7 +50,7 @@ describe('StyleExplorer', () => {
   it('cartes = vrais liens vers le catalogue filtré, avec nombre et prix visibles', () => {
     render(<StyleExplorer vehicles={catalog} loading={false} />);
     const section = screen.getByRole('region', { name: 'Trouvez votre style' });
-    const economique = within(section).getByRole('link', { name: /^2 voitures Économique .*dès 250 DH/ });
+    const economique = within(section).getByRole('link', { name: /^2 voitures Économique .*dès 250\sDH/ });
     expect(economique).toHaveAttribute('href', '/search?category=%C3%89conomique');
     expect(within(section).getAllByRole('listitem')).toHaveLength(2);
     // Catégories sans véhicule : listées comme « Bientôt », jamais en carte cliquable
@@ -66,7 +66,7 @@ describe('StyleExplorer', () => {
 
     await user.click(motos);
     expect(motos).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('link', { name: /^1 moto Trail .*dès 450 DH/ })).toHaveAttribute('href', '/motos?category=Trail');
+    expect(screen.getByRole('link', { name: /^1 moto Trail .*dès 450\sDH/ })).toHaveAttribute('href', '/motos?category=Trail');
     // Lien bureau et lien mobile (l'un des deux masqué en CSS selon l'écran) : tous deux vers /motos
     for (const link of screen.getAllByRole('link', { name: /Toutes les motos/ })) expect(link).toHaveAttribute('href', '/motos');
     expect(screen.getByText('Motos : 1 catégorie disponible')).toBeInTheDocument();

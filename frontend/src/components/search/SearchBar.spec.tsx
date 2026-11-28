@@ -36,12 +36,28 @@ describe('Recherche de l’accueil (carte mobile)', () => {
         initialEndDate="2099-01-08"
       />
     );
-    // Résumé du rideau + valeur affichée du champ (masquée aux lecteurs d'écran, qui lisent le contrôle)
-    const locations = screen.getAllByText('Centre-ville de Nador (boulevard Mohammed V)', { selector: 'span' });
+    // Pastille du résumé + valeur affichée du champ (masquée aux lecteurs d'écran, qui lisent le contrôle)
+    const locations = screen.getAllByText('Nador Centre', { selector: 'span' });
     expect(locations).toHaveLength(2);
     expect(locations.some((el) => el.closest('[aria-hidden="true"]'))).toBe(true);
     expect(screen.getByText(formatDate('2099-01-05', 'fr', 'weekdayDayMonth'))).toBeInTheDocument();
     expect(screen.getAllByText(formatDate('2099-01-08', 'fr', 'dayMonth')).length).toBeGreaterThan(0);
+  });
+
+  it('résume la recherche en pastilles séparées, avec la durée, et affiche le nombre de jours', () => {
+    render(<SearchBar initialLocation="Aéroport" initialStartDate="2099-01-05" initialEndDate="2099-01-08" />);
+    const toggle = screen.getByRole('button', { name: /^Modifier la recherche/ });
+    // Lieu, dates et catégorie dans trois pastilles distinctes (plus de texte collé « …(NDR)Tous les types »)
+    expect(within(toggle).getByText('Aéroport Nador Al Aroui (NDR)', { selector: 'span' })).toBeInTheDocument();
+    expect(within(toggle).getByText(/· 3 jours$/, { selector: 'span' })).toBeInTheDocument();
+    expect(within(toggle).getByText('Tous les types', { selector: 'span' })).toBeInTheDocument();
+    // Durée annoncée sous les champs, reliée au champ « retour »
+    expect(screen.getByLabelText(/^Retour/)).toHaveAccessibleDescription('Durée : 3 jours');
+  });
+
+  it('sans date connue (rendu serveur), affiche un texte indicatif et non « — »', () => {
+    render(<SearchBar />);
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
 
   it('s’ouvre replié en rideau, se déroule puis s’enroule', async () => {
@@ -49,7 +65,7 @@ describe('Recherche de l’accueil (carte mobile)', () => {
     render(<SearchBar />);
     const toggle = screen.getByRole('button', { name: /^Modifier la recherche/ });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(toggle).toHaveTextContent('Aéroport Nador Al-Aroui (NDR)');
+    expect(toggle).toHaveTextContent('Aéroport Nador Al Aroui (NDR)');
     // Replié : bouton Rechercher compact dans la barre, en plus du bouton des champs (masqué en CSS)
     expect(screen.getAllByRole('button', { name: 'Rechercher' })).toHaveLength(2);
 

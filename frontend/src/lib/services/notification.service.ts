@@ -1,5 +1,6 @@
 import { Booking } from '@/types';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
+import { siteConfig } from '@/config/site';
 
 export interface WhatsAppPayload {
   phone: string;
@@ -20,7 +21,7 @@ class NotificationService {
 
   /** Message WhatsApp professionnel destiné à l'agence */
   formatAgencyWhatsAppMessage(booking: Booking, appUrl?: string): string {
-    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma';
+    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
     const ref = booking.reference || booking.booking_ref || '';
     const pdfUrl = `${baseUrl}${signedBookingPdfPath(ref)}`;
     const dashboardUrl = `${baseUrl}/agency?booking=${encodeURIComponent(ref)}`;

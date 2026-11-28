@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { ALL_LOCALES, LOCALE_HEADER, localeDirection, resolveLocale, type Locale } from './config';
 import { getMessages, type Messages } from './messages';
 import { alternateHrefs, localizeHref } from './routing';
+import { absoluteUrl } from '@/config/site';
 
 /**
  * Langue de la requête, lue côté serveur : le proxy la déduit de l'adresse (/nl/…) et la transmet
@@ -56,7 +57,7 @@ export async function localizedPageMetadata(page: MetaPage, frPath: string | nul
     metadata.openGraph = {
       title: copy.ogTitle ?? copy.title,
       description: copy.ogDescription ?? copy.description,
-      url: `https://clickdrive.ma${localizeHref(frPath, locale) === '/' ? '' : localizeHref(frPath, locale)}`,
+      url: absoluteUrl(localizeHref(frPath, locale)),
       locale: t.meta.ogLocale,
     };
   }

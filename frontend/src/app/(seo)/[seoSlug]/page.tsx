@@ -21,6 +21,7 @@ import {
   ArrowRight,
   Clock,
 } from 'lucide-react';
+import { absoluteUrl } from '@/config/site';
 
 /**
  * Une adresse par langue : le proxy réécrit /nl/auto-huren-nador vers /location-voiture-nador et
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: page.title,
       description: page.metaDescription,
-      url: `https://clickdrive.ma${localizeHref(`/${page.slug}`, locale)}`,
+      url: absoluteUrl(localizeHref(`/${page.slug}`, locale)),
       siteName: 'ClickDrive Nador',
       locale: t.meta.ogLocale,
       type: 'website',
@@ -113,7 +114,7 @@ export default async function SeoLandingPage({ params }: PageProps) {
       ]),
       {
         '@type': 'FAQPage',
-        '@id': `https://clickdrive.ma${pageHref}#faq`,
+        '@id': `${absoluteUrl(pageHref)}#faq`,
         inLanguage: locale,
         mainEntity: pageData.faqs.map((faq) => ({
           '@type': 'Question',

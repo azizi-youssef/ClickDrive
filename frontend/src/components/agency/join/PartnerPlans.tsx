@@ -34,7 +34,7 @@ export function PartnerPlans() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">Tarifs</span>
         <h2 id="partner-plans" className="mt-2 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
-          Un abonnement mensuel selon la taille de votre flotte, 0 % de commission
+          Un abonnement mensuel selon la taille de votre flotte
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Vous encaissez directement vos locations. Sans engagement : vous changez de formule quand votre flotte évolue.

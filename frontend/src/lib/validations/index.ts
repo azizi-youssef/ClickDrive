@@ -14,7 +14,7 @@ export * from './booking';
 // Module 5 : Clients
 export * from './customer';
 
-// Module 6 : Paiements & Commissions
+// Module 6 : Paiements
 export * from './payment';
 
 // Module 7 : Administration & Plateforme

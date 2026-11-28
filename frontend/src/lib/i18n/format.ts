@@ -28,9 +28,21 @@ export function formatNumber(value: number, locale: Locale): string {
   return new Intl.NumberFormat(numberingTag(locale), { maximumFractionDigits: 0 }).format(value);
 }
 
-/** Montant en dirhams : « 1 200 DH », « 1,200 DH » (en), « 1.200 DH » (de, nl, es) */
+/** Espace insécable entre le montant et la devise : « 1 700 » et « DH » ne sont jamais séparés */
+const NO_BREAK_SPACE = ' ';
+
+/**
+ * Montant en dirhams, seul formateur de prix du site : « 1 700 DH » (fr, espace fine entre les milliers
+ * et espace insécable avant DH), « 1,700 DH » (en), « 1.700 DH » (de, nl, es).
+ * Le français suit fr-FR et non fr-MA : Intl formate fr-MA « 1.700 », contraire à l'usage voulu « 1 700 ».
+ */
 export function formatMoney(value: number, locale: Locale, currency = 'DH'): string {
-  return `${formatNumber(value, locale)} ${currency}`;
+  return `${formatNumber(value, locale)}${NO_BREAK_SPACE}${currency}`;
+}
+
+/** Prix journalier : « 280 DH / jour » (le libellé « / jour » vient des traductions) */
+export function formatDailyPrice(value: number, locale: Locale, perDay: string, currency = 'DH'): string {
+  return `${formatMoney(value, locale, currency)}${NO_BREAK_SPACE}${perDay}`;
 }
 
 /**

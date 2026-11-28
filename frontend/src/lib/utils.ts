@@ -28,8 +28,9 @@ export function formatDateFr(date: Date | string): string {
   return `${day}/${month}/${year}`;
 }
 
+/** Montant en dirhams (messages WhatsApp, PDF) : « 1 700 DH », espace insécable avant DH */
 export function formatPrice(price: number): string {
-  return `${formatNumber(price)} DH`;
+  return `${formatNumber(price)} DH`;
 }
 
 export function generateBookingRef(): string {

@@ -7,7 +7,6 @@ import { hasAccessPermission } from '@/lib/auth/server';
 import { bookingRequestSchema, BookingRequestInput } from '@/lib/validations/booking';
 import { calculateRentalDays, calculateRentalPrice } from '@/lib/utils/pricing';
 import { generateBookingReference, isValidBookingReference } from '@/lib/utils/reference';
-import { commissionService } from './commission.service';
 import { vehiclesService } from './vehicles.service';
 import { isUuid, type AvailabilityStatus } from '@/lib/availability/status';
 import { PRIVATE_VEHICLE_FIELDS } from '@/lib/vehicles/public';
@@ -33,15 +32,11 @@ const BOOKING_READ_COLUMNS = [
   'total_days',
   'daily_price',
   'total_price',
-  'commission_rate',
-  'commission_amount',
-  'agency_amount',
   'deposit_amount',
   'status',
   'created_at',
   'updated_at',
   'agency_status',
-  'commission_status',
   'requested_at',
   'reviewed_at',
   'confirmed_at',
@@ -323,10 +318,9 @@ export class BookingsService {
    * Création d'une nouvelle demande de réservation par un client.
    * RÈGLES CRITIQUES :
    * 1. La demande n'est PAS une réservation instantanée.
-   * 2. Le prix et la commission sont STRICTEMENT calculés côté serveur.
-   * 3. Le taux de commission actuel de la plateforme est sauvegardé dans la réservation.
-   * 4. La commission initiale est à statut 'PENDING'.
-   * 5. Un événement 'REQUEST_CREATED' est journalisé dans booking_events.
+   * 2. Le prix est STRICTEMENT calculé côté serveur.
+   * 3. Aucune commission : la plateforme est financée par l'abonnement des agences.
+   * 4. Un événement 'REQUEST_CREATED' est journalisé dans booking_events.
    */
   async createBookingRequest(
     rawInput: BookingRequestInput,
@@ -443,9 +437,8 @@ export class BookingsService {
 
     // 4. Calcul financier certifié côté serveur
     const totalDays = calculateRentalDays(input.startDate, input.endDate);
-    const platformCommissionRate = await commissionService.getCommissionRate();
     // Tarif semaine ou mois de l'agence appliqué dès 7 ou 30 jours (même calcul que l'estimation affichée)
-    const pricing = calculateRentalPrice(vehicle, totalDays, platformCommissionRate);
+    const pricing = calculateRentalPrice(vehicle, totalDays);
 
     // 5. Génération de la référence unique (CD-2026-XXXXXX)
     const reference = generateBookingReference();
@@ -494,11 +487,12 @@ export class BookingsService {
           customer_notes: input.customerNotes || null,
           daily_price: pricing.daily_price,
           total_price: pricing.total,
-          commission_rate: pricing.commission_rate,
+          // Aucune commission (modèle par abonnement). La colonne existe encore en base : 0 explicite, sinon
+          // les fonctions SQL des tableaux de bord appliqueraient leur ancien taux par défaut (15 %).
+          commission_rate: 0,
           deposit_amount: vehicle.deposit ?? 3000,
           // Statut de la machine à états partagée (PENDING n'est plus écrit : statut historique)
           status: 'REQUESTED',
-          commission_status: 'PENDING',
           requested_at: nowIso,
         })
           .select('*, vehicle:vehicles(*), agency:agencies(*)')

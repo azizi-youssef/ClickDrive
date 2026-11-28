@@ -237,20 +237,20 @@ export const SEO_LANDING_PAGES: Record<string, SeoLandingPageData> = {
   'location-voiture-nador-ete': {
     slug: 'location-voiture-nador-ete',
     h1: 'Location de voiture à Nador pour l’été',
-    title: 'Location voiture Nador été : réservez tôt | ClickDrive',
+    title: 'Location voiture Nador été : demandez tôt | ClickDrive',
     metaDescription:
-      'Retour au pays cet été ? Réservez tôt votre voiture à Nador, à l’aéroport ou au port de Beni Ansar, avec les tarifs semaine et mois des agences.',
+      'Retour au pays cet été ? Envoyez tôt votre demande de voiture à Nador, à l’aéroport ou au port de Beni Ansar, avec les tarifs semaine et mois des agences.',
     keywords: ['location voiture nador ete', 'location voiture nador aout', 'location voiture mre nador', 'location voiture port nador ete'],
     zoneName: 'Été à Nador',
     zoneType: 'category',
     highlightLongStay: true,
-    introTitle: 'Retour au pays : réservez avant le pic de juillet et août',
+    introTitle: 'Retour au pays : envoyez votre demande avant le pic de juillet et août',
     introText:
       'En été, les voitures partent vite. Envoyez votre demande dès que vos dates sont fixées : prise en charge à l’aéroport Nador-Al Aroui ou au port de Beni Ansar, tarif semaine ou mois appliqué automatiquement quand l’agence en propose un.',
     defaultLocation: 'Port de Beni Ansar',
     faqs: [
       {
-        question: 'Combien de temps à l’avance réserver pour l’été ?',
+        question: 'Combien de temps à l’avance envoyer sa demande pour l’été ?',
         answer:
           'Dès que vos dates sont connues : la recherche n’affiche que les véhicules libres sur toute votre période, et une demande ne vous engage pas tant que l’agence ne l’a pas confirmée.',
       },

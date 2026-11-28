@@ -1,4 +1,6 @@
-import { CLICKDRIVE_WHATSAPP_NUMBER } from './contact';
+import { formatPhoneDisplay } from './contact';
+
+export { formatPhoneDisplay };
 
 /**
  * Identité légale de l'éditeur (mentions légales, loi 31-08 sur la protection du consommateur).
@@ -16,12 +18,3 @@ export const LEGAL_IDENTIFIERS = {
   cndp: '',
 } as const;
 
-/** Téléphone public de la plateforme, au format lisible « +212 6 12 34 56 78 » */
-export function clickdrivePhoneDisplay(number: string = CLICKDRIVE_WHATSAPP_NUMBER): string {
-  const digits = number.replace(/\D/g, '');
-  if (digits.startsWith('212') && digits.length === 12) {
-    const local = digits.slice(3);
-    return `+212 ${local.charAt(0)} ${local.slice(1).replace(/(\d{2})(?=\d)/g, '$1 ')}`;
-  }
-  return `+${digits}`;
-}

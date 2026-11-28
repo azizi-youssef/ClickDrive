@@ -16,6 +16,7 @@ const HERO_IMAGES = {
 import { useSearchParams } from 'next/navigation';
 import { VehicleCard, VehicleCardSkeleton } from '@/components/cars/VehicleCard';
 import { SearchBar } from '@/components/search/SearchBar';
+import { SearchSummaryChips } from '@/components/search/SearchSummaryChips';
 import {
   ALL_CATEGORIES,
   CatalogFilters,
@@ -50,7 +51,6 @@ import {
   MapPin,
   Motorbike,
   RefreshCw,
-  Search,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
@@ -476,25 +476,28 @@ function SearchPageContent({ preload, vehicleType }: { preload: SearchPreload | 
               onClick={() => setMobileSearchOpen((open) => !open)}
               aria-expanded={mobileSearchOpen}
               aria-controls="catalog-search-form"
-              className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-brand sm:hidden"
+              className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-brand sm:hidden"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-accent-text" aria-hidden="true">
-                <Search className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold text-ink">{placeLabel}</span>
-                <span className="block truncate text-[13px] text-slate-600">
-                  {hasPeriod ? `${shortDate(searchPeriod.startDate)} → ${shortDate(searchPeriod.endDate)}` : catalog.flexibleDates}
-                  {filters.category && filters.category !== ALL_CATEGORIES ? ` · ${categoryLabel(t, filters.category)}` : ''}
-                </span>
-              </span>
-              <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-bold text-ink">
-                {mobileSearchOpen ? catalog.close : catalog.edit}
-                <ChevronDown
-                  className={cn('h-4 w-4 transition-transform motion-reduce:transition-none', mobileSearchOpen && 'rotate-180')}
-                  aria-hidden="true"
-                />
-              </span>
+              {/* Pastilles sur toute la largeur (chacune porte son icône) ; « Modifier » suit dans le même flux */}
+              <SearchSummaryChips
+                className="flex-1"
+                location={placeLabel}
+                dates={
+                  hasPeriod
+                    ? `${shortDate(searchPeriod.startDate)} – ${shortDate(searchPeriod.endDate)} · ${plural(periodDays ?? 1, t.vehicle.days)}`
+                    : catalog.flexibleDates
+                }
+                category={filters.category && filters.category !== ALL_CATEGORIES ? categoryLabel(t, filters.category) : t.searchBar.allTypes}
+                action={
+                  <span className="inline-flex items-center gap-0.5 px-1 py-1 text-[13px] font-bold text-ink underline decoration-line decoration-2 underline-offset-4">
+                    {mobileSearchOpen ? catalog.close : catalog.edit}
+                    <ChevronDown
+                      className={cn('h-4 w-4 text-ink-secondary transition-transform motion-reduce:transition-none', mobileSearchOpen && 'rotate-180')}
+                      aria-hidden="true"
+                    />
+                  </span>
+                }
+              />
             </button>
             <div id="catalog-search-form" className={cn(mobileSearchOpen ? 'mt-2 block' : 'hidden', 'sm:mt-0 sm:block')}>
               <SearchBar

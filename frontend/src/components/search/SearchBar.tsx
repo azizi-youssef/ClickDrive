@@ -4,16 +4,19 @@ import { track } from '@/lib/analytics/track';
 import React, { useEffect, useId, useState, useSyncExternalStore, useTransition } from 'react';
 import { useLocalizedRouter } from '@/lib/i18n/useLocalizedRouter';
 import { categoryLabel, locationLabel } from '@/lib/i18n/labels';
-import { ArrowRight, MapPin, Calendar, Car, ChevronDown, Loader2, Search, type LucideIcon } from 'lucide-react';
+import { MapPin, Calendar, Car, ChevronDown, Loader2, Search, type LucideIcon } from 'lucide-react';
 import { LOCATIONS_NADOR, CATEGORIES } from '@/lib/constants/catalog';
+import { DEFAULT_PICKUP_LOCATION, findPickupLocation } from '@/data/locations';
 import {
   addDateDays,
   formatLocalDate,
   getEffectiveRentalDates,
   isValidDateOnly,
   parseRentalPeriod,
+  rentalDayCount,
   type RentalPeriod,
 } from '@/lib/utils/date-only';
+import { SearchSummaryChips } from './SearchSummaryChips';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -168,7 +171,7 @@ const heroControlClass = cn(
 );
 
 export function SearchBar({
-  initialLocation = 'Aéroport Nador Al-Aroui (NDR)',
+  initialLocation = DEFAULT_PICKUP_LOCATION.value,
   initialStartDate = '',
   initialEndDate = '',
   initialCategory = ALL_CATEGORIES_LABEL,
@@ -180,7 +183,7 @@ export function SearchBar({
 }: SearchBarProps) {
   const router = useLocalizedRouter();
   const uid = useId();
-  const { t, date } = useTranslation();
+  const { t, date, plural } = useTranslation();
   // Navigation vers les résultats en cours : bouton en attente, pas de double envoi
   const [isPending, startTransition] = useTransition();
   const hero = !isCompact;
@@ -193,8 +196,9 @@ export function SearchBar({
     getLocalToday,
     getServerToday
   );
+  // Lieu reçu sous n'importe quelle orthographe connue (libellé, alias, ancienne valeur d'adresse)
   const [location, setLocation] = useState(
-    LOCATIONS_NADOR.includes(initialLocation) ? initialLocation : LOCATIONS_NADOR[0] ?? ''
+    findPickupLocation(initialLocation)?.value ?? DEFAULT_PICKUP_LOCATION.value
   );
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
@@ -207,6 +211,10 @@ export function SearchBar({
 
   const { startDate: effectiveStartDate, endDate: effectiveEndDate } =
     getEffectiveRentalDates(startDate, endDate, today);
+  // Nombre de jours de la période (retour exclu), affiché sous les dates et dans le résumé
+  const dayCount = rentalDayCount(effectiveStartDate, effectiveEndDate);
+  const durationText = dayCount > 0 ? plural(dayCount, t.vehicle.days) : '';
+  const durationId = `${uid}-duration`;
 
   // Accueil : les cartes véhicules reprennent les dates affichées ici (total estimé, lien vers la fiche)
   useEffect(() => {
@@ -265,14 +273,15 @@ export function SearchBar({
 
   // Date affichée sous 1024 px : « lun. 23 nov. » quand la colonne le permet, sinon « 23 nov. ».
   // Seuil 108 px : la forme longue la plus large (« Mo., 28. Sept. », 15 px gras) en mesure 105.
-  const dateText = (value: string) =>
+  // Sans date (rendu serveur, avant l'heure locale du visiteur) : texte indicatif explicite, jamais « — ».
+  const dateText = (value: string, placeholder: string) =>
     isValidDateOnly(value) ? (
       <>
         <span className="hidden whitespace-nowrap @[6.75rem]:inline">{date(value, 'weekdayDayMonth')}</span>
         <span className="whitespace-nowrap @[6.75rem]:hidden">{date(value, 'dayMonth')}</span>
       </>
     ) : (
-      <span className="text-ink-secondary">—</span>
+      <span className="font-semibold text-ink-secondary">{placeholder}</span>
     );
 
   const locationSelect = (
@@ -312,6 +321,7 @@ export function SearchBar({
       min={isValidDateOnly(effectiveStartDate) ? addDateDays(effectiveStartDate, 1) : today}
       disabled={!today}
       required
+      aria-describedby={durationText ? durationId : undefined}
       onChange={(e) => handleEndChange(e.target.value)}
       onClick={hero ? openDatePicker : undefined}
       className={hero ? heroControlClass : controlClass}
@@ -370,7 +380,7 @@ export function SearchBar({
               label={t.searchBar.pickupDate}
               shortLabel={t.searchBar.pickupShort}
               icon={Calendar}
-              value={dateText(effectiveStartDate)}
+              value={dateText(effectiveStartDate, t.searchBar.pickupDate)}
             >
               {startInput}
             </HeroField>
@@ -389,7 +399,7 @@ export function SearchBar({
               label={t.searchBar.dropoffDate}
               shortLabel={t.searchBar.dropoffShort}
               icon={Calendar}
-              value={dateText(effectiveEndDate)}
+              value={dateText(effectiveEndDate, t.searchBar.dropoffDate)}
             >
               {endInput}
             </HeroField>
@@ -442,22 +452,30 @@ export function SearchBar({
       </div>
   );
 
-  // Résumé du rideau replié : « 23 nov. → 26 nov. · Tous les types »
+  // Résumé du rideau replié, en pastilles séparées : [Lieu] [Dates · durée] [Catégorie] Modifier
   const hasDates = isValidDateOnly(effectiveStartDate) && isValidDateOnly(effectiveEndDate);
-  const summary = (
-    // Jamais tronqué : la catégorie passe à la ligne sur les écrans étroits
-    <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1 text-[13px] leading-[18px] text-ink-tertiary">
-      {hasDates && (
-        <span className="inline-flex items-center gap-1 whitespace-nowrap">
-          {date(effectiveStartDate, 'dayMonth')}
-          <ArrowRight className="h-3 w-3 shrink-0 rtl:rotate-180" aria-hidden="true" />
-          <span className="sr-only">–</span>
-          {date(effectiveEndDate, 'dayMonth')}
-          <span aria-hidden="true">·</span>
-        </span>
+  const datesSummary = hasDates
+    ? `${date(effectiveStartDate, 'dayMonth')} – ${date(effectiveEndDate, 'dayMonth')}${durationText ? ` · ${durationText}` : ''}`
+    : `${t.searchBar.pickupShort} – ${t.searchBar.dropoffShort}`;
+
+  // Durée de la période, sous les champs (annoncée quand elle change)
+  const durationLine = (
+    <p
+      id={durationId}
+      aria-live="polite"
+      className={cn(
+        'text-[13px] font-medium text-ink-tertiary',
+        hero ? 'px-4 pb-3 lg:px-4 lg:pb-2.5 lg:pt-0.5' : 'mt-2 px-1',
+        !durationText && 'sr-only'
       )}
-      <span>{categoryText(category)}</span>
-    </span>
+    >
+      {durationText && (
+        <>
+          <Calendar className="me-1.5 inline h-3.5 w-3.5 align-[-2px] text-accent-text" aria-hidden="true" />
+          {t.searchBar.durationLabel} : <strong className="font-bold text-ink">{durationText}</strong>
+        </>
+      )}
+    </p>
   );
 
   return (
@@ -483,26 +501,35 @@ export function SearchBar({
               )}
             >
               {expanded ? (
-                <span className="min-w-0 flex-1 text-sm font-bold text-ink">{t.searchBar.yourSearch}</span>
-              ) : (
-                <span className="min-w-0 flex-1">
-                  <span className="sr-only">{t.searchBar.editSearch}, </span>
-                  <span className="line-clamp-2 text-[15px] font-bold leading-5 text-ink [overflow-wrap:anywhere]">
-                    {locationLabel(t, location)}
+                <>
+                  <span className="min-w-0 flex-1 text-sm font-bold text-ink">{t.searchBar.yourSearch}</span>
+                  <span className="inline-flex shrink-0 items-center gap-1 pe-2 text-[13px] font-bold text-ink">
+                    {t.searchBar.collapse}
+                    <ChevronDown
+                      className="h-4 w-4 rotate-180 text-ink-secondary transition-transform duration-base motion-reduce:transition-none"
+                      aria-hidden="true"
+                    />
                   </span>
-                  {summary}
-                </span>
-              )}
-              <span className="inline-flex shrink-0 items-center gap-1 pe-2 text-[13px] font-bold text-ink">
-                {expanded && t.searchBar.collapse}
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 text-ink-secondary transition-transform duration-base motion-reduce:transition-none',
-                    expanded && 'rotate-180'
-                  )}
-                  aria-hidden="true"
+                </>
+              ) : (
+                <SearchSummaryChips
+                  className="flex-1"
+                  // Nom du bouton : « Modifier la recherche, lieu, dates, catégorie »
+                  prefix={<span className="sr-only">{t.searchBar.editSearch}, </span>}
+                  location={locationLabel(t, location)}
+                  dates={datesSummary}
+                  category={categoryText(category)}
+                  action={
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex items-center gap-0.5 px-1 py-1 text-[13px] font-bold text-ink underline decoration-line decoration-2 underline-offset-4"
+                    >
+                      {t.searchBar.edit}
+                      <ChevronDown className="h-4 w-4 text-ink-secondary" aria-hidden="true" />
+                    </span>
+                  }
                 />
-              </span>
+              )}
             </button>
             {!expanded && (
               <button
@@ -529,11 +556,17 @@ export function SearchBar({
               expanded ? 'grid-rows-[1fr]' : 'max-lg:invisible max-lg:grid-rows-[0fr] max-lg:duration-base max-lg:ease-exit'
             )}
           >
-            <div className="min-h-0 max-lg:overflow-hidden">{fieldsGrid}</div>
+            <div className="min-h-0 max-lg:overflow-hidden">
+              {fieldsGrid}
+              {durationLine}
+            </div>
           </div>
         </div>
       ) : (
-        fieldsGrid
+        <>
+          {fieldsGrid}
+          {durationLine}
+        </>
       )}
       {dateError && (
         <p className={cn('mt-2 text-sm', hero ? 'font-semibold text-accent-on-dark' : 'text-red-700')} role="alert">

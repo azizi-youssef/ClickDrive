@@ -31,7 +31,7 @@ const benefits = [
     icon: Users,
     title: 'Une nouvelle clientèle',
     description:
-      'Présentez votre flotte aux voyageurs, touristes et MRE recherchant une location à Nador et dans l’Oriental.',
+      'Présentez votre flotte aux voyageurs, touristes et MRE recherchant une location à Nador.',
   },
   {
     icon: CalendarDays,
@@ -155,7 +155,7 @@ export default function AgencyJoinPage() {
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
               Développez votre visibilité, présentez votre flotte et gérez
               vos demandes de location depuis une plateforme conçue pour
-              les agences de Nador et de la région de l’Oriental.
+              les agences de Nador.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

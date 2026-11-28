@@ -3,8 +3,8 @@ import type { Locale } from '../config';
 /** En-tête du site (bandeau, menu principal, destinations, compte, menu mobile) */
 const fr = {
   verifiedAgencies: 'Agences partenaires vérifiées',
-  airport: 'Aéroport Nador-Al Aroui',
-  port: 'Port Beni Ansar',
+  airport: 'Aéroport Nador Al Aroui',
+  port: 'Port de Beni Ansar',
   becomePartner: 'Devenir partenaire',
   account: 'Compte',
   sessionChecking: 'Vérification…',
@@ -47,7 +47,7 @@ const fr = {
   badgeVerified: 'Partenaires vérifiés',
   badgePricing: 'Prix transparents',
   badgeSupport: 'Support local',
-  locationTag: "Nador · Région de l'Oriental · Maroc",
+  locationTag: 'Nador · Maroc',
   adminBadge: 'Administrateur',
   agencyBadge: 'Agence',
   customerBadge: 'Client',
@@ -64,7 +64,7 @@ const fr = {
   },
   destinationItems: {
     airport: {
-      title: 'Aéroport Nador-Al Aroui',
+      title: 'Aéroport Nador Al Aroui',
       shortTitle: 'Aéroport Nador',
       desc: 'Prise en charge directe dès la descente de votre vol',
       tag: 'Populaire',
@@ -102,7 +102,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
   fr,
   en: {
     verifiedAgencies: 'Verified partner agencies',
-    airport: 'Nador-Al Aroui Airport',
+    airport: 'Nador Al Aroui Airport',
     port: 'Beni Ansar Port',
     becomePartner: 'Become a partner',
     account: 'Account',
@@ -146,7 +146,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     badgeVerified: 'Verified partners',
     badgePricing: 'Transparent prices',
     badgeSupport: 'Local support',
-    locationTag: 'Nador · Oriental region · Morocco',
+    locationTag: 'Nador · Morocco',
     adminBadge: 'Administrator',
     agencyBadge: 'Agency',
     customerBadge: 'Customer',
@@ -163,7 +163,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     },
     destinationItems: {
       airport: {
-        title: 'Nador-Al Aroui Airport',
+        title: 'Nador Al Aroui Airport',
         shortTitle: 'Nador Airport',
         desc: 'Pickup as soon as you step off your flight',
         tag: 'Popular',
@@ -176,7 +176,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
   },
   es: {
     verifiedAgencies: 'Agencias asociadas verificadas',
-    airport: 'Aeropuerto Nador-Al Aroui',
+    airport: 'Aeropuerto Nador Al Aroui',
     port: 'Puerto de Beni Ansar',
     becomePartner: 'Hazte socio',
     account: 'Cuenta',
@@ -220,7 +220,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     badgeVerified: 'Socios verificados',
     badgePricing: 'Precios transparentes',
     badgeSupport: 'Soporte local',
-    locationTag: 'Nador · Región Oriental · Marruecos',
+    locationTag: 'Nador · Marruecos',
     adminBadge: 'Administrador',
     agencyBadge: 'Agencia',
     customerBadge: 'Cliente',
@@ -237,7 +237,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     },
     destinationItems: {
       airport: {
-        title: 'Aeropuerto Nador-Al Aroui',
+        title: 'Aeropuerto Nador Al Aroui',
         shortTitle: 'Aeropuerto de Nador',
         desc: 'Recogida nada más bajar del avión',
         tag: 'Popular',
@@ -250,7 +250,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
   },
   de: {
     verifiedAgencies: 'Geprüfte Partnervermieter',
-    airport: 'Flughafen Nador-Al Aroui',
+    airport: 'Flughafen Nador Al Aroui',
     port: 'Hafen Beni Ansar',
     becomePartner: 'Partner werden',
     account: 'Konto',
@@ -294,7 +294,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     badgeVerified: 'Geprüfte Partner',
     badgePricing: 'Transparente Preise',
     badgeSupport: 'Support vor Ort',
-    locationTag: 'Nador · Region Oriental · Marokko',
+    locationTag: 'Nador · Marokko',
     adminBadge: 'Administrator',
     agencyBadge: 'Vermieter',
     customerBadge: 'Kunde',
@@ -311,7 +311,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     },
     destinationItems: {
       airport: {
-        title: 'Flughafen Nador-Al Aroui',
+        title: 'Flughafen Nador Al Aroui',
         shortTitle: 'Flughafen Nador',
         desc: 'Abholung direkt nach der Landung',
         tag: 'Beliebt',
@@ -324,7 +324,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
   },
   nl: {
     verifiedAgencies: 'Gecontroleerde partnerverhuurders',
-    airport: 'Luchthaven Nador-Al Aroui',
+    airport: 'Luchthaven Nador Al Aroui',
     port: 'Haven Beni Ansar',
     becomePartner: 'Partner worden',
     account: 'Account',
@@ -368,7 +368,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     badgeVerified: 'Gecontroleerde partners',
     badgePricing: 'Duidelijke prijzen',
     badgeSupport: 'Lokale ondersteuning',
-    locationTag: 'Nador · Regio Oriental · Marokko',
+    locationTag: 'Nador · Marokko',
     adminBadge: 'Beheerder',
     agencyBadge: 'Verhuurder',
     customerBadge: 'Klant',
@@ -385,7 +385,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     },
     destinationItems: {
       airport: {
-        title: 'Luchthaven Nador-Al Aroui',
+        title: 'Luchthaven Nador Al Aroui',
         shortTitle: 'Luchthaven Nador',
         desc: 'Ophalen zodra je uit het vliegtuig stapt',
         tag: 'Populair',
@@ -442,7 +442,7 @@ export const navbar: Record<Locale, NavbarMessages> = {
     badgeVerified: 'شركاء موثقون',
     badgePricing: 'أسعار واضحة',
     badgeSupport: 'دعم محلي',
-    locationTag: 'الناظور · جهة الشرق · المغرب',
+    locationTag: 'الناظور · المغرب',
     adminBadge: 'مسؤول',
     agencyBadge: 'وكالة',
     customerBadge: 'زبون',

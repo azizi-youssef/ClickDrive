@@ -7,6 +7,7 @@ import { Vehicle } from '@/types';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
 import { Badge } from '@/components/ui/Badge';
 import { Star, ArrowRight, Sparkles, Building2 } from 'lucide-react';
+import { formatPrice } from '@/lib/utils';
 
 interface SameModelAlternativesProps {
   currentVehicle: Vehicle;
@@ -100,7 +101,7 @@ export function SameModelAlternatives({
                         isCheaper ? 'text-emerald-700' : 'text-slate-500'
                       }`}
                     >
-                      {isCheaper ? `${Math.abs(diff)} DH moins cher` : `+${diff} DH`}
+                      {isCheaper ? `${formatPrice(Math.abs(diff))} moins cher` : `+${formatPrice(diff)}`}
                     </span>
                   )}
                 </div>

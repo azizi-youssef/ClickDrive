@@ -111,11 +111,10 @@ describe('Finances : opérations en cartes sur téléphone', () => {
             JSON.stringify({
               success: true,
               data: {
-                platformRate: 0,
-                kpis: { grossRevenue: 2400, platformCommission: 0, agencyNet: 2400, settledNet: 1200, pendingNet: 1200, totalBookingsCount: 2, completedBookingsCount: 1 },
+                kpis: { revenue: 2400, settledRevenue: 1200, pendingRevenue: 1200, totalBookingsCount: 2, completedBookingsCount: 1 },
                 transactions: [
-                  { id: 't1', reference: 'CD-2611-0041', date: '2026-11-14T09:00:00Z', customerName: 'Mohamed El Amrani', vehicle: 'Dacia Logan', totalPrice: 1200, agencyAmount: 1200, status: 'COMPLETED' },
-                  { id: 't2', reference: 'CD-2611-0042', date: '2026-11-14T09:00:00Z', customerName: 'Sophie Van der Berg', vehicle: 'Renault Clio', totalPrice: 1200, agencyAmount: 1200, status: 'REQUESTED' },
+                  { id: 't1', reference: 'CD-2611-0041', date: '2026-11-14T09:00:00Z', customerName: 'Mohamed El Amrani', vehicle: 'Dacia Logan', totalPrice: 1200, status: 'COMPLETED' },
+                  { id: 't2', reference: 'CD-2611-0042', date: '2026-11-14T09:00:00Z', customerName: 'Sophie Van der Berg', vehicle: 'Renault Clio', totalPrice: 1200, status: 'REQUESTED' },
                 ],
               },
             }),

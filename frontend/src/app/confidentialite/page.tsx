@@ -3,6 +3,7 @@ import Link from '@/components/i18n/LocalizedLink';
 import { ChevronRight, Shield } from 'lucide-react';
 import { legalPageMetadata } from '@/lib/i18n/server';
 import { LegalFrenchText } from '@/components/legal/LegalFrenchText';
+import { PRIVACY_EMAIL } from '@/lib/constants/contact';
 
 export async function generateMetadata(): Promise<Metadata> {
   return legalPageMetadata('privacy', '/confidentialite');
@@ -56,7 +57,7 @@ export default function ConfidentialitePage() {
               <Paragraph>
                 Le responsable du traitement des données personnelles est <strong>ClickDrive</strong>,
                 représenté par <strong>Youssef Azizi</strong>, dont le siège est à Nador, Maroc.
-                Contact : <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a>
+                Contact : <a href={`mailto:${PRIVACY_EMAIL}`} className="text-accent-text hover:underline font-semibold">{PRIVACY_EMAIL}</a>
               </Paragraph>
             </Section>
 
@@ -174,7 +175,7 @@ export default function ConfidentialitePage() {
               </div>
               <Paragraph>
                 Pour exercer ces droits, contactez-nous à{' '}
-                <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a>.
+                <a href={`mailto:${PRIVACY_EMAIL}`} className="text-accent-text hover:underline font-semibold">{PRIVACY_EMAIL}</a>.
                 Nous traiterons votre demande dans un délai de <strong>30 jours</strong>.
               </Paragraph>
               <Paragraph>
@@ -257,7 +258,7 @@ export default function ConfidentialitePage() {
                 Pour toute question relative à la protection de vos données :
               </Paragraph>
               <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                <li>📧 <a href="mailto:privacy@clickdrive.ma" className="text-accent-text hover:underline font-semibold">privacy@clickdrive.ma</a></li>
+                <li>📧 <a href={`mailto:${PRIVACY_EMAIL}`} className="text-accent-text hover:underline font-semibold">{PRIVACY_EMAIL}</a></li>
                 <li>📍 ClickDrive — Nador, Maroc</li>
                 <li>💬 <Link href="/contact" className="text-accent-text hover:underline font-semibold">Formulaire de contact</Link></li>
               </ul>

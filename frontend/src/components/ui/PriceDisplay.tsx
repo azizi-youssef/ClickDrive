@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn, formatNumber } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 interface PriceDisplayProps {
   price: number;
@@ -24,7 +24,7 @@ export function PriceDisplay({
   return (
     <div className={cn('inline-flex items-baseline gap-1', className)}>
       <span className={cn('text-ink', sizeClasses[size])}>
-        {formatNumber(price)} DH
+        {formatPrice(price)}
       </span>
       {period && (
         <span className="text-xs text-slate-500 font-medium lowercase">

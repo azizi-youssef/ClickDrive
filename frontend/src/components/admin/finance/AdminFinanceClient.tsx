@@ -176,20 +176,20 @@ export function AdminFinanceClient() {
                   Modèle Économique Actif
                 </span>
                 <span className="rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5">
-                  Abonnement Mensuel Flotte (0% Commission)
+                  Abonnement mensuel par flotte
                 </span>
               </div>
               <h2 className="text-base font-extrabold text-slate-900 mt-0.5">
                 Rémunération par abonnement mensuel basé sur la capacité en véhicules
               </h2>
               <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Chaque concession souscrit un abonnement proportionnel à la taille de sa flotte (Starter, Pro, Business, Illimité). Les réservations de véhicules génèrent 0% de prélèvement, garantissant 100% des fonds aux concessions.
+                Chaque agence souscrit un abonnement proportionnel à la taille de sa flotte (Starter, Pro, Business, Illimité). Le montant des locations revient entièrement aux agences.
               </p>
             </div>
           </div>
 
           <Link
-            href="/admin/settings/commission"
+            href="/admin/settings/abonnements"
             className="flex items-center gap-2 whitespace-nowrap self-start sm:self-center rounded-xl bg-white border border-blue-200 px-4 py-2.5 text-xs font-bold text-ink hover:bg-blue-50 shadow-xs transition"
           >
             <Settings className="h-4 w-4" />
@@ -347,13 +347,13 @@ export function AdminFinanceClient() {
         </TableWrapper>
       </AdminCard>
 
-      {/* Section 2: Bookings Ledger (With 0% commission notation) */}
+      {/* Section 2 : grand livre des réservations (montants des locations, perçus par les agences) */}
       <AdminCard noPadding>
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:p-5 border-b border-slate-100">
           <div>
             <SectionHeader title="Grand livre des réservations clients" />
             <p className="text-xs text-slate-500 mt-0.5">
-              Historique des flux transactionnels (0% de commission prélevée sur le modèle actuel).
+              Historique des réservations et de leur montant.
             </p>
           </div>
           <div className="flex items-center gap-2 sm:ml-auto">
@@ -394,18 +394,16 @@ export function AdminFinanceClient() {
               <Th>Dossier</Th>
               <Th className="hidden md:table-cell">Agence</Th>
               <Th className="hidden lg:table-cell">Dates</Th>
-              <Th>Total (DH)</Th>
-              <Th>Commission ClickDrive</Th>
-              <Th className="hidden sm:table-cell">Net Agence</Th>
+              <Th>Montant (DH)</Th>
               <Th>Statut</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {loading ? (
-              <TableSkeletonRows cols={7} rows={6} />
+              <TableSkeletonRows cols={5} rows={6} />
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-6">
+                <td colSpan={5} className="py-6">
                   <EmptyState icon={DollarSign} title="Aucune réservation trouvée" />
                 </td>
               </tr>
@@ -430,16 +428,6 @@ export function AdminFinanceClient() {
                   <Td>
                     <span className="text-sm font-bold tabular-nums text-slate-900">
                       {formatPrice(b.total_price)}
-                    </span>
-                  </Td>
-                  <Td>
-                    <span className="text-xs font-semibold tabular-nums text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      0 DH (Inclus)
-                    </span>
-                  </Td>
-                  <Td className="hidden sm:table-cell">
-                    <span className="text-sm font-extrabold tabular-nums text-emerald-700">
-                      {formatPrice(b.agency_amount ?? b.total_price)}
                     </span>
                   </Td>
                   <Td>

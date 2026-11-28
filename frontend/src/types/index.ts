@@ -34,13 +34,6 @@ export type TransmissionType = 'MANUAL' | 'AUTOMATIC';
 export type FuelType = 'DIESEL' | 'GASOLINE' | 'HYBRID' | 'ELECTRIC';
 export type VehicleStatus = 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'BLOCKED';
 
-export type CommissionStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'DUE'
-  | 'PAID'
-  | 'CANCELLED';
-
 export type DeliveryType =
   | 'AGENCY_PICKUP'
   | 'AIRPORT'
@@ -72,16 +65,6 @@ export interface BookingEvent {
   event_type: BookingEventType | string;
   metadata?: Record<string, any>;
   created_at: string;
-}
-
-export interface PlatformSettings {
-  id: string;
-  commission_rate: number; // e.g. 15.00
-  currency: string;
-  payment_fee: number;
-  cancellation_fee: number;
-  created_at?: string;
-  updated_at: string;
 }
 
 export interface Agency {
@@ -230,19 +213,15 @@ export interface Booking {
   agency_notes?: string;
   notes?: string;
 
-  // Calculs financiers
+  // Montants (aucune commission : plateforme financée par l'abonnement des agences)
   daily_price: number;
   subtotal?: number;
   total_price: number;
-  commission_rate: number; // ex: 15.00
-  commission_amount: number; // ex: 270
-  agency_amount: number; // ex: 1530
   deposit_amount: number;
 
   // Statuts
   status: BookingStatus;
   agency_status?: 'PENDING' | 'VIEWED' | 'ACCEPTED' | 'REJECTED' | 'ALTERNATIVE_PROPOSED';
-  commission_status?: CommissionStatus;
   rejection_reason?: string;
   alternative_vehicle_id?: string;
   /** Véhicule alternatif proposé par l'agence : projection publique uniquement */

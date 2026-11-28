@@ -460,7 +460,7 @@ export function AdminPermissionsClient() {
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-                  <span><strong>Table audit_logs :</strong> Journalise les connexions, modifications de commissions, suspensions d'agences et attributions de rôles.</span>
+                  <span><strong>Table audit_logs :</strong> Journalise les connexions, modifications d'abonnements, suspensions d'agences et attributions de rôles.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />

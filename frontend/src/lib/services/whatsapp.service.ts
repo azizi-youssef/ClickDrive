@@ -4,13 +4,14 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { signedBookingPdfPath } from '@/lib/auth/booking-pdf-link';
 import { maskPhone, withRetry } from '@/lib/notifications/retry';
 import { bookingStatusLabel } from '@/lib/bookings/status';
-import { CLICKDRIVE_WHATSAPP_NUMBER, SUPPORT_HOURS_SUMMARY } from '@/lib/constants/contact';
+import { PLATFORM_WHATSAPP_NUMBER, supportHoursSummary } from '@/lib/constants/contact';
 import { isValidBookingReference } from '@/lib/utils/reference';
 import { isUuid } from '@/lib/availability/status';
 import { signedBookingLink } from '@/lib/auth/booking-access-link';
 import { canCustomerCancel } from '@/lib/bookings/customer-cancel';
 import { resolveLocale } from '@/lib/i18n/config';
 import { localizeHref } from '@/lib/i18n/routing';
+import { siteConfig } from '@/config/site';
 
 /**
  * ========================================================================
@@ -220,7 +221,7 @@ export type WhatsAppMessageRecord = {
 };
 
 function appBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma').replace(/\/+$/, '');
+  return (process.env.NEXT_PUBLIC_APP_URL || siteConfig.url).replace(/\/+$/, '');
 }
 
 /**
@@ -241,7 +242,7 @@ const INBOUND_MENU =
 /** Réponse automatique : information seulement, jamais l'annonce d'une modification */
 function buildInboundReply(intent: InboundIntent, booking: InboundBooking | null, customerName: string): string {
   const ref = booking ? booking.reference || booking.booking_ref || '' : '';
-  const supportLine = `Assistance ClickDrive (${SUPPORT_HOURS_SUMMARY}) : *+${CLICKDRIVE_WHATSAPP_NUMBER}*`;
+  const supportLine = `Assistance ClickDrive (${supportHoursSummary('fr')}) : *+${PLATFORM_WHATSAPP_NUMBER}*`;
   const agencyPhone = booking?.agency?.whatsapp || booking?.agency?.phone || null;
   const agencyLine = booking?.agency?.name && agencyPhone ? `• Agence ${booking.agency.name} : *${agencyPhone}*\n` : '';
   const trackingUrl = customerTrackingUrl(booking);
@@ -543,7 +544,7 @@ export class WhatsAppService {
     agencyPhone: string,
     appUrl?: string
   ): Promise<WhatsAppMessageResult> {
-    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://clickdrive.ma';
+    const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
     const ref = booking.reference || booking.booking_ref || '';
     const pdfUrl = `${baseUrl}${signedBookingPdfPath(ref)}`;
     const vehicleName = booking.vehicle

@@ -141,7 +141,7 @@ function Ellipsis() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Premium pagination component for KlickDrive.
+ * Premium pagination component for ClickDrive.
  *
  * - Highlights the active page with the brand red (#E63946).
  * - Shows First / Previous / page-numbers / Next / Last controls.

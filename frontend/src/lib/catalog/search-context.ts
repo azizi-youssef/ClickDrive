@@ -1,4 +1,5 @@
 import { LOCATIONS_NADOR } from '@/lib/constants/catalog';
+import { findPickupLocation } from '@/data/locations';
 import { MEETING_POINTS } from '@/lib/constants/meetingPoints';
 import { parseRentalPeriod, type RentalPeriod } from '@/lib/utils/date-only';
 
@@ -14,6 +15,9 @@ const KNOWN_LOCATIONS = [...LOCATIONS_NADOR, ...MEETING_POINTS.map((point) => po
 /** Lieu lu dans une adresse (?location=…) : seulement un lieu connu, dans son orthographe de référence */
 export function parseSearchLocation(value: unknown): string | undefined {
   if (typeof value !== 'string' || value.length === 0 || value.length > 120) return undefined;
+  // Lieu de la liste officielle, quelle que soit l'orthographe reçue (libellé, alias, ancienne valeur)
+  const known = findPickupLocation(value);
+  if (known) return known.value;
   const folded = fold(value);
   return KNOWN_LOCATIONS.find((location) => fold(location) === folded);
 }

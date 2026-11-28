@@ -3,6 +3,7 @@ import type { Booking } from '@/types';
 import { bookingStatusLabel, bookingStatusTone, bookingNextStepHint } from '@/lib/bookings/status';
 import { formatEngineCc, isMotorcycle, motorcycleLicenseLabel } from '@/lib/vehicles/kind';
 import { deliverableCustomerEmail } from '@/lib/bookings/customer-email';
+import { siteConfig } from '@/config/site';
 
 /* ================================================================
    Fiche « Demande de réservation » ClickDrive — une seule page A4
@@ -440,7 +441,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
     layout.font('bold', 11.5, COLORS.white);
     doc.text('Demande de réservation', titleX, top + 10.5);
     layout.font('normal', 7, COLORS.onInk);
-    doc.text(pdfSafeText('Agences partenaires · Nador et région de l’Oriental'), titleX, top + 16);
+    doc.text(pdfSafeText('Agences partenaires vérifiées · Nador'), titleX, top + 16);
   } else {
     layout.font('bold', 14, COLORS.white);
     doc.text('ClickDrive', titleX, top + 10);
@@ -685,7 +686,7 @@ function renderBookingPdf(booking: Booking, d: Density, logo: LogoData | null, g
     layout
       .wrap(LEGAL_NOTE, layout.contentWidth, 2)
       .lines.forEach((line, i) => doc.text(line, MARGIN_X, lineY + 4 + i * 2.7));
-    doc.text(`${reference} · Document généré le ${formatPdfDateTime(generatedAt)} · clickdrive.ma`, MARGIN_X, layout.height - 7.2);
+    doc.text(`${reference} · Document généré le ${formatPdfDateTime(generatedAt)} · ${new URL(siteConfig.url).host}`, MARGIN_X, layout.height - 7.2);
     doc.text(`Page ${page} / ${pages}`, right, layout.height - 7.2, { align: 'right' });
   }
 

@@ -8,18 +8,16 @@ import {
   RefreshCw,
   Sparkles,
   ArrowUpRight,
-  TrendingUp,
   Wallet,
   CheckSquare,
   Clock,
-  BarChart3,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { normalizeBookingStatus } from '@clickdrive/shared/booking-status';
 import { xlsxFileName } from '@/lib/export/spreadsheet';
 import { useXlsxExport } from '@/lib/export/use-xlsx-export';
 import { agencyFinancesSheet } from '@/lib/export/dashboard-sheets';
-import { eyebrow, eyebrowMuted, heading } from '@/lib/design/tokens';
+import { eyebrow, heading } from '@/lib/design/tokens';
 import type { AgencySubscription, PlanChangeRequest, SubscriptionPlan } from '@/types';
 import { AgencySubscriptionModal } from '../subscription/AgencySubscriptionModal';
 import { PendingPlanChangeBanner } from '../subscription/PendingPlanChangeBanner';
@@ -31,19 +29,16 @@ export type TransactionItem = {
   customerName: string;
   vehicle: string;
   totalPrice: number;
-  agencyAmount: number;
   status: string;
 };
 
+/** Montants des locations : aucune commission (modèle par abonnement), tout revient à l'agence */
 export type FinanceData = {
-  platformRate: number;
   subscription?: AgencySubscription;
   kpis: {
-    grossRevenue: number;
-    platformCommission: number;
-    agencyNet: number;
-    settledNet: number;
-    pendingNet: number;
+    revenue: number;
+    settledRevenue: number;
+    pendingRevenue: number;
     totalBookingsCount: number;
     completedBookingsCount: number;
   };
@@ -120,7 +115,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-slate-500">
-            Modèle par abonnement mensuel : <strong>0 % de commission ClickDrive</strong>. Vous conservez 100 % de vos montants de location.
+            Modèle par abonnement mensuel : <strong>le montant de vos locations vous revient entièrement</strong>.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -202,60 +197,36 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
         <PendingPlanChangeBanner agencyId={agencyId} request={pendingChange} onCancelled={() => setPendingChange(null)} />
       )}
 
-      {/* KPI Cards — montants cumulés depuis l'ouverture du compte (pas de filtre de période ici) */}
+      {/* Indicateurs — montants cumulés depuis l'ouverture du compte (pas de filtre de période ici) */}
       {data && (
-        <div className={cn('grid grid-cols-2 gap-4 sm:grid-cols-3', data.platformRate > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-3')}>
-          {/* Brut et commission : seulement si une commission s'applique (0 % avec les forfaits) ;
-              sinon ils répéteraient le montant net et contrediraient le « 0 % de commission » ci-dessus */}
-          {data.platformRate > 0 && (
-            <>
-              <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className={eyebrowMuted}>CA brut</span>
-                  <TrendingUp className="h-4 w-4 text-slate-400" />
-                </div>
-                <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.grossRevenue)}</p>
-                <p className="text-xs text-slate-500">Total réservations confirmées</p>
-              </div>
-
-              <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className={eyebrowMuted}>Commission</span>
-                  <BarChart3 className="h-4 w-4 text-slate-400" />
-                </div>
-                <p className="text-2xl font-extrabold text-slate-900">{formatPrice(data.kpis.platformCommission)}</p>
-                <p className="text-xs text-slate-500">Part plateforme ({(data.platformRate * 100).toFixed(0)}%)</p>
-              </div>
-            </>
-          )}
-
-          {/* Net agence */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* Chiffre d'affaires */}
           <div className="flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className={cn(eyebrow, 'text-emerald-700')}>Net agence</span>
+              <span className={cn(eyebrow, 'text-emerald-700')}>Chiffre d’affaires</span>
               <Wallet className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-extrabold text-emerald-800">{formatPrice(data.kpis.agencyNet)}</p>
-            <p className="text-xs text-emerald-700">Votre part, toutes périodes</p>
+            <p className="text-2xl font-extrabold text-emerald-800">{formatPrice(data.kpis.revenue)}</p>
+            <p className="text-xs text-emerald-700">{data.kpis.totalBookingsCount} réservations confirmées, toutes périodes</p>
           </div>
 
-          {/* Réglé */}
+          {/* Encaissé */}
           <div className="flex flex-col gap-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className={cn(eyebrow, 'text-blue-700')}>Réglé</span>
+              <span className={cn(eyebrow, 'text-blue-700')}>Encaissé</span>
               <CheckSquare className="h-4 w-4 text-blue-500" />
             </div>
-            <p className="text-2xl font-extrabold text-blue-800">{formatPrice(data.kpis.settledNet)}</p>
+            <p className="text-2xl font-extrabold text-blue-800">{formatPrice(data.kpis.settledRevenue)}</p>
             <p className="text-xs text-blue-700">{data.kpis.completedBookingsCount} dossiers clôturés</p>
           </div>
 
-          {/* En attente */}
+          {/* À venir */}
           <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className={cn(eyebrow, 'text-amber-700')}>En attente</span>
+              <span className={cn(eyebrow, 'text-amber-700')}>À venir</span>
               <Clock className="h-4 w-4 text-amber-500" />
             </div>
-            <p className="text-2xl font-extrabold text-amber-800">{formatPrice(data.kpis.pendingNet)}</p>
+            <p className="text-2xl font-extrabold text-amber-800">{formatPrice(data.kpis.pendingRevenue)}</p>
             <p className="text-xs text-amber-700">{data.kpis.totalBookingsCount - data.kpis.completedBookingsCount} dossiers actifs</p>
           </div>
         </div>
@@ -280,7 +251,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
           </div>
         ) : (
           <>
-          {/* Téléphone : une carte par opération (le tableau à 7 colonnes défilerait à l'horizontale) */}
+          {/* Téléphone : une carte par opération (le tableau à 6 colonnes défilerait à l'horizontale) */}
           <ul className="divide-y divide-slate-100 sm:hidden" aria-label="Opérations">
             {data.transactions.map((t) => (
               <li key={t.id} className="px-4 py-3">
@@ -294,15 +265,9 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                   </div>
                   <TransactionStatus status={t.status} />
                 </div>
-                <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <dt className="text-slate-500">Montant brut</dt>
-                    <dd className="font-semibold text-slate-900">{formatPrice(t.totalPrice)}</dd>
-                  </div>
-                  <div className="text-right">
-                    <dt className="text-slate-500">Part agence</dt>
-                    <dd className="font-bold text-emerald-700">{formatPrice(t.agencyAmount)}</dd>
-                  </div>
+                <dl className="mt-2 flex items-baseline justify-between gap-2 text-xs">
+                  <dt className="text-slate-500">Montant</dt>
+                  <dd className="font-bold text-slate-900">{formatPrice(t.totalPrice)}</dd>
                 </dl>
               </li>
             ))}
@@ -315,8 +280,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3">Véhicule</th>
-                  <th className="px-4 py-3 text-right">Montant brut</th>
-                  <th className="px-4 py-3 text-right">Part agence</th>
+                  <th className="px-4 py-3 text-right">Montant</th>
                   <th className="px-4 py-3 text-center">Statut</th>
                 </tr>
               </thead>
@@ -329,11 +293,8 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
                     </td>
                     <td className="px-4 py-3 font-medium text-slate-900">{t.customerName}</td>
                     <td className="px-4 py-3 text-slate-600">{t.vehicle}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                    <td className="px-4 py-3 text-right font-bold text-slate-900">
                       {formatPrice(t.totalPrice)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-700">
-                      {formatPrice(t.agencyAmount)}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <TransactionStatus status={t.status} />

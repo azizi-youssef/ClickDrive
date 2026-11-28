@@ -30,6 +30,7 @@ import {
   StatusBadge,
 } from '@/components/admin/AdminUI';
 import { useRealtimeRefresh } from '@/lib/supabase/realtime';
+import { absoluteUrl } from '@/config/site';
 
 interface NotificationFeedItem {
   id: string;
@@ -634,7 +635,7 @@ export function AdminNotificationsClient() {
                         value={
                           typeof window !== 'undefined'
                             ? `${window.location.origin}/api/webhooks/whatsapp`
-                            : 'https://clickdrive.ma/api/webhooks/whatsapp'
+                            : absoluteUrl('/api/webhooks/whatsapp')
                         }
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 font-mono text-xs text-slate-800"
                       />
@@ -645,7 +646,7 @@ export function AdminNotificationsClient() {
                           copyToClipboard(
                             typeof window !== 'undefined'
                               ? `${window.location.origin}/api/webhooks/whatsapp`
-                              : 'https://clickdrive.ma/api/webhooks/whatsapp',
+                              : absoluteUrl('/api/webhooks/whatsapp'),
                             'url'
                           )
                         }

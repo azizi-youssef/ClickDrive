@@ -8,7 +8,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 /** Colonnes strictement necessaires au tableau de bord agence. */
 const BOOKING_LIST_COLUMNS =
-  'id, booking_ref, reference, vehicle_id, agency_id, customer_name, start_date, end_date, total_days, total_price, commission_rate, commission_amount, agency_amount, status, created_at, vehicle:vehicles(id, brand, model, category)';
+  'id, booking_ref, reference, vehicle_id, agency_id, customer_name, start_date, end_date, total_days, total_price, status, created_at, vehicle:vehicles(id, brand, model, category)';
 
 const MAX_PAGE_SIZE = 50;
 

@@ -97,7 +97,7 @@ export function AgencySubscriptionModal({
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
             Abonnement calculé en fonction de la taille de votre parc de véhicules.
-            <strong> 0 % de commission sur vos réservations</strong> : vous conservez 100 % de vos revenus locatifs.
+            <strong> Le montant de vos locations vous revient entièrement.</strong>
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs bg-white/10 rounded-xl px-4 py-2 w-fit">

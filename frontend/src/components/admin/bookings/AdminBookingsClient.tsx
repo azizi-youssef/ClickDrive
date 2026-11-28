@@ -228,10 +228,7 @@ export function AdminBookingsClient() {
                       </span>
                     </Td>
                     <Td className="hidden sm:table-cell">
-                      <div>
-                        <p className="text-sm font-semibold tabular-nums text-slate-900">{formatPrice(b.total_price)}</p>
-                        <p className="text-xs text-slate-400 tabular-nums">com. {formatPrice(b.commission_amount)}</p>
-                      </div>
+                      <p className="text-sm font-semibold tabular-nums text-slate-900">{formatPrice(b.total_price)}</p>
                     </Td>
                     <Td>
                       <BookingStatusBadge status={b.status} />

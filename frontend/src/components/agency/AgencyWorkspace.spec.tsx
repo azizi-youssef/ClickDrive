@@ -73,7 +73,7 @@ function stubApi() {
             stats: {
               totalVehicles: 12, availableVehicles: 4, reservedVehicles: 2, rentedVehicles: 5, maintenanceVehicles: 1,
               pendingBookings: 0, confirmedBookings: 7, completedBookings: 41, cancelledBookings: 6,
-              grossRevenue: 98400, platformCommission: 0, agencyNet: 98400, occupancyRate: 42,
+              grossRevenue: 98400, occupancyRate: 42,
             },
             agenda: { upcomingPickups: [], upcomingReturns: [], recentActivity: [] },
           },

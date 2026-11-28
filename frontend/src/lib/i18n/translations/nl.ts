@@ -77,6 +77,8 @@ export const nl: Translations = {
     yourSearch: 'Uw zoekopdracht',
     editSearch: 'Zoekopdracht wijzigen',
     collapse: 'Inklappen',
+    edit: 'Wijzigen',
+    durationLabel: 'Duur',
     allLocations: 'Alle ophaallocaties',
     airport: 'Luchthaven Nador-Al Aroui (NDR)',
     port: 'Haven Beni Ansar',
@@ -149,7 +151,7 @@ export const nl: Translations = {
     mentions: 'Colofon & Juridisch',
   },
   footer: {
-    tagline: 'Het toonaangevende platform voor autoverhuur in Nador en Oost-Marokko.',
+    tagline: 'Het toonaangevende platform voor autoverhuur in Nador.',
     agencyBoxTitle: 'Heb je een autoverhuurbedrijf in Nador?',
     agencyBoxDesc: 'Sluit je aan bij ClickDrive om je wagenpark te digitaliseren en gekwalificeerde boekingen te ontvangen.',
     agencyBoxCta: 'Partner worden',

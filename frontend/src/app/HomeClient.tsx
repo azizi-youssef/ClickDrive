@@ -10,7 +10,9 @@ import type { Vehicle, Agency } from '@/types';
 import { isMotorcycle } from '@/lib/vehicles/kind';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { formatNumber } from '@/lib/i18n/format';
-import { categoryLabel } from '@/lib/i18n/labels';
+import { categoryLabel, locationLabel } from '@/lib/i18n/labels';
+import { supportHoursSummary } from '@/lib/constants/contact';
+import { featuredPickupLocations, type LocationId, type PickupLocation } from '@/data/locations';
 import { GsapReveal } from '@/components/ui/react-bits';
 import { StyleExplorer } from '@/components/home/StyleExplorer';
 import type { RentalPeriod } from '@/lib/utils/date-only';
@@ -167,13 +169,21 @@ export function HomeClient({
     ),
   ];
 
-  const destinations = [
-    // shortName : valeur du filtre « lieu » dans l'URL (français, comme en base)
-    { name: home.destinations.airport, shortName: 'Aéroport', image: '/aeroport%20nador%20al%20aroui.jpeg', icon: Plane, tag: home.destinations.popular },
-    { name: home.destinations.center, shortName: 'Nador', image: '/centre%20nadar.jpeg', icon: MapPin, tag: null },
-    { name: home.destinations.port, shortName: 'Beni Ansar', image: '/frontera%20melilla.jpeg', icon: MapPin, tag: home.destinations.portTag },
-    { name: home.destinations.marchica, shortName: 'Marchica', image: '/atalayoun%20nador.jpg', icon: MapPin, tag: null },
-  ];
+  // Lieux mis en avant (src/data/locations.ts) : libellés normalisés, lien vers le catalogue avec le lieu choisi
+  const DESTINATION_TAGS: Partial<Record<LocationId, string>> = {
+    'aeroport-nador': home.destinations.popular,
+    'port-beni-ansar': home.destinations.portTag,
+  };
+  const destinations = featuredPickupLocations()
+    .filter((location): location is PickupLocation & { image: string } => Boolean(location.image))
+    .map((location) => ({
+      id: location.id,
+      name: locationLabel(t, location.value),
+      href: `/search?location=${encodeURIComponent(location.value)}`,
+      image: location.image,
+      icon: location.kind === 'AIRPORT' ? Plane : MapPin,
+      tag: DESTINATION_TAGS[location.id] ?? null,
+    }));
 
   // Bande de confiance unifiée, cohérente et lisible sur tous les écrans
   const unifiedTrustItems = [
@@ -195,7 +205,8 @@ export function HomeClient({
     {
       icon: Clock3,
       title: home.trust.supportTitle,
-      description: home.trust.supportDesc,
+      // Horaires lus dans config/site.ts, mis en forme dans la langue de la page
+      description: fmt(home.trust.supportDesc, { hours: supportHoursSummary(locale) }),
     },
   ];
 
@@ -207,10 +218,10 @@ export function HomeClient({
           recherche immédiatement utilisable
       ================================================================= */}
       <section className="relative isolate overflow-hidden bg-[#070B12] text-white">
-        {/* Photo d'ambiance décorative : alt vide, chargée en priorité (élément LCP) */}
+        {/* Photo d'ambiance : texte alternatif descriptif, chargée en priorité (élément LCP) */}
         <Image
           src="/hero-nador.png"
-          alt=""
+          alt={home.heroImageAlt}
           fill
           priority
           fetchPriority="high"
@@ -518,8 +529,8 @@ export function HomeClient({
             const Icon = destination.icon;
             return (
               <Link
-                href={`/search?location=${encodeURIComponent(destination.shortName)}`}
-                key={destination.name}
+                href={destination.href}
+                key={destination.id}
                 className="group relative aspect-[1.15] overflow-hidden rounded-2xl bg-slate-900"
               >
                 <Image
@@ -540,7 +551,7 @@ export function HomeClient({
 
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
                   <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition group-hover:bg-brand">
-                    <Icon className="h-4 w-4 text-white" />
+                    <Icon className="h-4 w-4 text-white" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-bold text-white sm:text-base">{destination.name}</p>
                   <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-white/85 transition group-hover:text-white">

@@ -378,8 +378,8 @@ export function OverviewPanel({
         />
         <KpiCard
           label="Revenus"
-          value={formatPrice(d.agencyNet)}
-          hint="Montant agence sur la période choisie"
+          value={formatPrice(d.grossRevenue)}
+          hint="Réservations confirmées sur la période choisie"
           icon={CircleDollarSign}
         />
       </div>

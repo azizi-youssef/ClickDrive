@@ -3,6 +3,7 @@ import Link from '@/components/i18n/LocalizedLink';
 import { ChevronRight, FileText } from 'lucide-react';
 import { legalPageMetadata } from '@/lib/i18n/server';
 import { LegalFrenchText } from '@/components/legal/LegalFrenchText';
+import { CONTACT_EMAIL } from '@/lib/constants/contact';
 
 export async function generateMetadata(): Promise<Metadata> {
   return legalPageMetadata('cgv', '/cgv');
@@ -214,7 +215,7 @@ export default function CGVPage() {
                 Pour toute réclamation ou question relative aux présentes CGV :
               </Paragraph>
               <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                <li>📧 <a href="mailto:contact@clickdrive.ma" className="text-accent-text hover:underline font-semibold">contact@clickdrive.ma</a></li>
+                <li>📧 <a href={`mailto:${CONTACT_EMAIL}`} className="text-accent-text hover:underline font-semibold">{CONTACT_EMAIL}</a></li>
                 <li>📍 Nador, Région de l&apos;Oriental, Maroc</li>
                 <li>💬 <Link href="/contact" className="text-accent-text hover:underline font-semibold">Formulaire de contact en ligne</Link></li>
               </ul>

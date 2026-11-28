@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
+import { siteConfig } from '@/config/site';
 import { DEFAULT_LOCALE, LOCALE_COOKIE_KEY, isLocale, localeFromAcceptLanguage, type Locale } from '@/lib/i18n/config';
 import { canonicalPath, isLocalizedPath, isUnlocalizedArea, localizeHref, splitLocalePrefix } from '@/lib/i18n/routing';
 
 /** Ancien nom de domaine (KlickDrive) : redirigé définitivement vers ClickDrive, chemin et paramètres conservés */
 const LEGACY_HOSTS = new Set(['klickdrive.ma', 'www.klickdrive.ma']);
-const CANONICAL_ORIGIN = 'https://clickdrive.ma';
+/** Domaine de destination : URL du site de la config (NEXT_PUBLIC_SITE_URL), jamais une redirection vers soi-même */
+const CANONICAL_ORIGIN = siteConfig.url;
+const CANONICAL_HOST = new URL(CANONICAL_ORIGIN).host.toLowerCase();
 /** Robots et aperçus de liens : jamais redirigés selon la langue (chaque adresse a sa langue) */
 const BOT_USER_AGENT = /bot|crawl|spider|slurp|facebookexternalhit|embedly|preview|lighthouse|headless/i;
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -21,7 +24,7 @@ function redirectTo(request: NextRequest, href: string, status: 307 | 308): Next
 
 export async function proxy(request: NextRequest) {
   const host = request.headers.get('host')?.split(':')[0]?.toLowerCase();
-  if (host && LEGACY_HOSTS.has(host)) {
+  if (host && LEGACY_HOSTS.has(host) && host !== CANONICAL_HOST) {
     const { pathname, search } = request.nextUrl;
     return NextResponse.redirect(`${CANONICAL_ORIGIN}${pathname}${search}`, 308);
   }

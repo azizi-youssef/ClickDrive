@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import React from 'react';
+import { absoluteUrl } from '@/config/site';
 
 export const metadata: Metadata = {
   title: 'Devenir agence partenaire à Nador',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     title: 'Rejoindre ClickDrive — Pour les agences de location à Nador',
     description:
       'Présentez votre flotte sur ClickDrive et recevez des demandes de réservation directes et sécurisées.',
-    url: 'https://clickdrive.ma/agency/join',
+    url: absoluteUrl('/agency/join'),
   },
 };
 

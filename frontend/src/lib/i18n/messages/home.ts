@@ -3,6 +3,8 @@ import type { PluralForms } from '../format';
 
 /** Page d'accueil (hors hero et barre de recherche, déjà dans les dictionnaires de base) */
 const fr = {
+  // Photo du héro : texte alternatif descriptif (lecteurs d'écran, référencement des images)
+  heroImageAlt: 'Berline noire garée sur la corniche de Nador au coucher du soleil',
   trust: {
     agenciesCount: { one: '{count} agence locale référencée', other: '{count} agences locales référencées' } as PluralForms,
     agenciesAudited: 'Agences locales auditées',
@@ -13,7 +15,7 @@ const fr = {
     pickupDesc: 'Livraison au terminal de l’Aéroport Al-Aroui, au port de Beni Ansar, en ville ou à votre hébergement.',
     supportTitle: 'Support client local',
     supportDesc:
-      'Une équipe locale joignable du lundi au vendredi (9h–18h) et le samedi matin (9h–13h) pour répondre à vos questions.',
+      'Une équipe locale joignable pour répondre à vos questions : {hours}.',
   },
   featured: {
     eyebrow: 'Sélection ClickDrive',
@@ -109,6 +111,7 @@ export type HomeMessages = typeof fr;
 export const home: Record<Locale, HomeMessages> = {
   fr,
   en: {
+    heroImageAlt: 'A black saloon parked on the Nador seafront at sunset',
     trust: {
       agenciesCount: { one: '{count} local agency listed', other: '{count} local agencies listed' },
       agenciesAudited: 'Audited local agencies',
@@ -118,7 +121,7 @@ export const home: Record<Locale, HomeMessages> = {
       pickupTitle: 'Pickup in Nador',
       pickupDesc: 'Delivery at Al-Aroui Airport terminal, Beni Ansar port, in town or at your accommodation.',
       supportTitle: 'Local customer support',
-      supportDesc: 'A local team available Monday to Friday (9am–6pm) and Saturday morning (9am–1pm) to answer your questions.',
+      supportDesc: 'A local team available to answer your questions: {hours}.',
     },
     featured: {
       eyebrow: 'ClickDrive selection',
@@ -208,6 +211,7 @@ export const home: Record<Locale, HomeMessages> = {
     },
   },
   es: {
+    heroImageAlt: 'Berlina negra aparcada en el paseo marítimo de Nador al atardecer',
     trust: {
       agenciesCount: { one: '{count} agencia local registrada', other: '{count} agencias locales registradas' },
       agenciesAudited: 'Agencias locales auditadas',
@@ -218,7 +222,7 @@ export const home: Record<Locale, HomeMessages> = {
       pickupDesc: 'Entrega en la terminal del aeropuerto Al-Aroui, en el puerto de Beni Ansar, en la ciudad o en tu alojamiento.',
       supportTitle: 'Atención al cliente local',
       supportDesc:
-        'Un equipo local disponible de lunes a viernes (9:00–18:00) y el sábado por la mañana (9:00–13:00) para responder a tus preguntas.',
+        'Un equipo local disponible para responder a tus preguntas: {hours}.',
     },
     featured: {
       eyebrow: 'Selección ClickDrive',
@@ -308,6 +312,7 @@ export const home: Record<Locale, HomeMessages> = {
     },
   },
   de: {
+    heroImageAlt: 'Schwarze Limousine an der Uferpromenade von Nador bei Sonnenuntergang',
     trust: {
       agenciesCount: { one: '{count} lokaler Vermieter gelistet', other: '{count} lokale Vermieter gelistet' },
       agenciesAudited: 'Geprüfte lokale Vermieter',
@@ -318,7 +323,7 @@ export const home: Record<Locale, HomeMessages> = {
       pickupDesc: 'Übergabe am Terminal des Flughafens Al-Aroui, am Hafen Beni Ansar, in der Stadt oder an Ihrer Unterkunft.',
       supportTitle: 'Kundenservice vor Ort',
       supportDesc:
-        'Ein lokales Team ist montags bis freitags (9–18 Uhr) und samstagvormittags (9–13 Uhr) für Ihre Fragen erreichbar.',
+        'Ein lokales Team ist für Ihre Fragen erreichbar: {hours}.',
     },
     featured: {
       eyebrow: 'ClickDrive-Auswahl',
@@ -408,6 +413,7 @@ export const home: Record<Locale, HomeMessages> = {
     },
   },
   nl: {
+    heroImageAlt: 'Zwarte sedan geparkeerd aan de boulevard van Nador bij zonsondergang',
     trust: {
       agenciesCount: { one: '{count} lokale verhuurder aangesloten', other: '{count} lokale verhuurders aangesloten' },
       agenciesAudited: 'Gecontroleerde lokale verhuurders',
@@ -418,7 +424,7 @@ export const home: Record<Locale, HomeMessages> = {
       pickupDesc: 'Levering bij de terminal van luchthaven Al-Aroui, in de haven van Beni Ansar, in de stad of bij je verblijf.',
       supportTitle: 'Lokale klantenservice',
       supportDesc:
-        'Een lokaal team is bereikbaar van maandag tot en met vrijdag (9.00–18.00 uur) en op zaterdagochtend (9.00–13.00 uur) voor je vragen.',
+        'Een lokaal team is bereikbaar voor je vragen: {hours}.',
     },
     featured: {
       eyebrow: 'Selectie van ClickDrive',
@@ -508,6 +514,7 @@ export const home: Record<Locale, HomeMessages> = {
     },
   },
   ar: {
+    heroImageAlt: 'سيارة سيدان سوداء متوقفة على كورنيش الناظور عند الغروب',
     trust: {
       agenciesCount: {
         zero: '{count} وكالة محلية مسجلة',
@@ -524,7 +531,7 @@ export const home: Record<Locale, HomeMessages> = {
       pickupTitle: 'الاستلام في الناظور',
       pickupDesc: 'التسليم في محطة مطار العروي أو ميناء بني انصار أو داخل المدينة أو في مكان إقامتك.',
       supportTitle: 'خدمة عملاء محلية',
-      supportDesc: 'فريق محلي متاح من الاثنين إلى الجمعة (9:00–18:00) وصباح السبت (9:00–13:00) للإجابة عن أسئلتك.',
+      supportDesc: 'فريق محلي متاح للإجابة عن أسئلتك: {hours}.',
     },
     featured: {
       eyebrow: 'اختيارات ClickDrive',

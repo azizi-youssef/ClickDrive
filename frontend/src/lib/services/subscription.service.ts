@@ -138,8 +138,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     sort_order: 1,
     features: [
       'De 5 à 15 véhicules actifs au catalogue',
-      '0% de commission sur toutes les réservations',
-      '100% des revenus locatifs conservés par la concession',
+      'Montant des locations encaissé en totalité par l’agence',
       'Gestion en direct du calendrier & des indisponibilités',
       'Support client et assistance WhatsApp standard',
     ],
@@ -158,7 +157,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     sort_order: 2,
     features: [
       'De 15 à 25 véhicules actifs au catalogue',
-      '0% de commission sur toutes les réservations',
+      'Montant des locations encaissé en totalité par l’agence',
       'Mise en avant prioritaire sur le moteur de recherche ClickDrive',
       "Suivi opérationnel simple de la flotte",
       'Gestion multi-utilisateurs (propriétaire & collaborateurs)',
@@ -179,7 +178,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     sort_order: 3,
     features: [
       'De 25 à 35 véhicules actifs au catalogue',
-      '0% de commission sur toutes les réservations',
+      'Montant des locations encaissé en totalité par l’agence',
       'Badge Concessionnaire Officiel Vérifié',
       'Export comptable automatisé et facturation proforma',
       'Gestionnaire de compte ClickDrive dédié',
@@ -200,7 +199,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     sort_order: 4,
     features: [
       "De 35 à 45 véhicules actifs au catalogue",
-      '0% de commission sur toutes les réservations',
+      'Montant des locations encaissé en totalité par l’agence',
       'Gestion multi-agences et succursales régionales',
       'Accès API pour synchronisation flotte & ERP',
       'Visibilité marketplace maximale garantie',

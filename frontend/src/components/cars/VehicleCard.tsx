@@ -136,6 +136,7 @@ function VehicleGallery({
   images,
   brand,
   model,
+  year,
   agencyCity,
   priority,
   unavailable,
@@ -144,6 +145,8 @@ function VehicleGallery({
   images: string[];
   brand: string;
   model: string;
+  /** Année du modèle, reprise dans le texte alternatif (« Dacia Logan 2023 – location Nador ») */
+  year?: number | string | null;
   agencyCity?: string;
   priority: boolean;
   unavailable: boolean;
@@ -288,7 +291,7 @@ function VehicleGallery({
                   <Image
                     src={img}
                     alt={`${fmt(agencyCity ? card.photoAltCity : card.photoAlt, {
-                      name: `${brand} ${model}`,
+                      name: [brand, model, year].filter(Boolean).join(' '),
                       city: agencyCity ?? '',
                     })}${
                       images.length > 1
@@ -445,6 +448,7 @@ function VehicleCardComponent({
           images={images}
           brand={vehicle.brand}
           model={vehicle.model}
+          year={vehicle.year}
           agencyCity={agency?.city}
           priority={priority}
           unavailable={!isBookable}

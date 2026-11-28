@@ -20,7 +20,6 @@ const stats: AdminStats = {
   totalMotorcycles: 22,
   totalBookings: 412,
   totalVolume: 1_284_500,
-  platformCommission: 0,
 };
 
 const overview = (overrides: Partial<AdminOverview> = {}): AdminOverview => ({

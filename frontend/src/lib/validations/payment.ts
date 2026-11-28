@@ -22,14 +22,6 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-export const COMMISSION_STATUSES = [
-  'PENDING',
-  'DUE',
-  'COLLECTED',
-  'WAIVED',
-] as const;
-export type CommissionStatus = (typeof COMMISSION_STATUSES)[number];
-
 export const DEPOSIT_STATUSES = [
   'HELD',
   'RELEASED',
@@ -78,28 +70,7 @@ export const depositManagementSchema = z.object({
   deductionReason: z.string().trim().max(500).optional(),
 });
 
-export const commissionSettingsSchema = z.object({
-  agencyId: z.string().regex(UUID_REGEX, 'Identifiant agence invalide').optional(),
-  commissionRatePercent: z.coerce
-    .number()
-    .min(0, 'Le taux de commission ne peut pas être négatif')
-    .max(100, 'Le taux de commission ne peut pas dépasser 100%'),
-  minCommissionMad: z.coerce
-    .number()
-    .min(0, 'La commission minimale ne peut pas être négative')
-    .default(0),
-});
-
-export const commissionStatusUpdateSchema = z.object({
-  bookingId: z.string().regex(UUID_REGEX, 'Identifiant de réservation invalide'),
-  commissionStatus: z.enum(COMMISSION_STATUSES),
-  amountMad: monetaryAmountSchema.optional(),
-  notes: z.string().trim().max(500).optional(),
-});
-
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type UpdatePaymentStatusInput = z.infer<typeof updatePaymentStatusSchema>;
 export type DepositManagementInput = z.infer<typeof depositManagementSchema>;
-export type CommissionSettingsInput = z.infer<typeof commissionSettingsSchema>;
-export type CommissionStatusUpdateInput = z.infer<typeof commissionStatusUpdateSchema>;
 

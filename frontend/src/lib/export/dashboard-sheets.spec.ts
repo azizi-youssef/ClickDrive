@@ -17,8 +17,6 @@ const booking = {
   end_date: '2026-12-04',
   total_days: 3,
   total_price: 1250,
-  commission_amount: 125.5,
-  agency_amount: 1124.5,
   status: 'APPROVED',
   created_at: '2026-11-09T22:30:00.000Z',
 } as unknown as Booking;
@@ -48,11 +46,11 @@ describe('Exports Excel des tableaux de bord', () => {
     expect(sheet.cells.get('J2')?.format).toBe('#,##0.00');
   });
 
-  it('administration — finances : commission et net agence en nombres', async () => {
-    const sheet = await read(adminFinanceSheet([booking, { ...booking, booking_ref: undefined, reference: 'CD-2', commission_amount: undefined, agency_amount: undefined } as unknown as Booking]));
-    expect(sheet.values[0]).toEqual(['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Total (DH)', 'Commission (DH)', 'Net agence (DH)', 'Statut']);
-    expect(sheet.values[1]).toEqual(['CD-2026-001842', 'Hélène Dupont', 'Agence Alpha', '2026-12-01', '2026-12-04', 1250, 125.5, 1124.5, 'Confirmée']);
-    expect(sheet.values[2].slice(0, 1).concat(sheet.values[2].slice(5, 8))).toEqual(['CD-2', 1250, 0, 1250]);
+  it('administration — finances : montant des locations, sans commission ni « net agence »', async () => {
+    const sheet = await read(adminFinanceSheet([booking, { ...booking, booking_ref: undefined, reference: 'CD-2' } as unknown as Booking]));
+    expect(sheet.values[0]).toEqual(['Dossier', 'Client', 'Agence', 'Début', 'Fin', 'Montant (DH)', 'Statut']);
+    expect(sheet.values[1]).toEqual(['CD-2026-001842', 'Hélène Dupont', 'Agence Alpha', '2026-12-01', '2026-12-04', 1250, 'Confirmée']);
+    expect(sheet.values[2].slice(0, 1).concat(sheet.values[2].slice(5, 6))).toEqual(['CD-2', 1250]);
   });
 
   it('administration — clients', async () => {
@@ -86,12 +84,11 @@ describe('Exports Excel des tableaux de bord', () => {
           customerName: 'Hélène Dupont',
           vehicle: 'Dacia Logan',
           totalPrice: 1250,
-          agencyAmount: 1250,
           status: 'COMPLETED',
         },
       ])
     );
-    expect(sheet.values[0]).toEqual(['Référence', 'Date', 'Client', 'Véhicule', 'Montant (DH)', 'Part agence (DH)', 'Statut']);
-    expect(sheet.values[1]).toEqual(['CD-2026-001842', '2026-12-01', 'Hélène Dupont', 'Dacia Logan', 1250, 1250, 'Terminée']);
+    expect(sheet.values[0]).toEqual(['Référence', 'Date', 'Client', 'Véhicule', 'Montant (DH)', 'Statut']);
+    expect(sheet.values[1]).toEqual(['CD-2026-001842', '2026-12-01', 'Hélène Dupont', 'Dacia Logan', 1250, 'Terminée']);
   });
 });
