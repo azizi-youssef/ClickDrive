@@ -261,7 +261,7 @@ export function Footer({ catalog = null }: { catalog?: FooterCatalog | null }) {
         {/* Mobile : accordéons ; tablette : 2 × 2 ; desktop : 4 colonnes (la première, plus longue, un peu plus large) */}
         <nav
           aria-label={strings.navAria}
-          className={cn('grid grid-cols-1 py-2 md:gap-y-8 md:py-9', FOOTER_GRID)}
+          className={cn('grid grid-cols-1 pt-2 md:gap-y-8 md:py-9', FOOTER_GRID)}
         >
           <FooterColumn title={strings.colExplorer} {...column('explorer')}>
             {featuredPickupLocations().map((location) => (
@@ -360,7 +360,8 @@ export function Footer({ catalog = null }: { catalog?: FooterCatalog | null }) {
         {/* 3. BAS DE PAGE                                               */}
         {/* ============================================================ */}
         {/* Mobile : langue d'abord (absente de l'en-tête mobile), puis informations. Desktop : informations à gauche, langue à droite. */}
-        <div className="flex flex-col gap-5 border-t border-white/8 py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+        {/* Mobile : le filet du dernier accordéon sert de séparation (pas de double trait) */}
+        <div className="flex flex-col gap-5 border-white/8 py-6 md:border-t lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           <LanguageSelector variant="footer" className="self-start lg:order-last lg:self-auto" />
 
           <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-slate-400 md:flex-row md:flex-wrap md:items-center md:gap-x-8">

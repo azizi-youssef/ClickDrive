@@ -108,11 +108,14 @@ function HeroField({
   icon: Icon,
   value,
   chevron = false,
+  badge,
   children,
 }: {
   id: string;
   label: string;
-  /** Libellé des colonnes étroites (dates) : jamais tronqué */
+  /** Repère court dans la ligne du libellé, à partir de 1024 px (ex. durée « 3 j » du champ retour) */
+  badge?: React.ReactNode;
+  /** Libellé des colonnes étroites (dates), jusqu'à 1279 px : jamais tronqué */
   shortLabel?: string;
   icon: LucideIcon;
   /** Valeur affichée sous 1024 px */
@@ -139,12 +142,21 @@ function HeroField({
         >
           <Icon className="hidden h-3.5 w-3.5 shrink-0 text-accent-text lg:block" aria-hidden="true" />
           {shortLabel ? (
+            // Forme courte jusqu'à 1279 px (la barre de 1024 px n'a pas la place du libellé complet et du repère)
             <>
-              <span className="lg:hidden">{shortLabel}</span>
-              <span className="hidden truncate lg:block">{label}</span>
+              <span className="xl:hidden">{shortLabel}</span>
+              <span className="hidden truncate xl:block">{label}</span>
             </>
           ) : (
             <span className="lg:truncate">{label}</span>
+          )}
+          {badge && (
+            <span
+              aria-hidden="true"
+              className="ms-auto hidden shrink-0 rounded-full bg-white px-1.5 py-px text-[11px] font-bold tabular-nums text-ink ring-1 ring-line lg:inline"
+            >
+              {badge}
+            </span>
           )}
         </label>
         <span
@@ -343,6 +355,16 @@ export function SearchBar({
     </select>
   );
 
+  // Texte de la durée (« Durée : 3 jours »), commun au héro et au catalogue
+  const durationContent = durationText ? (
+    <>
+      <Calendar className="h-3.5 w-3.5 shrink-0 text-accent-text" aria-hidden="true" />
+      <span>
+        {t.searchBar.durationLabel} : <strong className="font-bold text-ink">{durationText}</strong>
+      </span>
+    </>
+  ) : null;
+
   const fieldsGrid = (
       <div
         className={cn(
@@ -400,6 +422,7 @@ export function SearchBar({
               shortLabel={t.searchBar.dropoffShort}
               icon={Calendar}
               value={dateText(effectiveEndDate, t.searchBar.dropoffDate)}
+              badge={dayCount > 0 ? plural(dayCount, t.vehicle.daysShort) : undefined}
             >
               {endInput}
             </HeroField>
@@ -409,6 +432,21 @@ export function SearchBar({
             </CompactField>
           )}
         </div>
+
+        {/* Héro : durée juste sous les deux dates (mobile) ; à partir de 1024 px, repère « 3 j » dans le champ
+            retour et ligne réservée aux lecteurs d'écran (la barre reste sur une seule ligne) */}
+        {hero && (
+          <p
+            id={durationId}
+            aria-live="polite"
+            className={cn(
+              'col-span-2 flex items-center gap-1.5 border-b border-line px-4 py-2.5 text-[13px] font-medium text-ink-tertiary lg:sr-only',
+              !durationText && 'sr-only'
+            )}
+          >
+            {durationContent}
+          </p>
+        )}
 
         {/* Pas de champ Marque : le carrousel « Les grandes marques » et le catalogue s'en chargent.
             Une marque reçue en paramètre (catalogue) reste transmise dans l'URL. */}
@@ -458,23 +496,14 @@ export function SearchBar({
     ? `${date(effectiveStartDate, 'dayMonth')} – ${date(effectiveEndDate, 'dayMonth')}${durationText ? ` · ${durationText}` : ''}`
     : `${t.searchBar.pickupShort} – ${t.searchBar.dropoffShort}`;
 
-  // Durée de la période, sous les champs (annoncée quand elle change)
+  // Catalogue (formulaire compact) : durée sous les champs, annoncée quand elle change
   const durationLine = (
     <p
       id={durationId}
       aria-live="polite"
-      className={cn(
-        'text-[13px] font-medium text-ink-tertiary',
-        hero ? 'px-4 pb-3 lg:px-4 lg:pb-2.5 lg:pt-0.5' : 'mt-2 px-1',
-        !durationText && 'sr-only'
-      )}
+      className={cn('mt-2 flex items-center gap-1.5 px-1 text-[13px] font-medium text-ink-tertiary', !durationText && 'sr-only')}
     >
-      {durationText && (
-        <>
-          <Calendar className="me-1.5 inline h-3.5 w-3.5 align-[-2px] text-accent-text" aria-hidden="true" />
-          {t.searchBar.durationLabel} : <strong className="font-bold text-ink">{durationText}</strong>
-        </>
-      )}
+      {durationContent}
     </p>
   );
 
@@ -556,10 +585,7 @@ export function SearchBar({
               expanded ? 'grid-rows-[1fr]' : 'max-lg:invisible max-lg:grid-rows-[0fr] max-lg:duration-base max-lg:ease-exit'
             )}
           >
-            <div className="min-h-0 max-lg:overflow-hidden">
-              {fieldsGrid}
-              {durationLine}
-            </div>
+            <div className="min-h-0 max-lg:overflow-hidden">{fieldsGrid}</div>
           </div>
         </div>
       ) : (

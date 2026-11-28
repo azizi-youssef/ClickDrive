@@ -182,7 +182,7 @@ export function ContactClient() {
         <div aria-hidden="true" className="pointer-events-none absolute -end-24 -top-24 h-80 w-80 rounded-full bg-brand/20 blur-3xl" />
         <div className="relative mx-auto max-w-[1180px] px-4 pb-24 pt-10 sm:px-6 sm:pt-14 lg:px-8">
           <nav aria-label={c.breadcrumbAria} className="mb-6 flex items-center gap-1.5 text-xs font-medium text-slate-400">
-            <Link href="/" className="rounded-sm transition-colors hover:text-white">
+            <Link href="/" className="inline-flex min-h-6 items-center rounded-sm transition-colors hover:text-white">
               {c.home}
             </Link>
             <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />

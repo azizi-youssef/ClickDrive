@@ -151,7 +151,7 @@ export default function SubscriptionSettingsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
             <div className="lg:col-span-2 space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="simulated-vehicle-count" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Nombre de véhicules de la concession
                 </label>
                 <span className="text-2xl font-black text-ink">
@@ -160,6 +160,7 @@ export default function SubscriptionSettingsPage() {
               </div>
 
               <input
+                id="simulated-vehicle-count"
                 type="range"
                 min="1"
                 max="50"

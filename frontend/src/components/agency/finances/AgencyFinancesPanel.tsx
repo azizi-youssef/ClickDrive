@@ -57,6 +57,11 @@ function transactionStatus(status: string): { label: string; className: string }
   return { label: status, className: 'bg-amber-100 text-amber-800' };
 }
 
+/** « 1 dossier clôturé », « 3 dossiers clôturés » */
+function countLabel(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count > 1 ? pluralForm : singular}`;
+}
+
 function TransactionStatus({ status }: { status: string }) {
   const { label, className } = transactionStatus(status);
   return <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-bold uppercase', className)}>{label}</span>;
@@ -207,7 +212,9 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
               <Wallet className="h-4 w-4 text-emerald-500" />
             </div>
             <p className="text-2xl font-extrabold text-emerald-800">{formatPrice(data.kpis.revenue)}</p>
-            <p className="text-xs text-emerald-700">{data.kpis.totalBookingsCount} réservations confirmées, toutes périodes</p>
+            <p className="text-xs text-emerald-700">
+              {countLabel(data.kpis.totalBookingsCount, 'réservation confirmée', 'réservations confirmées')}, toutes périodes
+            </p>
           </div>
 
           {/* Encaissé */}
@@ -217,7 +224,7 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
               <CheckSquare className="h-4 w-4 text-blue-500" />
             </div>
             <p className="text-2xl font-extrabold text-blue-800">{formatPrice(data.kpis.settledRevenue)}</p>
-            <p className="text-xs text-blue-700">{data.kpis.completedBookingsCount} dossiers clôturés</p>
+            <p className="text-xs text-blue-700">{countLabel(data.kpis.completedBookingsCount, 'dossier clôturé', 'dossiers clôturés')}</p>
           </div>
 
           {/* À venir */}
@@ -227,7 +234,9 @@ export function AgencyFinancesPanel({ agencyId }: { agencyId: string }) {
               <Clock className="h-4 w-4 text-amber-500" />
             </div>
             <p className="text-2xl font-extrabold text-amber-800">{formatPrice(data.kpis.pendingRevenue)}</p>
-            <p className="text-xs text-amber-700">{data.kpis.totalBookingsCount - data.kpis.completedBookingsCount} dossiers actifs</p>
+            <p className="text-xs text-amber-700">
+              {countLabel(data.kpis.totalBookingsCount - data.kpis.completedBookingsCount, 'dossier actif', 'dossiers actifs')}
+            </p>
           </div>
         </div>
       )}
